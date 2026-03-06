@@ -13,7 +13,9 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   experimental: {
-    // Next.js 15/16 specific fix for next-pwa + turbopack mismatch
+    serverActions: {
+      allowedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000', 'localhost:3000', '127.0.0.1:3000'],
+    }
   }
 };
 
