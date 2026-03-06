@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { Star, Zap, CircleDashed, Coins, ShieldCheck, Power } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useI18n } from '@/contexts/I18nContext'
 
 type Stats = {
     goldStars?: number
@@ -19,6 +20,7 @@ export default function AccountHUD() {
     const [stats, setStats] = useState<Stats | null>(null)
     const pathname = usePathname()
     const router = useRouter()
+    const { t } = useI18n()
 
     // Don't show HUD on checkout or specific external views if needed (like /buy)
     const isGuestFlow = pathname?.startsWith('/buy') || pathname?.startsWith('/login')
@@ -69,7 +71,12 @@ export default function AccountHUD() {
                                 whileHover={{ scale: 1.1 }}
                                 className="w-10 h-10 bg-white/60 rounded-full overflow-hidden border border-white/80 shadow-sm flex items-center justify-center -ml-2"
                             >
-                                <img src={stats.avatarUrl || "/dog.svg"} alt="User Avatar" className={`w-full h-full object-cover ${!stats.avatarUrl && 'p-1.5'}`} />
+                                <img
+                                    src={`${stats.avatarUrl || "/dog.svg"}?v=4`}
+                                    alt="User Avatar"
+                                    className={`w-full h-full object-cover ${!stats.avatarUrl ? 'p-1.5' : ''}`}
+                                    onError={(e) => { e.currentTarget.src = "/dog.svg"; e.currentTarget.className = "w-full h-full object-contain p-1.5"; }}
+                                />
                             </motion.div>
                         </Link>
 
@@ -78,12 +85,12 @@ export default function AccountHUD() {
                                 <div className="bg-purple-500 p-1.5 rounded-full shadow-inner border border-purple-400">
                                     <ShieldCheck className="w-4 h-4 text-white" />
                                 </div>
-                                <span className="font-bold text-purple-700">Parent Mode</span>
+                                <span className="font-bold text-purple-700">{t('hud.parentMode')}</span>
                             </div>
                         ) : (
                             <>
                                 {/* Currency */}
-                                <div className="flex items-center gap-1.5" title="Coins (金币)">
+                                <div className="flex items-center gap-1.5" title={t('hud.coins')}>
                                     <div className="bg-amber-400 p-1.5 rounded-full shadow-inner border border-amber-300">
                                         <Coins className="w-4 h-4 text-white" />
                                     </div>
@@ -93,13 +100,13 @@ export default function AccountHUD() {
                                 <div className="w-px h-6 bg-white/50 hidden sm:block" />
 
                                 {/* Gold Stars */}
-                                <div className="flex items-center gap-1.5 hidden sm:flex" title="Task Gold Stars (任务金星)">
+                                <div className="flex items-center gap-1.5 hidden sm:flex" title={t('hud.goldStars')}>
                                     <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-sm" />
                                     <span className="font-bold text-[#6b5c45]">{stats.goldStars}</span>
                                 </div>
 
                                 {/* Purple Stars */}
-                                <div className="flex items-center gap-1.5 hidden sm:flex" title="Art Purple Stars (艺术紫星)">
+                                <div className="flex items-center gap-1.5 hidden sm:flex" title={t('hud.purpleStars')}>
                                     <Zap className="w-5 h-5 text-purple-500 fill-purple-400 drop-shadow-sm" />
                                     <span className="font-bold text-[#6b5c45]">{stats.purpleStars}</span>
                                 </div>
@@ -107,7 +114,7 @@ export default function AccountHUD() {
                                 <div className="w-px h-6 bg-white/50 hidden sm:block" />
 
                                 {/* Anger Penalties */}
-                                <div className="flex items-center gap-1.5" title="Anger Penalties (发脾气惩罚)">
+                                <div className="flex items-center gap-1.5" title={t('hud.penalties')}>
                                     <CircleDashed className="w-5 h-5 text-slate-500 fill-slate-200 drop-shadow-sm" />
                                     <span className="font-bold text-slate-600">{stats.angerPenalties}</span>
                                 </div>
@@ -118,7 +125,7 @@ export default function AccountHUD() {
                     <button
                         onClick={handleLogout}
                         className="ml-4 p-2 rounded-full hover:bg-white/50 text-slate-500 hover:text-red-500 transition-colors"
-                        title="Logout"
+                        title={t('hud.logout')}
                     >
                         <Power className="w-5 h-5" />
                     </button>

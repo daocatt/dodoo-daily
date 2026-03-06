@@ -1,15 +1,43 @@
-import React from 'react'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+'use client'
+
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldAlert, BadgePlus, Users, Settings } from 'lucide-react'
+import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2 } from 'lucide-react'
+import { useI18n } from '@/contexts/I18nContext'
+import { useRouter } from 'next/navigation'
 
-export default async function ParentDashboard() {
-    const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
+export default function ParentDashboard() {
+    const { t } = useI18n()
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
 
-    if (role !== 'PARENT') {
-        redirect('/')
+    useEffect(() => {
+        // Simple client-side role check (Middleware handles the heavy lifting)
+        // But we check stats to confirm role
+        fetch('/api/stats')
+            .then(res => {
+                if (!res.ok) {
+                    router.push('/')
+                    return
+                }
+                return res.json()
+            })
+            .then(data => {
+                if (data && data.isParent) {
+                    setLoading(false)
+                } else {
+                    router.push('/')
+                }
+            })
+            .catch(() => router.push('/'))
+    }, [router])
+
+    if (loading) {
+        return (
+            <div className="min-h-dvh flex items-center justify-center bg-slate-50">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+            </div>
+        )
     }
 
     return (
@@ -18,7 +46,7 @@ export default async function ParentDashboard() {
                 <Link href="/" className="p-2 rounded-full hover:bg-slate-100 transition-colors">
                     <ArrowLeft className="w-6 h-6 text-slate-500" />
                 </Link>
-                <h1 className="text-xl font-bold">Parent Dashboard (家长模式)</h1>
+                <h1 className="text-xl font-bold">{t('parent.title')}</h1>
             </header>
 
             <main className="flex-1 p-6 md:p-12 max-w-5xl mx-auto w-full">
@@ -28,10 +56,10 @@ export default async function ParentDashboard() {
                         <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center mb-2">
                             <Star className="w-6 h-6 text-yellow-500" />
                         </div>
-                        <h2 className="text-xl font-bold">Manual Rewards</h2>
-                        <p className="text-slate-500 text-sm">Add or remove Stars manually for the child.</p>
+                        <h2 className="text-xl font-bold">{t('parent.rewards')}</h2>
+                        <p className="text-slate-500 text-sm">{t('parent.rewardsDesc')}</p>
                         <button className="mt-auto px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-colors">
-                            Manage Stars
+                            {t('button.manage')}
                         </button>
                     </div>
 
@@ -39,10 +67,10 @@ export default async function ParentDashboard() {
                         <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center mb-2">
                             <ShieldAlert className="w-6 h-6 text-red-500" />
                         </div>
-                        <h2 className="text-xl font-bold">Emotion Penalties</h2>
-                        <p className="text-slate-500 text-sm">Record anger outbursts or manage existing penalties.</p>
+                        <h2 className="text-xl font-bold">{t('parent.penalties')}</h2>
+                        <p className="text-slate-500 text-sm">{t('parent.penaltiesDesc')}</p>
                         <button className="mt-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-colors">
-                            Record Behavior
+                            {t('button.record')}
                         </button>
                     </div>
 
@@ -50,10 +78,10 @@ export default async function ParentDashboard() {
                         <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-2">
                             <Users className="w-6 h-6 text-blue-500" />
                         </div>
-                        <h2 className="text-xl font-bold">Family Accounts</h2>
-                        <p className="text-slate-500 text-sm">Update child info or change parent PIN.</p>
+                        <h2 className="text-xl font-bold">{t('parent.family')}</h2>
+                        <p className="text-slate-500 text-sm">{t('parent.familyDesc')}</p>
                         <button className="mt-auto px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors">
-                            Manage Users
+                            {t('button.manage')}
                         </button>
                     </div>
 
@@ -61,10 +89,10 @@ export default async function ParentDashboard() {
                         <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-2">
                             <Settings className="w-6 h-6 text-purple-500" />
                         </div>
-                        <h2 className="text-xl font-bold">App Settings</h2>
-                        <p className="text-slate-500 text-sm">Configure app-wide parameters and features.</p>
+                        <h2 className="text-xl font-bold">{t('parent.settings')}</h2>
+                        <p className="text-slate-500 text-sm">{t('parent.settingsDesc')}</p>
                         <button className="mt-auto px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-semibold transition-colors">
-                            Settings
+                            {t('button.settings')}
                         </button>
                     </div>
 

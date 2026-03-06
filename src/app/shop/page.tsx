@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, Store, Coins, ShoppingBag, CheckCircle2, AlertCircle, Plus } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
+import { useI18n } from '@/contexts/I18nContext'
 
 type ShopItem = {
     id: string
@@ -24,6 +25,7 @@ export default function ShopPage() {
     const [newName, setNewName] = useState('')
     const [newCost, setNewCost] = useState('')
     const [newEmoji, setNewEmoji] = useState('🎁')
+    const { t } = useI18n()
 
     useEffect(() => {
         fetchItems()
@@ -55,13 +57,13 @@ export default function ShopPage() {
             const result = await res.json()
 
             if (res.ok) {
-                setMessage({ text: `Bought ${item.name}! Check your HUD!`, type: 'success' })
+                setMessage({ text: t('shop.buySuccess', { name: item.name }), type: 'success' })
                 fetchItems()
             } else {
-                setMessage({ text: result.error || 'Purchase failed', type: 'error' })
+                setMessage({ text: result.error || t('shop.buyError'), type: 'error' })
             }
         } catch (err) {
-            setMessage({ text: 'Network error', type: 'error' })
+            setMessage({ text: t('login.error.network'), type: 'error' })
         } finally {
             setPurchasingId(null)
             setTimeout(() => setMessage(null), 4000)
@@ -100,7 +102,7 @@ export default function ShopPage() {
                     </Link>
                     <span className="font-extrabold text-2xl tracking-tight text-amber-800 drop-shadow flex items-center gap-2">
                         <Store className="w-6 h-6" />
-                        Wish Shop (愿望商店)
+                        {t('shop.title')}
                     </span>
                 </div>
                 <button
@@ -108,7 +110,7 @@ export default function ShopPage() {
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-amber-400"
                 >
                     <Plus className="w-4 h-4" />
-                    New Wish (添加愿望)
+                    {t('shop.newWish')}
                 </button>
             </header>
 
@@ -162,7 +164,7 @@ export default function ShopPage() {
                                         disabled={purchasingId === item.id}
                                         className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 transition-all active:scale-95 disabled:grayscale"
                                     >
-                                        {purchasingId === item.id ? 'Loading...' : 'Buy with Coins'}
+                                        {purchasingId === item.id ? t('common.loading') : t('shop.buyWithCoins')}
                                     </button>
                                 </div>
                             </motion.div>
@@ -187,11 +189,11 @@ export default function ShopPage() {
                             className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-amber-50">
-                                <h3 className="text-xl font-bold flex items-center gap-2 text-amber-700"><ShoppingBag className="w-5 h-5" /> Add New Wish</h3>
+                                <h3 className="text-xl font-bold flex items-center gap-2 text-amber-700"><ShoppingBag className="w-5 h-5" /> {t('shop.form.addTitle')}</h3>
                             </div>
                             <form onSubmit={handleAddItem} className="p-6 flex flex-col gap-5">
                                 <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">Wish Name / Item</label>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('shop.form.nameLabel')}</label>
                                     <input
                                         type="text"
                                         value={newName}
@@ -203,7 +205,7 @@ export default function ShopPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-2">Cost (金币)</label>
+                                        <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('shop.form.costLabel')}</label>
                                         <input
                                             type="number"
                                             value={newCost}
@@ -214,7 +216,7 @@ export default function ShopPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-2">Emoji Icon</label>
+                                        <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('shop.form.emojiLabel')}</label>
                                         <input
                                             type="text"
                                             value={newEmoji}
@@ -229,10 +231,10 @@ export default function ShopPage() {
                                     type="submit"
                                     className="mt-2 w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black tracking-wide shadow-lg hover:opacity-90 transition-opacity text-lg"
                                 >
-                                    Confirm Addition
+                                    {t('shop.form.confirm')}
                                 </button>
                                 <button type="button" onClick={() => setShowAddModal(false)} className="py-2 text-[#a89880] font-bold hover:text-[#2c2416]">
-                                    Cancel
+                                    {t('common.cancel')}
                                 </button>
                             </form>
                         </motion.div>

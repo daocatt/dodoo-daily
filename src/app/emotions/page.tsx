@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, Flame, AlertOctagon, Info } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
+import { useI18n } from '@/contexts/I18nContext'
 
 type EmotionRecord = {
     id: string
@@ -20,6 +21,7 @@ export default function EmotionsPage() {
     const [recording, setRecording] = useState(false)
     const [notes, setNotes] = useState('')
     const [showModal, setShowModal] = useState(false)
+    const { t } = useI18n()
 
     useEffect(() => {
         fetchRecords()
@@ -70,7 +72,7 @@ export default function EmotionsPage() {
                     </Link>
                     <span className="font-extrabold text-2xl tracking-tight text-red-700 drop-shadow flex items-center gap-2">
                         <AlertOctagon className="w-6 h-6" />
-                        Emotions (情绪)
+                        {t('emotions.title')}
                     </span>
                 </div>
             </header>
@@ -83,26 +85,26 @@ export default function EmotionsPage() {
                         <div className="bg-rose-100 p-4 rounded-full mb-4">
                             <Flame className="w-12 h-12 text-rose-500" />
                         </div>
-                        <h2 className="text-2xl font-black text-rose-700 mb-2">Anger Outburst? (又发脾气了?)</h2>
-                        <p className="text-rose-900/60 font-bold mb-6 text-sm">Recording an outburst gives 1 Anger Penalty shape. (记录后扣除一个空心图形惩罚)</p>
+                        <h2 className="text-2xl font-black text-rose-700 mb-2">{t('emotions.angerQuestion')}</h2>
+                        <p className="text-rose-900/60 font-bold mb-6 text-sm">{t('emotions.recordDesc')}</p>
 
                         <button
                             onClick={() => setShowModal(true)}
                             className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-black text-xl px-8 py-5 rounded-2xl shadow-[0_8px_30px_rgb(225,29,72,0.3)] hover:scale-105 active:scale-95 transition-all duration-300 w-full md:w-auto flex items-center justify-center gap-3"
                         >
                             <AlertOctagon className="w-6 h-6" />
-                            Record It Now (记录惩罚)
+                            {t('emotions.recordBtn')}
                         </button>
                     </div>
 
                     <div className="flex flex-col gap-4">
-                        <h3 className="font-black text-xl text-rose-900 mb-2">History (历史记录)</h3>
+                        <h3 className="font-black text-xl text-rose-900 mb-2">{t('emotions.history')}</h3>
                         {loading ? (
-                            <div className="text-center py-8 text-rose-500 font-bold">Loading...</div>
+                            <div className="text-center py-8 text-rose-500 font-bold">{t('common.loading')}</div>
                         ) : records.length === 0 ? (
                             <div className="bg-white/50 border border-white rounded-2xl p-8 text-center text-rose-800/60 font-bold text-lg flex flex-col items-center justify-center gap-2">
                                 <Info className="w-8 h-8 opacity-50" />
-                                No records. Great job keeping emotions balanced! (没有记录，棒棒的！)
+                                {t('emotions.noRecords')}
                             </div>
                         ) : (
                             records.map((rec, idx) => (
@@ -119,9 +121,9 @@ export default function EmotionsPage() {
                                             {new Date(rec.createdAt).toLocaleString()}
                                         </div>
                                         {rec.resolved ? (
-                                            <span className="text-xs font-black bg-green-100 text-green-700 px-3 py-1 rounded-full uppercase tracking-widest">Resolved (已化解)</span>
+                                            <span className="text-xs font-black bg-green-100 text-green-700 px-3 py-1 rounded-full uppercase tracking-widest">{t('emotions.resolved')}</span>
                                         ) : (
-                                            <span className="text-xs font-black bg-rose-100 text-rose-700 px-3 py-1 rounded-full uppercase tracking-widest">Penalty (惩罚中)</span>
+                                            <span className="text-xs font-black bg-rose-100 text-rose-700 px-3 py-1 rounded-full uppercase tracking-widest">{t('emotions.penalty')}</span>
                                         )}
                                     </div>
                                     {rec.notes && <p className="text-[#6b5c45] font-medium pt-2 border-t border-rose-50 mt-1">{rec.notes}</p>}
@@ -148,16 +150,16 @@ export default function EmotionsPage() {
                             className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             <div className="p-6 border-b border-rose-100 flex justify-between items-center bg-rose-50">
-                                <h3 className="text-xl font-bold flex items-center gap-2 text-rose-700"><Flame className="w-5 h-5" /> Confirm Penalty</h3>
+                                <h3 className="text-xl font-bold flex items-center gap-2 text-rose-700"><Flame className="w-5 h-5" /> {t('common.confirm')}</h3>
                             </div>
                             <form onSubmit={handleRecordAnger} className="p-6 flex flex-col gap-5 bg-white">
                                 <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">Optional Reason / Notes (写点什么原因)</label>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('emotions.form.reasonLabel')}</label>
                                     <textarea
                                         value={notes}
                                         onChange={e => setNotes(e.target.value)}
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-rose-200 outline-none font-medium text-lg min-h-[100px] resize-none"
-                                        placeholder="e.g. Got mad about dinner..."
+                                        placeholder={t('emotions.form.reasonPlaceholder')}
                                     />
                                 </div>
 
@@ -166,10 +168,10 @@ export default function EmotionsPage() {
                                     disabled={recording}
                                     className="mt-2 w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-black tracking-widest shadow-lg hover:opacity-90 transition-opacity text-lg"
                                 >
-                                    {recording ? 'Saving...' : 'Confirm (确认记录)'}
+                                    {recording ? t('emotions.form.saving') : t('emotions.form.confirm')}
                                 </button>
                                 <button type="button" onClick={() => setShowModal(false)} className="py-2 text-[#a89880] font-bold hover:text-[#2c2416]">
-                                    Cancel (撤销)
+                                    {t('common.cancel')}
                                 </button>
                             </form>
                         </motion.div>

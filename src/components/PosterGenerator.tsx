@@ -5,6 +5,7 @@ import * as htmlToImage from 'html-to-image'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion, AnimatePresence } from 'motion/react'
 import { X, Download, Share2 } from 'lucide-react'
+import { useI18n } from '@/contexts/I18nContext'
 
 type PosterProps = {
     artwork: {
@@ -20,6 +21,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
     const posterRef = useRef<HTMLDivElement>(null)
     const [generating, setGenerating] = useState(false)
     const [posterImageUrl, setPosterImageUrl] = useState<string | null>(null)
+    const { t } = useI18n()
 
     // Using window.location.origin to build the purchase link
     const purchaseUrl = typeof window !== 'undefined'
@@ -70,7 +72,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                         >
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-black text-[#2c2416] tracking-tight">DoDoo Daily</h2>
-                                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">Art Exhibition</span>
+                                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">{t('poster.exhibition')}</span>
                             </div>
 
                             <div className="w-full aspect-square rounded-xl overflow-hidden bg-[#f5f0e8] shadow-inner border-4 border-white">
@@ -80,12 +82,12 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
 
                             <div>
                                 <h1 className="text-3xl font-black text-[#2c2416] mb-2">{artwork.title}</h1>
-                                <p className="text-[#a89880] text-sm">A piece of creative imagination from our little artist. Support their journey by collecting this artwork.</p>
+                                <p className="text-[#a89880] text-sm">{t('poster.description')}</p>
                             </div>
 
                             <div className="mt-auto flex items-end justify-between bg-[#f5f0e8] p-4 rounded-xl">
                                 <div>
-                                    <p className="text-xs font-bold text-[#a89880] uppercase tracking-wider mb-1">Collection Price</p>
+                                    <p className="text-xs font-bold text-[#a89880] uppercase tracking-wider mb-1">{t('poster.priceLabel')}</p>
                                     <p className="text-3xl font-black text-purple-600">¥ {artwork.priceRMB}</p>
                                 </div>
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-[#e8dfce]">
@@ -100,11 +102,11 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                             className="w-full mt-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {generating ? (
-                                <span className="animate-pulse">Generating Masterpiece...</span>
+                                <span className="animate-pulse">{t('poster.generating')}</span>
                             ) : (
                                 <>
                                     <Share2 className="w-5 h-5" />
-                                    Preview & Generate Poster
+                                    {t('poster.preview')}
                                 </>
                             )}
                         </button>
@@ -118,7 +120,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="flex flex-col gap-6 items-center"
                             >
-                                <h3 className="text-xl font-bold text-center text-[#2c2416]">Your Poster is Ready!</h3>
+                                <h3 className="text-xl font-bold text-center text-[#2c2416]">{t('poster.ready')}</h3>
 
                                 <div className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -130,14 +132,14 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                                     className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                                 >
                                     <Download className="w-5 h-5" />
-                                    Save to Device (保存图片)
+                                    {t('poster.save')}
                                 </button>
 
                                 <button
                                     onClick={() => setPosterImageUrl(null)}
                                     className="text-sm font-bold text-[#a89880] hover:text-[#2c2416] transition-colors"
                                 >
-                                    Generate Again
+                                    {t('poster.regen')}
                                 </button>
                             </motion.div>
                         </AnimatePresence>

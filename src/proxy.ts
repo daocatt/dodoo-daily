@@ -4,15 +4,14 @@ import type { NextRequest } from 'next/server'
 export function proxy(request: NextRequest) {
     const userId = request.cookies.get('dodoo_user_id')?.value
 
+    const isStaticAsset = request.nextUrl.pathname.match(/\.(png|jpg|jpeg|svg|ico|json|js)$/)
+
     if (
         !userId &&
         !request.nextUrl.pathname.startsWith('/login') &&
         !request.nextUrl.pathname.startsWith('/api') &&
         !request.nextUrl.pathname.startsWith('/_next') &&
-        !request.nextUrl.pathname.startsWith('/dog.svg') &&
-        !request.nextUrl.pathname.startsWith('/buy') &&
-        request.nextUrl.pathname !== '/manifest.json' &&
-        request.nextUrl.pathname !== '/sw.js'
+        !isStaticAsset
     ) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -26,5 +25,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico|dog.svg|manifest.json|sw.js|buy).*)'],
+    matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.svg|.*\\.jpg|manifest.json|sw.js).*)'],
 }

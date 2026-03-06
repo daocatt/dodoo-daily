@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
+import { useI18n } from '@/contexts/I18nContext'
 
 type Task = {
     id: string
@@ -19,6 +20,7 @@ export default function TasksPage() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
+    const { t } = useI18n()
 
     // Form
     const [title, setTitle] = useState('')
@@ -94,7 +96,7 @@ export default function TasksPage() {
                     </Link>
                     <span className="font-extrabold text-2xl tracking-tight text-white drop-shadow-md flex items-center gap-2">
                         <CheckSquare className="w-6 h-6" />
-                        Tasks (任务)
+                        {t('tasks.title')}
                     </span>
                 </div>
                 <button
@@ -102,7 +104,7 @@ export default function TasksPage() {
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/80 hover:bg-blue-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-blue-400"
                 >
                     <Plus className="w-4 h-4" />
-                    New Task (新建任务)
+                    {t('tasks.newTask')}
                 </button>
             </header>
 
@@ -115,8 +117,8 @@ export default function TasksPage() {
                     ) : tasks.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-48 text-white/80">
                             <CircleAlert className="w-16 h-16 mb-4 opacity-50" />
-                            <p className="text-xl font-bold">No tasks found (暂无任务)</p>
-                            <p className="text-sm">Click "New Task" to set a goal. (点击右上角添加)</p>
+                            <p className="text-xl font-bold">{t('tasks.noTasks')}</p>
+                            <p className="text-sm">{t('tasks.noTasksSub')}</p>
                         </div>
                     ) : (
                         <div className="flex gap-4 flex-col pb-24">
@@ -138,7 +140,7 @@ export default function TasksPage() {
                                         </h3>
                                         {task.isRepeating && (
                                             <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full mt-1 inline-block">
-                                                Daily Loop (每日)
+                                                {t('tasks.dailyLoop')}
                                             </span>
                                         )}
                                     </div>
@@ -169,23 +171,23 @@ export default function TasksPage() {
                             className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
-                                <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-blue-500" /> New Task (新建任务)</h3>
+                                <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-blue-500" /> {t('tasks.newTask')}</h3>
                             </div>
                             <form onSubmit={handleCreateTask} className="p-6 flex flex-col gap-5 bg-white">
                                 <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">Goal / Task Name (任务名称)</label>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('tasks.form.nameLabel')}</label>
                                     <input
                                         type="text"
                                         value={title}
                                         onChange={e => setTitle(e.target.value)}
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-lg"
-                                        placeholder="Read a book (读书30分钟)"
+                                        placeholder={t('tasks.form.namePlaceholder')}
                                         required
                                     />
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm font-bold text-[#6b5c45]">Reward Stars (金星奖励)</label>
+                                    <label className="text-sm font-bold text-[#6b5c45]">{t('tasks.form.rewardLabel')}</label>
                                     <div className="flex items-center gap-3">
                                         <button type="button" onClick={() => setRewardStars(Math.max(1, rewardStars - 1))} className="w-8 h-8 rounded-full bg-[#f5f0e8] flex items-center justify-center font-bold text-[#6b5c45]">-</button>
                                         <span className="font-black text-yellow-600 text-xl w-6 text-center">{rewardStars}</span>
@@ -201,17 +203,17 @@ export default function TasksPage() {
                                         onChange={(e) => setIsRepeating(e.target.checked)}
                                         className="w-5 h-5 accent-blue-500"
                                     />
-                                    <label htmlFor="isRep" className="font-bold text-[#6b5c45]">Daily Recurring (每日重复)</label>
+                                    <label htmlFor="isRep" className="font-bold text-[#6b5c45]">{t('tasks.form.recurringLabel')}</label>
                                 </div>
 
                                 <button
                                     type="submit"
                                     className="mt-2 w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold tracking-wide shadow-lg hover:opacity-90 transition-opacity text-lg"
                                 >
-                                    Create Goal
+                                    {t('tasks.createGoal')}
                                 </button>
                                 <button type="button" onClick={() => setShowNewTaskModal(false)} className="py-2 text-[#a89880] font-bold hover:text-[#2c2416]">
-                                    Cancel
+                                    {t('common.cancel')}
                                 </button>
                             </form>
                         </motion.div>

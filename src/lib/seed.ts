@@ -14,7 +14,7 @@ export async function seed() {
             name: 'Dad & Mom',
             role: 'PARENT',
             pin: '1234', // Default PIN for demo
-            avatarUrl: '/parent.png',
+            avatarUrl: '/parent_avatar.png',
         }).returning();
         parentId = newParent[0].id;
         console.log('✅ Created Parent account');
@@ -29,7 +29,7 @@ export async function seed() {
         const child1 = await db.insert(users).values({
             name: 'Little Artist',
             role: 'CHILD',
-            avatarUrl: '/child.png',
+            avatarUrl: '/child_avatar.png',
         }).returning();
 
         await db.insert(accountStats).values({
@@ -44,7 +44,7 @@ export async function seed() {
         const child2 = await db.insert(users).values({
             name: 'Sweet Girl',
             role: 'CHILD',
-            avatarUrl: '/child_girl.png',
+            avatarUrl: '/child_girl_avatar.png',
         }).returning();
 
         await db.insert(accountStats).values({

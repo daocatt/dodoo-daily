@@ -6,6 +6,7 @@ import { Plus, Camera, Image as ImageIcon, ChevronLeft, Upload } from 'lucide-re
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
+import { useI18n } from '@/contexts/I18nContext'
 
 type Artwork = {
     id: string
@@ -25,6 +26,7 @@ export default function GalleryPage() {
     const [albums, setAlbums] = useState<Album[]>([])
     const [loading, setLoading] = useState(true)
     const [showUploadModal, setShowUploadModal] = useState(false)
+    const { t } = useI18n()
 
     // Upload Form State
     const [uploadTitle, setUploadTitle] = useState('')
@@ -124,7 +126,7 @@ export default function GalleryPage() {
                     </Link>
                     <span className="font-extrabold text-2xl tracking-tight text-white drop-shadow-md flex items-center gap-2">
                         <ImageIcon className="w-6 h-6" />
-                        Gallery (画廊)
+                        {t('gallery.title')}
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -133,14 +135,14 @@ export default function GalleryPage() {
                         className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/80 hover:bg-purple-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-purple-400"
                     >
                         <Camera className="w-4 h-4" />
-                        Upload / Photo (上传)
+                        {t('gallery.upload')}
                     </button>
                     <button
                         onClick={() => setShowNewAlbumModal(true)}
                         className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-white/50"
                     >
                         <Plus className="w-4 h-4" />
-                        New Album (新建)
+                        {t('gallery.newAlbum')}
                     </button>
                 </div>
             </header>
@@ -153,8 +155,8 @@ export default function GalleryPage() {
                 ) : albums.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-white/80">
                         <ImageIcon className="w-16 h-16 mb-4 opacity-50" />
-                        <p className="text-xl font-bold">No Albums Yet (暂无画册)</p>
-                        <p className="text-sm">Click "New Album" to start your gallery! (点击新建开始展览)</p>
+                        <p className="text-xl font-bold">{t('gallery.noAlbums')}</p>
+                        <p className="text-sm">{t('gallery.noAlbumsSub')}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
@@ -171,7 +173,7 @@ export default function GalleryPage() {
                                 <div className="relative w-48 h-64 md:w-56 md:h-72 flex justify-center perspective-1000">
                                     {album.artworks.length === 0 ? (
                                         <div className="absolute w-full h-full rounded-2xl bg-white/40 backdrop-blur-sm border-4 border-white/60 shadow-lg flex items-center justify-center">
-                                            <span className="text-white/70 font-bold">Empty (空)</span>
+                                            <span className="text-white/70 font-bold">{t('gallery.empty')}</span>
                                         </div>
                                     ) : (
                                         album.artworks.map((art, artIdx) => (
@@ -192,7 +194,7 @@ export default function GalleryPage() {
                                 </div>
                                 <div className="mt-8 text-center bg-white/60 backdrop-blur-md px-6 py-2 rounded-full shadow-sm border border-white/50 group-hover:bg-white/80 transition-colors">
                                     <h3 className="font-bold text-lg">{album.title}</h3>
-                                    <p className="text-xs text-[#6b5c45] font-medium">{album.artworks.length} Artworks (幅作品)</p>
+                                    <p className="text-xs text-[#6b5c45] font-medium">{t('gallery.artworksCount', { count: album.artworks.length })}</p>
                                 </div>
                             </motion.div>
                         ))}
@@ -209,58 +211,56 @@ export default function GalleryPage() {
                         className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
-                            <h3 className="text-xl font-bold flex items-center gap-2"><Upload className="w-5 h-5 text-purple-500" /> Upload / Photo (上传/拍照)</h3>
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Upload className="w-5 h-5 text-purple-500" /> {t('gallery.upload')}</h3>
                             <button onClick={() => setShowUploadModal(false)} className="text-[#a89880] hover:text-[#2c2416] font-bold text-xl">&times;</button>
                         </div>
                         <form onSubmit={handleUpload} className="p-6 flex flex-col gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">Title (画作名称)</label>
+                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.titleLabel')}</label>
                                 <input
                                     type="text"
                                     value={uploadTitle}
                                     onChange={e => setUploadTitle(e.target.value)}
                                     className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
-                                    placeholder="e.g. Summer Sky (夏日的天空)"
+                                    placeholder={t('gallery.form.titlePlaceholder')}
                                     required
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">Price RMB (价格)</label>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceRmbLabel')}</label>
                                     <input
                                         type="number"
                                         value={uploadPriceRMB}
                                         onChange={e => setUploadPriceRMB(e.target.value)}
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
-                                        placeholder="售价人民币"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">Price Coins (金币)</label>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
                                     <input
                                         type="number"
                                         value={uploadPriceCoins}
                                         onChange={e => setUploadPriceCoins(e.target.value)}
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
-                                        placeholder="售价金币"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">Select Album (选择画册)</label>
+                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.albumLabel')}</label>
                                 <select
                                     value={uploadAlbumId}
                                     onChange={e => setUploadAlbumId(e.target.value)}
                                     className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
                                 >
-                                    <option value="">No Album (不放入画册)</option>
+                                    <option value="">{t('gallery.form.noAlbumOption')}</option>
                                     {albums.map(a => (
                                         <option key={a.id} value={a.id}>{a.title}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">Select File (选择图片/拍照)</label>
+                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.fileLabel')}</label>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -274,7 +274,7 @@ export default function GalleryPage() {
                                 disabled={uploading}
                                 className="mt-2 w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold tracking-wide shadow-lg opacity-90 hover:opacity-100 transition-opacity disabled:grayscale"
                             >
-                                {uploading ? 'Uploading...' : 'Submit / Publish (发布)'}
+                                {uploading ? t('gallery.form.uploading') : t('gallery.form.submit')}
                             </button>
                         </form>
                     </motion.div>
@@ -290,18 +290,18 @@ export default function GalleryPage() {
                         className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
-                            <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-indigo-500" /> New Album (新建画册)</h3>
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-indigo-500" /> {t('gallery.newAlbum')}</h3>
                             <button onClick={() => setShowNewAlbumModal(false)} className="text-[#a89880] hover:text-[#2c2416] font-bold text-xl">&times;</button>
                         </div>
                         <form onSubmit={handleCreateAlbum} className="p-6 flex flex-col gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">Album Name (画册名称)</label>
+                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.album.nameLabel')}</label>
                                 <input
                                     type="text"
                                     value={newAlbumName}
                                     onChange={e => setNewAlbumName(e.target.value)}
                                     className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
-                                    placeholder="e.g. My Paintings 2026"
+                                    placeholder={t('gallery.album.namePlaceholder')}
                                     required
                                 />
                             </div>
@@ -309,7 +309,7 @@ export default function GalleryPage() {
                                 type="submit"
                                 className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold tracking-wide shadow-lg opacity-90 hover:opacity-100 transition-opacity"
                             >
-                                Create (确认创建)
+                                {t('gallery.album.create')}
                             </button>
                         </form>
                     </motion.div>

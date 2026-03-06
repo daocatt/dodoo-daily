@@ -7,6 +7,7 @@ import { ChevronLeft, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
+import { useI18n } from '@/contexts/I18nContext'
 
 type Artwork = {
     id: string
@@ -29,6 +30,7 @@ export default function AlbumDetailPage() {
     const [album, setAlbum] = useState<AlbumDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [posterArtwork, setPosterArtwork] = useState<Artwork | null>(null)
+    const { t } = useI18n()
 
     useEffect(() => {
         if (!params?.id) return
@@ -62,12 +64,12 @@ export default function AlbumDetailPage() {
     if (!album) {
         return (
             <div className="min-h-dvh flex flex-col items-center justify-center bg-[#e0f2fe]">
-                <p className="text-xl font-bold mb-4">Album Not Found (未找到该画册)</p>
+                <p className="text-xl font-bold mb-4">{t('gallery.detail.notFound')}</p>
                 <button
                     onClick={() => router.push('/gallery')}
                     className="px-6 py-2 bg-white/50 backdrop-blur rounded-full font-bold shadow-sm"
                 >
-                    Back to Gallery (返回画廊)
+                    {t('gallery.detail.back')}
                 </button>
             </div>
         )
@@ -93,8 +95,8 @@ export default function AlbumDetailPage() {
                 {album.artworks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-white/80">
                         <ImageIcon className="w-16 h-16 mb-4 opacity-50" />
-                        <p className="text-xl font-bold">Empty Album (画册为空)</p>
-                        <p className="text-sm">Upload some art to this album! (快去上传些作品吧)</p>
+                        <p className="text-xl font-bold">{t('gallery.detail.empty')}</p>
+                        <p className="text-sm">{t('gallery.detail.emptySub')}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -114,13 +116,13 @@ export default function AlbumDetailPage() {
                                     {art.isSold ? (
                                         <div className="mt-4 flex items-center justify-between">
                                             <span className="text-gray-300 text-sm font-bold line-through">¥ {art.priceRMB ?? 0}</span>
-                                            <span className="text-green-400 font-bold uppercase tracking-widest bg-green-500/20 px-3 py-1 rounded-full text-sm">Collected (已收藏)</span>
+                                            <span className="text-green-400 font-bold uppercase tracking-widest bg-green-500/20 px-3 py-1 rounded-full text-sm">{t('gallery.detail.collected')}</span>
                                         </div>
                                     ) : (
                                         <>
                                             <div className="flex justify-between items-center mt-2">
                                                 <span className="text-purple-300 text-sm font-bold">¥ {art.priceRMB ?? 0}</span>
-                                                <span className="text-amber-400 text-sm font-bold">{art.priceCoins ?? 0} Coins</span>
+                                                <span className="text-amber-400 text-sm font-bold">{art.priceCoins ?? 0} {t('hud.coins')}</span>
                                             </div>
                                             <button
                                                 onClick={(e) => {
@@ -129,7 +131,7 @@ export default function AlbumDetailPage() {
                                                 }}
                                                 className="mt-4 w-full py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg backdrop-blur font-semibold transition-colors"
                                             >
-                                                Generate Poster (生成海报)
+                                                {t('gallery.detail.genPoster')}
                                             </button>
                                         </>
                                     )}
