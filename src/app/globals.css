@@ -1,0 +1,318 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────
+   Natural Texture UI — Design Tokens
+   Based on: natural-texture-ui skill
+───────────────────────────────────────────────────────── */
+:root {
+  --surface-base: #f5f0e8;
+  --surface-warm: #faf7f0;
+  --surface-white: #ffffff;
+  --border-subtle: #d6cdc0;
+  --text-primary: #2c2416;
+  --text-secondary: #6b5c45;
+  --text-muted: #a89880;
+  --accent-moss: #5a7a5a;
+  --accent-forest: #3d5c3d;
+  --accent-sage: #c8d8c0;
+  --warm-amber: #c8843c;
+  --warm-sienna: #a0621e;
+  --danger-terra: #c0503c;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Base Reset
+───────────────────────────────────────────────────────── */
+@layer base {
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--surface-base);
+    color: var(--text-primary);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-y;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   Mobile: Prevent iOS auto-zoom on input focus
+   iOS auto-zooms when font-size < 16px — we disable this
+   by ensuring inputs use at least 16px on touch devices.
+───────────────────────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   Scrollbar — warm neutral
+───────────────────────────────────────────────────────── */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--surface-base);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   Reusable Surface Classes
+───────────────────────────────────────────────────────── */
+
+/* Natural card — soft warm shadow, organic radius */
+.natural-card {
+  background: var(--surface-white);
+  border-radius: 24px;
+  box-shadow:
+    0 4px 20px rgba(44, 36, 22, 0.10),
+    0 1px 4px rgba(44, 36, 22, 0.06);
+  padding: 32px;
+}
+
+/* Elevated variant */
+.natural-card-elevated {
+  background: var(--surface-white);
+  border-radius: 24px;
+  box-shadow:
+    0 12px 40px rgba(44, 36, 22, 0.14),
+    0 2px 8px rgba(44, 36, 22, 0.06);
+  padding: 32px;
+}
+
+/* Inset / sunken panel */
+.natural-inset {
+  background: var(--surface-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Reusable Utility Classes
+───────────────────────────────────────────────────────── */
+
+/* Small tag / badge */
+.natural-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent-sage);
+  color: var(--accent-forest);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Divider */
+.natural-divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 16px 0;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Animation Keyframes
+───────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gentleFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-left {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s ease-out forwards;
+}
+
+.animate-float {
+  animation: gentleFloat 4s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Bottle throw / pick animations (used in main app)
+───────────────────────────────────────────────────────── */
+@keyframes throwBottle {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translateY(-100px) rotate(180deg) scale(1.2);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(-200px) rotate(360deg) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes pickBottle {
+  0% {
+    transform: translateY(100px) scale(0);
+    opacity: 0;
+  }
+
+  60% {
+    transform: translateY(-20px) scale(1.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-amber {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(200, 132, 60, 0.45);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px rgba(200, 132, 60, 0);
+  }
+}
+
+.animate-throw {
+  animation: throwBottle 0.8s ease-in forwards;
+}
+
+.animate-pick {
+  animation: pickBottle 0.8s ease-out forwards;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Record card (used in bottle list etc.)
+───────────────────────────────────────────────────────── */
+.record-card {
+  background: var(--surface-white);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px;
+  transition: box-shadow 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.record-card:hover {
+  box-shadow: 0 4px 20px rgba(44, 36, 22, 0.10);
+  transform: translateY(-1px);
+}
+
+
+
+/* ─────────────────────────────────────────────────────────
+   Tab active state
+───────────────────────────────────────────────────────── */
+.tab-active {
+  background: var(--surface-white);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(44, 36, 22, 0.10);
+}
+
+/* ─────────────────────────────────────────────────────────
+   Hide scrollbar for nav menus on mobile
+───────────────────────────────────────────────────────── */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

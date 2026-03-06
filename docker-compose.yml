@@ -1,0 +1,22 @@
+services:
+  dodoo-daily:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dodoo-daily
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./database/dodoo.db
+    volumes:
+      # Data persistence mapping for NAS/Local
+      - ./database:/app/database
+      - ./uploads:/app/uploads
+    # Optional: healthcheck
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
