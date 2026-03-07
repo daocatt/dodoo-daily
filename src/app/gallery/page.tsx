@@ -194,7 +194,7 @@ export default function GalleryPage() {
                                 </div>
                                 <div className="mt-8 text-center bg-white/60 backdrop-blur-md px-6 py-2 rounded-full shadow-sm border border-white/50 group-hover:bg-white/80 transition-colors">
                                     <h3 className="font-bold text-lg">{album.title}</h3>
-                                    <p className="text-xs text-[#6b5c45] font-medium">{t('gallery.artworksCount', { count: album.artworks.length })}</p>
+                                    <p className="text-xs text-[#6b5c45] font-medium">{t('gallery.artworksCount', { count: String(album.artworks.length) })}</p>
                                 </div>
                             </motion.div>
                         ))}

@@ -122,7 +122,7 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white p-8 rounded-[2.5rem] border-2 border-emerald-100 shadow-xl space-y-6"
+                    className="bg-white p-8 rounded-xl border-2 border-emerald-100 shadow-xl space-y-6"
                 >
                     <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
                         <div className="w-2 h-6 bg-emerald-500 rounded-full" />
@@ -199,12 +199,12 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredTasks.length === 0 ? (
-                    <div className="md:col-span-2 lg:col-span-3 py-20 text-center bg-white/50 rounded-3xl border-2 border-dashed border-slate-200">
+                    <div className="md:col-span-2 lg:col-span-3 py-20 text-center bg-white/50 rounded-xl border-2 border-dashed border-slate-200">
                         <p className="text-slate-400 font-bold">No tasks assigned yet.</p>
                     </div>
                 ) : (
                     filteredTasks.map(task => (
-                        <div key={task.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all relative group">
+                        <div key={task.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all relative group">
                             <div className="flex justify-between items-start mb-4">
                                 <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${task.completed ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
                                     {task.completed ? 'Completed' : 'Pending'}

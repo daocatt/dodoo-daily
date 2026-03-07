@@ -182,25 +182,16 @@ export default function Home() {
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
                 onClick={() => router.push(item.href)}
-                className="relative group flex items-center justify-between p-4 md:p-5 transition-all hover:bg-white/50 hover:backdrop-blur-2xl hover:shadow-2xl hover:shadow-white/20 rounded-xl w-full text-left border border-transparent hover:border-white/40"
+                className={`relative group flex items-center justify-between p-3 md:p-4 transition-all rounded-lg w-full text-left border border-white/20 ${item.bg} hover:brightness-95 hover:shadow-lg`}
               >
-                <div className="flex items-center gap-5 relative z-10 transition-transform group-hover:translate-x-2 duration-300">
-                  <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center shadow-inner`}>
-                    <item.icon className={`w-6 h-6 ${item.color}`} />
+                <div className="flex items-center gap-4 relative z-10 transition-transform group-hover:translate-x-1.5 duration-300">
+                  <div className={`w-10 h-10 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-sm`}>
+                    <item.icon className={`w-5 h-5 ${item.color}`} />
                   </div>
-                  <span className="font-extrabold text-xl md:text-2xl text-[#2c2416] tracking-tight">{item.title}</span>
+                  <span className="font-black text-lg md:text-xl text-[#2c2416] tracking-tight">{item.title}</span>
                 </div>
 
-                <ChevronRight className={`w-6 h-6 text-[#4a3728]/20 transition-all duration-300 ${hoveredIdx === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} />
-
-                {/* Border Bottom Animation */}
-                <div className="absolute bottom-0 left-6 right-6 h-[2px] bg-[#4a3728]/5 rounded-full" />
-                <motion.div
-                  className="absolute bottom-0 left-6 h-[2px] bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: hoveredIdx === idx ? 'calc(100% - 3rem)' : 0 }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                />
+                <ChevronRight className={`w-5 h-5 text-[#4a3728]/40 transition-all duration-300 ${hoveredIdx === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'}`} />
               </motion.button>
             ))}
           </div>

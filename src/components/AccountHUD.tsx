@@ -24,8 +24,9 @@ export default function AccountHUD() {
     const router = useRouter()
     const { t } = useI18n()
 
-    // Don't show HUD on checkout, auth flows, or any journal pages
-    const isGuestFlow = pathname?.startsWith('/buy') || pathname?.startsWith('/login') || pathname?.startsWith('/journal')
+    // Don't show HUD on checkout, auth flows, or any specific module pages
+    const hiddenPrefixes = ['/buy', '/login', '/journal', '/task', '/gallery', '/emotion', '/shop']
+    const isGuestFlow = hiddenPrefixes.some(prefix => pathname?.startsWith(prefix))
 
     const fetchData = async () => {
         try {

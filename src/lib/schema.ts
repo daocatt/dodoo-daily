@@ -143,6 +143,7 @@ export const shopItem = sqliteTable("ShopItem", {
     costCoins: integer("costCoins").notNull(),
     iconUrl: text("iconUrl"),
     stock: integer("stock").default(-1).notNull(),
+    deliveryDays: integer("deliveryDays").default(1).notNull(), // 1, 3, 7, 15, 30
     isActive: integer("isActive", { mode: "boolean" }).default(true).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),

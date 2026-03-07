@@ -143,7 +143,7 @@ export default function MediaManagement() {
     return (
         <div className="space-y-8 pb-12">
             {/* Header & Upload */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-xl border border-slate-100 shadow-sm">
                 <div className="flex-1">
                     <h2 className="text-2xl font-black text-slate-800">{t('parent.media')}</h2>
                     <p className="text-slate-500 mt-1">{t('parent.mediaDesc')}</p>
@@ -204,12 +204,12 @@ export default function MediaManagement() {
 
             {/* Media List */}
             {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-slate-100 border-dashed">
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 border-dashed">
                     <Loader2 className="w-10 h-10 animate-spin text-orange-200 mb-4" />
                     <p className="text-slate-400 font-medium">Scanning folders...</p>
                 </div>
             ) : media.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-slate-100 border-dashed text-slate-400 uppercase tracking-widest font-black text-xs">
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 border-dashed text-slate-400 uppercase tracking-widest font-black text-xs">
                     No files found
                 </div>
             ) : (
@@ -222,7 +222,7 @@ export default function MediaManagement() {
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className="bg-white rounded-3xl border border-slate-100 overflow-hidden group hover:shadow-xl transition-all flex flex-col"
+                                className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-xl transition-all flex flex-col"
                             >
                                 {/* Preview / Thumbnail Area */}
                                 <div className="aspect-video bg-slate-50 relative flex items-center justify-center group-hover:bg-slate-100/50 transition-colors">

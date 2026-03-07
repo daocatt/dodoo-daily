@@ -133,6 +133,23 @@ export default function ParentDashboard() {
                         </div>
                     </button>
 
+                    {/* Media Management */}
+                    <button
+                        onClick={() => setView('MEDIA')}
+                        className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-sky-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <ImageIcon className="w-7 h-7 text-sky-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.media')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.mediaDesc')}</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-sky-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
                     {/* Account Settings (Merged Profile & PIN) */}
                     <button
                         onClick={() => setView('PROFILE')}
@@ -164,23 +181,6 @@ export default function ParentDashboard() {
                         </div>
                         <div className="mt-auto pt-4 text-rose-600 font-bold flex items-center gap-1">
                             {t('button.settings')} <ArrowLeft className="w-4 h-4 rotate-180" />
-                        </div>
-                    </button>
-
-                    {/* Media Management */}
-                    <button
-                        onClick={() => setView('MEDIA')}
-                        className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-sky-200 transition-all text-left group"
-                    >
-                        <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                            <ImageIcon className="w-7 h-7 text-sky-500" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black text-slate-800">{t('parent.media')}</h2>
-                            <p className="text-slate-500 text-sm mt-1">{t('parent.mediaDesc')}</p>
-                        </div>
-                        <div className="mt-auto pt-4 text-sky-600 font-bold flex items-center gap-1">
-                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
                         </div>
                     </button>
 

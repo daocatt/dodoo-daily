@@ -62,12 +62,12 @@ export default function OrderManagement() {
 
             <div className="space-y-4">
                 {orders.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-3xl border border-slate-100 italic text-slate-400">
+                    <div className="text-center py-20 bg-white rounded-xl border border-slate-100 italic text-slate-400">
                         {t('parent.noOrders')}
                     </div>
                 ) : (
                     orders.map(order => (
-                        <div key={order.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+                        <div key={order.id} className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm space-y-4">
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden shrink-0">

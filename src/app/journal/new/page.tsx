@@ -55,16 +55,18 @@ export default function NewJournalPage() {
         setPosting(true)
 
         try {
-            const imageUrls: string[] = []
-
-            for (const file of images) {
+            // Upload in parallel
+            const uploadPromises = images.map(async (file) => {
                 const formData = new FormData()
                 formData.append('file', file)
                 formData.append('type', 'IMAGE')
                 const upRes = await fetch('/api/media/upload', { method: 'POST', body: formData })
+                if (!upRes.ok) throw new Error('Upload failed')
                 const upData = await upRes.json()
-                if (upData.path) imageUrls.push(upData.path)
-            }
+                return upData.path as string
+            })
+
+            const imageUrls = await Promise.all(uploadPromises)
 
             const res = await fetch('/api/journal', {
                 method: 'POST',
@@ -87,11 +89,11 @@ export default function NewJournalPage() {
     }
 
     return (
-        <div className="min-h-dvh flex flex-col relative bg-[#fdfcfb] text-slate-800 pb-20">
-            {/* Background Polish */}
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-orange-100/20 via-transparent to-transparent pointer-events-none" />
+        <div className="min-h-dvh flex flex-col relative overflow-x-hidden bg-orange-50/30 text-[#2c2416] pb-20">
+            {/* Background */}
+            <div className="fixed inset-0 bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-emerald-50/10 pointer-events-none" />
 
-            <header className="relative z-10 p-6 flex items-center max-w-4xl mx-auto w-full">
+            <header className="relative z-10 px-6 py-3 md:py-4 flex items-center max-w-4xl mx-auto w-full">
                 <button
                     onClick={() => router.back()}
                     className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-slate-600 border border-slate-50 active:scale-95 transition-transform"
@@ -153,61 +155,47 @@ export default function NewJournalPage() {
                                     </div>
                                 </div>
 
-                                {isMilestone && (
-                                    <div className="flex-1 flex gap-2">
-                                        <div className="relative flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm group hover:border-orange-200 transition-colors">
-                                            <Calendar className="w-4 h-4 text-orange-500 pointer-events-none" />
-                                            <span className="font-bold text-slate-600 text-sm pointer-events-none flex-1 text-center">
-                                                {postDate.split('T')[0]}
-                                            </span>
-                                            <input
-                                                type="date"
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                                value={postDate.split('T')[0]}
-                                                onChange={e => e.target.value && setPostDate(`${e.target.value}T${postDate.split('T')[1]}`)}
-                                                onClick={(e) => {
-                                                    try { (e.target as HTMLInputElement).showPicker(); } catch { }
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="relative flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm group hover:border-orange-200 transition-colors">
-                                            <span className="font-bold text-slate-600 text-sm pointer-events-none">
-                                                {postDate.split('T')[1]}
-                                            </span>
-                                            <input
-                                                type="time"
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                                                value={postDate.split('T')[1]}
-                                                onChange={e => e.target.value && setPostDate(`${postDate.split('T')[0]}T${e.target.value}`)}
-                                                onClick={(e) => {
-                                                    try { (e.target as HTMLInputElement).showPicker(); } catch { }
-                                                }}
-                                            />
-                                        </div>
+                                <div className="flex-1 flex gap-2 min-w-[240px]">
+                                    <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
+                                        <Calendar className="w-4 h-4 text-orange-400" />
+                                        <input
+                                            type="date"
+                                            className="w-full bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
+                                            value={postDate.split('T')[0]}
+                                            onChange={e => e.target.value && setPostDate(`${e.target.value}T${postDate.split('T')[1]}`)}
+                                        />
                                     </div>
-                                )}
+                                    <div className="flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
+                                        <input
+                                            type="time"
+                                            className="w-full min-w-[80px] bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
+                                            value={postDate.split('T')[1]}
+                                            onChange={e => e.target.value && setPostDate(`${postDate.split('T')[0]}T${e.target.value}`)}
+                                        />
+                                    </div>
+                                </div>
                             </div>
+                        </div>
 
-                            <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
-                                <button
-                                    type="submit"
-                                    disabled={posting || (!text && images.length === 0)}
-                                    className="flex-1 h-14 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    {posting ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Publish</span>}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => router.back()}
-                                    className="sm:w-32 h-14 bg-white border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 transition-all"
-                                >
-                                    {t('button.cancel')}
-                                </button>
-                            </div>
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-slate-100">
+                            <button
+                                type="submit"
+                                disabled={posting || (!text && images.length === 0)}
+                                className="flex-1 h-14 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                {posting ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Publish</span>}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => router.back()}
+                                className="sm:w-32 h-14 bg-white border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 transition-all"
+                            >
+                                {t('button.cancel')}
+                            </button>
                         </div>
                     </form>
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     )
 }

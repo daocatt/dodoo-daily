@@ -50,7 +50,7 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
 
     if (yearGroups.length === 0) {
         return (
-            <div className="text-center py-20 px-10 bg-white/40 rounded-[2.5rem] border-2 border-dashed border-white flex flex-col items-center gap-6 max-w-lg mx-auto">
+            <div className="text-center py-20 px-10 bg-white/40 rounded-xl border-2 border-dashed border-white flex flex-col items-center gap-6 max-w-lg mx-auto">
                 <Star className="w-16 h-16 text-slate-200" />
                 <p className="text-slate-400 font-bold">No milestones recorded yet.</p>
             </div>
@@ -76,12 +76,11 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                             const globalIndex = sortedMilestones.findIndex(m => m.id === entry.id)
                             const isLeft = globalIndex % 2 === 0
 
-                            // Robust image parsing
                             let entryImages: string[] = []
                             try {
                                 if (Array.isArray(entry.imageUrls)) {
                                     entryImages = entry.imageUrls
-                                } else if (entry.imageUrls) {
+                                } else if (entry.imageUrls && typeof entry.imageUrls === 'string' && entry.imageUrls.trim().startsWith('[')) {
                                     entryImages = JSON.parse(entry.imageUrls)
                                 } else if (entry.imageUrl) {
                                     entryImages = [entry.imageUrl]
@@ -106,7 +105,7 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                                     {/* Content Card */}
                                     <div className={`w-full md:w-[45%] ${isLeft ? 'md:pl-12' : 'md:pr-12'}`}>
                                         <div
-                                            className="bg-white p-5 rounded-3xl shadow-xl shadow-orange-900/5 hover:shadow-2xl transition-all border border-orange-50 group hover:-translate-y-1 cursor-pointer"
+                                            className="bg-white p-5 rounded-xl shadow-xl shadow-orange-900/5 hover:shadow-2xl transition-all border border-orange-50 group hover:-translate-y-1 cursor-pointer"
                                             onClick={() => onEntryClick?.(entry.id)}
                                         >
                                             <div className="flex gap-4 items-start">

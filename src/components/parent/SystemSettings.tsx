@@ -48,7 +48,7 @@ export default function SystemSettings() {
     return (
         <div className="max-w-4xl mx-auto space-y-12 py-12">
             <div className="text-center space-y-4 mb-12">
-                <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner">
+                <div className="w-20 h-20 bg-rose-50 rounded-xl flex items-center justify-center mx-auto shadow-inner">
                     <Cpu className="w-10 h-10 text-rose-500" />
                 </div>
                 <h2 className="text-4xl font-black text-slate-800 tracking-tight">System Control Center</h2>
@@ -57,7 +57,7 @@ export default function SystemSettings() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* System Availability */}
-                <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 flex flex-col justify-between">
+                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 flex flex-col justify-between">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="p-4 bg-amber-50 rounded-2xl">
@@ -77,7 +77,7 @@ export default function SystemSettings() {
 
                     <button
                         onClick={() => setShowConfirm(true)}
-                        className={`w-full py-5 rounded-[2rem] font-black text-lg transition-all shadow-xl active:scale-[0.98] mt-8 ${isClosed
+                        className={`w-full py-5 rounded-xl font-black text-lg transition-all shadow-xl active:scale-[0.98] mt-8 ${isClosed
                                 ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200'
                                 : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-200'
                             }`}
@@ -87,7 +87,7 @@ export default function SystemSettings() {
                 </div>
 
                 {/* System Maintenance */}
-                <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 opacity-60 pointer-events-none grayscale">
+                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 opacity-60 pointer-events-none grayscale">
                     <div className="space-y-4">
                         <div className="p-4 bg-slate-50 rounded-2xl w-fit">
                             <RotateCcw className="w-8 h-8 text-slate-400" />
@@ -95,7 +95,7 @@ export default function SystemSettings() {
                         <h3 className="text-2xl font-black text-slate-800">Hard Reboot</h3>
                         <p className="text-slate-500 text-sm leading-relaxed font-medium"> Clear system cache and restart all background services. This will reconnect all active users.</p>
                     </div>
-                    <button className="w-full py-5 rounded-[2rem] bg-slate-200 text-slate-500 font-black text-lg shadow-sm">
+                    <button className="w-full py-5 rounded-xl bg-slate-200 text-slate-500 font-black text-lg shadow-sm">
                         Perform Reboot
                     </button>
                 </div>
@@ -109,9 +109,9 @@ export default function SystemSettings() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl p-10 border border-slate-100"
+                            className="bg-white w-full max-w-md rounded-xl shadow-2xl p-10 border border-slate-100"
                         >
-                            <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center mb-8 mx-auto ${isClosed ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                            <div className={`w-20 h-20 rounded-lg flex items-center justify-center mb-8 mx-auto ${isClosed ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
                                 <ShieldAlert className="w-10 h-10" />
                             </div>
                             <h3 className="text-3xl font-black text-center text-slate-800 mb-4 uppercase tracking-tight">
@@ -125,13 +125,13 @@ export default function SystemSettings() {
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={handleToggleSystem}
-                                    className={`w-full py-5 text-white rounded-[1.5rem] font-black text-lg transition-all shadow-xl active:scale-95 ${isClosed ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'}`}
+                                    className={`w-full py-5 text-white rounded-lg font-black text-lg transition-all shadow-xl active:scale-95 ${isClosed ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'}`}
                                 >
                                     Confirm Action
                                 </button>
                                 <button
                                     onClick={() => setShowConfirm(false)}
-                                    className="w-full py-5 bg-slate-50 text-slate-400 rounded-[1.5rem] font-bold hover:bg-slate-100 transition-all"
+                                    className="w-full py-5 bg-slate-50 text-slate-400 rounded-lg font-bold hover:bg-slate-100 transition-all"
                                 >
                                     Nevermind
                                 </button>

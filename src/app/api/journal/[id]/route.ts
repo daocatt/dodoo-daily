@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -44,25 +44,46 @@ export async function GET(
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
         const body = await req.json()
         const { text, imageUrls, isMilestone, milestoneDate } = body
 
-        const updatedEntry = await db.update(journal)
+        await db.update(journal)
             .set({
                 text,
-                imageUrls,
+                imageUrl: imageUrls && imageUrls.length > 0 ? imageUrls[0] : null,
+                imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,
                 isMilestone,
                 milestoneDate: milestoneDate ? new Date(milestoneDate) : null,
                 updatedAt: new Date()
             })
             .where(eq(journal.id, id))
-            .returning()
 
-        return NextResponse.json(updatedEntry[0])
+        // After update, re-fetch with join to return the full author info
+        const entry = await db.select({
+            id: journal.id,
+            authorId: journal.authorId,
+            authorRole: journal.authorRole,
+            authorAvatar: users.avatarUrl,
+            authorName: users.name,
+            text: journal.text,
+            imageUrl: journal.imageUrl,
+            imageUrls: journal.imageUrls,
+            voiceUrl: journal.voiceUrl,
+            isMilestone: journal.isMilestone,
+            milestoneDate: journal.milestoneDate,
+            createdAt: journal.createdAt,
+            updatedAt: journal.updatedAt
+        })
+            .from(journal)
+            .leftJoin(users, eq(journal.authorId, users.id))
+            .where(eq(journal.id, id))
+            .get()
+
+        return NextResponse.json(entry)
     } catch (error) {
         console.error('Failed to update journal entry:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

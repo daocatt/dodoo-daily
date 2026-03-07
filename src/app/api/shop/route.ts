@@ -13,16 +13,13 @@ async function isParent() {
 export async function GET() {
     try {
         const items = await db.select().from(shopItem).orderBy(desc(shopItem.createdAt))
-        // Filter out inactive items for non-parents? Maybe not, usually parents want to see all.
-        // Let's keep it simple for now and return all, let the UI decide.
 
-        // If no items, let's seed some defaults for better demo experience
         if (items.length === 0) {
             const defaults = [
-                { name: 'Delicious Ice Cream', costCoins: 10, iconUrl: '🍦', stock: -1, isActive: true },
-                { name: 'New LEGO Set', costCoins: 500, iconUrl: '🧱', stock: -1, isActive: true },
-                { name: 'Gaming Zone (1 Hour)', costCoins: 50, iconUrl: '🎮', stock: -1, isActive: true },
-                { name: 'Bedtime Story+', costCoins: 5, iconUrl: '📖', stock: -1, isActive: true },
+                { name: '冰淇淋', costCoins: 10, iconUrl: '/upload/images/defaults/ice_cream.png', stock: -1, deliveryDays: 1, isActive: true, description: '美味的草莓香草双拼冰淇淋' },
+                { name: '乐高积木', costCoins: 500, iconUrl: '/upload/images/defaults/lego.png', stock: 10, deliveryDays: 3, isActive: true, description: '一套充满创意的乐高拼搭套装' },
+                { name: '游戏时间1小时', costCoins: 50, iconUrl: '/upload/images/defaults/game_time.png', stock: -1, deliveryDays: 1, isActive: true, description: '尽情享受1小时的电子游戏时间' },
+                { name: '任意玩具1个', costCoins: 100, iconUrl: '/upload/images/defaults/toy.png', stock: 5, deliveryDays: 7, isActive: true, description: '挑选一个自己喜欢的玩具（价值50元以内）' },
             ]
 
             for (const item of defaults) {
@@ -45,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json()
-        const { name, description, costCoins, iconUrl, stock, isActive } = body
+        const { name, description, costCoins, iconUrl, stock, deliveryDays, isActive } = body
 
         if (!name || costCoins === undefined) {
             return NextResponse.json({ error: 'Name and cost are required' }, { status: 400 })
@@ -55,8 +52,9 @@ export async function POST(req: NextRequest) {
             name,
             description: description || null,
             costCoins: parseInt(costCoins),
-            iconUrl: iconUrl || '🎁',
-            stock: stock !== undefined ? parseInt(stock) : -1,
+            iconUrl: iconUrl || null,
+            stock: stock !== undefined ? parseInt(stock) : 1,
+            deliveryDays: deliveryDays !== undefined ? parseInt(deliveryDays) : 1,
             isActive: isActive !== undefined ? !!isActive : true
         }).returning()
 
@@ -72,7 +70,7 @@ export async function PATCH(req: NextRequest) {
 
     try {
         const body = await req.json()
-        const { id, name, description, costCoins, iconUrl, stock, isActive } = body
+        const { id, name, description, costCoins, iconUrl, stock, deliveryDays, isActive } = body
 
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
@@ -82,6 +80,7 @@ export async function PATCH(req: NextRequest) {
         if (costCoins !== undefined) updateData.costCoins = parseInt(costCoins)
         if (iconUrl !== undefined) updateData.iconUrl = iconUrl
         if (stock !== undefined) updateData.stock = parseInt(stock)
+        if (deliveryDays !== undefined) updateData.deliveryDays = parseInt(deliveryDays)
         if (isActive !== undefined) updateData.isActive = !!isActive
         updateData.updatedAt = new Date()
 

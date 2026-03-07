@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   experimental: {
-    allowedDevOrigins: ['localhost:3000', '127.0.0.1:3000', 'localhost:3001', '127.0.0.1:3001'],
     serverActions: {
       allowedOrigins: [
         'http://localhost:3000', 'http://127.0.0.1:3000', 'localhost:3000', '127.0.0.1:3000',

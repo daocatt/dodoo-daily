@@ -88,15 +88,21 @@ export default function JournalPage() {
 
 
     const milestoneEntries = entries.filter(e => e.isMilestone)
-
+    const regularEntries = entries.filter(e => !e.isMilestone)
     const renderEntry = (entry: JournalEntry) => {
         const isChild = entry.authorRole === 'CHILD'
 
-        // Robust image parsing
         let entryImages: string[] = []
         try {
             if (entry.imageUrls) {
-                entryImages = JSON.parse(entry.imageUrls)
+                if (typeof entry.imageUrls === 'string' && entry.imageUrls.trim().startsWith('[')) {
+                    const parsed = JSON.parse(entry.imageUrls)
+                    entryImages = Array.isArray(parsed) ? parsed : (entry.imageUrl ? [entry.imageUrl] : [])
+                } else if (Array.isArray(entry.imageUrls)) {
+                    entryImages = entry.imageUrls
+                } else if (entry.imageUrl) {
+                    entryImages = [entry.imageUrl]
+                }
             } else if (entry.imageUrl) {
                 entryImages = [entry.imageUrl]
             }
@@ -136,18 +142,6 @@ export default function JournalPage() {
                                     </span>
                                 </div>
                             </div>
-
-                            {entry.isMilestone && (
-                                <div className="flex flex-col items-end gap-1">
-                                    <div className="px-2 py-0.5 bg-orange-100 text-orange-600 text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
-                                        <MilestoneIcon className="w-3 h-3" />
-                                        {t('parent.milestone')}
-                                    </div>
-                                    <span className="text-[8px] font-bold text-orange-400">
-                                        {formatDate(entry.milestoneDate || entry.createdAt)}
-                                    </span>
-                                </div>
-                            )}
 
                             {/* Edit Action */}
                             <button
@@ -196,36 +190,37 @@ export default function JournalPage() {
             {/* Background */}
             <div className="absolute inset-0 bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-emerald-50/10 pointer-events-none" />
 
-            {/* Top Bar Navigation */}
-            <header className="relative z-10 flex items-center justify-between p-6 w-full max-w-[1200px] mx-auto">
-                <div className="flex items-center gap-6">
-                    <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-orange-600 border border-white hover:bg-orange-50 transition-colors">
-                        <ChevronLeft className="w-6 h-6" />
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 text-white">
-                            <BookOpen className="w-6 h-6" />
-                        </div>
-                        <span className="font-black text-3xl tracking-tight text-slate-800">
-                            {t('journal.title')}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Mobile New Post (shown only on small screens) */}
-                <Link
-                    href="/journal/new"
-                    className="md:hidden bg-orange-600 text-white w-12 h-12 rounded-2xl shadow-xl shadow-orange-200 flex items-center justify-center"
-                >
-                    <PlusCircle className="w-6 h-6" />
-                </Link>
-            </header>
-
             {/* Main Content Area */}
-            <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pb-24 overflow-y-auto hide-scrollbar items-start">
+            <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-4 md:pt-8 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
 
-                {/* Left Sidebar (Tabs & Actions) */}
-                <aside className="w-full md:w-[280px] flex flex-col gap-6 md:sticky md:top-6 flex-shrink-0 z-20">
+                {/* Left Sidebar (Title, Tabs & Actions) */}
+                <aside className="w-full md:w-[280px] flex flex-col gap-6 md:sticky md:top-8 flex-shrink-0 z-20">
+
+                    {/* Embedded Top Navigation */}
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4">
+                            <Link href="/" className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-orange-600 border border-white hover:bg-orange-50 transition-colors">
+                                <ChevronLeft className="w-6 h-6" />
+                            </Link>
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 text-white flex-shrink-0">
+                                    <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
+                                </div>
+                                <span className="font-black text-2xl md:text-3xl tracking-tight text-slate-800">
+                                    {t('journal.title')}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Mobile New Post (shown only on small screens) */}
+                        <Link
+                            href="/journal/new"
+                            className="md:hidden bg-orange-600 text-white w-12 h-12 flex-shrink-0 rounded-2xl shadow-xl shadow-orange-200 flex items-center justify-center"
+                        >
+                            <PlusCircle className="w-6 h-6" />
+                        </Link>
+                    </div>
+
                     {/* Desktop New Post */}
                     <Link
                         href="/journal/new"
@@ -259,14 +254,14 @@ export default function JournalPage() {
                         <div className="flex flex-col gap-6 w-full">
                             {loading && entries.length === 0 ? (
                                 <div className="text-center font-bold text-orange-400 py-20 animate-pulse">{t('journal.loading')}</div>
-                            ) : entries.length === 0 ? (
+                            ) : regularEntries.length === 0 && !hasMore ? (
                                 <div className="text-center py-20 px-10 bg-white/40 rounded-[2.5rem] border-2 border-dashed border-white flex flex-col items-center gap-6">
                                     <Layers className="w-16 h-16 text-slate-300" />
                                     <p className="text-slate-500 font-bold">{t('journal.empty')}</p>
                                 </div>
                             ) : (
                                 <>
-                                    {entries.map(entry => renderEntry(entry))}
+                                    {regularEntries.map(entry => renderEntry(entry))}
 
                                     {hasMore && (
                                         <button

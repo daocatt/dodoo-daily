@@ -91,7 +91,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                 <div className="bg-white p-8 md:p-12 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
                     <div className="flex flex-col items-center gap-6">
                         <div className="relative">
-                            <div className="w-48 h-48 rounded-[3rem] bg-slate-50 border-8 border-white shadow-2xl overflow-hidden flex items-center justify-center">
+                            <div className="w-48 h-48 rounded-xl bg-slate-50 border-8 border-white shadow-2xl overflow-hidden flex items-center justify-center">
                                 {uploading ? (
                                     <Loader2 className="w-12 h-12 animate-spin text-purple-400" />
                                 ) : (
@@ -102,7 +102,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                                     />
                                 )}
                             </div>
-                            <label className="absolute -bottom-4 -right-4 p-5 bg-purple-600 text-white rounded-[1.5rem] shadow-xl cursor-pointer hover:bg-purple-700 transition-all hover:scale-110 active:scale-95 border-4 border-white">
+                            <label className="absolute -bottom-4 -right-4 p-5 bg-purple-600 text-white rounded-lg shadow-xl cursor-pointer hover:bg-purple-700 transition-all hover:scale-110 active:scale-95 border-4 border-white">
                                 <Camera className="w-7 h-7" />
                                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                             </label>
@@ -118,7 +118,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('gallery.form.titleLabel')}</label>
                             <input
                                 type="text"
-                                className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-3xl focus:ring-4 focus:ring-purple-100 transition-all outline-none text-xl font-bold text-slate-700"
+                                className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-purple-100 transition-all outline-none text-xl font-bold text-slate-700"
                                 placeholder="Your Display Name"
                                 value={name}
                                 onChange={e => { setName(e.target.value); setError(''); setMessage(''); }}
@@ -130,7 +130,7 @@ export default function ProfileManagement({ user }: { user: any }) {
 
                         <button
                             onClick={handleSave}
-                            className="w-full bg-slate-900 hover:bg-black text-white font-black py-5 rounded-[2rem] transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] text-lg"
+                            className="w-full bg-slate-900 hover:bg-black text-white font-black py-5 rounded-xl transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] text-lg"
                         >
                             <Save className="w-6 h-6" />
                             {t('button.save')} Account Changes
@@ -156,7 +156,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                             <input
                                 type="password"
                                 maxLength={4}
-                                className="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-3xl focus:ring-4 focus:ring-indigo-100 transition-all outline-none text-4xl font-black tracking-[1em] text-center"
+                                className="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-indigo-100 transition-all outline-none text-4xl font-black tracking-[1em] text-center"
                                 placeholder="••••"
                                 value={pin}
                                 onChange={e => { setPin(e.target.value); setPinError(''); setPinMessage(''); }}
@@ -168,7 +168,7 @@ export default function ProfileManagement({ user }: { user: any }) {
 
                         <button
                             onClick={handlePinUpdate}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-[2rem] transition-all shadow-xl active:scale-[0.98] text-lg"
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-xl transition-all shadow-xl active:scale-[0.98] text-lg"
                         >
                             Update Security PIN
                         </button>

@@ -235,7 +235,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
         const newVal = currentVal + (adjData.amount || 0);
 
         return (
-            <div key={child.id} className={`bg-white p-6 rounded-3xl border ${child.isArchived ? 'border-slate-200 bg-slate-50/50' : 'border-slate-100'} shadow-sm space-y-4 hover:shadow-md transition-shadow relative overflow-hidden`}>
+            <div key={child.id} className={`bg-white p-6 rounded-xl border ${child.isArchived ? 'border-slate-200 bg-slate-50/50' : 'border-slate-100'} shadow-sm space-y-4 hover:shadow-md transition-shadow relative overflow-hidden`}>
                 <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">
                         <div className="relative group overflow-hidden rounded-2xl w-16 h-16 bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
@@ -435,7 +435,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     animate={{ opacity: 1, scale: 1 }}
                     className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md overflow-y-auto"
                 >
-                    <motion.div className="bg-white p-8 md:p-10 rounded-[3rem] border-2 border-blue-50 shadow-2xl w-full max-w-2xl my-auto">
+                    <motion.div className="bg-white p-8 md:p-10 rounded-xl border-2 border-blue-50 shadow-2xl w-full max-w-2xl my-auto">
                         <div className="flex justify-between items-center mb-8">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
@@ -459,14 +459,14 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         <div className="mt-10 flex gap-4">
                             <button
                                 onClick={() => handleSave(editingChild || newChild)}
-                                className="flex-1 bg-blue-600 text-white rounded-[1.5rem] font-black py-4 text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                className="flex-1 bg-blue-600 text-white rounded-lg font-black py-4 text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                             >
                                 <Save className="w-5 h-5" />
                                 {editingChild ? t('button.save') : t('button.create')}
                             </button>
                             <button
                                 onClick={() => { setShowAdd(false); setEditingChild(null); }}
-                                className="px-10 bg-slate-100 text-slate-500 rounded-[1.5rem] font-bold hover:bg-slate-200 transition-all text-lg"
+                                className="px-10 bg-slate-100 text-slate-500 rounded-lg font-bold hover:bg-slate-200 transition-all text-lg"
                             >
                                 {t('button.cancel')}
                             </button>
@@ -477,7 +477,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {activeChildren.length === 0 && !showAdd && (
-                    <div className="flex flex-col items-center justify-center py-20 text-center gap-6 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-100">
+                    <div className="flex flex-col items-center justify-center py-20 text-center gap-6 bg-slate-50 rounded-xl border-2 border-dashed border-slate-100">
                         <Users className="w-16 h-16 text-slate-200" />
                         <p className="text-slate-400 font-bold">{t('parent.noChildren')}</p>
                     </div>
@@ -502,7 +502,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+                        className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
                     >
                         <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div className="flex items-center gap-3">
@@ -515,7 +515,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         </div>
                         <div className="flex-1 overflow-y-auto p-8 space-y-4">
                             {logs.map((log, i) => (
-                                <div key={i} className="flex items-center justify-between p-5 bg-slate-50 rounded-[2rem] border border-slate-100 relative overflow-hidden group hover:border-blue-200 transition-all">
+                                <div key={i} className="flex items-center justify-between p-5 bg-slate-50 rounded-xl border border-slate-100 relative overflow-hidden group hover:border-blue-200 transition-all">
                                     <div className="flex items-center gap-4">
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${log.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600'}`}>
                                             {log.amount > 0 ? '+' : ''}{log.amount}
@@ -544,7 +544,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 border border-slate-100"
+                            className="bg-white w-full max-w-md rounded-xl shadow-2xl p-8 border border-slate-100"
                         >
                             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto ${confirmModal.type === 'delete' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'}`}>
                                 <AlertTriangle className="w-8 h-8" />
