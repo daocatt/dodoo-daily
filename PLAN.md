@@ -35,3 +35,19 @@ Create a daily tool for Children's daily tasks.
   - **Star System (Reward & Penalty)**: Gold star = Task compelte. Purple star = Art reward. Hollow/Gray shape (Square/Triangle) = Anger penalty.
   - **Currency System**: 1:10 ratio with RMB. Earned by selling art.
   - **Shop System**: Spend currency on actual rewards (Toys, LEGO, gaming time, ice cream) or use it to clear emotion penalties.
+- **Admin & Management**:
+  - **Parent Console**: Comprehensive dashboard for managing family members, shop inventory, and orders.
+  - **Data Integrity**: Manual stat adjustments for each child with a full audit log of all currency/star changes.
+  - **Privacy & Security**: PIN-based access control for all roles, allowing shared devices with privacy for multi-child households.
+  - **Customization**: Support for custom user avatars and role-specific profile settings.
+
+## Database Lifecycle & Migration
+
+To ensure high stability and avoid data loss in production, we use Drizzle Kit's migration system:
+
+1. **Local Schema Changes**: Modify `src/lib/schema.ts`.
+2. **Generate Migration**: Run `npm run db:generate`. This creates human-readable SQL files in `src/lib/drizzle`.
+3. **Apply Update**:
+   - **Local Dev**: Use `npm run db:migrate` or `npm run db:push` for fast iteration.
+   - **Production/Docker**: On startup, `start.sh` automatically runs `migrate.js` to reconcile the SQLite database.
+4. **Tracking**: Avoid manual DB edits; all field changes are tracked in version-controlled SQL files.

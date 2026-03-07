@@ -30,6 +30,9 @@ RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/migrate.js ./
+COPY --from=builder /app/start.sh ./
+COPY --from=builder /app/src/lib/drizzle ./drizzle
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
@@ -43,6 +46,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Ensure the database and uploads directory exist and are writable
 RUN mkdir -p database uploads/images uploads/voices
 RUN chown -R nextjs:nodejs database uploads
+RUN chmod +x start.sh
 
 USER nextjs
 
@@ -52,4 +56,4 @@ ENV PORT 3000
 # set hostname to localhost
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["./start.sh"]

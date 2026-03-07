@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Lock, User, Loader2, ArrowLeft, CheckSquare } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
-import AnimatedSky from '@/components/AnimatedSky'
+import NatureBackground from '@/components/NatureBackground'
 
 type AuthUser = {
     id: string
@@ -73,8 +73,8 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="h-dvh flex items-center justify-center relative overflow-hidden text-[#2c2416]">
-            <AnimatedSky />
+        <div className="h-dvh flex items-center justify-center relative overflow-hidden text-[#4a3728]">
+            <NatureBackground />
 
             <div className="relative z-10 w-full max-w-4xl p-6">
                 <AnimatePresence mode="wait">
@@ -86,7 +86,7 @@ export default function LoginPage() {
                             exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
                             className="flex flex-col items-center"
                         >
-                            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-12 drop-shadow-lg tracking-tight">
+                            <h1 className="text-3xl md:text-5xl font-extrabold text-[#4a3728] mb-12 drop-shadow-sm tracking-tight">
                                 {t('login.title')}
                             </h1>
 
@@ -105,26 +105,27 @@ export default function LoginPage() {
                                             initial={{ opacity: 0, y: 50 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: i * 0.1, type: 'spring' }}
-                                            whileHover={{ scale: 1.05, y: -10 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            className="group flex flex-col items-center gap-4"
+                                            whileTap={{ scale: 0.98 }}
+                                            className="group flex flex-col items-center gap-6"
                                         >
-                                            <div className={`w-36 h-36 md:w-48 md:h-48 rounded-[2.5rem] bg-white/20 backdrop-blur-xl border-4 ${u.role === 'PARENT' ? 'border-[#a18cd1]/80' : 'border-[#4facfe]/80'} shadow-xl flex items-center justify-center overflow-hidden transition-all group-hover:bg-white/40 group-hover:shadow-2xl relative`}>
-                                                <div className={`absolute top-3 left-3 px-3 py-1 text-xs font-bold rounded-full text-white ${u.role === 'PARENT' ? 'bg-purple-500/80' : 'bg-blue-500/80'}`}>
+                                            <div className={`w-40 h-40 md:w-56 md:h-56 rounded-2xl bg-[#4a3728]/5 backdrop-blur-md border-2 ${u.role === 'PARENT' ? 'border-[#43aa8b]' : 'border-[#277da1]'} shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-[#4a3728]/10 group-hover:shadow-2xl relative`}>
+                                                <div className={`absolute top-4 left-4 px-3 py-1 text-[10px] md:text-xs font-bold rounded-full text-white z-20 ${u.role === 'PARENT' ? 'bg-[#43aa8b]/90' : 'bg-[#277da1]/90'}`}>
                                                     {u.role === 'PARENT' ? t('login.parent') : t('login.child')}
                                                 </div>
                                                 {u.avatarUrl ? (
                                                     <img
                                                         src={`${u.avatarUrl}?v=4`}
                                                         alt={u.name}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-125 select-none"
                                                         onError={(e) => { e.currentTarget.src = "/dog.svg"; }}
                                                     />
                                                 ) : (
-                                                    <User className={`w-16 h-16 md:w-20 md:h-20 ${u.role === 'PARENT' ? 'text-purple-100' : 'text-blue-100'} drop-shadow-sm group-hover:scale-110 transition-transform`} />
+                                                    <User className={`w-16 h-16 md:w-20 md:h-20 text-white/80 drop-shadow-sm transition-transform duration-500 ease-out group-hover:scale-125`} />
                                                 )}
+                                                {/* Subtle inner shadow effect on hover */}
+                                                <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.2)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                             </div>
-                                            <span className="text-xl md:text-3xl font-bold text-white drop-shadow-md tracking-wide bg-black/20 px-6 py-2 rounded-full backdrop-blur-sm">
+                                            <span className="text-xl md:text-3xl font-bold text-white drop-shadow-md tracking-wide bg-[#4a3728]/40 px-6 py-2 rounded-xl backdrop-blur-md group-hover:bg-[#4a3728]/60 transition-colors">
                                                 {u.name}
                                             </span>
                                         </motion.button>
@@ -142,14 +143,14 @@ export default function LoginPage() {
                         >
                             <button
                                 onClick={() => setSelectedUser(null)}
-                                className="flex items-center gap-2 text-white/80 hover:text-white mb-6 font-medium transition-colors bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm mx-auto"
+                                className="flex items-center gap-2 text-[#4a3728] hover:text-[#1a241a] mb-6 font-bold transition-all bg-white/60 px-5 py-2 rounded-xl backdrop-blur-sm mx-auto shadow-sm border border-[#4a3728]/10"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 {t('login.back')}
                             </button>
 
-                            <form onSubmit={handleLogin} className="bg-white/80 backdrop-blur-2xl p-8 md:p-10 rounded-[3rem] shadow-2xl border border-white flex flex-col items-center">
-                                <div className={`w-24 h-24 rounded-3xl overflow-hidden bg-gradient-to-br ${selectedUser.role === 'PARENT' ? 'from-purple-400 to-indigo-400' : 'from-blue-400 to-cyan-400'} shadow-inner flex items-center justify-center mb-6`}>
+                            <form onSubmit={handleLogin} className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-2xl shadow-xl border border-white flex flex-col items-center">
+                                <div className={`w-24 h-24 rounded-xl overflow-hidden bg-[#ebf3eb] shadow-inner flex items-center justify-center mb-6`}>
                                     {selectedUser.avatarUrl ? (
                                         <img
                                             src={`${selectedUser.avatarUrl}?v=4`}
@@ -196,10 +197,10 @@ export default function LoginPage() {
                                 )}
 
                                 <label className="flex items-center gap-3 w-full mb-8 cursor-pointer group">
-                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${rememberMe ? 'bg-blue-500 border-blue-500' : 'border-slate-300 bg-white group-hover:border-blue-400'}`}>
+                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${rememberMe ? 'bg-[#4a5a4a] border-[#4a5a4a]' : 'border-[#d1dcd1] bg-white group-hover:border-[#4a5a4a]'}`}>
                                         {rememberMe && <CheckSquare className="w-4 h-4 text-white" />}
                                     </div>
-                                    <span className="font-bold text-slate-600 select-none">{t('login.rememberMe')}</span>
+                                    <span className="font-bold text-[#4a5a4a] select-none">{t('login.rememberMe')}</span>
                                     <input
                                         type="checkbox"
                                         checked={rememberMe}
@@ -211,7 +212,7 @@ export default function LoginPage() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-2xl font-black text-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 flex justify-center items-center"
+                                    className="w-full py-4 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-xl font-bold text-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 flex justify-center items-center"
                                 >
                                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('login.loginButton')}
                                 </button>
@@ -220,6 +221,6 @@ export default function LoginPage() {
                     )}
                 </AnimatePresence>
             </div>
-        </div>
+        </div >
     )
 }

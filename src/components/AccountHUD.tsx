@@ -63,7 +63,7 @@ export default function AccountHUD() {
                 animate={{ opacity: 1, y: 0 }}
                 className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-2xl px-4 flex justify-center"
             >
-                <div className="bg-white/40 backdrop-blur-xl border border-white/50 shadow-lg px-4 py-2 rounded-full flex items-center justify-between pointer-events-auto min-w-[300px]">
+                <div className="bg-white/60 backdrop-blur-xl border border-[#4a3728]/10 shadow-md px-4 py-2 rounded-2xl flex items-center justify-between pointer-events-auto min-w-[300px]">
                     <div className="flex items-center gap-5">
                         {/* App Logo / User Avatar */}
                         <Link href="/">
@@ -85,38 +85,38 @@ export default function AccountHUD() {
                                 <div className="bg-purple-500 p-1.5 rounded-full shadow-inner border border-purple-400">
                                     <ShieldCheck className="w-4 h-4 text-white" />
                                 </div>
-                                <span className="font-bold text-purple-700">{t('hud.parentMode')}</span>
+                                <span className="font-bold text-[#4a3728]">{t('hud.parentMode')}</span>
                             </div>
                         ) : (
                             <>
                                 {/* Currency */}
                                 <div className="flex items-center gap-1.5" title={t('hud.coins')}>
-                                    <div className="bg-amber-400 p-1.5 rounded-full shadow-inner border border-amber-300">
+                                    <div className="bg-[#f8961e] p-1.5 rounded-lg shadow-inner border border-white/20">
                                         <Coins className="w-4 h-4 text-white" />
                                     </div>
-                                    <span className="font-black text-amber-700">{stats.currency}</span>
+                                    <span className="font-bold text-[#4a3728]">{stats.currency}</span>
                                 </div>
 
-                                <div className="w-px h-6 bg-white/50 hidden sm:block" />
+                                <div className="w-px h-6 bg-[#4a3728]/10 hidden sm:block" />
 
                                 {/* Gold Stars */}
                                 <div className="flex items-center gap-1.5 hidden sm:flex" title={t('hud.goldStars')}>
-                                    <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-sm" />
-                                    <span className="font-bold text-[#6b5c45]">{stats.goldStars}</span>
+                                    <Star className="w-5 h-5 text-[#f9c74f] fill-[#f9c74f] drop-shadow-sm" />
+                                    <span className="font-bold text-[#4a3728]">{stats.goldStars}</span>
                                 </div>
 
                                 {/* Purple Stars */}
                                 <div className="flex items-center gap-1.5 hidden sm:flex" title={t('hud.purpleStars')}>
-                                    <Zap className="w-5 h-5 text-purple-500 fill-purple-400 drop-shadow-sm" />
-                                    <span className="font-bold text-[#6b5c45]">{stats.purpleStars}</span>
+                                    <Zap className="w-5 h-5 text-[#277da1] fill-[#277da1] drop-shadow-sm" />
+                                    <span className="font-bold text-[#4a3728]">{stats.purpleStars}</span>
                                 </div>
 
-                                <div className="w-px h-6 bg-white/50 hidden sm:block" />
+                                <div className="w-px h-6 bg-[#4a3728]/10 hidden sm:block" />
 
                                 {/* Anger Penalties */}
                                 <div className="flex items-center gap-1.5" title={t('hud.penalties')}>
-                                    <CircleDashed className="w-5 h-5 text-slate-500 fill-slate-200 drop-shadow-sm" />
-                                    <span className="font-bold text-slate-600">{stats.angerPenalties}</span>
+                                    <CircleDashed className="w-5 h-5 text-[#907a67] drop-shadow-sm" />
+                                    <span className="font-bold text-[#907a67]">{stats.angerPenalties}</span>
                                 </div>
                             </>
                         )}
@@ -131,6 +131,6 @@ export default function AccountHUD() {
                     </button>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence >
     )
 }

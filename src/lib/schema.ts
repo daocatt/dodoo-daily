@@ -11,6 +11,8 @@ export const users = sqliteTable("Users", {
     pin: text("pin"), // Optional simple PIN for role switching
     role: text("role", { enum: ["PARENT", "CHILD"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
+    isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
+    isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
@@ -21,6 +23,16 @@ export const accountStats = sqliteTable("AccountStats", {
     angerPenalties: integer("angerPenalties").default(0).notNull(),
     currency: integer("currency").default(0).notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const accountStatsLog = sqliteTable("AccountStatsLog", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    type: text("type", { enum: ["CURRENCY", "GOLD_STAR", "PURPLE_STAR", "ANGER_PENALTY"] }).notNull(),
+    amount: integer("amount").notNull(), // Change amount (+/-)
+    balance: integer("balance").notNull(), // Resulting balance
+    reason: text("reason").notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
 export const guest = sqliteTable("Guest", {
@@ -119,10 +131,13 @@ export const journal = sqliteTable("Journal", {
 export const shopItem = sqliteTable("ShopItem", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
+    description: text("description"),
     costCoins: integer("costCoins").notNull(),
     iconUrl: text("iconUrl"),
     stock: integer("stock").default(-1).notNull(),
+    isActive: integer("isActive", { mode: "boolean" }).default(true).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 export const purchase = sqliteTable("Purchase", {
@@ -130,6 +145,8 @@ export const purchase = sqliteTable("Purchase", {
     userId: text("userId").references(() => users.id), // Child who bought it
     itemId: text("itemId").notNull().references(() => shopItem.id),
     costCoins: integer("costCoins").notNull(),
-    status: text("status").default("COMPLETED").notNull(),
+    status: text("status").default("PENDING").notNull(), // PENDING, SHIPPED, COMPLETED, CANCELLED
+    remarks: text("remarks"),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });

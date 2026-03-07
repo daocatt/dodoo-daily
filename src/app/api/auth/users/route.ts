@@ -3,15 +3,27 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
 import { seed } from '@/lib/seed'
 
+import { eq, and, not } from 'drizzle-orm'
+
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
-        let allUsers = await db.select().from(users)
+        let allUsers = await db.select().from(users).where(
+            and(
+                eq(users.isArchived, false),
+                eq(users.isDeleted, false)
+            )
+        )
 
         if (allUsers.length === 0) {
             await seed()
-            allUsers = await db.select().from(users)
+            allUsers = await db.select().from(users).where(
+                and(
+                    eq(users.isArchived, false),
+                    eq(users.isDeleted, false)
+                )
+            )
         }
 
         const formatted = allUsers.map(u => ({

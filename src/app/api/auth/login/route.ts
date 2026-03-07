@@ -11,6 +11,10 @@ export async function POST(req: Request) {
 
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
+        if (user.isArchived || user.isDeleted) {
+            return NextResponse.json({ error: 'Account disabled' }, { status: 403 })
+        }
+
         if (user.pin && user.pin !== pin) {
             return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 })
         }

@@ -4,7 +4,7 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import { Languages, CheckSquare, Smile, Store, Book, Settings, Image as ImageIcon } from 'lucide-react'
 import { motion } from 'motion/react'
-import AnimatedSky from '@/components/AnimatedSky'
+import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
 
 export default function Home() {
@@ -18,33 +18,32 @@ export default function Home() {
       .then(data => setStats(data))
   }, [])
 
-  // Mock recent artworks (messy positions)
-  const recentArtworks = [
-    { id: 1, title: 'Summer Day', bg: 'bg-orange-200', rotate: -15, x: -40, y: 15, image: '/artwork1.png' },
-    { id: 2, title: 'My Pet', bg: 'bg-emerald-200', rotate: 5, x: 40, y: -25, image: '/artwork2.png' },
-    { id: 3, title: 'Dream Castle', bg: 'bg-indigo-200', rotate: 12, x: 15, y: 40, image: '/artwork1.png' },
-  ]
-
-  // Stable references for translations and locale
-  const menuItems = React.useMemo(() => [
-    { title: t('menu.tasks'), icon: CheckSquare, bg: 'bg-gradient-to-r from-blue-400 to-cyan-400', shadow: 'shadow-blue-400/50', href: '/tasks' },
-    { title: t('menu.emotions'), icon: Smile, bg: 'bg-gradient-to-r from-pink-400 to-rose-400', shadow: 'shadow-pink-400/50', href: '/emotions' },
-    { title: t('menu.gallery'), icon: ImageIcon, bg: 'bg-gradient-to-r from-purple-400 to-violet-400', shadow: 'shadow-purple-400/50', href: '/gallery' },
-    { title: t('menu.journal'), icon: Book, bg: 'bg-gradient-to-r from-emerald-400 to-teal-400', shadow: 'shadow-emerald-400/50', href: '/journal' },
-    { title: t('menu.shop'), icon: Store, bg: 'bg-gradient-to-r from-amber-400 to-orange-400', shadow: 'shadow-amber-400/50', href: '/shop' },
-  ], [t])
-
   const toggleLanguage = React.useCallback(() => {
     setLocale(locale === 'en' ? 'zh-CN' : 'en')
   }, [locale, setLocale])
 
+  // Mock recent artworks (messy positions)
+  const recentArtworks = [
+    { id: 1, title: 'Summer Day', bg: 'bg-[#ffedb3]', rotate: -15, x: -40, y: 15, image: '/artwork1.png' },
+    { id: 2, title: 'My Pet', bg: 'bg-[#d0f4de]', rotate: 5, x: 40, y: -25, image: '/artwork2.png' },
+    { id: 3, title: 'Dream Castle', bg: 'bg-[#ffcfd2]', rotate: 12, x: 15, y: 40, image: '/artwork1.png' },
+  ]
+
+  // Stable references for translations and locale
+  const menuItems = React.useMemo(() => [
+    { title: t('menu.tasks'), icon: CheckSquare, bg: 'bg-[#43aa8b]', shadow: 'shadow-emerald-900/10', href: '/tasks' },    // Bold Green
+    { title: t('menu.emotions'), icon: Smile, bg: 'bg-[#f8961e]', shadow: 'shadow-orange-900/10', href: '/emotions' },  // Vibrant Orange
+    { title: t('menu.gallery'), icon: ImageIcon, bg: 'bg-[#f9c74f]', shadow: 'shadow-yellow-900/10', href: '/gallery' }, // Sunny Yellow
+    { title: t('menu.journal'), icon: Book, bg: 'bg-[#277da1]', shadow: 'shadow-blue-900/10', href: '/journal' },      // Sky Blue
+    { title: t('menu.shop'), icon: Store, bg: 'bg-[#907a67]', shadow: 'shadow-stone-900/10', href: '/shop' },        // Wood/Brown
+  ], [t])
+
   return (
-    <div className="h-dvh flex flex-col relative overflow-hidden text-[#2c2416]">
-      {/* Animated Sky Background */}
-      <AnimatedSky />
+    <div className="h-dvh flex flex-col relative overflow-hidden text-[#4a3728]">
+      <NatureBackground />
 
       {/* Header */}
-      <header className="relative z-10 flex justify-between items-center p-4 md:p-6 md:px-12 backdrop-blur-md bg-white/20 border-b border-white/20 shrink-0">
+      <header className="relative z-10 flex justify-between items-center p-4 md:p-6 md:px-12 backdrop-blur-md bg-white/30 border-b border-[#4a3728]/5 shrink-0">
         <div className="flex items-center gap-3">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -63,9 +62,7 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          <button onClick={() => {
-            if (stats?.isParent) router.push('/parent')
-          }}
+          <button onClick={() => router.push('/settings')}
             className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/40 backdrop-blur-md hover:bg-white/60 border border-white/50 transition-colors shadow-sm text-[#2c2416] focus:outline-none"
           >
             <Settings className="w-4 h-4 md:w-5 md:h-5" />
@@ -104,7 +101,7 @@ export default function Home() {
                   damping: 20
                 }}
                 whileHover={{ scale: 1.05, zIndex: 10, rotate: 0 }}
-                className={`absolute w-44 h-60 sm:w-64 sm:h-80 md:w-80 md:h-[28rem] rounded-[2.5rem] shadow-2xl ${art.bg} overflow-hidden border-4 md:border-[10px] border-white backdrop-blur-sm cursor-pointer group`}
+                className={`absolute w-44 h-60 sm:w-64 sm:h-80 md:w-80 md:h-[28rem] rounded-2xl shadow-xl ${art.bg} overflow-hidden border-4 md:border-[10px] border-white backdrop-blur-sm cursor-pointer group`}
                 style={{
                   zIndex: recentArtworks.length - index,
                 }}
@@ -112,7 +109,7 @@ export default function Home() {
                 {art.image && <img src={art.image} alt={art.title} className="w-full h-full object-cover" />}
                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute bottom-4 left-4 right-4 text-center">
-                  <div className="inline-block text-[10px] md:text-sm font-bold text-[#2c2416] bg-white/90 px-3 py-1 rounded-full backdrop-blur-md shadow-sm">
+                  <div className="inline-block text-[10px] md:text-sm font-bold text-[#2d3a2d] bg-white/90 px-3 py-1 rounded-xl backdrop-blur-md shadow-sm">
                     {art.title}
                   </div>
                 </div>
@@ -136,23 +133,21 @@ export default function Home() {
                 damping: 30,
                 mass: 0.5
               }}
-              whileHover={{ scale: 1.02, x: -16 }}
+              whileHover={{
+                scale: 1.02,
+                x: -24,
+                transition: { duration: 0.1, ease: "easeOut" }
+              }}
               whileTap={{ scale: 0.98 }}
-              className={`group relative flex items-center gap-4 w-full p-3 md:p-4 rounded-3xl ${item.bg} text-white ${item.shadow} shadow-lg hover:shadow-2xl overflow-hidden flex-1 md:flex-initial min-h-[4rem] max-h-[6rem] transition-none`}
+              className={`group relative flex items-center gap-4 w-full p-3 md:p-4 rounded-xl ${item.bg} text-white ${item.shadow} shadow-md overflow-hidden flex-1 md:flex-initial min-h-[4rem] max-h-[6rem] transition-none`}
             >
-              {/* Hover sweep gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/40 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-out" />
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-100" />
-
-              {/* Highlight bar indicator */}
-              <div className="absolute left-0 top-0 bottom-0 w-2.5 bg-white/30 group-hover:bg-white transition-all duration-100" />
-
+              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-200" />
               <div className="relative z-10 flex items-center gap-4 w-full">
-                <div className={`w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-[1.25rem] bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner group-hover:scale-110 group-hover:bg-white/40 transition-all ml-2`}>
+                <div className={`w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shadow-inner group-hover:scale-110 group-hover:bg-white/20 transition-transform duration-100`}>
                   <item.icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-sm" />
                 </div>
                 <div className="flex flex-col items-start ml-2">
-                  <span className="text-lg md:text-2xl font-extrabold tracking-wide drop-shadow-md">{item.title}</span>
+                  <span className="text-lg md:text-xl font-bold tracking-tight drop-shadow-sm">{item.title}</span>
                 </div>
               </div>
             </motion.button>
@@ -162,7 +157,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-2 md:py-4 text-center text-[10px] md:text-xs font-medium text-white/70 drop-shadow-sm flex flex-col items-center justify-center shrink-0">
+      <footer className="relative z-10 py-2 md:py-4 text-center text-[10px] md:text-xs font-medium text-[#4a3728]/60 drop-shadow-sm flex flex-col items-center justify-center shrink-0">
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
