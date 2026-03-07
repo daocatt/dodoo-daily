@@ -1,22 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task, users } from '@/lib/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, and } from 'drizzle-orm'
+import { cookies } from 'next/headers'
 
-async function getDefaultChildId() {
-    const kids = await db.select().from(users).where(eq(users.role, 'CHILD'))
-    return kids.length > 0 ? kids[0].id : null
+async function getCurrentUser() {
+    const cookieStore = await cookies()
+    const id = cookieStore.get('dodoo_user_id')?.value
+    const role = cookieStore.get('dodoo_role')?.value
+    return { id, role }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
-        const childId = await getDefaultChildId()
-        if (!childId) return NextResponse.json([])
+        const { id, role } = await getCurrentUser()
+        if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-        const allTasks = await db.select().from(task)
-            .where(eq(task.assignedTo, childId))
-            .orderBy(desc(task.createdAt))
-        return NextResponse.json(allTasks)
+        const { searchParams } = new URL(req.url)
+        const targetUserId = searchParams.get('userId')
+
+        let query = db.select().from(task)
+
+        if (role === 'PARENT') {
+            if (targetUserId) {
+                // @ts-ignore
+                const allTasks = await query.where(eq(task.assignedTo, targetUserId)).orderBy(desc(task.createdAt))
+                return NextResponse.json(allTasks)
+            } else {
+                const allTasks = await query.orderBy(desc(task.createdAt))
+                return NextResponse.json(allTasks)
+            }
+        } else {
+            // Child only sees their own tasks
+            // @ts-ignore
+            const allTasks = await query.where(eq(task.assignedTo, id)).orderBy(desc(task.createdAt))
+            return NextResponse.json(allTasks)
+        }
     } catch (error) {
         console.error('Failed to fetch tasks:', error)
         return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 })
@@ -25,18 +44,20 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json()
-        const { title, description, rewardStars, isRepeating } = body
-
-        if (!title) {
-            return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+        const { id, role } = await getCurrentUser()
+        if (!id || role !== 'PARENT') {
+            return NextResponse.json({ error: 'Only parents can assign tasks' }, { status: 403 })
         }
 
-        const childId = await getDefaultChildId()
-        if (!childId) return NextResponse.json({ error: 'No child account found' }, { status: 404 })
+        const body = await req.json()
+        const { title, description, rewardStars, isRepeating, assignedTo } = body
+
+        if (!title || !assignedTo) {
+            return NextResponse.json({ error: 'Title and assignedTo are required' }, { status: 400 })
+        }
 
         const newTask = await db.insert(task).values({
-            assignedTo: childId,
+            assignedTo,
             title,
             description: description || null,
             rewardStars: rewardStars ? parseInt(rewardStars) : 1,

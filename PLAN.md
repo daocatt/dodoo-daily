@@ -40,6 +40,22 @@ Create a daily tool for Children's daily tasks.
   - **Data Integrity**: Manual stat adjustments for each child with a full audit log of all currency/star changes.
   - **Privacy & Security**: PIN-based access control for all roles, allowing shared devices with privacy for multi-child households.
   - **Customization**: Support for custom user avatars and role-specific profile settings.
+- **Family Member Profiles (Enhanced)**:
+  - Full editing of profiles including Name, Nickname, Gender, Date of Birth, and Avatar.
+  - Automatically calculate and display Zodiac signs based on the selected Date of Birth.
+
+## 5. High-Value Refinements & Features
+
+- **Milestone (大事记) System**:
+  - Integrated with the Journal: Option to flag important entries as "Milestones".
+  - Dedicated Timeline View: A vertical chronological line (latest to earliest) showcasing legacy moments.
+  - Media-Rich: Support for thumbnails in the timeline.
+  - Interactive Lightbox: Click thumbnails to view full-size images with left/right navigation for multi-image entries.
+- **Enhanced Journal Media**:
+  - Increase image capacity per entry to up to 20 photos.
+  - Seamless gallery switching within the Lighthouse/Lightbox view.
+  - Journal feed renamed to "Daily Post" for a more active, social feel.
+  - Timeline view showcases author avatars and high-impact visual layouts.
 
 ## Database Lifecycle & Migration
 

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task, accountStats } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
+import { cookies } from 'next/headers'
+
+async function checkParent() {
+    const cookieStore = await cookies()
+    return cookieStore.get('dodoo_role')?.value === 'PARENT'
+}
 
 export async function PUT(
     req: NextRequest,
@@ -12,7 +18,6 @@ export async function PUT(
         const body = await req.json()
         const { completed } = body
 
-        // Fetch task to get reward
         const t = await db.select().from(task).where(eq(task.id, id))
         if (t.length === 0) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
 
@@ -23,9 +28,7 @@ export async function PUT(
             return NextResponse.json({ error: 'No user assigned to this task' }, { status: 400 })
         }
 
-        // Only give reward if completing it
         if (completed && !currentTask.completed) {
-            // Give reward
             let stats = await db.select().from(accountStats).where(eq(accountStats.userId, assignedTo))
             if (stats.length === 0) {
                 await db.insert(accountStats).values({
@@ -38,7 +41,6 @@ export async function PUT(
                     .where(eq(accountStats.userId, assignedTo))
             }
         } else if (!completed && currentTask.completed) {
-            // Deduct reward
             let stats = await db.select().from(accountStats).where(eq(accountStats.userId, assignedTo))
             if (stats.length > 0) {
                 await db.update(accountStats)
@@ -55,6 +57,20 @@ export async function PUT(
         return NextResponse.json(updatedTask[0])
     } catch (error) {
         console.error('Failed to update task:', error)
-        return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    }
+}
+
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        if (!await checkParent()) return NextResponse.json({ error: 'Auth failed' }, { status: 403 })
+        const { id } = await params
+        await db.delete(task).where(eq(task.id, id))
+        return NextResponse.json({ success: true })
+    } catch (e) {
+        return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

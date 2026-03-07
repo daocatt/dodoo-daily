@@ -2,25 +2,26 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2 } from 'lucide-react'
+import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2, CheckSquare, ShoppingBag as BagIcon, Camera, Lock, UserCircle, Power, Network, LayoutDashboard } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
 
 import ChildManagement from '@/components/parent/ChildManagement'
 import ShopManagement from '@/components/parent/ShopManagement'
 import OrderManagement from '@/components/parent/OrderManagement'
-import SettingsManagement from '@/components/parent/SettingsManagement'
+import ProfileManagement from '@/components/parent/SettingsManagement'
+import TaskManagement from '@/components/parent/TaskManagement'
+import SystemSettings from '@/components/parent/SystemSettings'
 
 export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'SETTINGS' | 'ORDERS'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'TASKS' | 'SYSTEM'>('HOME')
     const [user, setUser] = useState<any>(null)
+    const [preSelectedChild, setPreSelectedChild] = useState<string | null>(null)
 
     useEffect(() => {
-        // Simple client-side role check (Middleware handles the heavy lifting)
-        // But we check stats to confirm role
         fetch('/api/stats')
             .then(res => {
                 if (!res.ok) {
@@ -32,7 +33,7 @@ export default function ParentDashboard() {
             .then(data => {
                 if (data && data.isParent) {
                     setLoading(false)
-                    setUser(data.user)
+                    setUser({ name: data.name || 'Parent', avatarUrl: data.avatarUrl })
                 } else {
                     router.push('/')
                 }
@@ -50,66 +51,117 @@ export default function ParentDashboard() {
 
     const renderView = () => {
         switch (view) {
-            case 'FAMILY': return <ChildManagement />
+            case 'FAMILY': return <ChildManagement onAssignTask={(id) => {
+                setPreSelectedChild(id);
+                setView('TASKS');
+            }} />
             case 'REWARDS': return <ShopManagement />
             case 'ORDERS': return <OrderManagement />
-            case 'SETTINGS': return <SettingsManagement user={user} />
+            case 'PROFILE': return <ProfileManagement user={user} />
+            case 'SYSTEM': return <SystemSettings />
+            case 'TASKS': return <TaskManagement preSelectId={preSelectedChild} />
             default: return (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
 
+                    {/* Task Management */}
                     <button
-                        onClick={() => setView('REWARDS')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 hover:shadow-lg hover:border-yellow-200 transition-all text-left"
+                        onClick={() => setView('TASKS')}
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
                     >
-                        <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center mb-2">
-                            <Star className="w-6 h-6 text-yellow-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <CheckSquare className="w-7 h-7 text-emerald-500" />
                         </div>
-                        <h2 className="text-xl font-bold">{t('parent.rewards')}</h2>
-                        <p className="text-slate-500 text-sm">{t('parent.rewardsDesc')}</p>
-                        <div className="mt-auto pt-4 text-yellow-600 font-bold flex items-center gap-1 group">
-                            Manage Rewards <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('menu.tasks')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">Assign missions and track progress.</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-emerald-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
                         </div>
                     </button>
 
-                    <button
-                        onClick={() => setView('ORDERS')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 hover:shadow-lg hover:border-orange-200 transition-all text-left"
-                    >
-                        <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mb-2">
-                            <ShoppingBag className="w-6 h-6 text-orange-500" />
-                        </div>
-                        <h2 className="text-xl font-bold">Orders</h2>
-                        <p className="text-slate-500 text-sm">Manage shop orders & status.</p>
-                        <div className="mt-auto pt-4 text-orange-600 font-bold flex items-center gap-1 group">
-                            Check Orders <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                    </button>
-
+                    {/* Family Members */}
                     <button
                         onClick={() => setView('FAMILY')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 hover:shadow-lg hover:border-blue-200 transition-all text-left"
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-blue-200 transition-all text-left group"
                     >
-                        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-2">
-                            <Users className="w-6 h-6 text-blue-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Users className="w-7 h-7 text-blue-500" />
                         </div>
-                        <h2 className="text-xl font-bold">{t('parent.family')}</h2>
-                        <p className="text-slate-500 text-sm">{t('parent.familyDesc')}</p>
-                        <div className="mt-auto pt-4 text-blue-600 font-bold flex items-center gap-1 group">
-                            Manage Family <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.family')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.familyDesc')}</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-blue-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
                         </div>
                     </button>
 
+                    {/* Shop Orders */}
                     <button
-                        onClick={() => setView('SETTINGS')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 hover:shadow-lg hover:border-purple-200 transition-all text-left"
+                        onClick={() => setView('ORDERS')}
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-orange-200 transition-all text-left group"
                     >
-                        <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-2">
-                            <Settings className="w-6 h-6 text-purple-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <BagIcon className="w-7 h-7 text-orange-500" />
                         </div>
-                        <h2 className="text-xl font-bold">{t('parent.settings')}</h2>
-                        <p className="text-slate-500 text-sm">{t('parent.settingsDesc')}</p>
-                        <div className="mt-auto pt-4 text-purple-600 font-bold flex items-center gap-1 group">
-                            Security Settings <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.orders')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">Process wishes and shipments.</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-orange-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
+                    {/* Manual Rewards */}
+                    <button
+                        onClick={() => setView('REWARDS')}
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-yellow-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-yellow-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Star className="w-7 h-7 text-yellow-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.rewards')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.rewardsDesc')}</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-yellow-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
+                    {/* Account Settings (Merged Profile & PIN) */}
+                    <button
+                        onClick={() => setView('PROFILE')}
+                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-purple-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <UserCircle className="w-7 h-7 text-purple-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.profile')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.profileDesc')}</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-purple-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
+                    {/* System Control */}
+                    <button
+                        onClick={() => setView('SYSTEM')}
+                        className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-rose-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Power className="w-7 h-7 text-rose-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">System Control</h2>
+                            <p className="text-slate-500 text-sm mt-1">Manage system status and exit.</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-rose-600 font-bold flex items-center gap-1">
+                            {t('button.settings')} <ArrowLeft className="w-4 h-4 rotate-180" />
                         </div>
                     </button>
 
@@ -119,29 +171,47 @@ export default function ParentDashboard() {
     }
 
     return (
-        <div className="min-h-dvh flex flex-col relative overflow-hidden bg-slate-50 text-slate-800 pb-20">
-            <header className="px-6 py-4 bg-white shadow-sm flex items-center gap-4 sticky top-0 z-40">
-                {view === 'HOME' ? (
-                    <Link href="/" className="p-2 rounded-full hover:bg-slate-100 transition-colors">
-                        <ArrowLeft className="w-6 h-6 text-slate-500" />
-                    </Link>
-                ) : (
-                    <button onClick={() => setView('HOME')} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
-                        <ArrowLeft className="w-6 h-6 text-slate-500" />
-                    </button>
-                )}
-                <div>
-                    <h1 className="text-xl font-bold">{view === 'HOME' ? t('parent.title') : view}</h1>
-                    {view !== 'HOME' && <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Parent Console</p>}
+        <div className="min-h-dvh flex flex-col relative overflow-hidden bg-slate-50 text-slate-800 pb-20 font-sans">
+            <header className="px-6 py-5 bg-white shadow-sm flex items-center justify-between sticky top-0 z-40 border-b border-slate-100">
+                <div className="flex items-center gap-4">
+                    {view === 'HOME' ? (
+                        <Link href="/" className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors border border-slate-100">
+                            <ArrowLeft className="w-5 h-5 text-slate-500" />
+                        </Link>
+                    ) : (
+                        <button onClick={() => setView('HOME')} className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors border border-slate-100">
+                            <ArrowLeft className="w-5 h-5 text-slate-500" />
+                        </button>
+                    )}
+                    <div>
+                        <h1 className="text-xl font-black text-slate-900 leading-tight">
+                            {view === 'HOME' ? t('parent.title') :
+                                view === 'PROFILE' ? t('parent.profile') :
+                                    view === 'FAMILY' ? t('parent.family') :
+                                        view === 'TASKS' ? t('menu.tasks') :
+                                            view === 'SYSTEM' ? 'System Settings' :
+                                                view}
+                        </h1>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Control Panel</p>
+                    </div>
                 </div>
+
+                {view === 'HOME' && user && (
+                    <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                        <div className="text-right">
+                            <div className="text-xs font-black text-slate-800">{user.name}</div>
+                            <div className="text-[8px] font-black text-purple-500 uppercase tracking-tighter">Parent Mode</div>
+                        </div>
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                            <img src={user.avatarUrl || "/dog.svg"} alt="Me" className="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                )}
             </header>
 
-            <main className="flex-1 p-6 md:p-12 max-w-6xl mx-auto w-full">
+            <main className="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full">
                 {renderView()}
             </main>
         </div>
     )
 }
-
-import { ShoppingBag } from 'lucide-react'
-

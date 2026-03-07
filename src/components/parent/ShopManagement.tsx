@@ -77,17 +77,17 @@ export default function ShopManagement() {
 
             {showAdd && (
                 <div className="bg-white p-6 rounded-3xl border border-yellow-100 shadow-sm space-y-4">
-                    <h3 className="font-bold">Add New Item</h3>
+                    <h3 className="font-bold">{t('parent.addItem')}</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <input placeholder="Name" className="px-4 py-2 border rounded-xl" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} />
-                        <input placeholder="Icon (Emoji)" className="px-4 py-2 border rounded-xl" value={newItem.iconUrl} onChange={e => setNewItem({ ...newItem, iconUrl: e.target.value })} />
-                        <input type="number" placeholder="Cost (Coins)" className="px-4 py-2 border rounded-xl" value={newItem.costCoins} onChange={e => setNewItem({ ...newItem, costCoins: parseInt(e.target.value) })} />
+                        <input placeholder={t('gallery.form.titleLabel')} className="px-4 py-2 border rounded-xl" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} />
+                        <input placeholder={t('shop.form.emojiLabel')} className="px-4 py-2 border rounded-xl" value={newItem.iconUrl} onChange={e => setNewItem({ ...newItem, iconUrl: e.target.value })} />
+                        <input type="number" placeholder={t('shop.form.costLabel')} className="px-4 py-2 border rounded-xl" value={newItem.costCoins} onChange={e => setNewItem({ ...newItem, costCoins: parseInt(e.target.value) })} />
                         <input type="number" placeholder="Stock (-1 for infinite)" className="px-4 py-2 border rounded-xl" value={newItem.stock} onChange={e => setNewItem({ ...newItem, stock: parseInt(e.target.value) })} />
-                        <input placeholder="Description" className="px-4 py-2 border rounded-xl lg:col-span-2" value={newItem.description} onChange={e => setNewItem({ ...newItem, description: e.target.value })} />
+                        <input placeholder={t('emotions.form.reasonLabel')} className="px-4 py-2 border rounded-xl lg:col-span-2" value={newItem.description} onChange={e => setNewItem({ ...newItem, description: e.target.value })} />
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={handleAdd} className="bg-yellow-500 text-white rounded-xl font-bold px-6 py-2">Create</button>
-                        <button onClick={() => setShowAdd(false)} className="px-6 border rounded-xl">Cancel</button>
+                        <button onClick={handleAdd} className="bg-yellow-500 text-white rounded-xl font-bold px-6 py-2">{t('button.create')}</button>
+                        <button onClick={() => setShowAdd(false)} className="px-6 border rounded-xl">{t('button.cancel')}</button>
                     </div>
                 </div>
             )}

@@ -1,78 +1,105 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Plus, Archive, Trash2, Edit2, Check, X, Camera, BarChart3, History } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Tag, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
+import { getZodiac } from '@/lib/utils'
 
 interface Child {
     id: string
     name: string
+    nickname?: string
+    gender?: 'MALE' | 'FEMALE' | 'OTHER'
+    birthDate?: Date | string
+    zodiac?: string
     avatarUrl: string | null
     isArchived: boolean
     isDeleted: boolean
     stats?: {
-        currency: number
         goldStars: number
         purpleStars: number
         angerPenalties: number
+        currency: number
     }
 }
 
-export default function ChildManagement() {
+export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: string) => void }) {
     const { t } = useI18n()
     const [children, setChildren] = useState<Child[]>([])
     const [loading, setLoading] = useState(true)
-    const [editing, setEditing] = useState<string | null>(null)
     const [showAdd, setShowAdd] = useState(false)
-    const [newChild, setNewChild] = useState({ name: '', pin: '' })
+    const [editingChild, setEditingChild] = useState<Partial<Child> | null>(null)
+    const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', gender: 'OTHER' })
     const [showLogs, setShowLogs] = useState<string | null>(null)
     const [logs, setLogs] = useState<any[]>([])
     const [adjusting, setAdjusting] = useState<string | null>(null)
     const [adjData, setAdjData] = useState({ type: 'CURRENCY', amount: 0, reason: '' })
+    const [showArchived, setShowArchived] = useState(false)
+    const [confirmModal, setConfirmModal] = useState<{ type: 'delete' | 'archive', childId: string } | null>(null)
 
     const fetchChildren = async () => {
         try {
             const res = await fetch('/api/parent/children')
             const data = await res.json()
             setChildren(data)
-        } catch (e) { console.error(e) }
-        finally { setLoading(false) }
+        } catch (e) {
+            console.error('Failed to fetch children:', e)
+        } finally {
+            setLoading(false)
+        }
     }
 
-    useEffect(() => { fetchChildren() }, [])
+    useEffect(() => {
+        fetchChildren()
+    }, [])
 
-    const handleAdd = async () => {
-        if (!newChild.name) return
+    const handleSave = async (data: Partial<Child>) => {
+        if (!data.name) return
         try {
+            const method = data.id ? 'PATCH' : 'POST'
             await fetch('/api/parent/children', {
-                method: 'POST',
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newChild)
+                body: JSON.stringify(data)
             })
-            setNewChild({ name: '', pin: '' })
+            setNewChild({ name: '', nickname: '', gender: 'OTHER' })
+            setEditingChild(null)
             setShowAdd(false)
             fetchChildren()
         } catch (e) { console.error(e) }
     }
 
-    const handleUpdate = async (id: string, data: any) => {
+    const handleAvatarUpload = async (id: string, file: File) => {
+        const formData = new FormData()
+        formData.append('file', file)
         try {
-            await fetch('/api/parent/children', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, ...data })
+            const res = await fetch('/api/upload/avatar', {
+                method: 'POST',
+                body: formData
             })
-            fetchChildren()
+            const data = await res.json()
+            if (res.ok) {
+                await fetch('/api/parent/children', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, avatarUrl: data.avatarUrl })
+                })
+                fetchChildren()
+            }
         } catch (e) { console.error(e) }
     }
 
     const handleAdjust = async () => {
-        if (!adjusting || !adjData.reason) return
+        if (!adjusting) return
         try {
             await fetch('/api/parent/stats', {
-                method: 'PATCH',
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: adjusting, ...adjData })
+                body: JSON.stringify({
+                    userId: adjusting,
+                    ...adjData
+                })
             })
             setAdjusting(null)
             setAdjData({ type: 'CURRENCY', amount: 0, reason: '' })
@@ -82,207 +109,471 @@ export default function ChildManagement() {
 
     const fetchLogs = async (userId: string) => {
         try {
-            const res = await fetch(`/api/parent/stats?userId=${userId}`)
+            const res = await fetch(`/api/parent/logs?userId=${userId}`)
             const data = await res.json()
             setLogs(data)
             setShowLogs(userId)
         } catch (e) { console.error(e) }
     }
 
-    const handleAvatarUpload = async (userId: string, file: File) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('userId', userId)
+    const handleArchive = async (id: string) => {
         try {
-            await fetch('/api/upload/avatar', {
-                method: 'POST',
-                body: formData
+            await fetch('/api/parent/children', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, isArchived: true })
             })
+            setConfirmModal(null)
             fetchChildren()
         } catch (e) { console.error(e) }
     }
 
-    if (loading) return <div>Loading...</div>
+    const handleDelete = async (id: string) => {
+        try {
+            await fetch('/api/parent/children', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            })
+            setConfirmModal(null)
+            fetchChildren()
+        } catch (e) { console.error(e) }
+    }
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">{t('parent.family')}</h2>
-                <button
-                    onClick={() => setShowAdd(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-                >
-                    <Plus className="w-5 h-5" />
-                    {t('button.add')}
-                </button>
-            </div>
+    if (loading) return <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('common.loading')}</div>
 
-            {showAdd && (
-                <div className="bg-white p-6 rounded-3xl border border-blue-100 shadow-sm space-y-4">
-                    <h3 className="font-bold">Add Child</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    const activeChildren = children.filter(c => !c.isDeleted && !c.isArchived)
+    const renderMemberForm = (member: Partial<Child>, onChange: (val: Partial<Child>) => void) => {
+        return (
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('gallery.form.titleLabel')}</label>
                         <input
-                            type="text"
-                            placeholder="Name"
-                            className="px-4 py-2 border rounded-xl"
-                            value={newChild.name}
-                            onChange={e => setNewChild({ ...newChild, name: e.target.value })}
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            placeholder="Full Name"
+                            value={member.name || ''}
+                            onChange={e => onChange({ ...member, name: e.target.value })}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')}</label>
                         <input
-                            type="text"
-                            placeholder="PIN (Optional, min 4)"
-                            className="px-4 py-2 border rounded-xl"
-                            value={newChild.pin}
-                            onChange={e => setNewChild({ ...newChild, pin: e.target.value })}
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            placeholder="Nickname (Optional)"
+                            value={member.nickname || ''}
+                            onChange={e => onChange({ ...member, nickname: e.target.value })}
                         />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.gender')}</label>
                         <div className="flex gap-2">
-                            <button onClick={handleAdd} className="flex-1 bg-blue-500 text-white rounded-xl font-bold py-2">Create</button>
-                            <button onClick={() => setShowAdd(false)} className="px-4 border rounded-xl">Cancel</button>
+                            {(['MALE', 'FEMALE', 'OTHER'] as const).map(g => (
+                                <button
+                                    key={g}
+                                    type="button"
+                                    onClick={() => onChange({ ...member, gender: g })}
+                                    className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                >
+                                    {t(`gender.${g.toLowerCase()}` as any)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.memberPin')}</label>
+                        <input
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            placeholder="4 Digit PIN"
+                            maxLength={4}
+                            value={(member as any).pin || ''}
+                            onChange={e => onChange({ ...member, pin: e.target.value } as any)}
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
+                        <input
+                            type="date"
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            value={member.birthDate ? new Date(member.birthDate).toISOString().split('T')[0] : ''}
+                            onChange={e => {
+                                const date = e.target.value ? new Date(e.target.value) : undefined
+                                onChange({
+                                    ...member,
+                                    birthDate: date,
+                                    zodiac: date ? getZodiac(date) : undefined
+                                })
+                            }}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.zodiac')}</label>
+                        <div className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner">
+                            {member.zodiac || '---'}
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
+        )
+    }
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {children.filter(c => !c.isDeleted).map(child => (
-                    <div key={child.id} className={`bg-white p-6 rounded-3xl border ${child.isArchived ? 'border-slate-200 bg-slate-50' : 'border-slate-100'} shadow-sm space-y-4`}>
-                        <div className="flex items-start gap-4">
-                            <div className="relative group overflow-hidden rounded-2xl w-16 h-16 bg-slate-100 flex items-center justify-center shrink-0">
-                                {child.avatarUrl ? (
-                                    <img src={child.avatarUrl} alt={child.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-2xl font-bold text-slate-400 capitalize">{child.name[0]}</span>
-                                )}
-                                <label className="absolute inset-x-0 bottom-0 bg-black/50 text-white text-[10px] flex items-center justify-center py-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <Camera className="w-3 h-3 mr-1" />
-                                    Change
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={e => e.target.files?.[0] && handleAvatarUpload(child.id, e.target.files[0])}
-                                    />
-                                </label>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="text-lg font-bold truncate">{child.name}</h3>
-                                    {child.isArchived && <span className="bg-slate-200 text-slate-600 text-[10px] px-2 py-0.5 rounded-full uppercase">Archived</span>}
+    const archivedChildren = children.filter(c => !c.isDeleted && c.isArchived)
+
+    const renderChildCard = (child: Child) => {
+        const currentVal = child.stats ? (
+            adjData.type === 'CURRENCY' ? child.stats.currency :
+                adjData.type === 'GOLD_STAR' ? child.stats.goldStars :
+                    adjData.type === 'PURPLE_STAR' ? child.stats.purpleStars :
+                        child.stats.angerPenalties
+        ) : 0;
+        const newVal = currentVal + (adjData.amount || 0);
+
+        return (
+            <div key={child.id} className={`bg-white p-6 rounded-3xl border ${child.isArchived ? 'border-slate-200 bg-slate-50/50' : 'border-slate-100'} shadow-sm space-y-4 hover:shadow-md transition-shadow relative overflow-hidden`}>
+                <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4">
+                        <div className="relative group overflow-hidden rounded-2xl w-16 h-16 bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
+                            {child.avatarUrl ? (
+                                <img src={`${child.avatarUrl}?v=4`} alt={child.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full bg-blue-50 flex items-center justify-center">
+                                    <span className="text-2xl font-bold text-blue-300 capitalize">{child.nickname?.[0] || child.name[0]}</span>
                                 </div>
-                                <div className="mt-1 flex gap-3 text-xs text-slate-500">
-                                    <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" /> Coins: {child.stats?.currency || 0}</span>
-                                    <span className="flex items-center gap-1">Stars: {child.stats?.goldStars || 0}G / {child.stats?.purpleStars || 0}P</span>
+                            )}
+                            <label className="absolute inset-0 bg-black/40 text-white text-[10px] flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="w-4 h-4 mb-0.5" />
+                                {t('button.save')}
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={e => {
+                                        if (e.target.files?.[0]) {
+                                            handleAvatarUpload(child.id, e.target.files[0])
+                                        }
+                                    }}
+                                />
+                            </label>
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                {child.name}
+                                {child.nickname && <span className="text-xs text-slate-400 font-medium">({child.nickname})</span>}
+                                {child.isArchived && <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">{t('parent.archived')}</span>}
+                            </h3>
+                            {child.zodiac && (
+                                <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                                    {child.zodiac}
                                 </div>
+                            )}
+                            <div className="flex gap-4 mt-2">
+                                <span className="text-xs font-bold text-yellow-600 flex items-center gap-1">
+                                    <History className="w-3 h-3" /> {child.stats?.currency || 0}
+                                </span>
+                                <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
+                                    <Star className="w-3 h-3 fill-amber-500" /> {child.stats?.goldStars || 0}
+                                </span>
                             </div>
-                            <div className="flex gap-1 shrink-0">
+                        </div>
+                    </div>
+                    <div className="flex gap-1">
+                        {!child.isArchived && (
+                            <>
                                 <button
-                                    onClick={() => handleUpdate(child.id, { isArchived: !child.isArchived })}
-                                    className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500"
-                                    title={child.isArchived ? "Unarchive" : "Archive"}
+                                    onClick={() => setEditingChild(child)}
+                                    className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-300 hover:text-slate-600"
+                                    title="Edit Profile"
+                                >
+                                    <Tag className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setConfirmModal({ type: 'archive', childId: child.id })}
+                                    className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-300 hover:text-slate-600"
+                                    title={t('button.archive') || 'Archive'}
                                 >
                                     <Archive className="w-4 h-4" />
                                 </button>
+                        )}
                                 <button
-                                    onClick={() => handleUpdate(child.id, { isDeleted: true })}
-                                    className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-400"
-                                    title="Delete"
+                                    onClick={() => setConfirmModal({ type: 'delete', childId: child.id })}
+                                    className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-300 hover:text-red-500"
+                                    title={t('button.delete')}
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
-                        </div>
+                    </div>
 
-                        <div className="pt-2 flex flex-wrap gap-2">
-                            <button
-                                onClick={() => setAdjusting(adjusting === child.id ? null : child.id)}
-                                className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors"
-                            >
-                                Manual Adjust
-                            </button>
-                            <button
-                                onClick={() => fetchLogs(child.id)}
-                                className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-semibold hover:bg-indigo-100 transition-colors flex items-center gap-1.5"
-                            >
-                                <History className="w-4 h-4" /> Logs
-                            </button>
-                        </div>
+                    <div className="pt-2 flex flex-wrap gap-2 border-t border-slate-50 pt-4">
+                        <button
+                            onClick={() => onAssignTask?.(child.id)}
+                            className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors flex items-center gap-2"
+                        >
+                            <CheckSquare className="w-4 h-4" />
+                            {t('parent.assignTask')}
+                        </button>
+                        <button
+                            onClick={() => setAdjusting(adjusting === child.id ? null : child.id)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${adjusting === child.id ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                        >
+                            <BarChart3 className="w-4 h-4" />
+                            {t('parent.manualAdjust')}
+                        </button>
+                        <button
+                            onClick={() => fetchLogs(child.id)}
+                            className="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors flex items-center gap-2"
+                        >
+                            <History className="w-4 h-4" />
+                            {t('common.history')}
+                        </button>
+                    </div>
 
-                        {adjusting === child.id && (
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-                                <div className="grid grid-cols-2 gap-3">
+                    {adjusting === child.id && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-slate-50 p-5 rounded-2xl border border-blue-100 space-y-4 shadow-inner"
+                        >
+                            <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                                <span>{t('parent.adjustStats')}</span>
+                                <span className="text-blue-500">{t('parent.previewChanges')}</span>
+                            </div>
+
+                            <div className="flex gap-4 items-center">
+                                <div className="flex-1 space-y-3">
                                     <select
-                                        className="px-3 py-1.5 border rounded-lg text-sm"
+                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-400 outline-none appearance-none"
                                         value={adjData.type}
                                         onChange={e => setAdjData({ ...adjData, type: e.target.value })}
                                     >
-                                        <option value="CURRENCY">Currency</option>
-                                        <option value="GOLD_STAR">Gold Stars</option>
-                                        <option value="PURPLE_STAR">Purple Stars</option>
-                                        <option value="ANGER_PENALTY">Anger Penalty</option>
+                                        <option value="CURRENCY">{t('parent.currency')}</option>
+                                        <option value="GOLD_STAR">{t('parent.goldStars')}</option>
+                                        <option value="PURPLE_STAR">{t('parent.purpleStars')}</option>
+                                        <option value="ANGER_PENALTY">{t('parent.angerPenalty')}</option>
                                     </select>
-                                    <input
-                                        type="number"
-                                        placeholder="Amount (+/-)"
-                                        className="px-3 py-1.5 border rounded-lg text-sm"
-                                        onChange={e => setAdjData({ ...adjData, amount: parseInt(e.target.value) })}
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-blue-400 outline-none"
+                                            placeholder="Amount (+/-)"
+                                            value={adjData.amount || ''}
+                                            onChange={e => setAdjData({ ...adjData, amount: parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
                                 </div>
-                                <input
-                                    type="text"
-                                    placeholder="Reason (e.g., Good Behavior Bonus)"
-                                    className="w-full px-3 py-1.5 border rounded-lg text-sm"
-                                    value={adjData.reason}
-                                    onChange={e => setAdjData({ ...adjData, reason: e.target.value })}
-                                />
-                                <div className="flex gap-2">
-                                    <button onClick={handleAdjust} className="flex-1 bg-blue-500 text-white rounded-lg text-sm font-bold py-1.5">Apply</button>
-                                    <button onClick={() => setAdjusting(null)} className="px-3 border rounded-lg text-sm">Cancel</button>
+
+                                <div className="w-24 bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center justify-center shadow-sm">
+                                    <div className="text-[10px] text-slate-400 font-bold uppercase">{t('parent.result')}</div>
+                                    <div className="text-2xl font-black text-blue-600">{newVal}</div>
+                                    <div className="flex items-center gap-1 text-[8px] font-bold text-slate-300 mt-1">
+                                        <span>{currentVal}</span>
+                                        <ArrowRight className="w-2 h-2" />
+                                        <span>{newVal}</span>
+                                    </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                ))}
-            </div>
 
-            {showLogs && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/20 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-3xl shadow-xl flex flex-col">
-                        <div className="p-6 border-b flex justify-between items-center">
-                            <h3 className="text-xl font-bold flex items-center gap-2">
-                                <History className="w-6 h-6 text-indigo-500" />
-                                Activity Logs
-                            </h3>
-                            <button onClick={() => setShowLogs(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <X className="w-6 h-6 text-slate-400" />
-                            </button>
+                            <input
+                                type="text"
+                                placeholder={t('parent.reason')}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-400 outline-none"
+                                value={adjData.reason}
+                                onChange={e => setAdjData({ ...adjData, reason: e.target.value })}
+                            />
+
+                            <div className="flex gap-2">
+                                <button onClick={handleAdjust} className="flex-1 bg-blue-500 text-white rounded-xl font-bold py-3 shadow-md hover:bg-blue-600 transition-colors active:scale-[0.98]">
+                                    {t('button.apply')}
+                                </button>
+                                <button onClick={() => setAdjusting(null)} className="px-6 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">
+                                    {t('button.cancel')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
+                )
+    }
+
+                return (
+                <div className="space-y-8 pb-12">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="mb-8">
+                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">{t('parent.family')}</h2>
+                            <p className="text-sm text-slate-500 mt-1">{t('parent.familySub')}</p>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                            {logs.length === 0 ? (
-                                <p className="text-center text-slate-400 py-12">No logs found</p>
-                            ) : (
-                                logs.map(log => (
-                                    <div key={log.id} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${log.amount >= 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                            <span className="font-bold">{log.amount > 0 ? '+' : ''}{log.amount}</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-baseline">
-                                                <span className="font-semibold text-slate-700">{log.type}</span>
-                                                <span className="text-[10px] text-slate-400">{new Date(log.createdAt).toLocaleString()}</span>
-                                            </div>
-                                            <p className="text-sm text-slate-500">{log.reason}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-[10px] text-slate-400">Balance</div>
-                                            <div className="font-bold text-slate-600">{log.balance}</div>
-                                        </div>
-                                    </div>
-                                ))
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <button
+                                onClick={() => setShowAdd(true)}
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20 active:scale-95 font-bold"
+                            >
+                                <Plus className="w-5 h-5" />
+                                {t('parent.addChild')}
+                            </button>
+                            {archivedChildren.length > 0 && (
+                                <button
+                                    onClick={() => setShowArchived(!showArchived)}
+                                    className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl transition-all font-bold ${showArchived ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                                >
+                                    <Archive className="w-5 h-5" />
+                                    {showArchived ? t('parent.hideArchived') : t('parent.showArchived', { count: archivedChildren.length.toString() })}
+                                </button>
                             )}
                         </div>
                     </div>
+
+                    {(showAdd || editingChild) && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md overflow-y-auto"
+                        >
+                            <motion.div className="bg-white p-8 md:p-10 rounded-[3rem] border-2 border-blue-50 shadow-2xl w-full max-w-2xl my-auto">
+                                <div className="flex justify-between items-center mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                                            <Users className="w-6 h-6 text-blue-500" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-black text-slate-800">{editingChild ? 'Edit Member' : t('parent.addChild')}</h3>
+                                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Profile Details</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setShowAdd(false); setEditingChild(null); }} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                        <X className="w-6 h-6 text-slate-400" />
+                                    </button>
+                                </div>
+
+                                {renderMemberForm(editingChild || newChild, (val) => {
+                                    if (editingChild) setEditingChild(val)
+                                    else setNewChild(val)
+                                })}
+
+                                <div className="mt-10 flex gap-4">
+                                    <button
+                                        onClick={() => handleSave(editingChild || newChild)}
+                                        className="flex-1 bg-blue-600 text-white rounded-[1.5rem] font-black py-4 text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                    >
+                                        <Save className="w-5 h-5" />
+                                        {editingChild ? t('button.save') : t('button.create')}
+                                    </button>
+                                    <button
+                                        onClick={() => { setShowAdd(false); setEditingChild(null); }}
+                                        className="px-10 bg-slate-100 text-slate-500 rounded-[1.5rem] font-bold hover:bg-slate-200 transition-all text-lg"
+                                    >
+                                        {t('button.cancel')}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        {activeChildren.length === 0 && !showAdd && (
+                            <div className="flex flex-col items-center justify-center py-20 text-center gap-6 bg-slate-50 rounded-[2.5rem] border-2 border-dashed border-slate-100">
+                                <Users className="w-16 h-16 text-slate-200" />
+                                <p className="text-slate-400 font-bold">{t('parent.noChildren')}</p>
+                            </div>
+                        )}
+                        {activeChildren.map(child => renderChildCard(child))}
+                    </div>
+
+                    {showArchived && archivedChildren.length > 0 && (
+                        <div className="space-y-6 pt-12 border-t border-slate-200">
+                            <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                                <Archive className="w-5 h-5" />
+                                {t('parent.archivedMembers')}
+                            </h3>
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                {archivedChildren.map(child => renderChildCard(child))}
+                            </div>
+                        </div>
+                    )}
+
+                    {showLogs && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+                            >
+                                <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                    <div className="flex items-center gap-3">
+                                        <History className="w-6 h-6 text-slate-800" />
+                                        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{t('parent.balanceLogs')}</p>
+                                    </div>
+                                    <button onClick={() => setShowLogs(null)} className="p-3 hover:bg-white rounded-2xl transition-all shadow-sm">
+                                        <X className="w-6 h-6 text-slate-400" />
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-8 space-y-4">
+                                    {logs.map((log, i) => (
+                                        <div key={i} className="flex items-center justify-between p-5 bg-slate-50 rounded-[2rem] border border-slate-100 relative overflow-hidden group hover:border-blue-200 transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${log.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                    {log.amount > 0 ? '+' : ''}{log.amount}
+                                                </div>
+                                                <div>
+                                                    <div className="font-black text-slate-700">{log.reason}</div>
+                                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(log.createdAt).toLocaleString()}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs font-black text-slate-300 uppercase underline decoration-blue-100 underline-offset-4 mb-1">{log.type}</div>
+                                                <div className="text-xl font-black text-slate-800">{log.balance}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+
+                    {/* Confirmation Modals */}
+                    <AnimatePresence>
+                        {confirmModal && (
+                            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 border border-slate-100"
+                                >
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto ${confirmModal.type === 'delete' ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'}`}>
+                                        <AlertTriangle className="w-8 h-8" />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-center text-slate-800 mb-2">
+                                        {confirmModal.type === 'delete' ? t('parent.confirmDelete') : t('parent.confirmArchive')}
+                                    </h3>
+                                    <p className="text-center text-slate-500 font-medium mb-8">
+                                        {confirmModal.type === 'delete'
+                                            ? t('parent.confirmDeleteDesc')
+                                            : t('parent.confirmArchiveDesc')}
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => confirmModal.type === 'delete' ? handleDelete(confirmModal.childId) : handleArchive(confirmModal.childId)}
+                                            className={`flex-1 py-4 text-white rounded-2xl font-black transition-all shadow-lg active:scale-95 ${confirmModal.type === 'delete' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-800 hover:bg-black shadow-slate-200'}`}
+                                        >
+                                            {confirmModal.type === 'delete' ? t('button.delete') : t('button.apply')}
+                                        </button>
+                                        <button
+                                            onClick={() => setConfirmModal(null)}
+                                            className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                                        >
+                                            {t('button.cancel')}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
                 </div>
-            )}
-        </div>
-    )
+                )
 }

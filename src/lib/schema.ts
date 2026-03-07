@@ -8,9 +8,13 @@ import { text, integer, sqliteTable, real, primaryKey } from "drizzle-orm/sqlite
 export const users = sqliteTable("Users", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
+    nickname: text("nickname"),
     pin: text("pin"), // Optional simple PIN for role switching
     role: text("role", { enum: ["PARENT", "CHILD"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
+    gender: text("gender", { enum: ["MALE", "FEMALE", "OTHER"] }).default("OTHER"),
+    birthDate: integer("birthDate", { mode: "timestamp" }),
+    zodiac: text("zodiac"),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
@@ -116,12 +120,16 @@ export const order = sqliteTable("Order", {
 
 export const journal = sqliteTable("Journal", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    authorId: text("authorId").references(() => users.id), // Link to user
-    authorRole: text("authorRole").notNull(), // For easier filtering CHILD/PARENT
+    authorId: text("authorId").references(() => users.id),
+    authorRole: text("authorRole").notNull(),
     text: text("text"),
-    imageUrl: text("imageUrl"),
+    imageUrl: text("imageUrl"), // Keeping for legacy if needed, but will use imageUrls
+    imageUrls: text("imageUrls"), // JSON Array of strings
     voiceUrl: text("voiceUrl"),
+    isMilestone: integer("isMilestone", { mode: "boolean" }).default(false).notNull(),
+    milestoneDate: integer("milestoneDate", { mode: "timestamp" }),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -149,4 +157,27 @@ export const purchase = sqliteTable("Purchase", {
     remarks: text("remarks"),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+// -----------------------------------------------------------------------------
+// SYSTEM & FAMILY TREE
+// -----------------------------------------------------------------------------
+
+export const systemSettings = sqliteTable("SystemSettings", {
+    id: text("id").primaryKey().default("app_settings"),
+    isClosed: integer("isClosed", { mode: "boolean" }).default(false).notNull(),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const familyMember = sqliteTable("FamilyMember", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    nickname: text("nickname"),
+    relationship: text("relationship").notNull(),
+    parentId: text("parentId"),
+    gender: text("gender", { enum: ["MALE", "FEMALE", "OTHER"] }),
+    avatarUrl: text("avatarUrl"),
+    birthDate: integer("birthDate", { mode: "timestamp" }),
+    zodiac: text("zodiac"),
+    notes: text("notes"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });

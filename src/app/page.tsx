@@ -1,9 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Languages, CheckSquare, Smile, Store, Book, Settings, Image as ImageIcon } from 'lucide-react'
-import { motion } from 'motion/react'
+import { Languages, CheckSquare, Smile, Store, Book, Settings, Image as ImageIcon, ShieldAlert, ChevronRight, X, Maximize2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -11,162 +11,236 @@ export default function Home() {
   const router = useRouter()
   const { locale, setLocale, t } = useI18n()
   const [stats, setStats] = React.useState<any>(null)
+  const [sysSettings, setSysSettings] = React.useState<any>(null)
+  const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null)
+  const [zoomedArt, setZoomedArt] = useState<any>(null)
+
+  // Artwork Stack State with default rotations
+  const [artworks, setArtworks] = useState([
+    { id: 1, title: 'Summer Day', bg: 'bg-[#ffedb3]', defaultRotate: -15, rotate: -15, x: -40, y: 15, image: '/artwork1.png' },
+    { id: 2, title: 'My Pet', bg: 'bg-[#d0f4de]', defaultRotate: 5, rotate: 5, x: 40, y: -25, image: '/artwork2.png' },
+    { id: 3, title: 'Dream Castle', bg: 'bg-[#ffcfd2]', defaultRotate: 12, rotate: 12, x: 15, y: 40, image: '/artwork1.png' },
+  ])
 
   React.useEffect(() => {
     fetch('/api/stats')
       .then(res => res.json())
       .then(data => setStats(data))
+
+    fetch('/api/system/settings')
+      .then(res => res.json())
+      .then(data => setSysSettings(data))
   }, [])
 
   const toggleLanguage = React.useCallback(() => {
     setLocale(locale === 'en' ? 'zh-CN' : 'en')
   }, [locale, setLocale])
 
-  // Mock recent artworks (messy positions)
-  const recentArtworks = [
-    { id: 1, title: 'Summer Day', bg: 'bg-[#ffedb3]', rotate: -15, x: -40, y: 15, image: '/artwork1.png' },
-    { id: 2, title: 'My Pet', bg: 'bg-[#d0f4de]', rotate: 5, x: 40, y: -25, image: '/artwork2.png' },
-    { id: 3, title: 'Dream Castle', bg: 'bg-[#ffcfd2]', rotate: 12, x: 15, y: 40, image: '/artwork1.png' },
-  ]
+  const cycleArtwork = (clickedId: number) => {
+    const isTop = artworks[artworks.length - 1].id === clickedId
 
-  // Stable references for translations and locale
+    if (isTop) {
+      // Second click on top: Zoom in
+      setZoomedArt(artworks[artworks.length - 1])
+      return
+    }
+
+    // Move to front and set rotate to 0
+    const newArtworks = artworks.map(art => {
+      return { ...art, rotate: art.defaultRotate }
+    })
+
+    const clickedIdx = newArtworks.findIndex(a => a.id === clickedId)
+    const [item] = newArtworks.splice(clickedIdx, 1)
+
+    item.rotate = 0
+    newArtworks.push(item)
+
+    setArtworks(newArtworks)
+  }
+
   const menuItems = React.useMemo(() => [
-    { title: t('menu.tasks'), icon: CheckSquare, bg: 'bg-[#43aa8b]', shadow: 'shadow-emerald-900/10', href: '/tasks' },    // Bold Green
-    { title: t('menu.emotions'), icon: Smile, bg: 'bg-[#f8961e]', shadow: 'shadow-orange-900/10', href: '/emotions' },  // Vibrant Orange
-    { title: t('menu.gallery'), icon: ImageIcon, bg: 'bg-[#f9c74f]', shadow: 'shadow-yellow-900/10', href: '/gallery' }, // Sunny Yellow
-    { title: t('menu.journal'), icon: Book, bg: 'bg-[#277da1]', shadow: 'shadow-blue-900/10', href: '/journal' },      // Sky Blue
-    { title: t('menu.shop'), icon: Store, bg: 'bg-[#907a67]', shadow: 'shadow-stone-900/10', href: '/shop' },        // Wood/Brown
+    { title: t('menu.tasks'), icon: CheckSquare, color: 'text-[#43aa8b]', bg: 'bg-[#43aa8b]/10', href: '/tasks' },
+    { title: t('menu.emotions'), icon: Smile, color: 'text-[#f8961e]', bg: 'bg-[#f8961e]/10', href: '/emotions' },
+    { title: t('menu.gallery'), icon: ImageIcon, color: 'text-[#f9c74f]', bg: 'bg-[#f9c74f]/10', href: '/gallery' },
+    { title: t('menu.journal'), icon: Book, color: 'text-[#277da1]', bg: 'bg-[#277da1]/10', href: '/journal' },
+    { title: t('menu.shop'), icon: Store, color: 'text-[#907a67]', bg: 'bg-[#907a67]/10', href: '/shop' },
   ], [t])
+
+  // System Closed View
+  if (sysSettings?.isClosed && !stats?.isParent) {
+    return (
+      <div className="h-dvh flex flex-col items-center justify-center bg-rose-50 p-8 text-center space-y-8">
+        <NatureBackground />
+        <div className="relative z-10 w-32 h-32 bg-rose-100 rounded-[2.5rem] flex items-center justify-center shadow-inner">
+          <ShieldAlert className="w-16 h-16 text-rose-500" />
+        </div>
+        <div className="relative z-10 space-y-4">
+          <h1 className="text-4xl font-black text-rose-900">{t('system.closed')}</h1>
+          <p className="text-rose-700/60 max-w-md font-bold text-lg">{t('system.closedDesc')}</p>
+        </div>
+        <button
+          onClick={() => window.location.href = '/login'}
+          className="relative z-10 px-8 py-4 bg-rose-500 text-white rounded-2xl font-black shadow-xl shadow-rose-200"
+        >
+          {t('login.back')} / Re-login
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="h-dvh flex flex-col relative overflow-hidden text-[#4a3728]">
       <NatureBackground />
 
       {/* Header */}
-      <header className="relative z-10 flex justify-between items-center p-4 md:p-6 md:px-12 backdrop-blur-md bg-white/30 border-b border-[#4a3728]/5 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="relative z-10 flex justify-between items-center p-4 md:p-6 md:px-12 backdrop-blur-md bg-white/40 border-b border-[#4a3728]/10 shrink-0">
+        <div className="flex items-center gap-4">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/40 backdrop-blur-md flex items-center justify-center shadow-md border border-white/50 overflow-hidden"
+            className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center -ml-2"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${stats?.avatarUrl || "/dog.svg"}?v=4`}
-              alt="DoDoo Daily"
-              className={`w-full h-full object-cover ${!stats?.avatarUrl ? 'p-1.5' : ''}`}
-              onError={(e) => { e.currentTarget.src = "/dog.svg"; e.currentTarget.className = "w-full h-full object-contain p-1.5"; }}
-            />
+            <img src="/dog.svg" alt="DoDoo Logo" className="w-full h-full object-contain" />
           </motion.div>
-          <span className="font-extrabold text-xl md:text-2xl tracking-tight text-[#2c2416] drop-shadow-sm">{t('site.title')}</span>
+          <div>
+            <span className="font-black text-xl md:text-2xl tracking-tight text-[#2c2416] block leading-none">{t('site.title')}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#4a3728]/40 mt-1 block leading-none">Family & Growth</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 md:gap-4">
-          <button onClick={() => router.push('/settings')}
-            className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/40 backdrop-blur-md hover:bg-white/60 border border-white/50 transition-colors shadow-sm text-[#2c2416] focus:outline-none"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => stats?.isParent ? router.push('/parent') : router.push('/settings')}
+            className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/50 backdrop-blur-md hover:bg-white/80 border border-white/80 transition-all shadow-sm text-[#2c2416] active:scale-95"
           >
-            <Settings className="w-4 h-4 md:w-5 md:h-5" />
+            <Settings className="w-5 h-5" />
           </button>
           <button
             onClick={toggleLanguage}
-            className="flex items-center justify-center min-w-[3rem] px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/40 backdrop-blur-md hover:bg-white/60 border border-white/50 transition-colors text-xs md:text-sm font-bold text-[#2c2416] shadow-sm"
+            className="flex items-center justify-center min-w-[3.5rem] px-4 py-2 rounded-2xl bg-[#4a3728]/5 backdrop-blur-md hover:bg-[#4a3728]/10 border border-[#4a3728]/10 transition-all text-xs font-black text-[#2c2416] active:scale-95"
           >
-            <Languages className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             {locale === 'en' ? '中' : 'EN'}
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-4 p-4 md:p-8 items-center md:items-stretch overflow-hidden">
+      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-8 p-4 md:p-12 items-center md:items-stretch overflow-hidden">
 
-        {/* Left Side: Recent Artworks (Carousel / Overlapping style) */}
-        <div className="flex-1 w-full flex flex-col justify-center gap-2 items-center">
+        {/* Left Side: Display - Interaction Refined */}
+        <div className="flex-1 w-full h-full flex flex-col justify-center gap-2 items-center">
           <div className="relative h-64 sm:h-96 md:h-[32rem] w-full flex items-center justify-center perspective-2000">
-            {recentArtworks.map((art, index) => (
-              <motion.div
-                key={art.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  rotate: art.rotate,
-                  x: art.x,
-                  y: art.y,
-                }}
-                transition={{
-                  delay: index * 0.1,
-                  type: "spring",
-                  stiffness: 260,
-                  damping: 20
-                }}
-                whileHover={{ scale: 1.05, zIndex: 10, rotate: 0 }}
-                className={`absolute w-44 h-60 sm:w-64 sm:h-80 md:w-80 md:h-[28rem] rounded-2xl shadow-xl ${art.bg} overflow-hidden border-4 md:border-[10px] border-white backdrop-blur-sm cursor-pointer group`}
-                style={{
-                  zIndex: recentArtworks.length - index,
-                }}
-              >
-                {art.image && <img src={art.image} alt={art.title} className="w-full h-full object-cover" />}
-                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-4 left-4 right-4 text-center">
-                  <div className="inline-block text-[10px] md:text-sm font-bold text-[#2d3a2d] bg-white/90 px-3 py-1 rounded-xl backdrop-blur-md shadow-sm">
-                    {art.title}
+            {artworks.map((art, index) => {
+              const isTop = index === artworks.length - 1
+              return (
+                <motion.div
+                  key={art.id}
+                  layoutId={`artwork-${art.id}`}
+                  initial={false}
+                  animate={{
+                    rotate: art.rotate,
+                    x: art.x,
+                    y: art.y,
+                    zIndex: index,
+                    scale: isTop ? 1.05 : 1,
+                  }}
+                  whileHover={{
+                    y: art.y - 10,
+                    scale: isTop ? 1.08 : 1.02,
+                    rotate: isTop ? 0 : art.rotate,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => cycleArtwork(art.id)}
+                  className={`absolute w-44 h-56 sm:w-64 sm:h-80 md:w-72 md:h-96 ${art.bg} rounded-[2rem] p-4 shadow-2xl border-8 border-white overflow-hidden cursor-pointer select-none`}
+                >
+                  <div className="w-full h-full rounded-[1.5rem] bg-white/40 overflow-hidden flex items-center justify-center border border-white/20 pointer-events-none">
+                    <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  {isTop && (
+                    <div className="absolute bottom-6 right-6 p-2 bg-white/80 backdrop-blur-md rounded-xl shadow-lg text-[#4a3728]/40">
+                      <Maximize2 className="w-4 h-4" />
+                    </div>
+                  )}
+                </motion.div>
+              )
+            })}
           </div>
         </div>
 
-        {/* Right Side: Navigation Menu (Nintendo Switch Style Vertical List) */}
-        <div className="w-full md:w-[360px] flex flex-col justify-center gap-3 shrink-0 my-auto h-full max-h-[85vh]">
-          {menuItems.map((item, index) => (
-            <motion.button
-              key={item.href}
-              onClick={() => router.push(item.href)}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{
-                delay: index * 0.05,
-                type: "spring",
-                stiffness: 450,
-                damping: 30,
-                mass: 0.5
-              }}
-              whileHover={{
-                scale: 1.02,
-                x: -24,
-                transition: { duration: 0.1, ease: "easeOut" }
-              }}
-              whileTap={{ scale: 0.98 }}
-              className={`group relative flex items-center gap-4 w-full p-3 md:p-4 rounded-xl ${item.bg} text-white ${item.shadow} shadow-md overflow-hidden flex-1 md:flex-initial min-h-[4rem] max-h-[6rem] transition-none`}
-            >
-              <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-200" />
-              <div className="relative z-10 flex items-center gap-4 w-full">
-                <div className={`w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center shadow-inner group-hover:scale-110 group-hover:bg-white/20 transition-transform duration-100`}>
-                  <item.icon className="w-6 h-6 md:w-7 md:h-7 text-white drop-shadow-sm" />
+        {/* Right Side: Menu List */}
+        <div className="w-full md:w-[24rem] flex items-center justify-center md:justify-end shrink-0">
+          <div className="flex flex-col w-full space-y-2">
+            {menuItems.map((item, idx) => (
+              <motion.button
+                key={item.title}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                onMouseEnter={() => setHoveredIdx(idx)}
+                onMouseLeave={() => setHoveredIdx(null)}
+                onClick={() => router.push(item.href)}
+                className="relative group flex items-center justify-between p-4 md:p-5 transition-all hover:bg-white/50 hover:backdrop-blur-2xl hover:shadow-2xl hover:shadow-white/20 rounded-xl w-full text-left border border-transparent hover:border-white/40"
+              >
+                <div className="flex items-center gap-5 relative z-10 transition-transform group-hover:translate-x-2 duration-300">
+                  <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center shadow-inner`}>
+                    <item.icon className={`w-6 h-6 ${item.color}`} />
+                  </div>
+                  <span className="font-extrabold text-xl md:text-2xl text-[#2c2416] tracking-tight">{item.title}</span>
                 </div>
-                <div className="flex flex-col items-start ml-2">
-                  <span className="text-lg md:text-xl font-bold tracking-tight drop-shadow-sm">{item.title}</span>
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
 
+                <ChevronRight className={`w-6 h-6 text-[#4a3728]/20 transition-all duration-300 ${hoveredIdx === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`} />
+
+                {/* Border Bottom Animation */}
+                <div className="absolute bottom-0 left-6 right-6 h-[2px] bg-[#4a3728]/5 rounded-full" />
+                <motion.div
+                  className="absolute bottom-0 left-6 h-[2px] bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: hoveredIdx === idx ? 'calc(100% - 3rem)' : 0 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                />
+              </motion.button>
+            ))}
+          </div>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 py-2 md:py-4 text-center text-[10px] md:text-xs font-medium text-[#4a3728]/60 drop-shadow-sm flex flex-col items-center justify-center shrink-0">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          {t('footer.copyright', { year: new Date().getFullYear().toString() })}
-        </motion.p>
+      {/* LIGHTBOX ZOOM MODAL */}
+      <AnimatePresence>
+        {zoomedArt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setZoomedArt(null)}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 md:p-12 cursor-zoom-out"
+          >
+            <button className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-[110]">
+              <X className="w-6 h-6" />
+            </button>
+            <motion.div
+              layoutId={`artwork-${zoomedArt.id}`}
+              className={`relative max-w-full max-h-full aspect-[3/4] ${zoomedArt.bg} rounded-3xl p-4 md:p-6 shadow-2xl border-4 md:border-8 border-white overflow-hidden flex items-center justify-center`}
+              style={{
+                height: 'auto',
+                width: 'auto',
+                maxHeight: '90vh',
+                maxWidth: '90vw'
+              }}
+            >
+              <div className="w-full h-full rounded-2xl bg-white/40 overflow-hidden flex items-center justify-center border border-white/20">
+                <img src={zoomedArt.image} alt={zoomedArt.title} className="max-w-full max-h-full object-contain pointer-events-none" />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <footer className="relative z-10 p-4 md:p-6 text-center text-[#4a3728]/40 text-[10px] font-bold uppercase tracking-widest shrink-0">
+        {t('footer.copyright', { year: new Date().getFullYear().toString() })}
       </footer>
     </div>
   )
 }
-

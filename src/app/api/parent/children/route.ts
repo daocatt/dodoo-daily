@@ -17,11 +17,20 @@ export async function GET() {
         const children = await db.select({
             id: users.id,
             name: users.name,
+            nickname: users.nickname,
+            gender: users.gender,
+            birthDate: users.birthDate,
+            zodiac: users.zodiac,
             avatarUrl: users.avatarUrl,
             isArchived: users.isArchived,
             isDeleted: users.isDeleted,
             createdAt: users.createdAt,
-            stats: accountStats
+            stats: {
+                currency: accountStats.currency,
+                goldStars: accountStats.goldStars,
+                purpleStars: accountStats.purpleStars,
+                angerPenalties: accountStats.angerPenalties
+            }
         })
             .from(users)
             .leftJoin(accountStats, eq(users.id, accountStats.userId))
@@ -39,11 +48,15 @@ export async function POST(req: NextRequest) {
     if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, pin, avatarUrl } = await req.json()
+        const { name, nickname, gender, birthDate, zodiac, pin, avatarUrl } = await req.json()
         if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
 
         const [newUser] = await db.insert(users).values({
             name,
+            nickname: nickname || null,
+            gender: gender || 'OTHER',
+            birthDate: birthDate ? new Date(birthDate) : null,
+            zodiac: zodiac || null,
             pin: pin || null,
             avatarUrl: avatarUrl || null,
             role: 'CHILD'
@@ -68,11 +81,15 @@ export async function PATCH(req: NextRequest) {
     if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { id, name, pin, avatarUrl, isArchived, isDeleted } = await req.json()
+        const { id, name, nickname, gender, birthDate, zodiac, pin, avatarUrl, isArchived, isDeleted } = await req.json()
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
         const updateData: any = {}
         if (name !== undefined) updateData.name = name
+        if (nickname !== undefined) updateData.nickname = nickname
+        if (gender !== undefined) updateData.gender = gender
+        if (birthDate !== undefined) updateData.birthDate = birthDate ? new Date(birthDate) : null
+        if (zodiac !== undefined) updateData.zodiac = zodiac
         if (pin !== undefined) updateData.pin = pin
         if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
         if (isArchived !== undefined) updateData.isArchived = isArchived

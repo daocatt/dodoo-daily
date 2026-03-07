@@ -21,6 +21,10 @@ export default function SettingsPage() {
         fetch('/api/stats')
             .then(res => res.json())
             .then(data => {
+                if (data.isParent) {
+                    router.push('/parent')
+                    return
+                }
                 setUser(data)
                 setLoading(false)
             })
