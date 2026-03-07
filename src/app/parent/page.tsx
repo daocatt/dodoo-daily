@@ -68,7 +68,7 @@ export default function ParentDashboard() {
                     {/* Task Management */}
                     <button
                         onClick={() => setView('TASKS')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <CheckSquare className="w-7 h-7 text-emerald-500" />
@@ -85,7 +85,7 @@ export default function ParentDashboard() {
                     {/* Family Members */}
                     <button
                         onClick={() => setView('FAMILY')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-blue-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-blue-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <Users className="w-7 h-7 text-blue-500" />
@@ -102,7 +102,7 @@ export default function ParentDashboard() {
                     {/* Shop Orders */}
                     <button
                         onClick={() => setView('ORDERS')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-orange-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-orange-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <BagIcon className="w-7 h-7 text-orange-500" />
@@ -119,7 +119,7 @@ export default function ParentDashboard() {
                     {/* Manual Rewards */}
                     <button
                         onClick={() => setView('REWARDS')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-yellow-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-yellow-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-yellow-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <Star className="w-7 h-7 text-yellow-500" />
@@ -136,7 +136,7 @@ export default function ParentDashboard() {
                     {/* Media Management */}
                     <button
                         onClick={() => setView('MEDIA')}
-                        className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-sky-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-sky-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <ImageIcon className="w-7 h-7 text-sky-500" />
@@ -153,7 +153,7 @@ export default function ParentDashboard() {
                     {/* Account Settings (Merged Profile & PIN) */}
                     <button
                         onClick={() => setView('PROFILE')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-purple-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-purple-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <UserCircle className="w-7 h-7 text-purple-500" />
@@ -170,7 +170,7 @@ export default function ParentDashboard() {
                     {/* System Control */}
                     <button
                         onClick={() => setView('SYSTEM')}
-                        className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-rose-200 transition-all text-left group"
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-rose-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                             <Power className="w-7 h-7 text-rose-500" />

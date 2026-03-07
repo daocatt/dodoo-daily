@@ -4,19 +4,21 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: dodoo-daily
-    restart: always
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:./database/dodoo.db
+      # add any other env vars here, e.g. R2 keys
     volumes:
-      # Data persistence mapping for NAS/Local
-      - ./database:/app/database
-      - ./uploads:/app/uploads
-    # Optional: healthcheck
+      # ⚡ IMPORTANT: map these to your NAS/host paths for data persistence
+      # The database file (SQLite)
+      - ./data/database:/app/database
+      # User uploads (images, voices, avatars)
+      - ./data/uploads:/app/uploads
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/system/settings"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s

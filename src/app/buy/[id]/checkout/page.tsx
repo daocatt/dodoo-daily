@@ -45,7 +45,7 @@ export default function CheckoutPage() {
         return (
             <div className="min-h-dvh flex flex-col items-center justify-center bg-[#e0f2fe] text-[#2c2416] p-4 text-center">
                 <AnimatedSky />
-                <div className="z-10 bg-white/80 p-12 rounded-3xl shadow-2xl backdrop-blur-md">
+                <div className="z-10 bg-white/80 p-12 rounded-xl shadow-2xl backdrop-blur-md">
                     <h1 className="text-4xl font-black text-green-500 mb-4">Payment Success!</h1>
                     <p className="text-xl font-bold">Thank you for your support. (感谢您的支持)</p>
                     <p className="text-[#a89880] mt-4">Redirecting...</p>
@@ -58,7 +58,7 @@ export default function CheckoutPage() {
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416] items-center justify-center p-4">
             <AnimatedSky />
 
-            <form onSubmit={handlePurchase} className="relative z-10 w-full max-w-sm bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/50 flex flex-col gap-6">
+            <form onSubmit={handlePurchase} className="relative z-10 w-full max-w-sm bg-white/80 backdrop-blur-xl rounded-xl p-8 shadow-2xl border border-white/50 flex flex-col gap-6">
                 <div className="text-center mb-4">
                     <h1 className="text-3xl font-black mb-2">Checkout</h1>
                     <p className="text-[#a89880] text-sm tracking-wide">Leave your mark as a collector</p>

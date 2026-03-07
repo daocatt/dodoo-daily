@@ -32,23 +32,26 @@ export async function PATCH(req: NextRequest) {
     if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { isClosed } = await req.json()
+        const body = await req.json()
+        const updates: Record<string, unknown> = { updatedAt: new Date() }
+        if (typeof body.isClosed === 'boolean') updates.isClosed = body.isClosed
+        if (typeof body.needsSetup === 'boolean') updates.needsSetup = body.needsSetup
 
-        // Upsert logic
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
 
         if (existing.length > 0) {
             await db.update(systemSettings)
-                .set({ isClosed, updatedAt: new Date() })
+                .set(updates)
                 .where(eq(systemSettings.id, 'app_settings'))
         } else {
             await db.insert(systemSettings).values({
                 id: 'app_settings',
-                isClosed
+                isClosed: body.isClosed ?? false,
+                needsSetup: body.needsSetup ?? false,
             })
         }
 
-        return NextResponse.json({ success: true, isClosed })
+        return NextResponse.json({ success: true, ...updates })
     } catch (error) {
         console.error('Failed to update system settings:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

@@ -8,6 +8,17 @@ CREATE TABLE `AccountStats` (
 	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `AccountStatsLog` (
+	`id` text PRIMARY KEY NOT NULL,
+	`userId` text NOT NULL,
+	`type` text NOT NULL,
+	`amount` integer NOT NULL,
+	`balance` integer NOT NULL,
+	`reason` text NOT NULL,
+	`createdAt` integer DEFAULT (strftime('%s', 'now')),
+	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `Album` (
 	`id` text PRIMARY KEY NOT NULL,
 	`userId` text,
@@ -57,9 +68,30 @@ CREATE TABLE `Journal` (
 	`authorRole` text NOT NULL,
 	`text` text,
 	`imageUrl` text,
+	`imageUrls` text,
 	`voiceUrl` text,
+	`isMilestone` integer DEFAULT false NOT NULL,
+	`milestoneDate` integer,
 	`createdAt` integer DEFAULT (strftime('%s', 'now')),
+	`updatedAt` integer,
 	FOREIGN KEY (`authorId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `Media` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`fileName` text NOT NULL,
+	`fileType` text NOT NULL,
+	`mimeType` text,
+	`size` integer,
+	`storageProvider` text DEFAULT 'LOCAL' NOT NULL,
+	`path` text NOT NULL,
+	`key` text NOT NULL,
+	`bucket` text,
+	`userId` text,
+	`createdAt` integer DEFAULT (strftime('%s', 'now')),
+	`updatedAt` integer,
+	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `Order` (
@@ -80,8 +112,10 @@ CREATE TABLE `Purchase` (
 	`userId` text,
 	`itemId` text NOT NULL,
 	`costCoins` integer NOT NULL,
-	`status` text DEFAULT 'COMPLETED' NOT NULL,
+	`status` text DEFAULT 'PENDING' NOT NULL,
+	`remarks` text,
 	`createdAt` integer DEFAULT (strftime('%s', 'now')),
+	`updatedAt` integer,
 	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`itemId`) REFERENCES `ShopItem`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -89,10 +123,21 @@ CREATE TABLE `Purchase` (
 CREATE TABLE `ShopItem` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
+	`description` text,
 	`costCoins` integer NOT NULL,
 	`iconUrl` text,
 	`stock` integer DEFAULT -1 NOT NULL,
-	`createdAt` integer DEFAULT (strftime('%s', 'now'))
+	`deliveryDays` integer DEFAULT 1 NOT NULL,
+	`isActive` integer DEFAULT true NOT NULL,
+	`createdAt` integer DEFAULT (strftime('%s', 'now')),
+	`updatedAt` integer
+);
+--> statement-breakpoint
+CREATE TABLE `SystemSettings` (
+	`id` text PRIMARY KEY DEFAULT 'app_settings' NOT NULL,
+	`isClosed` integer DEFAULT false NOT NULL,
+	`needsSetup` integer DEFAULT true NOT NULL,
+	`updatedAt` integer
 );
 --> statement-breakpoint
 CREATE TABLE `Task` (
@@ -113,8 +158,14 @@ CREATE TABLE `Task` (
 CREATE TABLE `Users` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
+	`nickname` text,
 	`pin` text,
 	`role` text DEFAULT 'CHILD' NOT NULL,
 	`avatarUrl` text,
+	`gender` text DEFAULT 'OTHER',
+	`birthDate` integer,
+	`zodiac` text,
+	`isArchived` integer DEFAULT false NOT NULL,
+	`isDeleted` integer DEFAULT false NOT NULL,
 	`createdAt` integer DEFAULT (strftime('%s', 'now'))
 );

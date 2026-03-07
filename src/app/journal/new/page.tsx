@@ -107,25 +107,25 @@ export default function NewJournalPage() {
             </header>
 
             <main className="relative z-10 w-full max-w-4xl mx-auto px-6 mt-6">
-                <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-orange-900/5 border border-slate-50 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-2xl shadow-orange-900/5 border border-slate-50 overflow-hidden">
                     <form onSubmit={handlePost} className="p-8 md:p-12">
                         <div className="space-y-8">
                             <textarea
                                 value={text}
                                 onChange={e => setText(e.target.value)}
                                 placeholder={t('journal.placeholder')}
-                                className="w-full h-80 p-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
+                                className="w-full h-80 p-8 bg-slate-50/50 rounded-xl border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
                             />
 
                             <div className="flex flex-wrap gap-4">
-                                <label className="w-24 h-24 bg-slate-50 rounded-[1.5rem] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors border-2 border-dashed border-slate-200 group">
+                                <label className="w-24 h-24 bg-slate-50 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors border-2 border-dashed border-slate-200 group">
                                     <Camera className="w-8 h-8 text-slate-400 group-hover:scale-110 transition-transform" />
                                     <span className="text-[10px] font-black text-slate-400 mt-2 uppercase">Photo</span>
                                     <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                                 </label>
 
                                 {imagePreviews.map((prev, i) => (
-                                    <div key={i} className="relative w-24 h-24 rounded-[1.5rem] overflow-hidden shadow-md group border-2 border-white">
+                                    <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden shadow-md group border-2 border-white">
                                         <img src={prev} className="w-full h-full object-cover" />
                                         <button
                                             type="button"
@@ -138,7 +138,7 @@ export default function NewJournalPage() {
                                 ))}
                             </div>
 
-                            <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-3xl border border-orange-100/30">
+                            <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-xl border border-orange-100/30">
                                 <div className="flex items-center gap-4">
                                     <button
                                         type="button"

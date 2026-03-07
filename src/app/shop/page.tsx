@@ -144,7 +144,7 @@ export default function ShopPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
-                                className="group bg-white/70 backdrop-blur-xl border border-white/60 rounded-[2.5rem] p-6 shadow-xl flex flex-col items-center text-center hover:shadow-2xl transition-all"
+                                className="group bg-white/70 backdrop-blur-xl border border-white/60 rounded-xl p-6 shadow-xl flex flex-col items-center text-center hover:shadow-2xl transition-all"
                             >
                                 <div className="text-6xl mb-6 group-hover:scale-125 transition-transform duration-500">
                                     {item.iconUrl || '🎁'}
@@ -186,7 +186,7 @@ export default function ShopPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+                            className="w-full max-w-sm bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-amber-50">
                                 <h3 className="text-xl font-bold flex items-center gap-2 text-amber-700"><ShoppingBag className="w-5 h-5" /> {t('shop.form.addTitle')}</h3>

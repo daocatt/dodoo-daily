@@ -116,7 +116,7 @@ export default function JournalPage() {
                 key={entry.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer"
+                className="w-full bg-white rounded-lg p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => router.push(`/journal/${entry.id}`)}
             >
                 <div className="flex gap-6 items-start">
@@ -231,7 +231,7 @@ export default function JournalPage() {
                     </Link>
 
                     {/* Tabs */}
-                    <div className="flex md:flex-col p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-2xl md:rounded-3xl w-full shadow-inner border border-white">
+                    <div className="flex md:flex-col p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-lg md:rounded-xl w-full shadow-inner border border-white">
                         <button
                             onClick={() => setActiveTab('feed')}
                             className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'feed' ? 'bg-white text-orange-600 shadow-md' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
@@ -255,7 +255,7 @@ export default function JournalPage() {
                             {loading && entries.length === 0 ? (
                                 <div className="text-center font-bold text-orange-400 py-20 animate-pulse">{t('journal.loading')}</div>
                             ) : regularEntries.length === 0 && !hasMore ? (
-                                <div className="text-center py-20 px-10 bg-white/40 rounded-[2.5rem] border-2 border-dashed border-white flex flex-col items-center gap-6">
+                                <div className="text-center py-20 px-10 bg-white/40 rounded-xl border-2 border-dashed border-white flex flex-col items-center gap-6">
                                     <Layers className="w-16 h-16 text-slate-300" />
                                     <p className="text-slate-500 font-bold">{t('journal.empty')}</p>
                                 </div>
@@ -267,7 +267,7 @@ export default function JournalPage() {
                                         <button
                                             onClick={loadMore}
                                             disabled={loadingMore}
-                                            className="w-full py-6 rounded-[2rem] bg-white border border-orange-100 text-orange-500 font-black text-sm uppercase tracking-widest hover:bg-orange-50 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 mt-4 shadow-sm"
+                                            className="w-full py-6 rounded-lg bg-white border border-orange-100 text-orange-500 font-black text-sm uppercase tracking-widest hover:bg-orange-50 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 mt-4 shadow-sm"
                                         >
                                             {loadingMore ? (
                                                 <>

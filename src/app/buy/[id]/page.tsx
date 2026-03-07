@@ -21,7 +21,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416] items-center justify-center p-4">
             <AnimatedSky />
 
-            <main className="relative z-10 w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/50 flex flex-col items-center">
+            <main className="relative z-10 w-full max-w-md bg-white/80 backdrop-blur-xl rounded-xl p-8 shadow-2xl border border-white/50 flex flex-col items-center">
                 <div className="w-full aspect-square rounded-2xl overflow-hidden shadow-inner mb-6 border-4 border-white bg-[#f5f0e8]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={art.imageUrl} alt={art.title} className="w-full h-full object-cover" />

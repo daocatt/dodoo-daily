@@ -81,7 +81,7 @@ export default function EmotionsPage() {
                 <div className="w-full max-w-2xl flex flex-col gap-8 pb-24">
 
                     {/* Big Button Area */}
-                    <div className="bg-white/60 backdrop-blur-xl border border-red-100 p-8 rounded-3xl shadow-xl flex flex-col items-center text-center">
+                    <div className="bg-white/60 backdrop-blur-xl border border-red-100 p-8 rounded-xl shadow-xl flex flex-col items-center text-center">
                         <div className="bg-rose-100 p-4 rounded-full mb-4">
                             <Flame className="w-12 h-12 text-rose-500" />
                         </div>
@@ -147,7 +147,7 @@ export default function EmotionsPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+                            className="w-full max-w-sm bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             <div className="p-6 border-b border-rose-100 flex justify-between items-center bg-rose-50">
                                 <h3 className="text-xl font-bold flex items-center gap-2 text-rose-700"><Flame className="w-5 h-5" /> {t('common.confirm')}</h3>

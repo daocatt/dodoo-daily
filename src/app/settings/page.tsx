@@ -96,10 +96,10 @@ export default function SettingsPage() {
             <main className="relative z-10 flex-1 max-w-2xl mx-auto w-full p-6 space-y-8 pb-32">
 
                 {/* Profile Section */}
-                <section className="bg-white/60 backdrop-blur-xl rounded-[2.5rem] border border-white/80 shadow-xl p-8 space-y-6">
+                <section className="bg-white/60 backdrop-blur-xl rounded-xl border border-white/80 shadow-xl p-8 space-y-6">
                     <div className="flex flex-col items-center gap-4">
                         <div className="relative group">
-                            <div className="w-32 h-32 rounded-[2rem] bg-white shadow-inner overflow-hidden border-4 border-white/50 flex items-center justify-center">
+                            <div className="w-32 h-32 rounded-xl bg-white shadow-inner overflow-hidden border-4 border-white/50 flex items-center justify-center">
                                 {uploading ? (
                                     <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
                                 ) : (
@@ -123,7 +123,7 @@ export default function SettingsPage() {
                     </div>
 
                     {user?.isParent && (
-                        <Link href="/parent" className="flex items-center justify-between p-5 bg-purple-600/10 hover:bg-purple-600/20 rounded-[1.5rem] border border-purple-600/20 text-purple-700 transition-all group">
+                        <Link href="/parent" className="flex items-center justify-between p-5 bg-purple-600/10 hover:bg-purple-600/20 rounded-lg border border-purple-600/20 text-purple-700 transition-all group">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-purple-600 rounded-xl text-white shadow-lg shadow-purple-200">
                                     <ShieldCheck className="w-6 h-6" />
@@ -139,7 +139,7 @@ export default function SettingsPage() {
                 </section>
 
                 {/* Password Section */}
-                <section className="bg-white/60 backdrop-blur-xl rounded-[2.5rem] border border-white/80 shadow-xl p-8 space-y-6">
+                <section className="bg-white/60 backdrop-blur-xl rounded-xl border border-white/80 shadow-xl p-8 space-y-6">
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-indigo-500 rounded-xl text-white">
                             <Lock className="w-5 h-5" />
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                 {/* Logout Button */}
                 <button
                     onClick={handleLogout}
-                    className="w-full p-6 bg-red-50 hover:bg-red-100/80 rounded-[2.5rem] border border-red-100 text-red-600 font-extrabold flex items-center justify-center gap-3 transition-colors shadow-sm"
+                    className="w-full p-6 bg-red-50 hover:bg-red-100/80 rounded-xl border border-red-100 text-red-600 font-extrabold flex items-center justify-center gap-3 transition-colors shadow-sm"
                 >
                     <LogOut className="w-6 h-6" />
                     Logout

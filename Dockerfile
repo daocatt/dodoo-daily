@@ -1,59 +1,63 @@
-# Build Stage
+# ============================================================
+# Stage 1: Builder
+# ============================================================
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# Install deps
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Copy all files and build
+# Copy source
 COPY . .
 
-# Set environment variables for build
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# Run drizzle migrations if needed or handle it in start script
-# For standalone, we build first
+# Build Next.js (standalone output)
 RUN npm run build
 
-# Production Stage
+# ============================================================
+# Stage 2: Runner (minimal production image)
+# ============================================================
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Non-root user for security
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser  --system --uid 1001 nextjs
 
-# Copy necessary files from builder
+# --- Static assets & public files ---
 COPY --from=builder /app/public ./public
+
+# --- Migration script & startup ---
 COPY --from=builder /app/migrate.js ./
-COPY --from=builder /app/start.sh ./
+COPY --from=builder /app/start.sh   ./
+
+# Migration SQL files (copied from drizzle output dir)
 COPY --from=builder /app/src/lib/drizzle ./drizzle
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
+# --- Next.js standalone bundle ---
+RUN mkdir -p .next
 RUN chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/static-html-export
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static     ./.next/static
 
-# Ensure the database and uploads directory exist and are writable
-RUN mkdir -p database uploads/images uploads/voices
-RUN chown -R nextjs:nodejs database uploads
+# --- Persistent data directories ---
+# These will be mounted as volumes; create them here so they exist with correct perms
+RUN mkdir -p database uploads/images uploads/voices uploads/avatars \
+ && chown -R nextjs:nodejs database uploads
+
 RUN chmod +x start.sh
 
 USER nextjs
 
 EXPOSE 3000
-
-ENV PORT 3000
-# set hostname to localhost
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
 CMD ["./start.sh"]

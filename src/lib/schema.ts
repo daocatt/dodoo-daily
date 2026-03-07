@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { text, integer, sqliteTable, real, primaryKey } from "drizzle-orm/sqlite-core";
+import { text, integer, sqliteTable, real } from "drizzle-orm/sqlite-core";
 
 // -----------------------------------------------------------------------------
 // USER & FAMILY SYSTEM
@@ -9,7 +9,7 @@ export const users = sqliteTable("Users", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
     nickname: text("nickname"),
-    pin: text("pin"), // Optional simple PIN for role switching
+    pin: text("pin"),
     role: text("role", { enum: ["PARENT", "CHILD"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
     gender: text("gender", { enum: ["MALE", "FEMALE", "OTHER"] }).default("OTHER"),
@@ -33,8 +33,8 @@ export const accountStatsLog = sqliteTable("AccountStatsLog", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     userId: text("userId").notNull().references(() => users.id),
     type: text("type", { enum: ["CURRENCY", "GOLD_STAR", "PURPLE_STAR", "ANGER_PENALTY"] }).notNull(),
-    amount: integer("amount").notNull(), // Change amount (+/-)
-    balance: integer("balance").notNull(), // Resulting balance
+    amount: integer("amount").notNull(),
+    balance: integer("balance").notNull(),
     reason: text("reason").notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
@@ -52,7 +52,7 @@ export const guest = sqliteTable("Guest", {
 
 export const task = sqliteTable("Task", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    assignedTo: text("assignedTo").references(() => users.id), // Link to child
+    assignedTo: text("assignedTo").references(() => users.id),
     title: text("title").notNull(),
     description: text("description"),
     isRepeating: integer("isRepeating", { mode: "boolean" }).default(false).notNull(),
@@ -70,7 +70,7 @@ export const task = sqliteTable("Task", {
 
 export const emotionRecord = sqliteTable("EmotionRecord", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    userId: text("userId").references(() => users.id), // Link to child
+    userId: text("userId").references(() => users.id),
     type: text("type").default("ANGER").notNull(),
     notes: text("notes"),
     resolved: integer("resolved", { mode: "boolean" }).default(false).notNull(),
@@ -83,7 +83,7 @@ export const emotionRecord = sqliteTable("EmotionRecord", {
 
 export const album = sqliteTable("Album", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    userId: text("userId").references(() => users.id), // Link to child creator
+    userId: text("userId").references(() => users.id),
     title: text("title").notNull(),
     coverUrls: text("coverUrls"),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
@@ -92,7 +92,7 @@ export const album = sqliteTable("Album", {
 
 export const artwork = sqliteTable("Artwork", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    userId: text("userId").references(() => users.id), // Link to child creator
+    userId: text("userId").references(() => users.id),
     title: text("title").notNull(),
     imageUrl: text("imageUrl").notNull(),
     priceRMB: real("priceRMB").default(0).notNull(),
@@ -123,8 +123,8 @@ export const journal = sqliteTable("Journal", {
     authorId: text("authorId").references(() => users.id),
     authorRole: text("authorRole").notNull(),
     text: text("text"),
-    imageUrl: text("imageUrl"), // Keeping for legacy if needed, but will use imageUrls
-    imageUrls: text("imageUrls"), // JSON Array of strings
+    imageUrl: text("imageUrl"),
+    imageUrls: text("imageUrls"),
     voiceUrl: text("voiceUrl"),
     isMilestone: integer("isMilestone", { mode: "boolean" }).default(false).notNull(),
     milestoneDate: integer("milestoneDate", { mode: "timestamp" }),
@@ -143,7 +143,7 @@ export const shopItem = sqliteTable("ShopItem", {
     costCoins: integer("costCoins").notNull(),
     iconUrl: text("iconUrl"),
     stock: integer("stock").default(-1).notNull(),
-    deliveryDays: integer("deliveryDays").default(1).notNull(), // 1, 3, 7, 15, 30
+    deliveryDays: integer("deliveryDays").default(1).notNull(),
     isActive: integer("isActive", { mode: "boolean" }).default(true).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
@@ -151,36 +151,25 @@ export const shopItem = sqliteTable("ShopItem", {
 
 export const purchase = sqliteTable("Purchase", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    userId: text("userId").references(() => users.id), // Child who bought it
+    userId: text("userId").references(() => users.id),
     itemId: text("itemId").notNull().references(() => shopItem.id),
     costCoins: integer("costCoins").notNull(),
-    status: text("status").default("PENDING").notNull(), // PENDING, SHIPPED, COMPLETED, CANCELLED
+    status: text("status").default("PENDING").notNull(),
     remarks: text("remarks"),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
+
 // -----------------------------------------------------------------------------
-// SYSTEM & FAMILY TREE
+// SYSTEM SETTINGS
 // -----------------------------------------------------------------------------
 
 export const systemSettings = sqliteTable("SystemSettings", {
     id: text("id").primaryKey().default("app_settings"),
     isClosed: integer("isClosed", { mode: "boolean" }).default(false).notNull(),
+    // needsSetup: true until the first-run wizard is completed
+    needsSetup: integer("needsSetup", { mode: "boolean" }).default(true).notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
-});
-
-export const familyMember = sqliteTable("FamilyMember", {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    name: text("name").notNull(),
-    nickname: text("nickname"),
-    relationship: text("relationship").notNull(),
-    parentId: text("parentId"),
-    gender: text("gender", { enum: ["MALE", "FEMALE", "OTHER"] }),
-    avatarUrl: text("avatarUrl"),
-    birthDate: integer("birthDate", { mode: "timestamp" }),
-    zodiac: text("zodiac"),
-    notes: text("notes"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
 // -----------------------------------------------------------------------------
@@ -189,15 +178,15 @@ export const familyMember = sqliteTable("FamilyMember", {
 
 export const media = sqliteTable("Media", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    name: text("name").notNull(), // User-friendly name or edited name
-    fileName: text("fileName").notNull(), // Physical filename
-    fileType: text("fileType").notNull(), // IMAGE, VOICE, VIDEO, DOC, GALLERY
+    name: text("name").notNull(),
+    fileName: text("fileName").notNull(),
+    fileType: text("fileType").notNull(),
     mimeType: text("mimeType"),
     size: integer("size"),
-    storageProvider: text("storageProvider").default("LOCAL").notNull(), // LOCAL, R2
-    path: text("path").notNull(), // Full URL or access path
-    key: text("key").notNull(), // Relative path or R2 key
-    bucket: text("bucket"), // R2 bucket name
+    storageProvider: text("storageProvider").default("LOCAL").notNull(),
+    path: text("path").notNull(),
+    key: text("key").notNull(),
+    bucket: text("bucket"),
     userId: text("userId").references(() => users.id),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),

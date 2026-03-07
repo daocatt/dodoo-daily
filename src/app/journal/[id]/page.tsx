@@ -198,10 +198,10 @@ export default function JournalDetailPage() {
 
                 {!isEditing && (
                     <aside className="w-full md:w-[320px] flex flex-col gap-6 md:sticky md:top-6 flex-shrink-0 z-20">
-                        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-orange-900/5 border border-slate-50 p-8 flex flex-col gap-8">
+                        <div className="bg-white rounded-xl shadow-xl shadow-orange-900/5 border border-slate-50 p-8 flex flex-col gap-8">
                             {/* Author Info */}
                             <div className="flex items-center gap-4">
-                                <div className={`w-16 h-16 rounded-3xl overflow-hidden border-4 ${isChild ? 'border-orange-100 shadow-orange-200' : 'border-indigo-100 shadow-indigo-200'} shadow-lg flex-shrink-0`}>
+                                <div className={`w-16 h-16 rounded-xl overflow-hidden border-4 ${isChild ? 'border-orange-100 shadow-orange-200' : 'border-indigo-100 shadow-indigo-200'} shadow-lg flex-shrink-0`}>
                                     {entry.authorAvatar ? (
                                         <img src={entry.authorAvatar} alt={entry.authorName || ''} className="w-full h-full object-cover" />
                                     ) : (
@@ -223,7 +223,7 @@ export default function JournalDetailPage() {
                             </div>
 
                             {entry.isMilestone && (
-                                <div className="flex flex-col gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/50">
+                                <div className="flex flex-col gap-3 p-4 bg-orange-50/50 rounded-xl border border-orange-100/50">
                                     <div className="flex items-center gap-2 text-orange-600">
                                         <MilestoneIcon className="w-5 h-5 flex-shrink-0" />
                                         <span className="text-xs font-black uppercase tracking-widest">{t('parent.milestone')}</span>
@@ -267,11 +267,11 @@ export default function JournalDetailPage() {
                     </aside>
                 )}
                 <div className="flex-1 w-full min-w-0 flex flex-col">
-                    <article className="w-full bg-white rounded-[2.5rem] shadow-2xl shadow-orange-900/5 border border-slate-50 overflow-hidden">
+                    <article className="w-full bg-white rounded-xl shadow-2xl shadow-orange-900/5 border border-slate-50 overflow-hidden">
                         {isEditing ? (
                             <div className="p-8 md:p-12 space-y-8">
                                 <textarea
-                                    className="w-full h-80 p-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
+                                    className="w-full h-80 p-8 bg-slate-50/50 rounded-xl border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
                                     value={editText}
                                     onChange={e => setEditText(e.target.value)}
                                     placeholder={t('journal.placeholder')}
@@ -279,14 +279,14 @@ export default function JournalDetailPage() {
 
                                 {/* Image Uploader */}
                                 <div className="flex flex-wrap gap-4">
-                                    <label className="w-24 h-24 bg-slate-50 rounded-[1.5rem] flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors border-2 border-dashed border-slate-200 group">
+                                    <label className="w-24 h-24 bg-slate-50 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors border-2 border-dashed border-slate-200 group">
                                         <Camera className="w-8 h-8 text-slate-400 group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] font-black text-slate-400 mt-2 uppercase">Photo</span>
                                         <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                                     </label>
 
                                     {editExistingImages.map((img, i) => (
-                                        <div key={`exist-${i}`} className="relative w-24 h-24 rounded-[1.5rem] overflow-hidden shadow-md group border-2 border-white">
+                                        <div key={`exist-${i}`} className="relative w-24 h-24 rounded-lg overflow-hidden shadow-md group border-2 border-white">
                                             <img src={img} className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
@@ -299,7 +299,7 @@ export default function JournalDetailPage() {
                                     ))}
 
                                     {newPreviews.map((prev, i) => (
-                                        <div key={`new-${i}`} className="relative w-24 h-24 rounded-[1.5rem] overflow-hidden shadow-md group border-2 border-white">
+                                        <div key={`new-${i}`} className="relative w-24 h-24 rounded-lg overflow-hidden shadow-md group border-2 border-white">
                                             <img src={prev} className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
@@ -315,7 +315,7 @@ export default function JournalDetailPage() {
                                     ))}
                                 </div>
 
-                                <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-3xl border border-orange-100/30">
+                                <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-xl border border-orange-100/30">
                                     <div className="flex items-center gap-4">
                                         <button
                                             onClick={() => setEditIsMilestone(!editIsMilestone)}
@@ -398,7 +398,7 @@ export default function JournalDetailPage() {
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
                                                 onClick={() => setLightbox({ images: entryImages, index: i })}
-                                                className="relative aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-xl group"
+                                                className="relative aspect-square rounded-xl overflow-hidden border-2 border-white shadow-xl group"
                                             >
                                                 <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />

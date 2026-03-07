@@ -60,7 +60,12 @@ export default function LoginPage() {
             const data = await res.json()
 
             if (res.ok && data.success) {
-                window.location.href = '/' // full reload to re-run middleware and contextual fetches
+                // Parent: check if first-run setup wizard is needed
+                if (data.needsSetup) {
+                    window.location.href = '/setup'
+                } else {
+                    window.location.href = '/'
+                }
             } else {
                 setError(data.error === 'Invalid PIN' ? t('login.error.invalidPin') : (data.error || t('login.error.network')))
                 setLoading(true)

@@ -168,7 +168,7 @@ export default function TasksPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+                            className="w-full max-w-sm bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
                                 <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-blue-500" /> {t('tasks.newTask')}</h3>

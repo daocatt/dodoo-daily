@@ -208,7 +208,7 @@ export default function GalleryPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                        className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
                             <h3 className="text-xl font-bold flex items-center gap-2"><Upload className="w-5 h-5 text-purple-500" /> {t('gallery.upload')}</h3>
@@ -287,7 +287,7 @@ export default function GalleryPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                        className="w-full max-w-sm bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
                             <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-indigo-500" /> {t('gallery.newAlbum')}</h3>

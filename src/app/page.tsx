@@ -60,11 +60,11 @@ export default function Home() {
   }
 
   const menuItems = React.useMemo(() => [
-    { title: t('menu.tasks'), icon: CheckSquare, color: 'text-[#43aa8b]', bg: 'bg-[#43aa8b]/10', href: '/tasks' },
-    { title: t('menu.emotions'), icon: Smile, color: 'text-[#f8961e]', bg: 'bg-[#f8961e]/10', href: '/emotions' },
-    { title: t('menu.gallery'), icon: ImageIcon, color: 'text-[#f9c74f]', bg: 'bg-[#f9c74f]/10', href: '/gallery' },
-    { title: t('menu.journal'), icon: Book, color: 'text-[#277da1]', bg: 'bg-[#277da1]/10', href: '/journal' },
-    { title: t('menu.shop'), icon: Store, color: 'text-[#907a67]', bg: 'bg-[#907a67]/10', href: '/shop' },
+    { title: t('menu.tasks'), icon: CheckSquare, href: '/tasks', bg: 'bg-[#43aa8b]', shadow: 'shadow-[#43aa8b]/30', iconBg: 'bg-[#3a9679]' },
+    { title: t('menu.emotions'), icon: Smile, href: '/emotions', bg: 'bg-[#f8961e]', shadow: 'shadow-[#f8961e]/30', iconBg: 'bg-[#df841a]' },
+    { title: t('menu.gallery'), icon: ImageIcon, href: '/gallery', bg: 'bg-[#e9b500]', shadow: 'shadow-[#e9b500]/30', iconBg: 'bg-[#cfa000]' },
+    { title: t('menu.journal'), icon: Book, href: '/journal', bg: 'bg-[#277da1]', shadow: 'shadow-[#277da1]/30', iconBg: 'bg-[#206a89]' },
+    { title: t('menu.shop'), icon: Store, href: '/shop', bg: 'bg-[#c47f5a]', shadow: 'shadow-[#c47f5a]/30', iconBg: 'bg-[#a86a48]' },
   ], [t])
 
   // System Closed View
@@ -72,7 +72,7 @@ export default function Home() {
     return (
       <div className="h-dvh flex flex-col items-center justify-center bg-rose-50 p-8 text-center space-y-8">
         <NatureBackground />
-        <div className="relative z-10 w-32 h-32 bg-rose-100 rounded-[2.5rem] flex items-center justify-center shadow-inner">
+        <div className="relative z-10 w-32 h-32 bg-rose-100 rounded-xl flex items-center justify-center shadow-inner">
           <ShieldAlert className="w-16 h-16 text-rose-500" />
         </div>
         <div className="relative z-10 space-y-4">
@@ -112,13 +112,13 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => stats?.isParent ? router.push('/parent') : router.push('/settings')}
-            className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/50 backdrop-blur-md hover:bg-white/80 border border-white/80 transition-all shadow-sm text-[#2c2416] active:scale-95"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/60 hover:bg-white/90 border border-white/80 transition-all shadow-sm text-[#2c2416] active:scale-95"
           >
             <Settings className="w-5 h-5" />
           </button>
           <button
             onClick={toggleLanguage}
-            className="flex items-center justify-center min-w-[3.5rem] px-4 py-2 rounded-2xl bg-[#4a3728]/5 backdrop-blur-md hover:bg-[#4a3728]/10 border border-[#4a3728]/10 transition-all text-xs font-black text-[#2c2416] active:scale-95"
+            className="flex items-center justify-center min-w-[3.5rem] px-4 py-2 rounded-full bg-[#4a3728]/8 hover:bg-[#4a3728]/15 border border-[#4a3728]/15 transition-all text-xs font-black text-[#2c2416] active:scale-95"
           >
             {locale === 'en' ? '中' : 'EN'}
           </button>
@@ -153,9 +153,9 @@ export default function Home() {
                   }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => cycleArtwork(art.id)}
-                  className={`absolute w-44 h-56 sm:w-64 sm:h-80 md:w-72 md:h-96 ${art.bg} rounded-[2rem] p-4 shadow-2xl border-8 border-white overflow-hidden cursor-pointer select-none`}
+                  className={`absolute w-44 h-56 sm:w-64 sm:h-80 md:w-72 md:h-96 ${art.bg} rounded-xl p-4 shadow-2xl border-8 border-white overflow-hidden cursor-pointer select-none`}
                 >
-                  <div className="w-full h-full rounded-[1.5rem] bg-white/40 overflow-hidden flex items-center justify-center border border-white/20 pointer-events-none">
+                  <div className="w-full h-full rounded-lg bg-white/40 overflow-hidden flex items-center justify-center border border-white/20 pointer-events-none">
                     <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
                   </div>
 
@@ -182,16 +182,46 @@ export default function Home() {
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
                 onClick={() => router.push(item.href)}
-                className={`relative group flex items-center justify-between p-3 md:p-4 transition-all rounded-lg w-full text-left border border-white/20 ${item.bg} hover:brightness-95 hover:shadow-lg`}
+                className={`relative group flex items-center justify-between p-3 md:p-4 transition-all duration-200 rounded-lg w-full text-left overflow-hidden ${item.bg} ${item.shadow} shadow-lg hover:shadow-xl hover:brightness-110 active:scale-[0.98]`}
               >
-                <div className="flex items-center gap-4 relative z-10 transition-transform group-hover:translate-x-1.5 duration-300">
-                  <div className={`w-10 h-10 rounded-md bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-sm`}>
-                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                {/* Bottom sweep highlight bar */}
+                <AnimatePresence>
+                  {hoveredIdx === idx && (
+                    <motion.div
+                      key="sweep"
+                      className="absolute bottom-0 left-0 h-[3px] w-full origin-left"
+                      style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.4) 100%)' }}
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      exit={{ scaleX: 0, opacity: 0 }}
+                      transition={{ duration: 0.35, ease: 'easeOut' }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                {/* Subtle inner glow on hover */}
+                <AnimatePresence>
+                  {hoveredIdx === idx && (
+                    <motion.div
+                      key="glow"
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 60%)' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                <div className="flex items-center gap-4 relative z-10 transition-transform group-hover:translate-x-1 duration-200">
+                  <div className={`w-10 h-10 rounded-md ${item.iconBg} flex items-center justify-center shadow-sm`}>
+                    <item.icon className="w-5 h-5 text-white/90" />
                   </div>
-                  <span className="font-black text-lg md:text-xl text-[#2c2416] tracking-tight">{item.title}</span>
+                  <span className="font-black text-lg md:text-xl text-white tracking-tight drop-shadow-sm">{item.title}</span>
                 </div>
 
-                <ChevronRight className={`w-5 h-5 text-[#4a3728]/40 transition-all duration-300 ${hoveredIdx === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'}`} />
+                <ChevronRight className={`w-5 h-5 text-white/70 relative z-10 transition-all duration-200 ${hoveredIdx === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} />
               </motion.button>
             ))}
           </div>
@@ -213,7 +243,7 @@ export default function Home() {
             </button>
             <motion.div
               layoutId={`artwork-${zoomedArt.id}`}
-              className={`relative max-w-full max-h-full aspect-[3/4] ${zoomedArt.bg} rounded-3xl p-4 md:p-6 shadow-2xl border-4 md:border-8 border-white overflow-hidden flex items-center justify-center`}
+              className={`relative max-w-full max-h-full aspect-[3/4] ${zoomedArt.bg} rounded-xl p-4 md:p-6 shadow-2xl border-4 md:border-8 border-white overflow-hidden flex items-center justify-center`}
               style={{
                 height: 'auto',
                 width: 'auto',

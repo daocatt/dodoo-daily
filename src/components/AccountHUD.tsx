@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Star, Zap, CircleDashed, Coins, ShieldCheck, Power, Network, Users } from 'lucide-react'
+import { Star, Zap, CircleDashed, Coins, ShieldCheck, Power } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -78,7 +78,7 @@ export default function AccountHUD() {
                 animate={{ opacity: 1, y: 0 }}
                 className="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-full max-w-2xl px-4 flex justify-center"
             >
-                <div className="bg-white/60 backdrop-blur-xl border border-[#4a3728]/10 shadow-lg px-4 py-2 rounded-2xl flex items-center justify-between pointer-events-auto min-w-[320px]">
+                <div className="bg-white/60 backdrop-blur-xl border border-[#4a3728]/10 shadow-lg px-4 py-2 rounded-full flex items-center justify-between pointer-events-auto min-w-[320px]">
                     <div className="flex items-center gap-4">
                         <Link href="/">
                             <motion.div
@@ -118,7 +118,7 @@ export default function AccountHUD() {
                             <div className="flex items-center gap-3 pr-2 border-r border-[#4a3728]/5">
                                 {/* Currency */}
                                 <div className="flex items-center gap-1.5" title={t('hud.coins')}>
-                                    <div className="bg-[#f8961e] p-1 rounded-lg shadow-inner">
+                                    <div className="bg-[#f8961e] p-1 rounded-full shadow-inner">
                                         <Coins className="w-3.5 h-3.5 text-white" />
                                     </div>
                                     <span className="text-sm font-bold text-[#4a3728]">{stats.currency}</span>
@@ -132,16 +132,6 @@ export default function AccountHUD() {
                             </div>
                         )}
 
-                        {/* Family Tree Link - Now links to /family-tree */}
-                        <Link
-                            href="/family-tree"
-                            className="flex items-center gap-1.5 group px-2 py-1 rounded-xl hover:bg-emerald-50 transition-colors"
-                        >
-                            <div className="bg-emerald-500 p-1.5 rounded-full shadow-inner border border-emerald-400 group-hover:scale-110 transition-transform">
-                                <Network className="w-3.5 h-3.5 text-white" />
-                            </div>
-                            <span className="font-black text-[#4a3728] text-[10px] uppercase tracking-widest hidden sm:block">{t('hud.familyTree')}</span>
-                        </Link>
                     </div>
 
                     <button

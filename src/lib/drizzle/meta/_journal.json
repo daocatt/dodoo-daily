@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1772794034583,
-      "tag": "0000_broken_plazm",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1772870042121,
-      "tag": "0001_unusual_stellaris",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1772876726149,
-      "tag": "0002_family_profiles_and_milestones",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1772881521913,
-      "tag": "0003_milestone_date_and_updated_at",
+      "when": 1772906643729,
+      "tag": "0000_right_captain_universe",
       "breakpoints": true
     }
   ]

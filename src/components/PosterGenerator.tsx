@@ -53,7 +53,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl relative">
+            <div className="w-full max-w-lg bg-white rounded-xl overflow-hidden shadow-2xl relative">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors"
