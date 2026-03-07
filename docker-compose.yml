@@ -3,22 +3,39 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # 🌟 关键：从非当前目录加载单独的 .env 用于 Docker 构建期（Build Time）
+      secrets:
+        - ext_env
     container_name: dodoo-daily
     restart: unless-stopped
     ports:
       - "3000:3000"
+    
+    # 🌟 关键：用于容器运行期（Runtime）从群晖指定路径加载单独的 .env 文件
+    env_file:
+      - /volume1/docker/dodoo-daily-config/.env
+      
     environment:
       - NODE_ENV=production
-      # add any other env vars here, e.g. R2 keys
+    
     volumes:
-      # ⚡ IMPORTANT: map these to your NAS/host paths for data persistence
-      # The database file (SQLite)
-      - ./data/database:/app/database
-      # User uploads (images, voices, avatars)
-      - ./data/uploads:/app/uploads
+      # ⚡ 重点：群晖 NAS 的数据持久化目录映射
+      # 将分隔符前面的左侧(宿主机目录)，修改为您在群晖 File Station 中创建的真实绝对路径
+      
+      # [1] 映射 SQLite 数据库文件存放路径 (确保更换为您群晖的路径)
+      - /volume1/docker/dodoo-daily/database:/app/database
+      
+      # [2] 映射相册、录音、头像等上传文件的存放路径
+      - /volume1/docker/dodoo-daily/uploads:/app/uploads
+      
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/system/settings"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
+
+# 配置群晖所在宿主机的外部文件作为 Docker BuildKit secret
+secrets:
+  ext_env:
+    file: /volume1/docker/dodoo-daily-config/.env

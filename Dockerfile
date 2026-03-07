@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ============================================================
 # Stage 1: Builder
 # ============================================================
@@ -14,8 +15,11 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build Next.js (standalone output)
-RUN npm run build
+# ⚡ 从非当前目录(通过 Docker BuildKit secret)挂载 .env 文件
+# 在群晖构建时，系统会读取外部的 .env，并在构建阶段应用(如 NEXT_PUBLIC_ 变量)
+RUN --mount=type=secret,id=ext_env \
+    if [ -f /run/secrets/ext_env ]; then cat /run/secrets/ext_env > .env; fi && \
+    npm run build
 
 # ============================================================
 # Stage 2: Runner (minimal production image)
@@ -41,8 +45,8 @@ COPY --from=builder /app/start.sh   ./
 COPY --from=builder /app/src/lib/drizzle ./drizzle
 
 # --- Next.js standalone bundle ---
-RUN mkdir -p .next
-RUN chown nextjs:nodejs .next
+RUN mkdir -p .next \
+ && chown nextjs:nodejs .next
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static     ./.next/static
