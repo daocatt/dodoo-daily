@@ -45,23 +45,27 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const { id, role } = await getCurrentUser()
-        if (!id || role !== 'PARENT') {
-            return NextResponse.json({ error: 'Only parents can assign tasks' }, { status: 403 })
+        if (!id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const body = await req.json()
-        const { title, description, rewardStars, isRepeating, assignedTo } = body
+        const { title, description, rewardStars, isRepeating, isMonthlyRepeating, plannedTime, assignedTo } = body
 
-        if (!title || !assignedTo) {
-            return NextResponse.json({ error: 'Title and assignedTo are required' }, { status: 400 })
+        if (!title) {
+            return NextResponse.json({ error: 'Title is required' }, { status: 400 })
         }
 
+        const finalAssignedTo = assignedTo || id;
+
         const newTask = await db.insert(task).values({
-            assignedTo,
+            assignedTo: finalAssignedTo,
             title,
             description: description || null,
             rewardStars: rewardStars ? parseInt(rewardStars) : 1,
             isRepeating: !!isRepeating,
+            isMonthlyRepeating: !!isMonthlyRepeating,
+            plannedTime: plannedTime ? new Date(plannedTime) : null,
             completed: false,
         }).returning()
 

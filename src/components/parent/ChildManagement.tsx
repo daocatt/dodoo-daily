@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Tag, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare } from 'lucide-react'
+import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { getZodiac } from '@/lib/utils'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 interface Child {
     id: string
@@ -73,6 +75,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const handleAvatarUpload = async (id: string, file: File) => {
         const formData = new FormData()
         formData.append('file', file)
+        formData.append('userId', id)
         try {
             const res = await fetch('/api/upload/avatar', {
                 method: 'POST',
@@ -198,18 +201,21 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
-                        <input
-                            type="date"
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
-                            value={member.birthDate ? new Date(member.birthDate).toISOString().split('T')[0] : ''}
-                            onChange={e => {
-                                const date = e.target.value ? new Date(e.target.value) : undefined
+                        <DatePicker
+                            selected={member.birthDate ? new Date(member.birthDate) : null}
+                            onChange={(date: Date | null) => {
                                 onChange({
                                     ...member,
-                                    birthDate: date,
+                                    birthDate: date || undefined,
                                     zodiac: date ? getZodiac(date) : undefined
                                 })
                             }}
+                            dateFormat="yyyy-MM-dd"
+                            showMonthDropdown
+                            showYearDropdown
+                            dropdownMode="select"
+                            placeholderText={t('parent.birthDate')}
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                         />
                     </div>
                     <div className="space-y-2">
@@ -290,7 +296,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                     className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-300 hover:text-slate-600"
                                     title="Edit Profile"
                                 >
-                                    <Tag className="w-4 h-4" />
+                                    <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setConfirmModal({ type: 'archive', childId: child.id })}

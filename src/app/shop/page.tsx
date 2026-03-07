@@ -20,6 +20,7 @@ export default function ShopPage() {
     const [loading, setLoading] = useState(true)
     const [purchasingId, setPurchasingId] = useState<string | null>(null)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
+    const [isParent, setIsParent] = useState(false)
 
     const [showAddModal, setShowAddModal] = useState(false)
     const [newName, setNewName] = useState('')
@@ -29,7 +30,20 @@ export default function ShopPage() {
 
     useEffect(() => {
         fetchItems()
+        fetchStats()
     }, [])
+
+    const fetchStats = async () => {
+        try {
+            const res = await fetch('/api/stats')
+            if (res.ok) {
+                const data = await res.json()
+                setIsParent(data.isParent || false)
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
 
     const fetchItems = async () => {
         try {
@@ -105,13 +119,15 @@ export default function ShopPage() {
                         {t('shop.title')}
                     </span>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-amber-400"
-                >
-                    <Plus className="w-4 h-4" />
-                    {t('shop.newWish')}
-                </button>
+                {!isParent && (
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-amber-400"
+                    >
+                        <Plus className="w-4 h-4" />
+                        {t('shop.newWish')}
+                    </button>
+                )}
             </header>
 
             <main className="relative z-10 flex-1 overflow-y-auto p-6 md:p-12 pb-24 hide-scrollbar">
@@ -146,8 +162,12 @@ export default function ShopPage() {
                                 transition={{ delay: idx * 0.05 }}
                                 className="group bg-white/70 backdrop-blur-xl border border-white/60 rounded-xl p-6 shadow-xl flex flex-col items-center text-center hover:shadow-2xl transition-all"
                             >
-                                <div className="text-6xl mb-6 group-hover:scale-125 transition-transform duration-500">
-                                    {item.iconUrl || '🎁'}
+                                <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-500 w-24 h-24 flex items-center justify-center">
+                                    {item.iconUrl?.startsWith('http') || item.iconUrl?.startsWith('/') ? (
+                                        <img src={item.iconUrl} alt={item.name} className="w-full h-full object-cover rounded-2xl shadow-sm border-2 border-amber-100" />
+                                    ) : (
+                                        item.iconUrl || '🎁'
+                                    )}
                                 </div>
                                 <h3 className="font-black text-xl mb-4 text-[#2c2416]">{item.name}</h3>
 
@@ -159,13 +179,22 @@ export default function ShopPage() {
                                         <span className="font-black text-2xl text-amber-600">{item.costCoins}</span>
                                     </div>
 
-                                    <button
-                                        onClick={() => handlePurchase(item)}
-                                        disabled={purchasingId === item.id}
-                                        className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 transition-all active:scale-95 disabled:grayscale"
-                                    >
-                                        {purchasingId === item.id ? t('common.loading') : t('shop.buyWithCoins')}
-                                    </button>
+                                    {!isParent ? (
+                                        <button
+                                            onClick={() => handlePurchase(item)}
+                                            disabled={purchasingId === item.id}
+                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 transition-all active:scale-95 disabled:grayscale"
+                                        >
+                                            {purchasingId === item.id ? t('common.loading') : t('shop.buyWithCoins')}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            disabled
+                                            className="w-full py-4 bg-slate-200 text-slate-400 font-black rounded-2xl shadow-inner cursor-not-allowed"
+                                        >
+                                            {t('shop.previewOnly')}
+                                        </button>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
@@ -221,8 +250,8 @@ export default function ShopPage() {
                                             type="text"
                                             value={newEmoji}
                                             onChange={e => setNewEmoji(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-amber-400 outline-none font-bold text-lg text-center"
-                                            placeholder="🎁"
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-amber-400 outline-none font-bold text-lg"
+                                            placeholder="Emoji (e.g. 🎁) or Image URL"
                                         />
                                     </div>
                                 </div>

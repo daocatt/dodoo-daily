@@ -10,6 +10,8 @@ import {
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import Lightbox from '@/components/Lightbox'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 type JournalEntry = {
     id: string
@@ -333,20 +335,24 @@ export default function JournalDetailPage() {
                                     {/* Publish Date & Time Picker */}
                                     <div className="flex-1 flex gap-2 min-w-[240px]">
                                         <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
-                                            <Calendar className="w-4 h-4 text-orange-400" />
-                                            <input
-                                                type="date"
+                                            <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
+                                            <DatePicker
+                                                selected={new Date(editMilestoneDate)}
+                                                onChange={(date: Date | null) => {
+                                                    if (date) {
+                                                        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+                                                        const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
+                                                        setEditMilestoneDate(localISOTime);
+                                                    }
+                                                }}
+                                                showTimeSelect
+                                                timeFormat="HH:mm"
+                                                timeIntervals={15}
+                                                dateFormat="yyyy-MM-dd HH:mm"
+                                                showMonthDropdown
+                                                showYearDropdown
+                                                dropdownMode="select"
                                                 className="w-full bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
-                                                value={editMilestoneDate.split('T')[0]}
-                                                onChange={e => e.target.value && setEditMilestoneDate(`${e.target.value}T${editMilestoneDate.split('T')[1]}`)}
-                                            />
-                                        </div>
-                                        <div className="flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
-                                            <input
-                                                type="time"
-                                                className="w-full min-w-[80px] bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
-                                                value={editMilestoneDate.split('T')[1]}
-                                                onChange={e => e.target.value && setEditMilestoneDate(`${editMilestoneDate.split('T')[0]}T${e.target.value}`)}
                                             />
                                         </div>
                                     </div>

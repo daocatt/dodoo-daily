@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert } from 'lucide-react'
+import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
@@ -12,20 +12,25 @@ type Task = {
     title: string
     description: string | null
     isRepeating: boolean
+    isMonthlyRepeating: boolean
     rewardStars: number
     completed: boolean
+    plannedTime: string | null
 }
 
 export default function TasksPage() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
+    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'daily' | 'monthly'>('today')
     const { t } = useI18n()
 
     // Form
     const [title, setTitle] = useState('')
     const [rewardStars, setRewardStars] = useState(1)
     const [isRepeating, setIsRepeating] = useState(false)
+    const [isMonthlyRepeating, setIsMonthlyRepeating] = useState(false)
+    const [plannedDate, setPlannedDate] = useState(() => new Date().toISOString().split('T')[0])
 
     useEffect(() => {
         fetchTasks()
@@ -71,13 +76,20 @@ export default function TasksPage() {
             const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, rewardStars, isRepeating })
+                body: JSON.stringify({
+                    title,
+                    rewardStars,
+                    isRepeating,
+                    isMonthlyRepeating,
+                    plannedTime: new Date(plannedDate).toISOString()
+                })
             })
             if (res.ok) {
                 setShowNewTaskModal(false)
                 setTitle('')
                 setRewardStars(1)
                 setIsRepeating(false)
+                setIsMonthlyRepeating(false)
                 fetchTasks()
             }
         } catch (err) {
@@ -89,27 +101,69 @@ export default function TasksPage() {
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416]">
             <AnimatedSky />
 
-            <header className="relative z-10 flex justify-between items-center p-6 backdrop-blur-sm bg-white/20 border-b border-white/30">
+            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-white/30 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-white border border-white/50">
-                        <ChevronLeft className="w-6 h-6" />
+                    <Link href="/" className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-800 border border-slate-200">
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                     </Link>
-                    <span className="font-extrabold text-2xl tracking-tight text-white drop-shadow-md flex items-center gap-2">
-                        <CheckSquare className="w-6 h-6" />
-                        {t('tasks.title')}
-                    </span>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden md:flex w-10 h-10 bg-blue-500 rounded-2xl items-center justify-center shadow-md shadow-blue-500/30 text-white flex-shrink-0">
+                            <CheckSquare className="w-5 h-5" />
+                        </div>
+                        <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800">
+                            {t('tasks.title')}
+                        </span>
+                    </div>
                 </div>
                 <button
                     onClick={() => setShowNewTaskModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/80 hover:bg-blue-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-blue-400"
+                    className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95"
                 >
-                    <Plus className="w-4 h-4" />
-                    {t('tasks.newTask')}
+                    <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="hidden md:inline">{t('tasks.newTask')}</span>
                 </button>
             </header>
 
-            <main className="relative z-10 flex-1 overflow-y-auto p-6 md:p-8 hide-scrollbar flex justify-center">
-                <div className="w-full max-w-2xl">
+            <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
+
+                {/* Left Sidebar (Tabs) */}
+                <aside className="w-full md:w-[240px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
+                    <div className="flex md:flex-col overflow-x-auto p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-lg md:rounded-xl w-full shadow-inner border border-white hide-scrollbar">
+                        <button
+                            onClick={() => setActiveTab('today')}
+                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'today' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <Sun className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Today</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('tomorrow')}
+                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'tomorrow' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <Sunrise className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Tomorrow</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('week')}
+                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'week' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <Calendar className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">This Week</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('daily')}
+                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'daily' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <Repeat className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Daily Loop</span>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('monthly')}
+                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'monthly' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <CalendarDays className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Monthly Loop</span>
+                        </button>
+                    </div>
+                </aside>
+
+                {/* Right Content */}
+                <div className="flex-1 w-full max-w-2xl">
                     {loading ? (
                         <div className="flex justify-center items-center h-48">
                             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
@@ -122,7 +176,28 @@ export default function TasksPage() {
                         </div>
                     ) : (
                         <div className="flex gap-4 flex-col pb-24">
-                            {tasks.map((task, idx) => (
+                            {tasks.filter(task => {
+                                if (activeTab === 'daily') return task.isRepeating && !task.isMonthlyRepeating;
+                                if (activeTab === 'monthly') return task.isMonthlyRepeating;
+
+                                if (task.isRepeating || task.isMonthlyRepeating) return false;
+
+                                const pt = task.plannedTime ? new Date(task.plannedTime) : new Date();
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const tomorrow = new Date(today);
+                                tomorrow.setDate(tomorrow.getDate() + 1);
+                                const weekEnd = new Date(today);
+                                weekEnd.setDate(weekEnd.getDate() + 7);
+
+                                pt.setHours(0, 0, 0, 0);
+
+                                if (activeTab === 'today') return pt.getTime() === today.getTime();
+                                if (activeTab === 'tomorrow') return pt.getTime() === tomorrow.getTime();
+                                if (activeTab === 'week') return pt >= today && pt <= weekEnd;
+
+                                return false;
+                            }).map((task, idx) => (
                                 <motion.div
                                     key={task.id}
                                     initial={{ opacity: 0, x: -20 }}
@@ -195,15 +270,44 @@ export default function TasksPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-3 bg-[#faf7f0] p-4 rounded-xl border border-[#e8dfce]">
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-bold text-[#6b5c45]">Planned Date</label>
                                     <input
-                                        type="checkbox"
-                                        id="isRep"
-                                        checked={isRepeating}
-                                        onChange={(e) => setIsRepeating(e.target.checked)}
-                                        className="w-5 h-5 accent-blue-500"
+                                        type="date"
+                                        value={plannedDate}
+                                        onChange={e => setPlannedDate(e.target.value)}
+                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-lg"
+                                        required
                                     />
-                                    <label htmlFor="isRep" className="font-bold text-[#6b5c45]">{t('tasks.form.recurringLabel')}</label>
+                                </div>
+
+                                <div className="flex flex-col gap-3 bg-[#faf7f0] p-4 rounded-xl border border-[#e8dfce]">
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="isRep"
+                                            checked={isRepeating}
+                                            onChange={(e) => {
+                                                setIsRepeating(e.target.checked);
+                                                if (e.target.checked) setIsMonthlyRepeating(false);
+                                            }}
+                                            className="w-5 h-5 accent-blue-500 rounded"
+                                        />
+                                        <label htmlFor="isRep" className="font-bold text-[#6b5c45]">{t('tasks.form.recurringLabel')}</label>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="checkbox"
+                                            id="isMonthlyRep"
+                                            checked={isMonthlyRepeating}
+                                            onChange={(e) => {
+                                                setIsMonthlyRepeating(e.target.checked);
+                                                if (e.target.checked) setIsRepeating(false);
+                                            }}
+                                            className="w-5 h-5 accent-purple-500 rounded"
+                                        />
+                                        <label htmlFor="isMonthlyRep" className="font-bold text-[#6b5c45]">Monthly Repeating Task</label>
+                                    </div>
                                 </div>
 
                                 <button

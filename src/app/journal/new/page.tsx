@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Camera, X, Milestone as MilestoneIcon, Calendar, BookOpen, Loader2 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 const formatDate = (date: string | number | Date) => {
     const d = new Date(date)
@@ -157,20 +159,24 @@ export default function NewJournalPage() {
 
                                 <div className="flex-1 flex gap-2 min-w-[240px]">
                                     <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
-                                        <Calendar className="w-4 h-4 text-orange-400" />
-                                        <input
-                                            type="date"
+                                        <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
+                                        <DatePicker
+                                            selected={new Date(postDate)}
+                                            onChange={(date: Date | null) => {
+                                                if (date) {
+                                                    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+                                                    const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
+                                                    setPostDate(localISOTime);
+                                                }
+                                            }}
+                                            showTimeSelect
+                                            timeFormat="HH:mm"
+                                            timeIntervals={15}
+                                            dateFormat="yyyy-MM-dd HH:mm"
+                                            showMonthDropdown
+                                            showYearDropdown
+                                            dropdownMode="select"
                                             className="w-full bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
-                                            value={postDate.split('T')[0]}
-                                            onChange={e => e.target.value && setPostDate(`${e.target.value}T${postDate.split('T')[1]}`)}
-                                        />
-                                    </div>
-                                    <div className="flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
-                                        <input
-                                            type="time"
-                                            className="w-full min-w-[80px] bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
-                                            value={postDate.split('T')[1]}
-                                            onChange={e => e.target.value && setPostDate(`${postDate.split('T')[0]}T${e.target.value}`)}
                                         />
                                     </div>
                                 </div>

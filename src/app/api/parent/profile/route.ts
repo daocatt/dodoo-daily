@@ -6,14 +6,14 @@ import { eq } from 'drizzle-orm'
 
 export async function PATCH(req: Request) {
     const cookieStore = await cookies()
-    const session = cookieStore.get('session')?.value
+    const session = cookieStore.get('dodoo_user_id')?.value
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name } = await req.json()
-        if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+        const { name, avatarUrl } = await req.json()
+        if (!name && !avatarUrl) return NextResponse.json({ error: 'Name or AvatarUrl is required' }, { status: 400 })
 
-        // Find current user from session (assuming session is the user ID for now as per other routes)
+        // Find current user from session
         const currentUser = await db.query.users.findFirst({
             where: eq(users.id, session)
         })
@@ -22,8 +22,12 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
+        const updates: any = {}
+        if (name) updates.name = name
+        if (avatarUrl) updates.avatarUrl = avatarUrl
+
         await db.update(users)
-            .set({ name })
+            .set(updates)
             .where(eq(users.id, session))
 
         return NextResponse.json({ success: true })

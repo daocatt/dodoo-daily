@@ -190,45 +190,36 @@ export default function JournalPage() {
             {/* Background */}
             <div className="absolute inset-0 bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-emerald-50/10 pointer-events-none" />
 
-            {/* Main Content Area */}
-            <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-4 md:pt-8 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
-
-                {/* Left Sidebar (Title, Tabs & Actions) */}
-                <aside className="w-full md:w-[280px] flex flex-col gap-6 md:sticky md:top-8 flex-shrink-0 z-20">
-
-                    {/* Embedded Top Navigation */}
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-4">
-                            <Link href="/" className="w-12 h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-orange-600 border border-white hover:bg-orange-50 transition-colors">
-                                <ChevronLeft className="w-6 h-6" />
-                            </Link>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 text-white flex-shrink-0">
-                                    <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
-                                </div>
-                                <span className="font-black text-2xl md:text-3xl tracking-tight text-slate-800">
-                                    {t('journal.title')}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Mobile New Post (shown only on small screens) */}
-                        <Link
-                            href="/journal/new"
-                            className="md:hidden bg-orange-600 text-white w-12 h-12 flex-shrink-0 rounded-2xl shadow-xl shadow-orange-200 flex items-center justify-center"
-                        >
-                            <PlusCircle className="w-6 h-6" />
-                        </Link>
-                    </div>
-
-                    {/* Desktop New Post */}
-                    <Link
-                        href="/journal/new"
-                        className="hidden md:flex bg-orange-600 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 items-center justify-center gap-3 text-lg"
-                    >
-                        <PlusCircle className="w-6 h-6" />
-                        New Post
+            {/* Top Header */}
+            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-orange-100/50 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <Link href="/" className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-sm text-orange-600 border border-orange-100 hover:bg-orange-50 transition-colors">
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                     </Link>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden md:flex w-10 h-10 bg-orange-500 rounded-2xl items-center justify-center shadow-md shadow-orange-500/30 text-white flex-shrink-0">
+                            <BookOpen className="w-5 h-5" />
+                        </div>
+                        <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800">
+                            {t('journal.title')}
+                        </span>
+                    </div>
+                </div>
+
+                <Link
+                    href="/journal/new"
+                    className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-orange-500 hover:bg-orange-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95"
+                >
+                    <PlusCircle className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="hidden md:inline">New Post</span>
+                </Link>
+            </header>
+
+            {/* Main Content Area */}
+            <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
+
+                {/* Left Sidebar (Tabs) */}
+                <aside className="w-full md:w-[240px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
 
                     {/* Tabs */}
                     <div className="flex md:flex-col p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-lg md:rounded-xl w-full shadow-inner border border-white">

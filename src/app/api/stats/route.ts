@@ -21,7 +21,7 @@ export async function GET() {
         if (!userRecord) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
         if (currentUserRole === 'PARENT') {
-            return NextResponse.json({ isParent: true, avatarUrl: userRecord.avatarUrl })
+            return NextResponse.json({ isParent: true, name: userRecord.name, avatarUrl: userRecord.avatarUrl })
         }
 
         let stats = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId))
@@ -38,7 +38,7 @@ export async function GET() {
             childStats = newStats[0]
         }
 
-        return NextResponse.json({ ...childStats, avatarUrl: userRecord.avatarUrl })
+        return NextResponse.json({ ...childStats, name: userRecord.name, avatarUrl: userRecord.avatarUrl })
     } catch (error) {
         console.error('Failed to fetch account stats:', error)
         return NextResponse.json({ error: 'Failed to fetch account stats' }, { status: 500 })

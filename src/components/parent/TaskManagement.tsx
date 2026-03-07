@@ -17,6 +17,8 @@ interface Task {
     description: string | null
     rewardStars: number
     isRepeating: boolean
+    isMonthlyRepeating: boolean
+    plannedTime: string | null
     completed: boolean
     assignedTo: string
 }
@@ -34,6 +36,8 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
         description: '',
         rewardStars: 1,
         isRepeating: false,
+        isMonthlyRepeating: false,
+        plannedTime: new Date().toISOString().split('T')[0],
         assignedTo: preSelectId || ''
     })
 
@@ -59,11 +63,14 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
             const res = await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    ...formData,
+                    plannedTime: formData.plannedTime ? new Date(formData.plannedTime).toISOString() : null
+                })
             })
             if (res.ok) {
                 setShowAdd(false)
-                setFormData({ title: '', description: '', rewardStars: 1, isRepeating: false, assignedTo: '' })
+                setFormData({ title: '', description: '', rewardStars: 1, isRepeating: false, isMonthlyRepeating: false, plannedTime: new Date().toISOString().split('T')[0], assignedTo: '' })
                 fetchData()
             }
         } catch (e) { console.error(e) }
@@ -175,15 +182,36 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
                                 </span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-slate-400 uppercase ml-1">Planned Date</label>
                             <input
-                                type="checkbox"
-                                id="isRepeating"
-                                className="w-5 h-5 accent-emerald-500 rounded"
-                                checked={formData.isRepeating}
-                                onChange={e => setFormData({ ...formData, isRepeating: e.target.checked })}
+                                type="date"
+                                className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-emerald-100"
+                                value={formData.plannedTime}
+                                onChange={e => setFormData({ ...formData, plannedTime: e.target.value })}
                             />
-                            <label htmlFor="isRepeating" className="font-bold text-slate-700">Daily Repeating Task</label>
+                        </div>
+                        <div className="flex flex-col gap-3 justify-center md:col-span-2">
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    id="isRepeating"
+                                    className="w-5 h-5 accent-emerald-500 rounded"
+                                    checked={formData.isRepeating}
+                                    onChange={e => setFormData({ ...formData, isRepeating: e.target.checked, isMonthlyRepeating: e.target.checked ? false : formData.isMonthlyRepeating })}
+                                />
+                                <label htmlFor="isRepeating" className="font-bold text-slate-700">Daily Repeating Task</label>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    id="isMonthlyRepeating"
+                                    className="w-5 h-5 accent-emerald-500 rounded"
+                                    checked={formData.isMonthlyRepeating}
+                                    onChange={e => setFormData({ ...formData, isMonthlyRepeating: e.target.checked, isRepeating: e.target.checked ? false : formData.isRepeating })}
+                                />
+                                <label htmlFor="isMonthlyRepeating" className="font-bold text-slate-700">Monthly Repeating Task</label>
+                            </div>
                         </div>
                     </div>
                     <div className="flex gap-3 pt-4">
@@ -228,6 +256,12 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
                                     <span className="flex items-center gap-1.5 text-blue-400">
                                         <Clock className="w-4 h-4" />
                                         Daily
+                                    </span>
+                                )}
+                                {task.isMonthlyRepeating && (
+                                    <span className="flex items-center gap-1.5 text-purple-400">
+                                        <Clock className="w-4 h-4" />
+                                        Monthly
                                     </span>
                                 )}
                             </div>

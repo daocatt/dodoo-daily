@@ -88,7 +88,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                 className="w-full max-w-2xl space-y-12"
             >
                 {/* Profile Section */}
-                <div className="bg-white p-8 md:p-12 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
+                <div className="bg-white p-8 md:p-12 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
                     <div className="flex flex-col items-center gap-6">
                         <div className="relative">
                             <div className="w-48 h-48 rounded-xl bg-slate-50 border-8 border-white shadow-2xl overflow-hidden flex items-center justify-center">
@@ -139,7 +139,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                 </div>
 
                 {/* PIN Section */}
-                <div className="bg-white p-8 md:p-12 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
+                <div className="bg-white p-8 md:p-12 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
                     <div className="flex items-center gap-4 border-b border-slate-50 pb-6">
                         <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
                             <Lock className="w-7 h-7 text-indigo-500" />

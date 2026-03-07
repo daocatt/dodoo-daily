@@ -25,7 +25,7 @@ export default function AccountHUD() {
     const { t } = useI18n()
 
     // Don't show HUD on checkout, auth flows, or any specific module pages
-    const hiddenPrefixes = ['/buy', '/login', '/journal', '/task', '/gallery', '/emotion', '/shop']
+    const hiddenPrefixes = ['/buy', '/login', '/setup', '/journal', '/task', '/gallery', '/emotion', '/shop']
     const isGuestFlow = hiddenPrefixes.some(prefix => pathname?.startsWith(prefix))
 
     const fetchData = async () => {
@@ -42,10 +42,9 @@ export default function AccountHUD() {
                         setChildren(kids)
                     }
                 }
-            } else if (res.status === 401) {
-                // If on homepage or other app pages but not auth flow
-                if (!pathname?.startsWith('/login')) {
-                    router.push('/login')
+            } else if (res.status === 401 || res.status === 404) {
+                if (!pathname?.startsWith('/login') && !pathname?.startsWith('/setup')) {
+                    handleLogout()
                 }
             }
         } catch (err) {
@@ -54,17 +53,26 @@ export default function AccountHUD() {
     }
 
     const handleLogout = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' })
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+        } catch (e) { }
         window.location.href = '/login'
     }
 
     useEffect(() => {
-        if (!isGuestFlow) {
+        // ALWAYS check auth state across ALL pages, not just HUD visible ones
+        if (!pathname?.startsWith('/login') && !pathname?.startsWith('/setup')) {
             fetchData()
-            const interval = setInterval(fetchData, 15000)
-            return () => clearInterval(interval)
         }
-    }, [pathname, isGuestFlow])
+
+        // Interval check
+        const interval = setInterval(() => {
+            if (!pathname?.startsWith('/login') && !pathname?.startsWith('/setup')) {
+                fetchData()
+            }
+        }, 15000)
+        return () => clearInterval(interval)
+    }, [pathname])
 
     if (isGuestFlow || !stats) return null
 

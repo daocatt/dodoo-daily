@@ -119,12 +119,12 @@ export default function GalleryPage() {
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416]">
             <AnimatedSky />
 
-            <header className="relative z-10 flex justify-between items-center p-6 backdrop-blur-sm bg-white/20 border-b border-white/30">
+            <header className="relative z-10 flex justify-between items-center p-6 backdrop-blur-sm bg-white/40 border-b border-white/50 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-white border border-white/50">
+                    <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-800 border border-slate-200">
                         <ChevronLeft className="w-6 h-6" />
                     </Link>
-                    <span className="font-extrabold text-2xl tracking-tight text-white drop-shadow-md flex items-center gap-2">
+                    <span className="font-extrabold text-2xl tracking-tight text-slate-800 flex items-center gap-2">
                         <ImageIcon className="w-6 h-6" />
                         {t('gallery.title')}
                     </span>
@@ -139,7 +139,7 @@ export default function GalleryPage() {
                     </button>
                     <button
                         onClick={() => setShowNewAlbumModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-white/50"
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 hover:bg-slate-700 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-slate-700"
                     >
                         <Plus className="w-4 h-4" />
                         {t('gallery.newAlbum')}
