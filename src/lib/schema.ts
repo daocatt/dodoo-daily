@@ -181,3 +181,23 @@ export const familyMember = sqliteTable("FamilyMember", {
     notes: text("notes"),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
+
+// -----------------------------------------------------------------------------
+// MEDIA & FILE SYSTEM
+// -----------------------------------------------------------------------------
+
+export const media = sqliteTable("Media", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(), // User-friendly name or edited name
+    fileName: text("fileName").notNull(), // Physical filename
+    fileType: text("fileType").notNull(), // IMAGE, VOICE, VIDEO, DOC, GALLERY
+    mimeType: text("mimeType"),
+    size: integer("size"),
+    storageProvider: text("storageProvider").default("LOCAL").notNull(), // LOCAL, R2
+    path: text("path").notNull(), // Full URL or access path
+    key: text("key").notNull(), // Relative path or R2 key
+    bucket: text("bucket"), // R2 bucket name
+    userId: text("userId").references(() => users.id),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});

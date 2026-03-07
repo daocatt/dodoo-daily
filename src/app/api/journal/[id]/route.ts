@@ -41,3 +41,30 @@ export async function GET(
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 }
+
+export async function PATCH(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
+    try {
+        const { id } = await params
+        const body = await req.json()
+        const { text, imageUrls, isMilestone, milestoneDate } = body
+
+        const updatedEntry = await db.update(journal)
+            .set({
+                text,
+                imageUrls,
+                isMilestone,
+                milestoneDate: milestoneDate ? new Date(milestoneDate) : null,
+                updatedAt: new Date()
+            })
+            .where(eq(journal.id, id))
+            .returning()
+
+        return NextResponse.json(updatedEntry[0])
+    } catch (error) {
+        console.error('Failed to update journal entry:', error)
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
+}

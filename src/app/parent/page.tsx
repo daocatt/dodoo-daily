@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2, CheckSquare, ShoppingBag as BagIcon, Camera, Lock, UserCircle, Power, Network, LayoutDashboard } from 'lucide-react'
+import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2, CheckSquare, ShoppingBag as BagIcon, Camera, Lock, UserCircle, Power, Network, LayoutDashboard, Image as ImageIcon } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
 
@@ -12,12 +12,13 @@ import OrderManagement from '@/components/parent/OrderManagement'
 import ProfileManagement from '@/components/parent/SettingsManagement'
 import TaskManagement from '@/components/parent/TaskManagement'
 import SystemSettings from '@/components/parent/SystemSettings'
+import MediaManagement from '@/components/parent/MediaManagement'
 
 export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'TASKS' | 'SYSTEM'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'TASKS' | 'SYSTEM' | 'MEDIA'>('HOME')
     const [user, setUser] = useState<any>(null)
     const [preSelectedChild, setPreSelectedChild] = useState<string | null>(null)
 
@@ -60,6 +61,7 @@ export default function ParentDashboard() {
             case 'PROFILE': return <ProfileManagement user={user} />
             case 'SYSTEM': return <SystemSettings />
             case 'TASKS': return <TaskManagement preSelectId={preSelectedChild} />
+            case 'MEDIA': return <MediaManagement />
             default: return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
 
@@ -165,6 +167,23 @@ export default function ParentDashboard() {
                         </div>
                     </button>
 
+                    {/* Media Management */}
+                    <button
+                        onClick={() => setView('MEDIA')}
+                        className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-sky-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <ImageIcon className="w-7 h-7 text-sky-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.media')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.mediaDesc')}</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-sky-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
                 </div>
             )
         }
@@ -190,7 +209,8 @@ export default function ParentDashboard() {
                                     view === 'FAMILY' ? t('parent.family') :
                                         view === 'TASKS' ? t('menu.tasks') :
                                             view === 'SYSTEM' ? 'System Settings' :
-                                                view}
+                                                view === 'MEDIA' ? t('parent.media') :
+                                                    view}
                         </h1>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Control Panel</p>
                     </div>

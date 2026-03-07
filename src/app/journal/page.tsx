@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     ChevronLeft, BookOpen, User, UserRound, Camera, X, Star,
     Milestone as MilestoneIcon, Layers, History, Clock,
-    PlusCircle, Loader2, Calendar
+    PlusCircle, Loader2, Calendar, Edit2
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -127,9 +127,10 @@ export default function JournalPage() {
             for (const file of images) {
                 const formData = new FormData()
                 formData.append('file', file)
-                const upRes = await fetch('/api/upload', { method: 'POST', body: formData })
+                formData.append('type', 'IMAGE')
+                const upRes = await fetch('/api/media/upload', { method: 'POST', body: formData })
                 const upData = await upRes.json()
-                if (upData.url) imageUrls.push(upData.url)
+                if (upData.path) imageUrls.push(upData.path)
             }
 
             const res = await fetch('/api/journal', {
@@ -219,6 +220,17 @@ export default function JournalPage() {
                                     </span>
                                 </div>
                             )}
+
+                            {/* Edit Action */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(`/journal/${entry.id}?edit=true`);
+                                }}
+                                className="ml-2 p-2 rounded-xl bg-slate-50 text-slate-300 hover:text-orange-500 hover:bg-orange-50 transition-all border border-transparent hover:border-orange-100"
+                            >
+                                <Edit2 className="w-3.5 h-3.5" />
+                            </button>
                         </div>
 
                         {/* Text Content */}
@@ -406,16 +418,18 @@ export default function JournalPage() {
                                             {t('parent.milestone')}
                                         </button>
 
-                                        <div className="relative flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden group hover:border-orange-200 transition-colors">
-                                            <Calendar className="w-4 h-4 text-orange-500" />
-                                            <span className="font-bold text-slate-600 text-xs">
-                                                {formatDate(postDate)}
-                                            </span>
+                                        <div className="flex-1 relative flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm group hover:border-orange-200 transition-colors">
+                                            <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
                                             <input
                                                 type="datetime-local"
                                                 value={postDate}
                                                 onChange={e => setPostDate(e.target.value)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                className="font-bold text-slate-600 text-xs bg-transparent outline-none w-full cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                                onClick={(e) => {
+                                                    try {
+                                                        (e.target as HTMLInputElement).showPicker();
+                                                    } catch { }
+                                                }}
                                             />
                                         </div>
                                     </div>

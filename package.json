@@ -13,6 +13,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1004.0",
     "better-sqlite3": "^12.6.2",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",

@@ -47,9 +47,27 @@ export default function FamilyTreePage() {
         e.preventDefault()
         if (!editing?.name || !editing?.relationship) return
 
+        let finalParentId = editing.parentId || null
+
+        // Smart Parenting: If trying to add a role and parentId is not set, try to infer it
+        if (!finalParentId) {
+            const rel = editing.relationship
+            if (rel === t('family.role.me') || rel === t('family.role.brother') || rel === t('family.role.sister')) {
+                finalParentId = members.find(m => m.relationship === t('family.role.father'))?.id ||
+                    members.find(m => m.relationship === t('family.role.mother'))?.id || null
+            } else if (rel === t('family.role.father')) {
+                finalParentId = members.find(m => m.relationship === t('family.role.grandpa_p'))?.id ||
+                    members.find(m => m.relationship === t('family.role.grandma_p'))?.id || null
+            } else if (rel === t('family.role.mother')) {
+                finalParentId = members.find(m => m.relationship === t('family.role.grandpa_m'))?.id ||
+                    members.find(m => m.relationship === t('family.role.grandma_m'))?.id || null
+            }
+        }
+
         const method = editing.id ? 'PATCH' : 'POST'
         const payload = {
             ...editing,
+            parentId: finalParentId,
             birthDate: editing.birthDate ? new Date(editing.birthDate) : null
         }
         try {
@@ -59,6 +77,8 @@ export default function FamilyTreePage() {
                 body: JSON.stringify(payload)
             })
             if (res.ok) {
+                // If it was a parent being added (Father/Mother), check if "Me" is orphan and should be their child
+                // This is a bit more complex for a single fetch, but let's at least handle the basic parent-link of the NEW member.
                 setEditing(null)
                 setShowForm(false)
                 fetchData()
@@ -229,9 +249,9 @@ export default function FamilyTreePage() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white w-full max-w-md rounded-[3rem] shadow-2xl p-8 md:p-10 border border-emerald-50"
+                            className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-emerald-50 flex flex-col max-h-[90dvh] overflow-hidden"
                         >
-                            <header className="flex items-center justify-between mb-8">
+                            <header className="flex items-center justify-between p-8 pb-4 shrink-0">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                                         <User className="w-6 h-6 text-emerald-600" />
@@ -243,113 +263,132 @@ export default function FamilyTreePage() {
                                 </button>
                             </header>
 
-                            <form onSubmit={handleSave} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('family.memberName')}</label>
-                                    <input
-                                        autoFocus
-                                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold transition-all focus:ring-4 focus:ring-emerald-50 outline-none"
-                                        placeholder={t('family.namePlaceholder')}
-                                        value={editing?.name || ''}
-                                        onChange={e => setEditing({ ...editing, name: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('family.relationship')}</label>
-                                    <input
-                                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold transition-all focus:ring-4 focus:ring-emerald-50 outline-none"
-                                        placeholder={t('family.relationshipPlaceholder')}
-                                        value={editing?.relationship || ''}
-                                        onChange={e => setEditing({ ...editing, relationship: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.gender')}</label>
-                                    <div className="flex gap-2">
-                                        {(['MALE', 'FEMALE', 'OTHER'] as const).map(g => (
-                                            <button
-                                                key={g}
-                                                type="button"
-                                                onClick={() => setEditing({ ...editing, gender: g })}
-                                                className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all ${editing?.gender === g
-                                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'
-                                                    : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                                                    }`}
-                                            >
-                                                {t(`gender.${g.toLowerCase()}` as any)}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
+                            <div className="flex-1 overflow-y-auto px-8 pb-8 hide-scrollbar">
+                                <form onSubmit={handleSave} className="space-y-6">
+                                    {/* Name */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')}</label>
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('family.memberName')}</label>
                                         <input
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold transition-all focus:ring-4 focus:ring-emerald-50 outline-none"
-                                            placeholder="Nickname"
-                                            value={editing?.nickname || ''}
-                                            onChange={e => setEditing({ ...editing, nickname: e.target.value })}
+                                            autoFocus
+                                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold transition-all focus:ring-4 focus:ring-emerald-50 outline-none"
+                                            placeholder={t('family.namePlaceholder')}
+                                            value={editing?.name || ''}
+                                            onChange={e => setEditing({ ...editing, name: e.target.value })}
+                                            required
                                         />
                                     </div>
+
+                                    {/* Gender Choice */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('family.parent')}</label>
-                                        <select
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none"
-                                            value={editing?.parentId || ''}
-                                            onChange={e => setEditing({ ...editing, parentId: e.target.value || null })}
-                                        >
-                                            <option value="">{t('family.none')}</option>
-                                            {members.filter(m => m.id !== editing?.id).map(m => (
-                                                <option key={m.id} value={m.id}>{m.name}</option>
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.gender')}</label>
+                                        <div className="flex gap-2">
+                                            {(['MALE', 'FEMALE', 'OTHER'] as const).map(g => (
+                                                <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={() => setEditing({ ...editing, gender: g })}
+                                                    className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all ${editing?.gender === g
+                                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'
+                                                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                                                        }`}
+                                                >
+                                                    {t(`gender.${g.toLowerCase()}` as any)}
+                                                </button>
                                             ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
-                                        <input
-                                            type="date"
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold transition-all focus:ring-4 focus:ring-emerald-50 outline-none"
-                                            value={editing?.birthDate ? new Date(editing.birthDate).toISOString().split('T')[0] : ''}
-                                            onChange={e => {
-                                                const date = e.target.value ? new Date(e.target.value) : undefined
-                                                setEditing({
-                                                    ...editing,
-                                                    birthDate: date,
-                                                    zodiac: date ? getZodiac(date) : undefined
-                                                })
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.zodiac')}</label>
-                                        <div className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner text-sm">
-                                            {editing?.zodiac || '---'}
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="pt-4 flex gap-3">
-                                    <button
-                                        type="submit"
-                                        className="flex-1 bg-emerald-500 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-emerald-200 hover:bg-emerald-600 active:scale-95"
-                                    >
-                                        {editing?.id ? t('family.updateMember') : t('family.addToTree')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => { setShowForm(false); setEditing(null); }}
-                                        className="px-6 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all"
-                                    >
-                                        {t('button.cancel')}
-                                    </button>
-                                </div>
-                            </form>
+                                    {/* Relationship Dropdown + Custom Toggle */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('family.relationship')}</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { key: 'me', gender: 'OTHER' },
+                                                { key: 'father', gender: 'MALE' },
+                                                { key: 'mother', gender: 'FEMALE' },
+                                                { key: 'grandpa_p', gender: 'MALE' },
+                                                { key: 'grandma_p', gender: 'FEMALE' },
+                                                { key: 'grandpa_m', gender: 'MALE' },
+                                                { key: 'grandma_m', gender: 'FEMALE' },
+                                                { key: 'brother', gender: 'MALE' },
+                                                { key: 'sister', gender: 'FEMALE' },
+                                                { key: 'other', gender: 'OTHER' }
+                                            ].map(role => (
+                                                <button
+                                                    key={role.key}
+                                                    type="button"
+                                                    onClick={() => setEditing({
+                                                        ...editing,
+                                                        relationship: t(`family.role.${role.key}` as any),
+                                                        gender: role.gender as any
+                                                    })}
+                                                    className={`py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all border ${editing?.relationship === t(`family.role.${role.key}` as any)
+                                                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-100'
+                                                        : 'bg-white text-slate-500 border-slate-100 hover:bg-slate-50'
+                                                        }`}
+                                                >
+                                                    {t(`family.role.${role.key}` as any)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <input
+                                            className="w-full mt-2 px-6 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm focus:ring-2 focus:ring-emerald-50 outline-none"
+                                            placeholder={t('family.relationshipPlaceholder')}
+                                            value={editing?.relationship || ''}
+                                            onChange={e => setEditing({ ...editing, relationship: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {/* Birth Date */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
+                                            <input
+                                                type="date"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold transition-all focus:ring-4 focus:ring-emerald-50 outline-none"
+                                                value={editing?.birthDate ? new Date(editing.birthDate).toISOString().split('T')[0] : ''}
+                                                onChange={e => {
+                                                    const date = e.target.value ? new Date(e.target.value) : undefined
+                                                    setEditing({
+                                                        ...editing,
+                                                        birthDate: date,
+                                                        zodiac: date ? getZodiac(date) : undefined
+                                                    })
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('family.parent')}</label>
+                                            <select
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none appearance-none"
+                                                value={editing?.parentId || ''}
+                                                onChange={e => setEditing({ ...editing, parentId: e.target.value || null })}
+                                            >
+                                                <option value="">{t('family.none')}</option>
+                                                {members.filter(m => m.id !== editing?.id).map(m => (
+                                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 flex gap-3">
+                                        <button
+                                            type="submit"
+                                            className="flex-1 bg-emerald-500 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-emerald-200 hover:bg-emerald-600 active:scale-95"
+                                        >
+                                            {editing?.id ? t('family.updateMember') : t('family.addToTree')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setShowForm(false); setEditing(null); }}
+                                            className="px-6 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                                        >
+                                            {t('button.cancel')}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </motion.div>
                     </div>
                 )}

@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
+import { uploadMedia } from '@/lib/storage'
+
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
@@ -27,27 +29,16 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'File is required' }, { status: 400 })
         }
 
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-
-        const uploadDir = join(process.cwd(), 'uploads', 'images', 'avatars')
-        await mkdir(uploadDir, { recursive: true })
-
-        const ext = file.name.split('.').pop() || 'jpg'
-        const fileName = `${uuidv4()}.${ext}`
-        const path = join(uploadDir, fileName)
-
-        await writeFile(path, buffer)
-
-        const avatarUrl = `/api/images/avatars/${fileName}`
+        const mediaItem = await uploadMedia(file, 'IMAGE', targetUserId);
+        const avatarUrl = mediaItem.path;
 
         await db.update(users)
             .set({ avatarUrl })
             .where(eq(users.id, targetUserId))
 
         return NextResponse.json({ success: true, avatarUrl })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to upload avatar:', error)
-        return NextResponse.json({ error: 'Failed to upload' }, { status: 500 })
+        return NextResponse.json({ error: error.message || 'Failed to upload' }, { status: 500 })
     }
 }

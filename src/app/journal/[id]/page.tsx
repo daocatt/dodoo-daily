@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     ChevronLeft, User, UserRound, Calendar, Milestone as MilestoneIcon,
-    Clock, Tag, Share2, Globe, Lock
+    Clock, Tag, Share2, Globe, Lock, Edit2, Check, X as CloseIcon, Loader2
 } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -38,10 +38,16 @@ const formatDate = (date: string | number | Date) => {
 export default function JournalDetailPage() {
     const { id } = useParams()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const { t } = useI18n()
     const [entry, setEntry] = useState<JournalEntry | null>(null)
     const [loading, setLoading] = useState(true)
     const [lightbox, setLightbox] = useState<{ images: string[], index: number } | null>(null)
+    const [isEditing, setIsEditing] = useState(false)
+    const [editText, setEditText] = useState('')
+    const [editIsMilestone, setEditIsMilestone] = useState(false)
+    const [editMilestoneDate, setEditMilestoneDate] = useState<string>('')
+    const [saving, setSaving] = useState(false)
 
     useEffect(() => {
         const fetchDetail = async () => {
@@ -50,6 +56,17 @@ export default function JournalDetailPage() {
                 if (res.ok) {
                     const data = await res.json()
                     setEntry(data)
+                    setEditText(data.text || '')
+                    setEditIsMilestone(data.isMilestone)
+                    const mDate = data.milestoneDate ? new Date(data.milestoneDate) : new Date(data.createdAt)
+                    // Format for datetime-local: YYYY-MM-DDTHH:mm
+                    const offset = mDate.getTimezoneOffset()
+                    const localDate = new Date(mDate.getTime() - (offset * 60 * 1000))
+                    setEditMilestoneDate(localDate.toISOString().slice(0, 16))
+
+                    if (searchParams.get('edit') === 'true') {
+                        setIsEditing(true)
+                    }
                 } else {
                     router.push('/journal')
                 }
@@ -60,7 +77,32 @@ export default function JournalDetailPage() {
             }
         }
         if (id) fetchDetail()
-    }, [id])
+    }, [id, router])
+
+    const handleSave = async () => {
+        if (!id) return
+        setSaving(true)
+        try {
+            const res = await fetch(`/api/journal/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: editText,
+                    isMilestone: editIsMilestone,
+                    milestoneDate: editIsMilestone ? new Date(editMilestoneDate).getTime() : null
+                })
+            })
+            if (res.ok) {
+                const updated = await res.json()
+                setEntry(prev => prev ? { ...prev, ...updated } : null)
+                setIsEditing(false)
+            }
+        } catch (error) {
+            console.error('Failed to update journal:', error)
+        } finally {
+            setSaving(false)
+        }
+    }
 
     if (loading) {
         return (
@@ -99,10 +141,34 @@ export default function JournalDetailPage() {
                     <ChevronLeft className="w-6 h-6" />
                 </button>
                 <div className="flex items-center gap-2">
-                    <div className="px-4 py-2 bg-white rounded-full border border-slate-100 shadow-sm flex items-center gap-2">
-                        <Share2 className="w-4 h-4 text-slate-400" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('journal.shareMoment')}</span>
-                    </div>
+                    {!isEditing ? (
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-slate-400 hover:text-orange-500 border border-slate-50 active:scale-95 transition-all"
+                        >
+                            <Edit2 className="w-5 h-5" />
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-orange-500 shadow-xl shadow-orange-500/20 text-white border border-orange-400 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsEditing(false)
+                                    setEditText(entry.text || '')
+                                    setEditIsMilestone(entry.isMilestone)
+                                }}
+                                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-slate-400 hover:text-rose-500 border border-slate-50 active:scale-95 transition-all"
+                            >
+                                <CloseIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </header>
 
@@ -153,10 +219,53 @@ export default function JournalDetailPage() {
 
                     {/* Content Section */}
                     <div className="p-8 md:p-12">
-                        {entry.text && (
-                            <p className="text-xl md:text-2xl text-slate-700 font-medium leading-[1.8] mb-12 whitespace-pre-wrap">
-                                {entry.text}
-                            </p>
+                        {isEditing ? (
+                            <div className="space-y-8">
+                                <textarea
+                                    className="w-full h-80 p-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
+                                    value={editText}
+                                    onChange={e => setEditText(e.target.value)}
+                                    placeholder={t('journal.placeholder')}
+                                />
+                                <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-3xl border border-orange-100/30">
+                                    <div className="flex items-center gap-4">
+                                        <button
+                                            onClick={() => setEditIsMilestone(!editIsMilestone)}
+                                            className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${editIsMilestone ? 'bg-orange-500 border-orange-500 shadow-lg shadow-orange-200' : 'bg-white border-orange-200'
+                                                }`}
+                                        >
+                                            {editIsMilestone && <Check className="w-5 h-5 text-white stroke-[3]" />}
+                                        </button>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-black text-orange-600 uppercase tracking-widest">{t('parent.milestone')}</span>
+                                            <span className="text-[10px] text-orange-400 font-bold">{t('parent.milestoneTip')}</span>
+                                        </div>
+                                    </div>
+
+                                    {editIsMilestone && (
+                                        <div className="flex-1 relative flex items-center gap-3 bg-white p-4 rounded-2xl border border-orange-100 shadow-sm group hover:border-orange-200 transition-colors">
+                                            <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                            <input
+                                                type="datetime-local"
+                                                className="font-bold text-slate-600 text-sm bg-transparent outline-none w-full cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                                value={editMilestoneDate}
+                                                onChange={e => setEditMilestoneDate(e.target.value)}
+                                                onClick={(e) => {
+                                                    try {
+                                                        (e.target as HTMLInputElement).showPicker();
+                                                    } catch { }
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            entry.text && (
+                                <p className="text-xl md:text-2xl text-slate-700 font-medium leading-[1.8] mb-12 whitespace-pre-wrap">
+                                    {entry.text}
+                                </p>
+                            )
                         )}
 
                         {entryImages.length > 0 && (
