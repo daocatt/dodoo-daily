@@ -133,50 +133,23 @@ export default function JournalDetailPage() {
             {/* Background Polish */}
             <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-orange-100/20 via-transparent to-transparent pointer-events-none" />
 
-            <header className="relative z-10 p-6 flex items-center justify-between max-w-4xl mx-auto w-full">
+            <header className="relative z-10 p-6 flex items-center max-w-[1200px] mx-auto w-full">
                 <button
                     onClick={() => router.back()}
                     className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-slate-600 border border-slate-50 active:scale-95 transition-transform"
                 >
                     <ChevronLeft className="w-6 h-6" />
                 </button>
-                <div className="flex items-center gap-2">
-                    {!isEditing ? (
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-slate-400 hover:text-orange-500 border border-slate-50 active:scale-95 transition-all"
-                        >
-                            <Edit2 className="w-5 h-5" />
-                        </button>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-orange-500 shadow-xl shadow-orange-500/20 text-white border border-orange-400 active:scale-95 transition-all disabled:opacity-50"
-                            >
-                                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setIsEditing(false)
-                                    setEditText(entry.text || '')
-                                    setEditIsMilestone(entry.isMilestone)
-                                }}
-                                className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-slate-400 hover:text-rose-500 border border-slate-50 active:scale-95 transition-all"
-                            >
-                                <CloseIcon className="w-5 h-5" />
-                            </button>
-                        </div>
-                    )}
+                <div className="flex-1 text-center pr-12">
+                    <span className="font-black text-xl text-slate-800 tracking-tight">Journal Detail</span>
                 </div>
             </header>
+            <main className={`relative z-10 w-full ${isEditing ? 'max-w-4xl' : 'max-w-[1200px]'} mx-auto px-6 mt-6 pb-24 flex flex-col md:flex-row gap-6 md:gap-12 items-start`}>
 
-            <main className="relative z-10 max-w-4xl mx-auto px-6 mt-6">
-                <article className="bg-white rounded-[2.5rem] shadow-2xl shadow-orange-900/5 border border-slate-50 overflow-hidden">
-                    {/* Header Info */}
-                    <div className="p-8 md:p-12 pb-6 border-b border-slate-50 bg-gradient-to-b from-slate-50/50 to-white">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                {!isEditing && (
+                    <aside className="w-full md:w-[320px] flex flex-col gap-6 md:sticky md:top-6 flex-shrink-0 z-20">
+                        <div className="bg-white rounded-[2.5rem] shadow-xl shadow-orange-900/5 border border-slate-50 p-8 flex flex-col gap-8">
+                            {/* Author Info */}
                             <div className="flex items-center gap-4">
                                 <div className={`w-16 h-16 rounded-3xl overflow-hidden border-4 ${isChild ? 'border-orange-100 shadow-orange-200' : 'border-indigo-100 shadow-indigo-200'} shadow-lg flex-shrink-0`}>
                                     {entry.authorAvatar ? (
@@ -187,12 +160,12 @@ export default function JournalDetailPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div>
-                                    <h1 className="text-2xl font-black text-slate-800 leading-tight">
+                                <div className="min-w-0">
+                                    <h1 className="text-xl font-black text-slate-800 leading-tight truncate">
                                         {entry.authorName || (isChild ? t('login.child') : t('login.parent'))}
                                     </h1>
-                                    <div className="flex items-center gap-3 mt-1">
-                                        <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.2em] ${isChild ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600'}`}>
+                                    <div className="flex flex-col gap-1 mt-1">
+                                        <div className={`w-fit px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.2em] ${isChild ? 'bg-orange-100 text-orange-600' : 'bg-indigo-100 text-indigo-600'}`}>
                                             {isChild ? t('login.child') : t('login.parent')}
                                         </div>
                                         <span className="text-[10px] font-bold text-slate-400">
@@ -203,103 +176,138 @@ export default function JournalDetailPage() {
                             </div>
 
                             {entry.isMilestone && (
-                                <div className="flex flex-col items-start md:items-end gap-2">
-                                    <div className="px-5 py-2.5 bg-gradient-to-r from-orange-400 to-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-orange-200 flex items-center gap-2">
-                                        <MilestoneIcon className="w-4 h-4" />
-                                        {t('parent.milestone')}
+                                <div className="flex flex-col gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/50">
+                                    <div className="flex items-center gap-2 text-orange-600">
+                                        <MilestoneIcon className="w-5 h-5 flex-shrink-0" />
+                                        <span className="text-xs font-black uppercase tracking-widest">{t('parent.milestone')}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-orange-400">
-                                        <Calendar className="w-3 h-3" />
-                                        <span className="text-[10px] font-black">{formatDate(entry.milestoneDate || entry.createdAt)}</span>
+                                    <div className="flex items-center gap-2 text-orange-400 bg-white px-3 py-2 rounded-xl border border-orange-100">
+                                        <Calendar className="w-4 h-4" />
+                                        <span className="text-xs font-bold">{formatDate(entry.milestoneDate || entry.createdAt)}</span>
                                     </div>
                                 </div>
                             )}
+
+                            {/* Actions */}
+                            <div className="pt-6 border-t border-slate-100 flex gap-4">
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex-1 bg-white border-2 border-slate-100 text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-50 hover:border-slate-200 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                    <span>Edit Option</span>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </aside>
+                )}
 
-                    {/* Content Section */}
-                    <div className="p-8 md:p-12">
-                        {isEditing ? (
-                            <div className="space-y-8">
-                                <textarea
-                                    className="w-full h-80 p-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
-                                    value={editText}
-                                    onChange={e => setEditText(e.target.value)}
-                                    placeholder={t('journal.placeholder')}
-                                />
-                                <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-3xl border border-orange-100/30">
-                                    <div className="flex items-center gap-4">
-                                        <button
-                                            onClick={() => setEditIsMilestone(!editIsMilestone)}
-                                            className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${editIsMilestone ? 'bg-orange-500 border-orange-500 shadow-lg shadow-orange-200' : 'bg-white border-orange-200'
-                                                }`}
-                                        >
-                                            {editIsMilestone && <Check className="w-5 h-5 text-white stroke-[3]" />}
-                                        </button>
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-black text-orange-600 uppercase tracking-widest">{t('parent.milestone')}</span>
-                                            <span className="text-[10px] text-orange-400 font-bold">{t('parent.milestoneTip')}</span>
-                                        </div>
+                <article className="flex-1 w-full min-w-0 bg-white rounded-[2.5rem] shadow-2xl shadow-orange-900/5 border border-slate-50 overflow-hidden">
+                    {isEditing ? (
+                        <div className="p-8 md:p-12 space-y-8">
+                            <textarea
+                                className="w-full h-96 p-8 bg-slate-50/50 rounded-[2.5rem] border-2 border-slate-50 focus:border-orange-100 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none text-xl md:text-2xl font-medium leading-[1.8] resize-none transition-all shadow-inner"
+                                value={editText}
+                                onChange={e => setEditText(e.target.value)}
+                                placeholder={t('journal.placeholder')}
+                            />
+
+                            <div className="flex flex-col md:flex-row md:items-center gap-6 p-6 bg-orange-50/50 rounded-3xl border border-orange-100/30">
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        onClick={() => setEditIsMilestone(!editIsMilestone)}
+                                        className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${editIsMilestone ? 'bg-orange-500 border-orange-500 shadow-lg shadow-orange-200' : 'bg-white border-orange-200'
+                                            }`}
+                                    >
+                                        {editIsMilestone && <Check className="w-5 h-5 text-white stroke-[3]" />}
+                                    </button>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-black text-orange-600 uppercase tracking-widest">{t('parent.milestone')}</span>
+                                        <span className="text-[10px] text-orange-400 font-bold">{t('parent.milestoneTip')}</span>
                                     </div>
+                                </div>
 
-                                    {editIsMilestone && (
-                                        <div className="flex-1 relative flex items-center gap-3 bg-white p-4 rounded-2xl border border-orange-100 shadow-sm group hover:border-orange-200 transition-colors">
-                                            <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                {editIsMilestone && (
+                                    <div className="flex-1 flex gap-2">
+                                        <div className="relative flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm group hover:border-orange-200 transition-colors">
+                                            <Calendar className="w-4 h-4 text-orange-500 pointer-events-none" />
+                                            <span className="font-bold text-slate-600 text-sm pointer-events-none flex-1 text-center">
+                                                {editMilestoneDate.split('T')[0]}
+                                            </span>
                                             <input
-                                                type="datetime-local"
-                                                className="font-bold text-slate-600 text-sm bg-transparent outline-none w-full cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                                                value={editMilestoneDate}
-                                                onChange={e => setEditMilestoneDate(e.target.value)}
+                                                type="date"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                value={editMilestoneDate.split('T')[0]}
+                                                onChange={e => e.target.value && setEditMilestoneDate(`${e.target.value}T${editMilestoneDate.split('T')[1]}`)}
                                                 onClick={(e) => {
-                                                    try {
-                                                        (e.target as HTMLInputElement).showPicker();
-                                                    } catch { }
+                                                    try { (e.target as HTMLInputElement).showPicker(); } catch { }
                                                 }}
                                             />
                                         </div>
-                                    )}
-                                </div>
+                                        <div className="relative flex items-center justify-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm group hover:border-orange-200 transition-colors">
+                                            <span className="font-bold text-slate-600 text-sm pointer-events-none">
+                                                {editMilestoneDate.split('T')[1]}
+                                            </span>
+                                            <input
+                                                type="time"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                value={editMilestoneDate.split('T')[1]}
+                                                onChange={e => e.target.value && setEditMilestoneDate(`${editMilestoneDate.split('T')[0]}T${e.target.value}`)}
+                                                onClick={(e) => {
+                                                    try { (e.target as HTMLInputElement).showPicker(); } catch { }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        ) : (
-                            entry.text && (
+
+                            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-slate-100">
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="flex-1 h-14 bg-orange-500 text-white font-black rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Save Details</span>}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        setEditText(entry.text || '');
+                                        setEditIsMilestone(entry.isMilestone);
+                                    }}
+                                    className="sm:w-32 h-14 bg-white border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center"
+                                >
+                                    <span>Cancel</span>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-8 md:p-12">
+                            {entry.text && (
                                 <p className="text-xl md:text-2xl text-slate-700 font-medium leading-[1.8] mb-12 whitespace-pre-wrap">
                                     {entry.text}
                                 </p>
-                            )
-                        )}
+                            )}
 
-                        {entryImages.length > 0 && (
-                            <div className={`grid gap-4 ${entryImages.length === 1 ? 'grid-cols-1' : entryImages.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
-                                {entryImages.map((img, i) => (
-                                    <motion.button
-                                        key={i}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => setLightbox({ images: entryImages, index: i })}
-                                        className="relative aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-xl group"
-                                    >
-                                        <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </motion.button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer Polish */}
-                    <div className="p-8 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                        <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-300">
-                                <Globe className="w-4 h-4" />
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-300">
-                                <Lock className="w-4 h-4" />
-                            </div>
+                            {entryImages.length > 0 && (
+                                <div className={`grid gap-4 ${entryImages.length === 1 ? 'grid-cols-1' : entryImages.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+                                    {entryImages.map((img, i) => (
+                                        <motion.button
+                                            key={i}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => setLightbox({ images: entryImages, index: i })}
+                                            className="relative aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-xl group"
+                                        >
+                                            <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                            {t('journal.copyright')}
-                        </p>
-                    </div>
+                    )}
                 </article>
             </main>
 

@@ -24,8 +24,8 @@ export default function AccountHUD() {
     const router = useRouter()
     const { t } = useI18n()
 
-    // Don't show HUD on checkout or specific external views if needed (like /buy)
-    const isGuestFlow = pathname?.startsWith('/buy') || pathname?.startsWith('/login')
+    // Don't show HUD on checkout, auth flows, or any journal pages
+    const isGuestFlow = pathname?.startsWith('/buy') || pathname?.startsWith('/login') || pathname?.startsWith('/journal')
 
     const fetchData = async () => {
         try {

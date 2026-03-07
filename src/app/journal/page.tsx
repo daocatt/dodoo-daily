@@ -47,21 +47,6 @@ export default function JournalPage() {
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
 
-    // Post Modal State
-    const [showPostModal, setShowPostModal] = useState(false)
-    const [text, setText] = useState('')
-    const getLocalISOString = () => {
-        const d = new Date()
-        const offset = d.getTimezoneOffset()
-        const local = new Date(d.getTime() - (offset * 60 * 1000))
-        return local.toISOString().slice(0, 16)
-    }
-
-    const [images, setImages] = useState<File[]>([])
-    const [imagePreviews, setImagePreviews] = useState<string[]>([])
-    const [isMilestone, setIsMilestone] = useState(false)
-    const [postDate, setPostDate] = useState(getLocalISOString())
-    const [posting, setPosting] = useState(false)
 
     // Lightbox State
     const [lightbox, setLightbox] = useState<{ images: string[], index: number } | null>(null)
@@ -101,63 +86,6 @@ export default function JournalPage() {
         }
     }
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files) return
-        const files = Array.from(e.target.files).slice(0, 20 - images.length)
-        setImages([...images, ...files])
-
-        const newPreviews = files.map(f => URL.createObjectURL(f))
-        setImagePreviews([...imagePreviews, ...newPreviews])
-    }
-
-    const removeImage = (idx: number) => {
-        setImages(images.filter((_, i) => i !== idx))
-        setImagePreviews(imagePreviews.filter((_, i) => i !== idx))
-    }
-
-    const handlePost = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!text && images.length === 0) return
-        setPosting(true)
-
-        try {
-            const imageUrls: string[] = []
-
-            // Upload images first
-            for (const file of images) {
-                const formData = new FormData()
-                formData.append('file', file)
-                formData.append('type', 'IMAGE')
-                const upRes = await fetch('/api/media/upload', { method: 'POST', body: formData })
-                const upData = await upRes.json()
-                if (upData.path) imageUrls.push(upData.path)
-            }
-
-            const res = await fetch('/api/journal', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    text,
-                    imageUrls,
-                    isMilestone,
-                    milestoneDate: new Date(postDate).getTime()
-                })
-            })
-            if (res.ok) {
-                setText('')
-                setImages([])
-                setImagePreviews([])
-                setIsMilestone(false)
-                setPostDate(getLocalISOString())
-                setShowPostModal(false)
-                fetchJournal(1, true)
-            }
-        } catch (err) {
-            console.error(err)
-        } finally {
-            setPosting(false)
-        }
-    }
 
     const milestoneEntries = entries.filter(e => e.isMilestone)
 
@@ -268,59 +196,73 @@ export default function JournalPage() {
             {/* Background */}
             <div className="absolute inset-0 bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-emerald-50/10 pointer-events-none" />
 
-            <header className="relative z-10 flex flex-col p-6 md:px-10 md:pt-10 gap-8">
-                <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-6">
-                        <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-orange-600 border border-white">
-                            <ChevronLeft className="w-6 h-6" />
-                        </Link>
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 text-white">
-                                <BookOpen className="w-6 h-6" />
-                            </div>
-                            <span className="font-black text-3xl tracking-tight text-slate-800">
-                                {t('journal.title')}
-                            </span>
+            {/* Top Bar Navigation */}
+            <header className="relative z-10 flex items-center justify-between p-6 w-full max-w-[1200px] mx-auto">
+                <div className="flex items-center gap-6">
+                    <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white shadow-xl shadow-orange-900/5 text-orange-600 border border-white hover:bg-orange-50 transition-colors">
+                        <ChevronLeft className="w-6 h-6" />
+                    </Link>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/30 text-white">
+                            <BookOpen className="w-6 h-6" />
                         </div>
+                        <span className="font-black text-3xl tracking-tight text-slate-800">
+                            {t('journal.title')}
+                        </span>
                     </div>
-
-                    <button
-                        onClick={() => setShowPostModal(true)}
-                        className="bg-orange-600 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 flex items-center gap-2"
-                    >
-                        <PlusCircle className="w-6 h-6" />
-                        <span className="hidden md:inline">New Post</span>
-                    </button>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex p-1.5 bg-white/50 backdrop-blur-md rounded-2xl w-full max-w-sm self-center shadow-inner">
-                    <button
-                        onClick={() => setActiveTab('feed')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs transition-all ${activeTab === 'feed' ? 'bg-white text-orange-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        <History className="w-4 h-4" /> {t('journal.dailyPost')}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('timeline')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs transition-all ${activeTab === 'timeline' ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        <Clock className="w-4 h-4" /> {t('parent.timeline')}
-                    </button>
-                </div>
+                {/* Mobile New Post (shown only on small screens) */}
+                <Link
+                    href="/journal/new"
+                    className="md:hidden bg-orange-600 text-white w-12 h-12 rounded-2xl shadow-xl shadow-orange-200 flex items-center justify-center"
+                >
+                    <PlusCircle className="w-6 h-6" />
+                </Link>
             </header>
 
-            <main className="relative z-10 flex-1 overflow-y-auto p-4 md:p-8 hide-scrollbar flex justify-center items-start">
-                <div className="w-full max-w-2xl flex flex-col gap-10 pb-24">
+            {/* Main Content Area */}
+            <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pb-24 overflow-y-auto hide-scrollbar items-start">
+
+                {/* Left Sidebar (Tabs & Actions) */}
+                <aside className="w-full md:w-[280px] flex flex-col gap-6 md:sticky md:top-6 flex-shrink-0 z-20">
+                    {/* Desktop New Post */}
+                    <Link
+                        href="/journal/new"
+                        className="hidden md:flex bg-orange-600 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-orange-200 hover:bg-orange-700 transition-all active:scale-95 items-center justify-center gap-3 text-lg"
+                    >
+                        <PlusCircle className="w-6 h-6" />
+                        New Post
+                    </Link>
+
+                    {/* Tabs */}
+                    <div className="flex md:flex-col p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-2xl md:rounded-3xl w-full shadow-inner border border-white">
+                        <button
+                            onClick={() => setActiveTab('feed')}
+                            className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'feed' ? 'bg-white text-orange-600 shadow-md' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <History className="w-5 h-5" /> {t('journal.dailyPost')}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('timeline')}
+                            className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'timeline' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <Clock className="w-5 h-5" /> {t('parent.timeline')}
+                        </button>
+                    </div>
+                </aside>
+
+                {/* Feed Content */}
+                <div className="flex-1 w-full max-w-2xl flex flex-col gap-10">
 
                     {activeTab === 'feed' ? (
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-6 w-full">
                             {loading && entries.length === 0 ? (
                                 <div className="text-center font-bold text-orange-400 py-20 animate-pulse">{t('journal.loading')}</div>
                             ) : entries.length === 0 ? (
                                 <div className="text-center py-20 px-10 bg-white/40 rounded-[2.5rem] border-2 border-dashed border-white flex flex-col items-center gap-6">
-                                    <Layers className="w-16 h-16 text-slate-200" />
-                                    <p className="text-slate-400 font-bold">{t('journal.empty')}</p>
+                                    <Layers className="w-16 h-16 text-slate-300" />
+                                    <p className="text-slate-500 font-bold">{t('journal.empty')}</p>
                                 </div>
                             ) : (
                                 <>
@@ -330,11 +272,11 @@ export default function JournalPage() {
                                         <button
                                             onClick={loadMore}
                                             disabled={loadingMore}
-                                            className="w-full py-6 rounded-[2rem] bg-white border border-orange-100 text-orange-500 font-black text-xs uppercase tracking-widest hover:bg-orange-50 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+                                            className="w-full py-6 rounded-[2rem] bg-white border border-orange-100 text-orange-500 font-black text-sm uppercase tracking-widest hover:bg-orange-50 transition-colors flex items-center justify-center gap-3 disabled:opacity-50 mt-4 shadow-sm"
                                         >
                                             {loadingMore ? (
                                                 <>
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
                                                     {t('common.loading')}
                                                 </>
                                             ) : (
@@ -356,112 +298,6 @@ export default function JournalPage() {
             </main>
 
             <AnimatePresence>
-                {showPostModal && (
-                    <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md overflow-y-auto">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
-                            className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-8 md:p-10 border border-orange-50 my-auto"
-                        >
-                            <header className="flex items-center justify-between mb-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
-                                        <BookOpen className="w-6 h-6 text-orange-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-2xl font-black text-slate-800">Capture Moment</h3>
-                                        <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest">Post to Journal</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setShowPostModal(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
-                                    <X className="w-6 h-6 text-slate-400" />
-                                </button>
-                            </header>
-
-                            <form onSubmit={handlePost} className="space-y-6">
-                                <textarea
-                                    value={text}
-                                    onChange={e => setText(e.target.value)}
-                                    placeholder={t('journal.placeholder')}
-                                    className="w-full bg-slate-50 border border-slate-100 rounded-[1.5rem] p-6 focus:ring-4 focus:ring-orange-100 outline-none font-medium text-lg min-h-[160px] resize-none transition-all"
-                                />
-
-                                <div className="flex flex-wrap gap-3">
-                                    <label className="w-20 h-20 bg-slate-100 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-200 transition-colors border-2 border-dashed border-slate-200 group">
-                                        <Camera className="w-6 h-6 text-slate-400 group-hover:scale-110 transition-transform" />
-                                        <span className="text-[8px] font-black text-slate-400 mt-1 uppercase">Photo</span>
-                                        <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
-                                    </label>
-
-                                    {imagePreviews.map((prev, i) => (
-                                        <div key={i} className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-md group border-2 border-white">
-                                            <img src={prev} className="w-full h-full object-cover" />
-                                            <button
-                                                onClick={(e) => { e.preventDefault(); removeImage(i); }}
-                                                className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                            >
-                                                <X className="w-6 h-6" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="p-6 bg-slate-50 rounded-[2rem] space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsMilestone(!isMilestone)}
-                                            className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xs transition-all ${isMilestone ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' : 'bg-white text-slate-400 border border-slate-200'}`}
-                                        >
-                                            <MilestoneIcon className={`w-5 h-5 ${isMilestone ? 'fill-white' : ''}`} />
-                                            {t('parent.milestone')}
-                                        </button>
-
-                                        <div className="flex-1 relative flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-slate-100 shadow-sm group hover:border-orange-200 transition-colors">
-                                            <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                            <input
-                                                type="datetime-local"
-                                                value={postDate}
-                                                onChange={e => setPostDate(e.target.value)}
-                                                className="font-bold text-slate-600 text-xs bg-transparent outline-none w-full cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                                                onClick={(e) => {
-                                                    try {
-                                                        (e.target as HTMLInputElement).showPicker();
-                                                    } catch { }
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {isMilestone && (
-                                        <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest leading-relaxed">
-                                            ✨ {t('parent.milestoneTip')}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex gap-4">
-                                    <button
-                                        type="submit"
-                                        disabled={posting || (!text && images.length === 0)}
-                                        className="flex-1 bg-orange-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-orange-200 hover:bg-orange-700 disabled:opacity-50 transition-all active:scale-95 text-lg"
-                                    >
-                                        {posting ? 'Publishing...' : t('journal.post')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPostModal(false)}
-                                        className="px-10 bg-slate-100 text-slate-500 font-bold rounded-[1.5rem] hover:bg-slate-200 transition-all"
-                                    >
-                                        {t('button.cancel')}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-
                 {lightbox && (
                     <Lightbox
                         images={lightbox.images}
