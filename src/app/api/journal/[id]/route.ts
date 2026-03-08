@@ -11,12 +11,13 @@ export async function GET(
         const { id } = await params
         if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
 
-        const entry = await db.select({
+        const rawEntry = await db.select({
             id: journal.id,
             authorId: journal.authorId,
             authorRole: journal.authorRole,
             authorAvatar: users.avatarUrl,
             authorName: users.name,
+            authorNickname: users.nickname,
             text: journal.text,
             imageUrl: journal.imageUrl,
             imageUrls: journal.imageUrls,
@@ -31,8 +32,13 @@ export async function GET(
             .where(eq(journal.id, id))
             .get()
 
-        if (!entry) {
+        if (!rawEntry) {
             return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        }
+
+        const entry = {
+            ...rawEntry,
+            authorName: rawEntry.authorNickname || rawEntry.authorName
         }
 
         return NextResponse.json(entry)
@@ -63,12 +69,13 @@ export async function PATCH(
             .where(eq(journal.id, id))
 
         // After update, re-fetch with join to return the full author info
-        const entry = await db.select({
+        const rawEntryAfterUpdate = await db.select({
             id: journal.id,
             authorId: journal.authorId,
             authorRole: journal.authorRole,
             authorAvatar: users.avatarUrl,
             authorName: users.name,
+            authorNickname: users.nickname,
             text: journal.text,
             imageUrl: journal.imageUrl,
             imageUrls: journal.imageUrls,
@@ -83,7 +90,12 @@ export async function PATCH(
             .where(eq(journal.id, id))
             .get()
 
-        return NextResponse.json(entry)
+        const finalEntry = {
+            ...rawEntryAfterUpdate,
+            authorName: rawEntryAfterUpdate?.authorNickname || rawEntryAfterUpdate?.authorName
+        }
+
+        return NextResponse.json(finalEntry)
     } catch (error) {
         console.error('Failed to update journal entry:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

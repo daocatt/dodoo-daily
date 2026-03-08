@@ -10,7 +10,6 @@ import ChildManagement from '@/components/parent/ChildManagement'
 import ShopManagement from '@/components/parent/ShopManagement'
 import OrderManagement from '@/components/parent/OrderManagement'
 import ProfileManagement from '@/components/parent/SettingsManagement'
-import TaskManagement from '@/components/parent/TaskManagement'
 import SystemSettings from '@/components/parent/SystemSettings'
 import MediaManagement from '@/components/parent/MediaManagement'
 
@@ -18,9 +17,8 @@ export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'TASKS' | 'SYSTEM' | 'MEDIA'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA'>('HOME')
     const [user, setUser] = useState<any>(null)
-    const [preSelectedChild, setPreSelectedChild] = useState<string | null>(null)
 
     useEffect(() => {
         fetch('/api/stats')
@@ -53,34 +51,15 @@ export default function ParentDashboard() {
     const renderView = () => {
         switch (view) {
             case 'FAMILY': return <ChildManagement onAssignTask={(id) => {
-                setPreSelectedChild(id);
-                setView('TASKS');
+                router.push(`/tasks?assignTo=${id}`)
             }} />
             case 'REWARDS': return <ShopManagement />
             case 'ORDERS': return <OrderManagement />
             case 'PROFILE': return <ProfileManagement user={user} />
             case 'SYSTEM': return <SystemSettings />
-            case 'TASKS': return <TaskManagement preSelectId={preSelectedChild} />
             case 'MEDIA': return <MediaManagement />
             default: return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
-
-                    {/* Task Management */}
-                    <button
-                        onClick={() => setView('TASKS')}
-                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
-                    >
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                            <CheckSquare className="w-7 h-7 text-emerald-500" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black text-slate-800">{t('menu.tasks')}</h2>
-                            <p className="text-slate-500 text-sm mt-1">Assign missions and track progress.</p>
-                        </div>
-                        <div className="mt-auto pt-4 text-emerald-600 font-bold flex items-center gap-1">
-                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
-                        </div>
-                    </button>
 
                     {/* Family Members */}
                     <button
@@ -207,10 +186,9 @@ export default function ParentDashboard() {
                             {view === 'HOME' ? t('parent.title') :
                                 view === 'PROFILE' ? t('parent.profile') :
                                     view === 'FAMILY' ? t('parent.family') :
-                                        view === 'TASKS' ? t('menu.tasks') :
-                                            view === 'SYSTEM' ? 'System Settings' :
-                                                view === 'MEDIA' ? t('parent.media') :
-                                                    view}
+                                        view === 'SYSTEM' ? 'System Settings' :
+                                            view === 'MEDIA' ? t('parent.media') :
+                                                view}
                         </h1>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Control Panel</p>
                     </div>
@@ -229,7 +207,7 @@ export default function ParentDashboard() {
                 )}
             </header>
 
-            <main className="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full">
+            <main className="flex-1 p-6 md:p-12 pb-32 md:pb-12 max-w-7xl mx-auto w-full">
                 {renderView()}
             </main>
         </div>

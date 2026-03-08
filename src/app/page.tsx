@@ -61,7 +61,7 @@ export default function Home() {
 
   const menuItems = React.useMemo(() => [
     { title: t('menu.tasks'), icon: CheckSquare, href: '/tasks', bg: 'bg-[#43aa8b]', shadow: 'shadow-[#43aa8b]/30', iconBg: 'bg-[#3a9679]' },
-    { title: t('menu.emotions'), icon: Smile, href: '/emotions', bg: 'bg-[#f8961e]', shadow: 'shadow-[#f8961e]/30', iconBg: 'bg-[#df841a]' },
+    // { title: t('menu.emotions'), icon: Smile, href: '/emotions', bg: 'bg-[#f8961e]', shadow: 'shadow-[#f8961e]/30', iconBg: 'bg-[#df841a]' },
     { title: t('menu.gallery'), icon: ImageIcon, href: '/gallery', bg: 'bg-[#e9b500]', shadow: 'shadow-[#e9b500]/30', iconBg: 'bg-[#cfa000]' },
     { title: t('menu.journal'), icon: Book, href: '/journal', bg: 'bg-[#277da1]', shadow: 'shadow-[#277da1]/30', iconBg: 'bg-[#206a89]' },
     { title: t('menu.shop'), icon: Store, href: '/shop', bg: 'bg-[#c47f5a]', shadow: 'shadow-[#c47f5a]/30', iconBg: 'bg-[#a86a48]' },
@@ -126,11 +126,11 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-8 p-4 md:p-12 items-center md:items-stretch overflow-hidden">
+      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-12 p-4 md:p-8 lg:p-12 pb-32 lg:pb-12 items-center lg:items-center overflow-y-auto lg:overflow-hidden">
 
         {/* Left Side: Display - Interaction Refined */}
-        <div className="flex-1 w-full h-full flex flex-col justify-center gap-2 items-center">
-          <div className="relative h-64 sm:h-96 md:h-[32rem] w-full flex items-center justify-center perspective-2000">
+        <div className="flex-1 w-full flex flex-col justify-center items-center py-8 lg:py-0">
+          <div className="relative h-64 sm:h-80 lg:h-[32rem] w-full flex items-center justify-center perspective-2000">
             {artworks.map((art, index) => {
               const isTop = index === artworks.length - 1
               return (
@@ -153,7 +153,7 @@ export default function Home() {
                   }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => cycleArtwork(art.id)}
-                  className={`absolute w-44 h-56 sm:w-64 sm:h-80 md:w-72 md:h-96 ${art.bg} rounded-xl p-4 shadow-2xl border-8 border-white overflow-hidden cursor-pointer select-none`}
+                  className={`absolute w-44 h-56 sm:w-56 sm:h-72 lg:w-72 lg:h-96 ${art.bg} rounded-xl p-4 shadow-2xl border-8 border-white overflow-hidden cursor-pointer select-none`}
                 >
                   <div className="w-full h-full rounded-lg bg-white/40 overflow-hidden flex items-center justify-center border border-white/20 pointer-events-none">
                     <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
@@ -171,8 +171,8 @@ export default function Home() {
         </div>
 
         {/* Right Side: Menu List */}
-        <div className="w-full md:w-[24rem] flex items-center justify-center md:justify-end shrink-0">
-          <div className="flex flex-col w-full space-y-2">
+        <div className="w-full lg:w-[24rem] flex items-center justify-center lg:justify-end shrink-0 pb-12 lg:pb-0">
+          <div className="flex flex-col w-full max-w-md lg:max-w-none space-y-3">
             {menuItems.map((item, idx) => (
               <motion.button
                 key={item.title}
@@ -259,9 +259,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <footer className="relative z-10 p-4 md:p-6 text-center text-[#4a3728]/40 text-[10px] font-bold uppercase tracking-widest shrink-0">
-        {t('footer.copyright', { year: new Date().getFullYear().toString() })}
-      </footer>
     </div>
   )
 }

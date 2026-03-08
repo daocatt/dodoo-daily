@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users, systemSettings } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
+import { eq, or, and, not } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { uploadMedia } from '@/lib/storage'
 
@@ -20,6 +20,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Name is required' }, { status: 400 })
         }
 
+        const trimmedName = name.trim();
+
+        // Unique Check
+        const existing = await db.select().from(users).where(eq(users.name, trimmedName)).all();
+        if (existing.length > 0 && existing[0].role !== 'PARENT') {
+            return NextResponse.json({ error: 'Name already exists' }, { status: 400 });
+        }
+
         // Find the default parent user
         const [parentUser] = await db.select().from(users).where(eq(users.role, 'PARENT')).all()
         if (!parentUser) {
@@ -34,7 +42,7 @@ export async function POST(req: NextRequest) {
 
         // Update the parent's name and avatar
         await db.update(users)
-            .set({ name: name.trim(), avatarUrl })
+            .set({ name: trimmedName, avatarUrl })
             .where(eq(users.id, parentUser.id))
 
         // Log the parent in automatically by setting session cookies

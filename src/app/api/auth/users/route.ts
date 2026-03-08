@@ -28,7 +28,7 @@ export async function GET() {
 
         const formatted = allUsers.map(u => ({
             id: u.id,
-            name: u.name,
+            name: u.nickname || u.name,
             role: u.role,
             avatarUrl: u.avatarUrl,
             hasPin: !!u.pin

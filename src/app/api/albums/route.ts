@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { album, artwork, users } from '@/lib/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, and } from 'drizzle-orm'
+import { cookies } from 'next/headers'
 
-async function getDefaultChildId() {
-    const kids = await db.select().from(users).where(eq(users.role, 'CHILD'))
-    return kids.length > 0 ? kids[0].id : null
+async function getAuth() {
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('dodoo_user_id')?.value
+    const role = cookieStore.get('dodoo_role')?.value
+    return { userId, role }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     try {
-        const childId = await getDefaultChildId()
-        if (!childId) return NextResponse.json([])
+        const { userId: currentUserId, role } = await getAuth()
+        if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+        const { searchParams } = new URL(req.url)
+        // If parent, allow filtering by specific childId. Otherwise force self.
+        const targetUserId = (role === 'PARENT' && searchParams.get('userId')) ? searchParams.get('userId')! : currentUserId
 
         const albums = await db.select().from(album)
-            .where(eq(album.userId, childId))
+            .where(eq(album.userId, targetUserId))
             .orderBy(desc(album.updatedAt))
 
         const allArtworks = await db.select()
             .from(artwork)
-            .where(eq(artwork.userId, childId))
+            .where(and(eq(artwork.userId, targetUserId), eq(artwork.isArchived, false)))
             .orderBy(desc(artwork.createdAt))
 
         const albumsWithArtworks = albums.map(a => {
@@ -39,18 +46,21 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
+        const { userId } = await getAuth()
+        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
         const body = await req.json()
-        const { title } = body
+        const { title, targetUserId } = body
 
         if (!title) {
             return NextResponse.json({ error: 'Title is required' }, { status: 400 })
         }
 
-        const childId = await getDefaultChildId()
-        if (!childId) return NextResponse.json({ error: 'No child account found' }, { status: 404 })
+        // Parent can create for child
+        const ownerId = (role === 'PARENT' && targetUserId) ? targetUserId : userId
 
         const newAlbum = await db.insert(album).values({
-            userId: childId,
+            userId: ownerId,
             title,
         }).returning()
 

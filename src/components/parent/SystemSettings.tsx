@@ -10,7 +10,10 @@ export default function SystemSettings() {
     const { t } = useI18n()
     const router = useRouter()
     const [isClosed, setIsClosed] = useState(false)
+    const [starsToCoinsRatio, setStarsToCoinsRatio] = useState(10)
+    const [coinsToRmbRatio, setCoinsToRmbRatio] = useState(1.0)
     const [loading, setLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
 
     useEffect(() => {
@@ -18,28 +21,31 @@ export default function SystemSettings() {
             .then(res => res.json())
             .then(data => {
                 setIsClosed(data.isClosed)
+                setStarsToCoinsRatio(data.starsToCoinsRatio || 10)
+                setCoinsToRmbRatio(data.coinsToRmbRatio || 1.0)
                 setLoading(false)
             })
             .catch(() => setLoading(false))
     }, [])
 
-    const handleToggleSystem = async () => {
+    const handleUpdateSettings = async (updates: any) => {
+        setIsSaving(true)
         try {
             const res = await fetch('/api/system/settings', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isClosed: !isClosed })
+                body: JSON.stringify(updates)
             })
             if (res.ok) {
-                setIsClosed(!isClosed)
+                if (updates.isClosed !== undefined) setIsClosed(updates.isClosed)
+                if (updates.starsToCoinsRatio !== undefined) setStarsToCoinsRatio(updates.starsToCoinsRatio)
+                if (updates.coinsToRmbRatio !== undefined) setCoinsToRmbRatio(updates.coinsToRmbRatio)
                 setShowConfirm(false)
-                if (!isClosed) {
-                    // If we just closed it, redirect or something?
-                    // Usually "closing" might mean maintenance mode
-                }
             }
         } catch (e) {
-            console.error('Failed to toggle system', e)
+            console.error('Failed to update settings', e)
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -78,26 +84,61 @@ export default function SystemSettings() {
                     <button
                         onClick={() => setShowConfirm(true)}
                         className={`w-full py-5 rounded-xl font-black text-lg transition-all shadow-xl active:scale-[0.98] mt-8 ${isClosed
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200'
-                                : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-200'
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-200'
+                            : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-200'
                             }`}
                     >
                         {isClosed ? 'Activate System' : 'Close System Now'}
                     </button>
                 </div>
 
-                {/* System Maintenance */}
-                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 opacity-60 pointer-events-none grayscale">
-                    <div className="space-y-4">
-                        <div className="p-4 bg-slate-50 rounded-2xl w-fit">
-                            <RotateCcw className="w-8 h-8 text-slate-400" />
-                        </div>
-                        <h3 className="text-2xl font-black text-slate-800">Hard Reboot</h3>
-                        <p className="text-slate-500 text-sm leading-relaxed font-medium"> Clear system cache and restart all background services. This will reconnect all active users.</p>
+                {/* Reward System Settings */}
+                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8">
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-slate-800">Reward Economy</h3>
+                        <p className="text-slate-500 text-sm font-medium">Define conversion ratios for stars and coins.</p>
                     </div>
-                    <button className="w-full py-5 rounded-xl bg-slate-200 text-slate-500 font-black text-lg shadow-sm">
-                        Perform Reboot
-                    </button>
+
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Stars to 1 Coin</label>
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="number"
+                                    value={starsToCoinsRatio}
+                                    onChange={(e) => setStarsToCoinsRatio(parseInt(e.target.value))}
+                                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                                />
+                                <button
+                                    onClick={() => handleUpdateSettings({ starsToCoinsRatio })}
+                                    disabled={isSaving}
+                                    className="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 disabled:opacity-50 transition-all"
+                                >
+                                    Set
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">1 Coin to $ (RMB)</label>
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={coinsToRmbRatio}
+                                    onChange={(e) => setCoinsToRmbRatio(parseFloat(e.target.value))}
+                                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                                />
+                                <button
+                                    onClick={() => handleUpdateSettings({ coinsToRmbRatio })}
+                                    disabled={isSaving}
+                                    className="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 disabled:opacity-50 transition-all"
+                                >
+                                    Set
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -124,7 +165,7 @@ export default function SystemSettings() {
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button
-                                    onClick={handleToggleSystem}
+                                    onClick={() => handleUpdateSettings({ isClosed: !isClosed })}
                                     className={`w-full py-5 text-white rounded-lg font-black text-lg transition-all shadow-xl active:scale-95 ${isClosed ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'}`}
                                 >
                                     Confirm Action

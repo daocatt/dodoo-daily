@@ -12,19 +12,29 @@ async function isParent() {
 
 export async function GET() {
     try {
-        let [settings] = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
+        let settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
 
         if (!settings) {
             // Initialize if not exists
-            [settings] = await db.insert(systemSettings).values({
+            const [newSettings] = await db.insert(systemSettings).values({
                 id: 'app_settings',
-                isClosed: false
+                isClosed: false,
+                needsSetup: true,
+                starsToCoinsRatio: 10,
+                coinsToRmbRatio: 1.0
             }).returning()
+            settings = newSettings
         }
 
         return NextResponse.json(settings)
     } catch (error) {
-        return NextResponse.json({ isClosed: false })
+        console.error('Failed to fetch system settings:', error)
+        return NextResponse.json({
+            isClosed: false,
+            needsSetup: false,
+            starsToCoinsRatio: 10,
+            coinsToRmbRatio: 1.0
+        })
     }
 }
 
@@ -36,6 +46,8 @@ export async function PATCH(req: NextRequest) {
         const updates: Record<string, unknown> = { updatedAt: new Date() }
         if (typeof body.isClosed === 'boolean') updates.isClosed = body.isClosed
         if (typeof body.needsSetup === 'boolean') updates.needsSetup = body.needsSetup
+        if (body.starsToCoinsRatio !== undefined) updates.starsToCoinsRatio = parseInt(body.starsToCoinsRatio)
+        if (body.coinsToRmbRatio !== undefined) updates.coinsToRmbRatio = parseFloat(body.coinsToRmbRatio)
 
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
 

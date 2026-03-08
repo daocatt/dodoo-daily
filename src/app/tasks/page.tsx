@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays } from 'lucide-react'
+import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays, Users, Edit2, User } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -16,16 +17,26 @@ type Task = {
     rewardStars: number
     completed: boolean
     plannedTime: string | null
+    assignedTo: string
+    creatorId: string
 }
 
-export default function TasksPage() {
+function TasksPageContent() {
+    const searchParams = useSearchParams()
+    const assignToParam = searchParams.get('assignTo')
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
-    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'daily' | 'monthly'>('today')
+    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'daily' | 'monthly' | 'assigns'>('today')
+    const [isParent, setIsParent] = useState(false)
+    const [children, setChildren] = useState<any[]>([])
+    const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
+    const [assignTo, setAssignTo] = useState<string>('')
+    const [currentUserId, setCurrentUserId] = useState<string>('')
     const { t } = useI18n()
 
     // Form
+    const [editingTask, setEditingTask] = useState<Task | null>(null)
     const [title, setTitle] = useState('')
     const [rewardStars, setRewardStars] = useState(1)
     const [isRepeating, setIsRepeating] = useState(false)
@@ -34,7 +45,27 @@ export default function TasksPage() {
 
     useEffect(() => {
         fetchTasks()
-    }, [])
+        fetch('/api/stats')
+            .then(res => res.json())
+            .then(data => {
+                if (data.userId) setCurrentUserId(data.userId)
+                if (data.isParent) {
+                    setIsParent(true)
+                    fetch('/api/parent/children')
+                        .then(res => res.json())
+                        .then(kids => {
+                            setChildren(kids || [])
+                            if (assignToParam) {
+                                setAssignTo(assignToParam)
+                                setShowNewTaskModal(true)
+                                setActiveTab('assigns')
+                            } else if (kids && kids.length > 0) {
+                                setAssignTo(kids[0].id)
+                            }
+                        })
+                }
+            })
+    }, [assignToParam])
 
     const fetchTasks = async () => {
         try {
@@ -73,19 +104,24 @@ export default function TasksPage() {
         if (!title) return
 
         try {
-            const res = await fetch('/api/tasks', {
-                method: 'POST',
+            const url = editingTask ? `/api/tasks/${editingTask.id}` : '/api/tasks'
+            const method = editingTask ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title,
                     rewardStars,
                     isRepeating,
                     isMonthlyRepeating,
-                    plannedTime: new Date(plannedDate).toISOString()
+                    plannedTime: new Date(plannedDate).toISOString(),
+                    assignedTo: (!editingTask && isParent) ? assignTo : undefined
                 })
             })
             if (res.ok) {
                 setShowNewTaskModal(false)
+                setEditingTask(null)
                 setTitle('')
                 setRewardStars(1)
                 setIsRepeating(false)
@@ -115,13 +151,42 @@ export default function TasksPage() {
                         </span>
                     </div>
                 </div>
-                <button
-                    onClick={() => setShowNewTaskModal(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95"
-                >
-                    <Plus className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="hidden md:inline">{t('tasks.newTask')}</span>
-                </button>
+                <div className="flex items-center gap-2 md:gap-3">
+                    <button
+                        onClick={() => {
+                            setEditingTask(null)
+                            setTitle('')
+                            setRewardStars(1)
+                            setIsRepeating(false)
+                            setIsMonthlyRepeating(false)
+                            setPlannedDate(new Date().toISOString().split('T')[0])
+                            setAssignTo('')
+                            setShowNewTaskModal(true)
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95 border-2 border-blue-400"
+                    >
+                        <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="hidden md:inline">{t('tasks.newTask')}</span>
+                    </button>
+                    {isParent && children.length > 0 && (
+                        <button
+                            onClick={() => {
+                                setEditingTask(null)
+                                setTitle('')
+                                setRewardStars(1)
+                                setIsRepeating(false)
+                                setIsMonthlyRepeating(false)
+                                setPlannedDate(new Date().toISOString().split('T')[0])
+                                setAssignTo(assignToParam || children[0].id || '')
+                                setShowNewTaskModal(true)
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-sm md:text-base font-bold text-white shadow-md shadow-emerald-500/20 active:scale-95 border-2 border-emerald-400"
+                        >
+                            <Users className="w-4 h-4 md:w-5 md:h-5" />
+                            <span className="hidden md:inline">{t('parent.assignTask') || 'Assign Task'}</span>
+                        </button>
+                    )}
+                </div>
             </header>
 
             <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
@@ -159,6 +224,36 @@ export default function TasksPage() {
                         >
                             <CalendarDays className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Monthly Loop</span>
                         </button>
+                        {isParent && (
+                            <div className="flex flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
+                                <button
+                                    onClick={() => setActiveTab('assigns')}
+                                    className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'assigns' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                                >
+                                    <CheckSquare className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Assigns</span>
+                                </button>
+                                {activeTab === 'assigns' && children.length > 1 && (
+                                    <div className="flex md:flex-col gap-1 md:pl-8 mt-1 w-full">
+                                        <button
+                                            onClick={() => setAssignedChildId('ALL')}
+                                            className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-xs transition-colors shrink-0 ${assignedChildId === 'ALL' ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
+                                        >
+                                            All Children
+                                        </button>
+                                        {children.map(child => (
+                                            <button
+                                                key={child.id}
+                                                onClick={() => setAssignedChildId(child.id)}
+                                                className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-xs transition-colors shrink-0 flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
+                                            >
+                                                {child.avatarUrl && <img src={child.avatarUrl} className="w-4 h-4 rounded-full object-cover hidden md:block" />}
+                                                {child.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </aside>
 
@@ -177,9 +272,30 @@ export default function TasksPage() {
                     ) : (
                         <div className="flex gap-4 flex-col pb-24">
                             {tasks.filter(task => {
+                                // Logic:
+                                // 1. If I am the creator and assignedTo is someone else -> This is an "Assign" I gave out.
+                                // 2. If I am the assignedTo and creator is someone else -> This is an "Assign" I received.
+                                // 3. If I am both creator and assignedTo -> This is my own personal task.
+
+                                const isAssignIGave = task.creatorId === currentUserId && task.assignedTo !== currentUserId;
+                                const isAssignIReceived = task.assignedTo === currentUserId && task.creatorId !== currentUserId;
+                                const isMyOwnTask = task.assignedTo === currentUserId && task.creatorId === currentUserId;
+
+                                if (activeTab === 'assigns') {
+                                    // In "Assigns" tab, we ONLY show tasks I gave to others (if Parent)
+                                    if (!isAssignIGave) return false;
+                                    if (assignedChildId !== 'ALL') return task.assignedTo === assignedChildId;
+                                    return true;
+                                }
+
+                                // In other tabs, we ONLY show tasks assigned to ME (personal or received from parent)
+                                if (task.assignedTo !== currentUserId) return false;
+
+                                // Frequency filters
                                 if (activeTab === 'daily') return task.isRepeating && !task.isMonthlyRepeating;
                                 if (activeTab === 'monthly') return task.isMonthlyRepeating;
 
+                                // If looking for one-off tasks (Today/Tomorrow/Week)
                                 if (task.isRepeating || task.isMonthlyRepeating) return false;
 
                                 const pt = task.plannedTime ? new Date(task.plannedTime) : new Date();
@@ -214,8 +330,20 @@ export default function TasksPage() {
                                             {task.title}
                                         </h3>
                                         {task.isRepeating && (
-                                            <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full mt-1 inline-block">
+                                            <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full mt-1 inline-block mr-2">
                                                 {t('tasks.dailyLoop')}
+                                            </span>
+                                        )}
+                                        {task.creatorId !== currentUserId && task.assignedTo === currentUserId && (
+                                            <span className="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full mt-1 inline-flex items-center gap-1">
+                                                <User className="w-3 h-3" />
+                                                Assigned by Parent
+                                            </span>
+                                        )}
+                                        {task.creatorId === currentUserId && task.assignedTo !== currentUserId && (
+                                            <span className="text-xs bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full mt-1 inline-flex items-center gap-1">
+                                                <User className="w-3 h-3" />
+                                                To: {children.find(c => c.id === task.assignedTo)?.name || 'Child'}
                                             </span>
                                         )}
                                     </div>
@@ -223,6 +351,24 @@ export default function TasksPage() {
                                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-400" />
                                         <span className="font-black text-yellow-700">+{task.rewardStars}</span>
                                     </div>
+                                    {task.creatorId === currentUserId && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingTask(task);
+                                                setTitle(task.title);
+                                                setRewardStars(task.rewardStars);
+                                                setIsRepeating(task.isRepeating);
+                                                setIsMonthlyRepeating(task.isMonthlyRepeating);
+                                                setPlannedDate(task.plannedTime ? new Date(task.plannedTime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+                                                setAssignTo(task.assignedTo);
+                                                setShowNewTaskModal(true);
+                                            }}
+                                            className="ml-2 w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-500 transition-colors shadow-sm"
+                                        >
+                                            <Edit2 className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </motion.div>
                             ))}
                         </div>
@@ -240,90 +386,117 @@ export default function TasksPage() {
                         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
+                            initial={{ scale: 0.95, y: 10 }}
                             animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col"
+                            exit={{ scale: 0.95, y: 10 }}
+                            className="w-full max-w-sm bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
                         >
-                            <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
-                                <h3 className="text-xl font-bold flex items-center gap-2"><Plus className="w-5 h-5 text-blue-500" /> {t('tasks.newTask')}</h3>
+                            <div className={`p-4 md:p-5 border-b flex justify-between items-center ${assignTo === '' ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
+                                <h3 className="text-lg md:text-xl font-black flex items-center gap-2 text-slate-800">
+                                    {editingTask ? <Edit2 className="w-5 h-5 text-blue-500" /> : (assignTo === '' ? <Plus className="w-5 h-5 text-blue-500" /> : <Users className="w-5 h-5 text-emerald-500" />)}
+                                    {editingTask ? 'Edit Task' : (assignTo === '' ? t('tasks.newTask') : t('parent.assignTask') || 'Assign Task')}
+                                </h3>
                             </div>
-                            <form onSubmit={handleCreateTask} className="p-6 flex flex-col gap-5 bg-white">
-                                <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('tasks.form.nameLabel')}</label>
-                                    <input
-                                        type="text"
-                                        value={title}
-                                        onChange={e => setTitle(e.target.value)}
-                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-lg"
-                                        placeholder={t('tasks.form.namePlaceholder')}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-bold text-[#6b5c45]">{t('tasks.form.rewardLabel')}</label>
-                                    <div className="flex items-center gap-3">
-                                        <button type="button" onClick={() => setRewardStars(Math.max(1, rewardStars - 1))} className="w-8 h-8 rounded-full bg-[#f5f0e8] flex items-center justify-center font-bold text-[#6b5c45]">-</button>
-                                        <span className="font-black text-yellow-600 text-xl w-6 text-center">{rewardStars}</span>
-                                        <button type="button" onClick={() => setRewardStars(rewardStars + 1)} className="w-8 h-8 rounded-full bg-[#f5f0e8] flex items-center justify-center font-bold text-[#6b5c45]">+</button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-[#6b5c45]">Planned Date</label>
-                                    <input
-                                        type="date"
-                                        value={plannedDate}
-                                        onChange={e => setPlannedDate(e.target.value)}
-                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-lg"
-                                        required
-                                    />
-                                </div>
-
-                                <div className="flex flex-col gap-3 bg-[#faf7f0] p-4 rounded-xl border border-[#e8dfce]">
-                                    <div className="flex items-center gap-3">
+                            <div className="overflow-y-auto hide-scrollbar">
+                                <form onSubmit={handleCreateTask} className="p-4 md:p-5 flex flex-col gap-4 bg-white">
+                                    <div>
+                                        <label className="block text-xs md:text-sm font-bold text-[#6b5c45] mb-1.5">{t('tasks.form.nameLabel')}</label>
                                         <input
-                                            type="checkbox"
-                                            id="isRep"
-                                            checked={isRepeating}
-                                            onChange={(e) => {
-                                                setIsRepeating(e.target.checked);
-                                                if (e.target.checked) setIsMonthlyRepeating(false);
-                                            }}
-                                            className="w-5 h-5 accent-blue-500 rounded"
+                                            type="text"
+                                            value={title}
+                                            onChange={e => setTitle(e.target.value)}
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
+                                            placeholder={t('tasks.form.namePlaceholder')}
+                                            required
                                         />
-                                        <label htmlFor="isRep" className="font-bold text-[#6b5c45]">{t('tasks.form.recurringLabel')}</label>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="checkbox"
-                                            id="isMonthlyRep"
-                                            checked={isMonthlyRepeating}
-                                            onChange={(e) => {
-                                                setIsMonthlyRepeating(e.target.checked);
-                                                if (e.target.checked) setIsRepeating(false);
-                                            }}
-                                            className="w-5 h-5 accent-purple-500 rounded"
-                                        />
-                                        <label htmlFor="isMonthlyRep" className="font-bold text-[#6b5c45]">Monthly Repeating Task</label>
-                                    </div>
-                                </div>
 
-                                <button
-                                    type="submit"
-                                    className="mt-2 w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold tracking-wide shadow-lg hover:opacity-90 transition-opacity text-lg"
-                                >
-                                    {t('tasks.createGoal')}
-                                </button>
-                                <button type="button" onClick={() => setShowNewTaskModal(false)} className="py-2 text-[#a89880] font-bold hover:text-[#2c2416]">
-                                    {t('common.cancel')}
-                                </button>
-                            </form>
+                                    {isParent && children.length > 0 && !editingTask && (
+                                        <div className="space-y-1.5">
+                                            <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Assign To</label>
+                                            <select
+                                                value={assignTo}
+                                                onChange={e => setAssignTo(e.target.value)}
+                                                className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
+                                            >
+                                                <option value="">Myself (Parent)</option>
+                                                {children.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.rewardLabel')}</label>
+                                        <div className="flex items-center gap-2">
+                                            <button type="button" onClick={() => setRewardStars(Math.max(1, rewardStars - 1))} className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#f5f0e8] flex items-center justify-center font-bold text-[#6b5c45]">-</button>
+                                            <span className="font-black text-yellow-600 text-lg md:text-xl w-6 text-center">{rewardStars}</span>
+                                            <button type="button" onClick={() => setRewardStars(rewardStars + 1)} className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#f5f0e8] flex items-center justify-center font-bold text-[#6b5c45]">+</button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Planned Date</label>
+                                        <input
+                                            type="date"
+                                            value={plannedDate}
+                                            onChange={e => setPlannedDate(e.target.value)}
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-2.5 bg-[#faf7f0] p-3 md:p-4 rounded-xl border border-[#e8dfce]">
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="isRep"
+                                                checked={isRepeating}
+                                                onChange={(e) => {
+                                                    setIsRepeating(e.target.checked);
+                                                    if (e.target.checked) setIsMonthlyRepeating(false);
+                                                }}
+                                                className="w-5 h-5 accent-blue-500 rounded"
+                                            />
+                                            <label htmlFor="isRep" className="font-bold text-sm text-[#6b5c45]">{t('tasks.form.recurringLabel')}</label>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="isMonthlyRep"
+                                                checked={isMonthlyRepeating}
+                                                onChange={(e) => {
+                                                    setIsMonthlyRepeating(e.target.checked);
+                                                    if (e.target.checked) setIsRepeating(false);
+                                                }}
+                                                className="w-4 h-4 md:w-5 md:h-5 accent-purple-500 rounded"
+                                            />
+                                            <label htmlFor="isMonthlyRep" className="font-bold text-sm text-[#6b5c45]">Monthly Repeating Task</label>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className={`mt-1 w-full py-3 md:py-3.5 rounded-2xl text-white font-black tracking-wide shadow-lg hover:opacity-90 transition-opacity text-base md:text-lg ${assignTo === '' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/20' : 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20'}`}
+                                    >
+                                        {assignTo === '' ? t('tasks.createGoal') : 'Confirm Assignment'}
+                                    </button>
+                                    <button type="button" onClick={() => setShowNewTaskModal(false)} className="py-1.5 md:py-2 text-sm md:text-base text-[#a89880] font-bold hover:text-[#2c2416]">
+                                        {t('common.cancel')}
+                                    </button>
+                                </form>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </div>
+    )
+}
+
+export default function TasksPage() {
+    return (
+        <Suspense fallback={<div className="min-h-dvh flex items-center justify-center bg-[#e0f2fe]">Loading...</div>}>
+            <TasksPageContent />
+        </Suspense>
     )
 }

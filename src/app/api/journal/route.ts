@@ -13,12 +13,13 @@ export async function GET(req: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '10')
         const offset = (page - 1) * limit
 
-        const entries = await db.select({
+        const rawEntries = await db.select({
             id: journal.id,
             authorId: journal.authorId,
             authorRole: journal.authorRole,
             authorAvatar: users.avatarUrl,
             authorName: users.name,
+            authorNickname: users.nickname,
             text: journal.text,
             imageUrl: journal.imageUrl,
             imageUrls: journal.imageUrls,
@@ -33,6 +34,11 @@ export async function GET(req: NextRequest) {
             .orderBy(desc(journal.milestoneDate), desc(journal.createdAt))
             .limit(limit)
             .offset(offset)
+
+        const entries = rawEntries.map(e => ({
+            ...e,
+            authorName: e.authorNickname || e.authorName
+        }))
 
         const [totalCount] = await db.select({ value: count() }).from(journal)
 

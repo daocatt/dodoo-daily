@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { accountStats, users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { seed } from '@/lib/seed'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
@@ -20,25 +19,27 @@ export async function GET() {
         const userRecord = await db.select().from(users).where(eq(users.id, currentUserId)).get()
         if (!userRecord) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
-        if (currentUserRole === 'PARENT') {
-            return NextResponse.json({ isParent: true, name: userRecord.name, avatarUrl: userRecord.avatarUrl })
-        }
+        // Check if stats exist, if not create them
+        let statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
 
-        let stats = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId))
-
-        let childStats = stats[0]
-        if (!childStats) {
-            const newStats = await db.insert(accountStats).values({
+        if (!statsRecord) {
+            const [newStats] = await db.insert(accountStats).values({
                 userId: currentUserId,
-                currency: 0,
                 goldStars: 0,
                 purpleStars: 0,
                 angerPenalties: 0,
+                currency: 0,
             }).returning()
-            childStats = newStats[0]
+            statsRecord = newStats
         }
 
-        return NextResponse.json({ ...childStats, name: userRecord.name, avatarUrl: userRecord.avatarUrl })
+        return NextResponse.json({
+            ...statsRecord,
+            isParent: currentUserRole === 'PARENT',
+            userId: currentUserId,
+            name: userRecord.nickname || userRecord.name,
+            avatarUrl: userRecord.avatarUrl
+        })
     } catch (error) {
         console.error('Failed to fetch account stats:', error)
         return NextResponse.json({ error: 'Failed to fetch account stats' }, { status: 500 })

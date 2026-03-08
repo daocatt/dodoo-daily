@@ -8,6 +8,48 @@
       "when": 1772906643729,
       "tag": "0000_right_captain_universe",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1772954705890,
+      "tag": "0001_acoustic_paper_doll",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1772959228918,
+      "tag": "0002_lame_beyonder",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1772961210674,
+      "tag": "0003_wise_micromax",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1772962292880,
+      "tag": "0004_icy_jocasta",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1772962916757,
+      "tag": "0005_boring_lady_mastermind",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1772968895648,
+      "tag": "0006_worried_masque",
+      "breakpoints": true
     }
   ]
 }

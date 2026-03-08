@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { ChevronLeft, Image as ImageIcon } from 'lucide-react'
+import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3 } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
@@ -24,17 +24,44 @@ type AlbumDetail = {
     artworks: Artwork[]
 }
 
+type AvailableAlbum = {
+    id: string
+    title: string
+}
+
 export default function AlbumDetailPage() {
     const params = useParams()
     const router = useRouter()
     const [album, setAlbum] = useState<AlbumDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [posterArtwork, setPosterArtwork] = useState<Artwork | null>(null)
+    const [isParent, setIsParent] = useState(false)
+
+    // Edit State
+    const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null)
+    const [editTitle, setEditTitle] = useState('')
+    const [editPriceRMB, setEditPriceRMB] = useState('')
+    const [editPriceCoins, setEditPriceCoins] = useState('')
+    const [editAlbumId, setEditAlbumId] = useState('')
+    const [availableAlbums, setAvailableAlbums] = useState<AvailableAlbum[]>([])
+    const [editingAlbumTitle, setEditingAlbumTitle] = useState(false)
+    const [editAlbumName, setEditAlbumName] = useState('')
+    const [updating, setUpdating] = useState(false)
+
     const { t } = useI18n()
 
     useEffect(() => {
         if (!params?.id) return
         fetchAlbumDetail(params.id as string)
+
+        fetch('/api/stats')
+            .then(res => res.json())
+            .then(data => {
+                if (data.isParent) {
+                    setIsParent(true)
+                    fetch('/api/albums').then(r => r.json()).then(albums => setAvailableAlbums(albums))
+                }
+            })
     }, [params])
 
     const fetchAlbumDetail = async (id: string) => {
@@ -50,6 +77,76 @@ export default function AlbumDetailPage() {
             console.error(err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleUpdateArtwork = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!editingArtwork) return
+
+        setUpdating(true)
+        try {
+            const res = await fetch(`/api/artworks/${editingArtwork.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: editTitle,
+                    priceRMB: editPriceRMB,
+                    priceCoins: editPriceCoins,
+                    albumId: editAlbumId === 'archive' ? null : editAlbumId,
+                    isArchived: editAlbumId === 'archive'
+                })
+            })
+            if (res.ok) {
+                setEditingArtwork(null)
+                fetchAlbumDetail(params.id as string)
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const handleArchiveArtwork = async () => {
+        if (!editingArtwork) return
+        if (!confirm('Are you sure you want to delete/archive this artwork?')) return
+
+        setUpdating(true)
+        try {
+            const res = await fetch(`/api/artworks/${editingArtwork.id}`, {
+                method: 'DELETE'
+            })
+            if (res.ok) {
+                setEditingArtwork(null)
+                fetchAlbumDetail(params.id as string)
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const handleUpdateAlbum = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!editAlbumName) return
+
+        setUpdating(true)
+        try {
+            const res = await fetch(`/api/albums/${params.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: editAlbumName })
+            })
+            if (res.ok) {
+                setEditingAlbumTitle(false)
+                fetchAlbumDetail(params.id as string)
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setUpdating(false)
         }
     }
 
@@ -79,14 +176,26 @@ export default function AlbumDetailPage() {
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416]">
             <AnimatedSky />
 
-            <header className="relative z-10 flex justify-between items-center p-6 backdrop-blur-sm bg-white/20 border-b border-white/30">
+            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-white/50 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => router.push('/gallery')} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-white border border-white/50">
-                        <ChevronLeft className="w-6 h-6" />
+                    <button onClick={() => router.push('/gallery')} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-800 border border-slate-200">
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
                     </button>
-                    <span className="font-extrabold text-2xl tracking-tight text-white drop-shadow-md flex items-center gap-2">
-                        <ImageIcon className="w-6 h-6" />
+                    <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800 flex items-center gap-2">
+                        <ImageIcon className="w-6 h-6 text-indigo-500" />
                         {album.title}
+                        {isParent && album.id !== 'archive' && (
+                            <button
+                                onClick={() => {
+                                    setEditAlbumName(album.title)
+                                    setEditingAlbumTitle(true)
+                                }}
+                                className="ml-2 p-1.5 rounded-full hover:bg-black/5 text-slate-400 hover:text-slate-700 transition-colors"
+                                title="Edit Album Name"
+                            >
+                                <Edit3 className="w-4 h-4 md:w-5 md:h-5" />
+                            </button>
+                        )}
                     </span>
                 </div>
             </header>
@@ -135,6 +244,22 @@ export default function AlbumDetailPage() {
                                             </button>
                                         </>
                                     )}
+
+                                    {isParent && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setEditTitle(art.title)
+                                                setEditPriceRMB(art.priceRMB.toString())
+                                                setEditPriceCoins(art.priceCoins.toString())
+                                                setEditAlbumId(art.albumId || 'archive')
+                                                setEditingArtwork(art)
+                                            }}
+                                            className="absolute top-2 right-2 p-2 bg-white/40 hover:bg-white/60 backdrop-blur rounded-full text-slate-800 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Settings className="w-5 h-5" />
+                                        </button>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
@@ -142,12 +267,119 @@ export default function AlbumDetailPage() {
                 )}
             </main>
 
-            {/* Poster Generator Modal */}
-            {posterArtwork && (
-                <PosterGenerator
-                    artwork={posterArtwork}
-                    onClose={() => setPosterArtwork(null)}
-                />
+            {/* Edit Modal */}
+            {editingArtwork && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                    >
+                        <div className="p-5 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Settings className="w-5 h-5 text-indigo-500" /> Edit Artwork</h3>
+                            <button onClick={() => setEditingArtwork(null)} className="text-[#a89880] hover:text-[#2c2416] font-bold text-xl">&times;</button>
+                        </div>
+                        <div className="overflow-y-auto hide-scrollbar">
+                            <form onSubmit={handleUpdateArtwork} className="p-5 flex flex-col gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">Title</label>
+                                    <input
+                                        type="text"
+                                        value={editTitle}
+                                        onChange={e => setEditTitle(e.target.value)}
+                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                        required
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">Price (RMB)</label>
+                                        <input
+                                            type="number"
+                                            value={editPriceRMB}
+                                            onChange={e => setEditPriceRMB(e.target.value)}
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">Price (Coins)</label>
+                                        <input
+                                            type="number"
+                                            value={editPriceCoins}
+                                            onChange={e => setEditPriceCoins(e.target.value)}
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">Album</label>
+                                    <select
+                                        value={editAlbumId}
+                                        onChange={e => setEditAlbumId(e.target.value)}
+                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                    >
+                                        <option value="archive">Archives (Hidden from public)</option>
+                                        {availableAlbums.map(a => (
+                                            <option key={a.id} value={a.id}>{a.title}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex gap-3 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleArchiveArtwork}
+                                        disabled={updating}
+                                        className="flex items-center justify-center gap-2 p-3 rounded-xl bg-red-100 text-red-600 hover:bg-red-200 font-bold transition-colors w-14 shrink-0"
+                                        title={editingArtwork.isSold ? 'Archive' : 'Delete'}
+                                    >
+                                        {editingArtwork.isSold ? <Archive className="w-5 h-5" /> : <Trash className="w-5 h-5" />}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={updating}
+                                        className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold tracking-wide shadow-lg opacity-90 hover:opacity-100 transition-opacity disabled:grayscale"
+                                    >
+                                        {updating ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+            {/* Edit Album Modal */}
+            {editingAlbumTitle && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                    >
+                        <div className="p-5 border-b border-[#f5f0e8] flex justify-between items-center bg-[#faf7f0]">
+                            <h3 className="text-xl font-bold flex items-center gap-2"><Edit3 className="w-5 h-5 text-indigo-500" /> Edit Album Name</h3>
+                            <button onClick={() => setEditingAlbumTitle(false)} className="text-[#a89880] hover:text-[#2c2416] font-bold text-xl">&times;</button>
+                        </div>
+                        <form onSubmit={handleUpdateAlbum} className="p-5 flex flex-col gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">New Name</label>
+                                <input
+                                    type="text"
+                                    value={editAlbumName}
+                                    onChange={e => setEditAlbumName(e.target.value)}
+                                    className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                    required
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={updating}
+                                className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold tracking-wide shadow-lg opacity-90 hover:opacity-100 transition-opacity disabled:grayscale"
+                            >
+                                {updating ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </form>
+                    </motion.div>
+                </div>
             )}
         </div>
     )

@@ -1,21 +1,24 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare } from 'lucide-react'
+import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare, Power } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
-import { getZodiac } from '@/lib/utils'
+import { getZodiac, getChineseZodiac } from '@/lib/utils'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
 interface Child {
     id: string
     name: string
+    realName?: string
     nickname?: string
     gender?: 'MALE' | 'FEMALE' | 'OTHER'
     birthDate?: Date | string
     zodiac?: string
+    chineseZodiac?: string
     avatarUrl: string | null
+    role: 'CHILD' | 'GRANDPARENT' | 'OTHER'
     isArchived: boolean
     isDeleted: boolean
     stats?: {
@@ -32,7 +35,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const [loading, setLoading] = useState(true)
     const [showAdd, setShowAdd] = useState(false)
     const [editingChild, setEditingChild] = useState<Partial<Child> | null>(null)
-    const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', gender: 'OTHER' })
+    const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
     const [showLogs, setShowLogs] = useState<string | null>(null)
     const [logs, setLogs] = useState<any[]>([])
     const [adjusting, setAdjusting] = useState<string | null>(null)
@@ -65,10 +68,24 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             })
-            setNewChild({ name: '', nickname: '', gender: 'OTHER' })
+            setNewChild({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
             setEditingChild(null)
             setShowAdd(false)
             fetchChildren()
+        } catch (e) { console.error(e) }
+    }
+
+    const handleMasquerade = async (userId: string) => {
+        try {
+            const res = await fetch('/api/parent/masquerade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetUserId: userId })
+            })
+            if (res.ok) {
+                const data = await res.json()
+                window.location.href = data.redirect || '/'
+            }
         } catch (e) { console.error(e) }
     }
 
@@ -96,11 +113,11 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const handleAdjust = async () => {
         if (!adjusting) return
         try {
-            await fetch('/api/parent/stats', {
+            await fetch('/api/parent/economy/distribute', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userId: adjusting,
+                    targetUserId: adjusting,
                     ...adjData
                 })
             })
@@ -179,13 +196,28 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                     key={g}
                                     type="button"
                                     onClick={() => onChange({ ...member, gender: g })}
-                                    className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    className={`flex-1 py-4 rounded-2xl font-black text-[10px] transition-all border ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
                                 >
                                     {t(`gender.${g.toLowerCase()}` as any)}
                                 </button>
                             ))}
                         </div>
                     </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
+                        <select
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all appearance-none"
+                            value={member.role || 'CHILD'}
+                            onChange={e => onChange({ ...member, role: e.target.value as any })}
+                        >
+                            <option value="CHILD">Child</option>
+                            <option value="GRANDPARENT">Grandparent</option>
+                            <option value="OTHER">Other Relative</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.memberPin')}</label>
                         <input
@@ -196,9 +228,6 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             onChange={e => onChange({ ...member, pin: e.target.value } as any)}
                         />
                     </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
                         <DatePicker
@@ -207,7 +236,8 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 onChange({
                                     ...member,
                                     birthDate: date || undefined,
-                                    zodiac: date ? getZodiac(date) : undefined
+                                    zodiac: date ? getZodiac(date) : undefined,
+                                    chineseZodiac: date ? getChineseZodiac(date) : undefined
                                 })
                             }}
                             dateFormat="yyyy-MM-dd"
@@ -218,10 +248,18 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                         />
                     </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')}</label>
+                        <div className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner">
+                            {member.chineseZodiac || (member.birthDate ? getChineseZodiac(new Date(member.birthDate)) : '---')}
+                        </div>
+                    </div>
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.zodiac')}</label>
                         <div className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner">
-                            {member.zodiac || '---'}
+                            {member.zodiac || (member.birthDate ? getZodiac(new Date(member.birthDate)) : '---')}
                         </div>
                     </div>
                 </div>
@@ -270,14 +308,30 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         <div>
                             <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                                 {child.name}
-                                {child.nickname && <span className="text-xs text-slate-400 font-medium">({child.nickname})</span>}
-                                {child.isArchived && <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">{t('parent.archived')}</span>}
+                                {child.nickname && child.realName && child.realName !== child.name && (
+                                    <span className="text-xs text-slate-400 font-medium">({child.realName})</span>
+                                )}
                             </h3>
-                            {child.zodiac && (
-                                <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1">
-                                    {child.zodiac}
-                                </div>
-                            )}
+                            <div className="flex gap-2 flex-wrap mt-1">
+                                {child.role !== 'CHILD' && (
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full inline-block">
+                                        {child.role}
+                                    </div>
+                                )}
+                                {child.isArchived && <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">{t('parent.archived')}</span>}
+                            </div>
+                            <div className="flex gap-2 flex-wrap mt-1">
+                                {(child.chineseZodiac || child.birthDate) && (
+                                    <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
+                                        {child.chineseZodiac || getChineseZodiac(new Date(child.birthDate!))}
+                                    </div>
+                                )}
+                                {(child.zodiac || child.birthDate) && (
+                                    <div className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block">
+                                        {child.zodiac || getZodiac(new Date(child.birthDate!))}
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex gap-4 mt-2">
                                 <span className="text-xs font-bold text-yellow-600 flex items-center gap-1">
                                     <History className="w-3 h-3" /> {child.stats?.currency || 0}
@@ -322,15 +376,21 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         onClick={() => onAssignTask?.(child.id)}
                         className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-bold hover:bg-emerald-100 transition-colors flex items-center gap-2"
                     >
-                        <CheckSquare className="w-4 h-4" />
                         {t('parent.assignTask')}
+                    </button>
+                    <button
+                        onClick={() => handleMasquerade(child.id)}
+                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-colors flex items-center gap-2"
+                    >
+                        <Power className="w-4 h-4" />
+                        Masquerade
                     </button>
                     <button
                         onClick={() => setAdjusting(adjusting === child.id ? null : child.id)}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${adjusting === child.id ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
                     >
-                        <BarChart3 className="w-4 h-4" />
-                        {t('parent.manualAdjust')}
+                        <Star className="w-4 h-4" />
+                        Distribute
                     </button>
                     <button
                         onClick={() => fetchLogs(child.id)}
@@ -341,70 +401,72 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </button>
                 </div>
 
-                {adjusting === child.id && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-slate-50 p-5 rounded-2xl border border-blue-100 space-y-4 shadow-inner"
-                    >
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-                            <span>{t('parent.adjustStats')}</span>
-                            <span className="text-blue-500">{t('parent.previewChanges')}</span>
-                        </div>
+                {
+                    adjusting === child.id && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-slate-50 p-5 rounded-2xl border border-blue-100 space-y-4 shadow-inner"
+                        >
+                            <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                                <span>{t('parent.adjustStats')}</span>
+                                <span className="text-blue-500">{t('parent.previewChanges')}</span>
+                            </div>
 
-                        <div className="flex gap-4 items-center">
-                            <div className="flex-1 space-y-3">
-                                <select
-                                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-400 outline-none appearance-none"
-                                    value={adjData.type}
-                                    onChange={e => setAdjData({ ...adjData, type: e.target.value })}
-                                >
-                                    <option value="CURRENCY">{t('parent.currency')}</option>
-                                    <option value="GOLD_STAR">{t('parent.goldStars')}</option>
-                                    <option value="PURPLE_STAR">{t('parent.purpleStars')}</option>
-                                    <option value="ANGER_PENALTY">{t('parent.angerPenalty')}</option>
-                                </select>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-blue-400 outline-none"
-                                        placeholder="Amount (+/-)"
-                                        value={adjData.amount || ''}
-                                        onChange={e => setAdjData({ ...adjData, amount: parseInt(e.target.value) || 0 })}
-                                    />
+                            <div className="flex gap-4 items-center">
+                                <div className="flex-1 space-y-3">
+                                    <select
+                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-400 outline-none appearance-none"
+                                        value={adjData.type}
+                                        onChange={e => setAdjData({ ...adjData, type: e.target.value })}
+                                    >
+                                        <option value="CURRENCY">{t('parent.currency')}</option>
+                                        <option value="GOLD_STAR">{t('parent.goldStars')}</option>
+                                        <option value="PURPLE_STAR">{t('parent.purpleStars')}</option>
+                                        <option value="ANGER_PENALTY">{t('parent.angerPenalty')}</option>
+                                    </select>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-black focus:ring-2 focus:ring-blue-400 outline-none"
+                                            placeholder="Amount (+/-)"
+                                            value={adjData.amount || ''}
+                                            onChange={e => setAdjData({ ...adjData, amount: parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="w-24 bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center justify-center shadow-sm">
+                                    <div className="text-[10px] text-slate-400 font-bold uppercase">{t('parent.result')}</div>
+                                    <div className="text-2xl font-black text-blue-600">{newVal}</div>
+                                    <div className="flex items-center gap-1 text-[8px] font-bold text-slate-300 mt-1">
+                                        <span>{currentVal}</span>
+                                        <ArrowRight className="w-2 h-2" />
+                                        <span>{newVal}</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="w-24 bg-white border border-slate-200 rounded-2xl p-3 flex flex-col items-center justify-center shadow-sm">
-                                <div className="text-[10px] text-slate-400 font-bold uppercase">{t('parent.result')}</div>
-                                <div className="text-2xl font-black text-blue-600">{newVal}</div>
-                                <div className="flex items-center gap-1 text-[8px] font-bold text-slate-300 mt-1">
-                                    <span>{currentVal}</span>
-                                    <ArrowRight className="w-2 h-2" />
-                                    <span>{newVal}</span>
-                                </div>
+                            <input
+                                type="text"
+                                placeholder={t('parent.reason')}
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-400 outline-none"
+                                value={adjData.reason}
+                                onChange={e => setAdjData({ ...adjData, reason: e.target.value })}
+                            />
+
+                            <div className="flex gap-2">
+                                <button onClick={handleAdjust} className="flex-1 bg-blue-500 text-white rounded-xl font-bold py-3 shadow-md hover:bg-blue-600 transition-colors active:scale-[0.98]">
+                                    {t('button.apply')}
+                                </button>
+                                <button onClick={() => setAdjusting(null)} className="px-6 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">
+                                    {t('button.cancel')}
+                                </button>
                             </div>
-                        </div>
-
-                        <input
-                            type="text"
-                            placeholder={t('parent.reason')}
-                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-400 outline-none"
-                            value={adjData.reason}
-                            onChange={e => setAdjData({ ...adjData, reason: e.target.value })}
-                        />
-
-                        <div className="flex gap-2">
-                            <button onClick={handleAdjust} className="flex-1 bg-blue-500 text-white rounded-xl font-bold py-3 shadow-md hover:bg-blue-600 transition-colors active:scale-[0.98]">
-                                {t('button.apply')}
-                            </button>
-                            <button onClick={() => setAdjusting(null)} className="px-6 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">
-                                {t('button.cancel')}
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </div>
+                        </motion.div>
+                    )
+                }
+            </div >
         )
     }
 
@@ -421,7 +483,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 transition-all shadow-lg shadow-blue-500/20 active:scale-95 font-bold"
                     >
                         <Plus className="w-5 h-5" />
-                        {t('parent.addChild')}
+                        Add Member
                     </button>
                     {archivedChildren.length > 0 && (
                         <button
@@ -448,7 +510,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                     <Users className="w-6 h-6 text-blue-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-800">{editingChild ? 'Edit Member' : t('parent.addChild')}</h3>
+                                    <h3 className="text-2xl font-black text-slate-800">{editingChild ? 'Edit Member' : 'Add Member'}</h3>
                                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Profile Details</p>
                                 </div>
                             </div>

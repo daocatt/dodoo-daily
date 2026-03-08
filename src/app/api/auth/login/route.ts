@@ -25,6 +25,9 @@ export async function POST(req: Request) {
         cookieStore.set('dodoo_user_id', user.id, { maxAge, path: '/' })
         cookieStore.set('dodoo_role', user.role, { maxAge, path: '/' })
 
+        // Update last login
+        await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
+
         // For parent login: check if first-run setup is needed
         let needsSetup = false
         if (user.role === 'PARENT') {

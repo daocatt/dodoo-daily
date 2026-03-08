@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users, accountStats } from '@/lib/schema'
-import { eq, and, not } from 'drizzle-orm'
+import { eq, and, not, or } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 async function isParent() {
@@ -21,7 +21,9 @@ export async function GET() {
             gender: users.gender,
             birthDate: users.birthDate,
             zodiac: users.zodiac,
+            chineseZodiac: users.chineseZodiac,
             avatarUrl: users.avatarUrl,
+            role: users.role,
             isArchived: users.isArchived,
             isDeleted: users.isDeleted,
             createdAt: users.createdAt,
@@ -34,10 +36,23 @@ export async function GET() {
         })
             .from(users)
             .leftJoin(accountStats, eq(users.id, accountStats.userId))
-            .where(eq(users.role, 'CHILD'))
+            .where(not(eq(users.role, 'PARENT')))
             .all()
 
-        return NextResponse.json(children)
+        const formattedChildren = children.map(child => {
+            if (child.zodiac && child.zodiac.includes(' - ')) {
+                child.zodiac = child.zodiac.split(' - ').pop() || child.zodiac;
+            }
+            return {
+                ...child,
+                // The primary 'name' used by the whole system will now be the nickname if available
+                displayName: child.nickname || child.name,
+                realName: child.name,
+                name: child.nickname || child.name
+            };
+        });
+
+        return NextResponse.json(formattedChildren)
     } catch (error) {
         console.error('Failed to fetch children:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
@@ -48,8 +63,28 @@ export async function POST(req: NextRequest) {
     if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, nickname, gender, birthDate, zodiac, pin, avatarUrl } = await req.json()
+        const body = await req.json()
+        const { name, nickname, gender, birthDate, pin, avatarUrl, role } = body
+        let { zodiac, chineseZodiac } = body
         if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+
+        if (birthDate) {
+            const { getZodiac, getChineseZodiac } = await import('@/lib/utils');
+            if (!zodiac) zodiac = getZodiac(new Date(birthDate));
+            if (!chineseZodiac) chineseZodiac = getChineseZodiac(new Date(birthDate));
+        }
+
+        // Check uniqueness
+        const conditions = [eq(users.name, name)];
+        if (nickname) conditions.push(eq(users.nickname, nickname));
+
+        const existing = await db.select().from(users).where(or(...conditions)).all();
+        if (existing.length > 0) {
+            const hasSameName = existing.some(u => u.name === name);
+            const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
+            if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
+            if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+        }
 
         const [newUser] = await db.insert(users).values({
             name,
@@ -57,9 +92,10 @@ export async function POST(req: NextRequest) {
             gender: gender || 'OTHER',
             birthDate: birthDate ? new Date(birthDate) : null,
             zodiac: zodiac || null,
+            chineseZodiac: chineseZodiac || null,
             pin: pin || null,
             avatarUrl: avatarUrl || null,
-            role: 'CHILD'
+            role: role || 'CHILD'
         }).returning()
 
         await db.insert(accountStats).values({
@@ -81,8 +117,39 @@ export async function PATCH(req: NextRequest) {
     if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { id, name, nickname, gender, birthDate, zodiac, pin, avatarUrl, isArchived, isDeleted } = await req.json()
+        const body = await req.json()
+        const { id, name, nickname, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted } = body
+        let { zodiac, chineseZodiac } = body
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+
+        if (birthDate !== undefined) {
+            const { getZodiac, getChineseZodiac } = await import('@/lib/utils');
+            if (!zodiac) zodiac = birthDate ? getZodiac(new Date(birthDate)) : null;
+            if (!chineseZodiac) chineseZodiac = birthDate ? getChineseZodiac(new Date(birthDate)) : null;
+        }
+
+        // Check uniqueness
+        if (name || nickname) {
+            const conditions = [];
+            if (name) conditions.push(eq(users.name, name));
+            if (nickname) conditions.push(eq(users.nickname, nickname));
+
+            if (conditions.length > 0) {
+                const existing = await db.select().from(users).where(
+                    and(
+                        not(eq(users.id, id)),
+                        or(...conditions)
+                    )
+                ).all();
+
+                if (existing.length > 0) {
+                    const hasSameName = name && existing.some(u => u.name === name);
+                    const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
+                    if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
+                    if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+                }
+            }
+        }
 
         const updateData: any = {}
         if (name !== undefined) updateData.name = name
@@ -90,8 +157,10 @@ export async function PATCH(req: NextRequest) {
         if (gender !== undefined) updateData.gender = gender
         if (birthDate !== undefined) updateData.birthDate = birthDate ? new Date(birthDate) : null
         if (zodiac !== undefined) updateData.zodiac = zodiac
+        if (chineseZodiac !== undefined) updateData.chineseZodiac = chineseZodiac
         if (pin !== undefined) updateData.pin = pin
         if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
+        if (role !== undefined) updateData.role = role
         if (isArchived !== undefined) updateData.isArchived = isArchived
         if (isDeleted !== undefined) updateData.isDeleted = isDeleted
 

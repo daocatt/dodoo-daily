@@ -1,0 +1,1 @@
+ALTER TABLE `Artwork` ADD `isArchived` integer DEFAULT false NOT NULL;

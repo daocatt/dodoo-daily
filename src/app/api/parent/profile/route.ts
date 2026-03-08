@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
+import { eq, or, and, not } from 'drizzle-orm'
 
 export async function PATCH(req: Request) {
     const cookieStore = await cookies()
@@ -22,8 +22,35 @@ export async function PATCH(req: Request) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
+        if (name) {
+            const existing = await db.select().from(users).where(
+                and(
+                    not(eq(users.id, session)),
+                    eq(users.name, name.trim())
+                )
+            ).all();
+
+            if (existing.length > 0) {
+                return NextResponse.json({ error: 'Name already exists' }, { status: 400 });
+            }
+        }
+
+        if (nickname) {
+            const existing = await db.select().from(users).where(
+                and(
+                    not(eq(users.id, session)),
+                    eq(users.nickname, nickname.trim())
+                )
+            ).all();
+
+            if (existing.length > 0) {
+                return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+            }
+        }
+
         const updates: any = {}
         if (name) updates.name = name
+        if (nickname) updates.nickname = nickname
         if (avatarUrl) updates.avatarUrl = avatarUrl
 
         await db.update(users)

@@ -7,16 +7,18 @@ import { text, integer, sqliteTable, real } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("Users", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    name: text("name").notNull(),
-    nickname: text("nickname"),
+    name: text("name").notNull().unique(),
+    nickname: text("nickname").unique(),
     pin: text("pin"),
-    role: text("role", { enum: ["PARENT", "CHILD"] }).notNull().default("CHILD"),
+    role: text("role", { enum: ["PARENT", "CHILD", "GRANDPARENT", "OTHER"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
     gender: text("gender", { enum: ["MALE", "FEMALE", "OTHER"] }).default("OTHER"),
     birthDate: integer("birthDate", { mode: "timestamp" }),
     zodiac: text("zodiac"),
+    chineseZodiac: text("chineseZodiac"),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
+    lastLoginAt: integer("lastLoginAt", { mode: "timestamp" }),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
@@ -53,11 +55,15 @@ export const guest = sqliteTable("Guest", {
 export const task = sqliteTable("Task", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     assignedTo: text("assignedTo").references(() => users.id),
+    creatorId: text("creatorId").references(() => users.id),
     title: text("title").notNull(),
     description: text("description"),
     isRepeating: integer("isRepeating", { mode: "boolean" }).default(false).notNull(),
     isMonthlyRepeating: integer("isMonthlyRepeating", { mode: "boolean" }).default(false).notNull(),
     rewardStars: integer("rewardStars").default(1).notNull(),
+    rewardCoins: integer("rewardCoins").default(0).notNull(), // Extra coins for special tasks
+    needsParentConfirmation: integer("needsParentConfirmation", { mode: "boolean" }).default(false).notNull(),
+    confirmationStatus: text("confirmationStatus", { enum: ["PENDING", "APPROVED", "REJECTED"] }).default("PENDING"),
     plannedTime: integer("plannedTime", { mode: "timestamp" }),
     startTime: integer("startTime", { mode: "timestamp" }),
     endTime: integer("endTime", { mode: "timestamp" }),
@@ -102,6 +108,7 @@ export const artwork = sqliteTable("Artwork", {
     albumId: text("albumId").references(() => album.id),
     isSold: integer("isSold", { mode: "boolean" }).default(false).notNull(),
     buyerId: text("buyerId").references(() => guest.id),
+    isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
@@ -171,6 +178,8 @@ export const systemSettings = sqliteTable("SystemSettings", {
     isClosed: integer("isClosed", { mode: "boolean" }).default(false).notNull(),
     // needsSetup: true until the first-run wizard is completed
     needsSetup: integer("needsSetup", { mode: "boolean" }).default(true).notNull(),
+    starsToCoinsRatio: integer("starsToCoinsRatio").default(10).notNull(),
+    coinsToRmbRatio: real("coinsToRmbRatio").default(1.0).notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
@@ -192,4 +201,17 @@ export const media = sqliteTable("Media", {
     userId: text("userId").references(() => users.id),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+// -----------------------------------------------------------------------------
+// GROWTH SYSTEM (Weight & Height)
+// -----------------------------------------------------------------------------
+
+export const growthRecord = sqliteTable("GrowthRecord", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    height: real("height"), // in cm
+    weight: real("weight"), // in kg
+    date: integer("date", { mode: "timestamp" }).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });

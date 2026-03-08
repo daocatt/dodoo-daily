@@ -1,45 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { join } from 'path'
-import { writeFile, mkdir } from 'fs/promises'
 import { db } from '@/lib/db'
 import { artwork, users } from '@/lib/schema'
-import { v4 as uuidv4 } from 'uuid'
-import { eq } from 'drizzle-orm'
 import { uploadMedia } from '@/lib/storage'
+import { cookies } from 'next/headers'
+import { eq } from 'drizzle-orm'
 
-async function getDefaultChildId() {
-    const kids = await db.select().from(users).where(eq(users.role, 'CHILD'))
-    return kids.length > 0 ? kids[0].id : null
+async function getAuth() {
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('dodoo_user_id')?.value
+    return { userId }
 }
 
 export async function POST(req: NextRequest) {
     try {
+        const cookieStore = await cookies()
+        const userId = cookieStore.get('dodoo_user_id')?.value
+        const role = cookieStore.get('dodoo_role')?.value
+        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
         const formData = await req.formData()
-        const file = formData.get('file') as File
-        const title = formData.get('title') as string
+        const files = formData.getAll('file') as File[]
+        const title = formData.get('title') as string || 'Untitled'
         const priceRMB = parseFloat(formData.get('priceRMB') as string) || 0
         const priceCoins = parseInt(formData.get('priceCoins') as string) || 0
         const albumId = formData.get('albumId') as string
+        const targetUserId = formData.get('targetUserId') as string
 
-        if (!file || !title) {
-            return NextResponse.json({ error: 'File and title are required' }, { status: 400 })
+        if (!files || files.length === 0) {
+            return NextResponse.json({ error: 'Files are required' }, { status: 400 })
         }
 
-        const childId = await getDefaultChildId()
-        if (!childId) return NextResponse.json({ error: 'No child account found' }, { status: 404 })
+        const results = []
 
-        const mediaItem = await uploadMedia(file, 'GALLERY', childId);
+        const ownerId = (role === 'PARENT' && targetUserId) ? targetUserId : userId
 
-        const insertResult = await db.insert(artwork).values({
-            userId: childId,
-            title,
-            imageUrl: mediaItem.path,
-            priceRMB,
-            priceCoins,
-            albumId: albumId || null,
-        }).returning()
+        for (const [index, file] of files.entries()) {
+            const mediaItem = await uploadMedia(file, 'GALLERY', ownerId);
+            const artworkTitle = files.length > 1 ? `${title} ${index + 1}` : title;
 
-        return NextResponse.json({ success: true, artwork: insertResult[0] })
+            const insertResult = await db.insert(artwork).values({
+                userId: ownerId,
+                title: artworkTitle,
+                imageUrl: mediaItem.path,
+                priceRMB,
+                priceCoins,
+                albumId: albumId || null,
+            }).returning()
+
+            results.push(insertResult[0])
+        }
+
+        return NextResponse.json({ success: true, artworks: results })
     } catch (error) {
         console.error('Failed to upload image:', error)
         return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
