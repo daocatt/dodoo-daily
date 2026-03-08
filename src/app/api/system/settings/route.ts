@@ -22,7 +22,10 @@ export async function GET() {
                 needsSetup: true,
                 starsToCoinsRatio: 10,
                 coinsToRmbRatio: 1.0,
-                timezone: 'Asia/Shanghai'
+                timezone: 'Asia/Shanghai',
+                systemName: 'DoDoo Family',
+                showAllAvatars: true,
+                homepageImages: JSON.stringify(['/carousel/bg1.jpg', '/carousel/bg2.jpg', '/carousel/bg3.jpg'])
             }).returning()
             settings = newSettings
         }
@@ -50,6 +53,9 @@ export async function PATCH(req: NextRequest) {
         if (body.starsToCoinsRatio !== undefined) updates.starsToCoinsRatio = parseInt(body.starsToCoinsRatio)
         if (body.coinsToRmbRatio !== undefined) updates.coinsToRmbRatio = parseFloat(body.coinsToRmbRatio)
         if (body.timezone !== undefined) updates.timezone = body.timezone
+        if (body.systemName !== undefined) updates.systemName = body.systemName
+        if (typeof body.showAllAvatars === 'boolean') updates.showAllAvatars = body.showAllAvatars
+        if (body.homepageImages !== undefined) updates.homepageImages = body.homepageImages
 
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
 

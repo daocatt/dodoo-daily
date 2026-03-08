@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 type Task = {
     id: string
@@ -38,8 +40,9 @@ function TasksPageContent() {
     const [isParent, setIsParent] = useState(false)
     const [children, setChildren] = useState<any[]>([])
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
-    const [assignTo, setAssignTo] = useState<string>('')
+    const [assignTo, setAssignTo] = useState<string[]>([]) // Changed to array
     const [currentUserId, setCurrentUserId] = useState<string>('')
+    const [parentInfo, setParentInfo] = useState<any>(null)
     const [systemTimezone, setSystemTimezone] = useState('Asia/Shanghai')
     const { t } = useI18n()
 
@@ -50,7 +53,7 @@ function TasksPageContent() {
     const [rewardCoins, setRewardCoins] = useState(0)
     const [isRepeating, setIsRepeating] = useState(false)
     const [isMonthlyRepeating, setIsMonthlyRepeating] = useState(false)
-    const [plannedDate, setPlannedDate] = useState(() => getTodayStringInTimezone())
+    const [plannedDate, setPlannedDate] = useState<Date | null>(() => new Date())
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
@@ -58,7 +61,15 @@ function TasksPageContent() {
         fetch('/api/stats')
             .then(res => res.json())
             .then(data => {
-                if (data.userId) setCurrentUserId(data.userId)
+                if (data.userId) {
+                    setCurrentUserId(data.userId)
+                    setParentInfo({
+                        id: data.userId,
+                        name: data.name || 'Parent',
+                        nickname: data.nickname || data.name || 'Parent',
+                        avatarUrl: data.avatarUrl
+                    })
+                }
                 if (data.timezone) setSystemTimezone(data.timezone)
                 if (data.isParent) {
                     setIsParent(true)
@@ -67,15 +78,11 @@ function TasksPageContent() {
                         .then(kids => {
                             setChildren(kids || [])
                             if (assignToParam) {
-                                setAssignTo(assignToParam)
+                                setAssignTo([assignToParam])
                                 setShowNewTaskModal(true)
                                 setActiveTab('assigns')
-                            } else if (kids && kids.length > 0) {
-                                setAssignTo(kids[0].id)
                             } else {
-                                // Parent with no kids or explicitly personal
-                                setRewardStars(1)
-                                setRewardCoins(0)
+                                setAssignTo([]) // Default to myself
                             }
                         })
                 }
@@ -123,7 +130,7 @@ function TasksPageContent() {
     }
 
     useEffect(() => {
-        if (assignTo === '' || assignTo === currentUserId) {
+        if (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId)) {
             setRewardStars(1)
             setRewardCoins(0)
         }
@@ -135,34 +142,38 @@ function TasksPageContent() {
 
         setIsSubmitting(true)
         try {
-            const isAssigned = !!assignTo && assignTo !== currentUserId;
-            const baseUrl = isAssigned ? '/api/assigned-tasks' : '/api/tasks';
-            const url = editingTask ? `${baseUrl}/${editingTask.id}` : baseUrl;
-            const method = editingTask ? 'PUT' : 'POST'
+            const targets = assignTo.length === 0 ? [currentUserId] : assignTo;
 
-            const res = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title,
-                    rewardStars: isAssigned ? rewardStars : 1,
-                    rewardCoins: isAssigned ? rewardCoins : 0,
-                    isRepeating,
-                    isMonthlyRepeating,
-                    plannedTime: new Date(plannedDate).toISOString(),
-                    assignedTo: isAssigned ? assignTo : undefined
+            for (const targetId of targets) {
+                const isAssigned = targetId !== currentUserId;
+                const baseUrl = isAssigned ? '/api/assigned-tasks' : '/api/tasks';
+                const url = editingTask ? `${baseUrl}/${editingTask.id}` : baseUrl;
+                const method = editingTask ? 'PUT' : 'POST'
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        rewardStars: isAssigned ? rewardStars : 1,
+                        rewardCoins: isAssigned ? rewardCoins : 0,
+                        isRepeating,
+                        isMonthlyRepeating,
+                        plannedTime: plannedDate ? plannedDate.toISOString() : new Date().toISOString(),
+                        assignedTo: isAssigned ? targetId : undefined
+                    })
                 })
-            })
-            if (res.ok) {
-                setShowNewTaskModal(false)
-                setEditingTask(null)
-                setTitle('')
-                setRewardStars(1)
-                setRewardCoins(0)
-                setIsRepeating(false)
-                setIsMonthlyRepeating(false)
-                fetchTasks()
+                if (!res.ok) throw new Error('Failed to create task for ' + targetId);
             }
+
+            setShowNewTaskModal(false)
+            setEditingTask(null)
+            setTitle('')
+            setRewardStars(1)
+            setRewardCoins(0)
+            setIsRepeating(false)
+            setIsMonthlyRepeating(false)
+            fetchTasks()
         } catch (err) {
             console.error(err)
         } finally {
@@ -225,8 +236,8 @@ function TasksPageContent() {
                             setRewardCoins(0)
                             setIsRepeating(false)
                             setIsMonthlyRepeating(false)
-                            setPlannedDate(getTodayStringInTimezone(systemTimezone))
-                            setAssignTo('')
+                            setPlannedDate(new Date())
+                            setAssignTo([])
                             setShowNewTaskModal(true)
                         }}
                         className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95 border-2 border-blue-400"
@@ -243,8 +254,8 @@ function TasksPageContent() {
                                 setRewardCoins(0)
                                 setIsRepeating(false)
                                 setIsMonthlyRepeating(false)
-                                setPlannedDate(getTodayStringInTimezone(systemTimezone))
-                                setAssignTo(assignToParam || children[0].id || '')
+                                setPlannedDate(new Date())
+                                setAssignTo(assignToParam ? [assignToParam] : [children[0].id])
                                 setShowNewTaskModal(true)
                             }}
                             className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-sm md:text-base font-bold text-white shadow-md shadow-emerald-500/20 active:scale-95 border-2 border-emerald-400"
@@ -502,8 +513,8 @@ function TasksPageContent() {
                                                             setRewardCoins(task.rewardCoins || 0);
                                                             setIsRepeating(task.isRepeating);
                                                             setIsMonthlyRepeating(task.isMonthlyRepeating);
-                                                            setPlannedDate(task.plannedTime ? new Date(task.plannedTime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-                                                            setAssignTo(task.isAssigned ? (task.assigneeId || '') : (currentUserId || ''));
+                                                            setPlannedDate(task.plannedTime ? new Date(task.plannedTime) : new Date());
+                                                            setAssignTo(task.isAssigned ? (task.assigneeId ? [task.assigneeId] : []) : [currentUserId]);
                                                             setShowNewTaskModal(true);
                                                         }}
                                                         className="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-500 transition-colors shadow-sm"
@@ -538,8 +549,8 @@ function TasksPageContent() {
                         >
                             <div className={`p-4 md:p-5 border-b flex justify-between items-center ${assignTo === '' ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
                                 <h3 className="text-lg md:text-xl font-black flex items-center gap-2 text-slate-800">
-                                    {editingTask ? <Edit2 className="w-5 h-5 text-blue-500" /> : (assignTo === '' ? <Plus className="w-5 h-5 text-blue-500" /> : <Users className="w-5 h-5 text-emerald-500" />)}
-                                    {editingTask ? 'Edit Task' : (assignTo === '' ? t('tasks.newTask') : t('parent.assignTask') || 'Assign Task')}
+                                    {editingTask ? <Edit2 className="w-5 h-5 text-blue-500" /> : (assignTo.length === 0 ? <Plus className="w-5 h-5 text-blue-500" /> : <Users className="w-5 h-5 text-emerald-500" />)}
+                                    {editingTask ? 'Edit Task' : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.newTask') : t('parent.assignTask') || 'Assign Task')}
                                 </h3>
                             </div>
                             <div className="overflow-y-auto hide-scrollbar">
@@ -557,23 +568,58 @@ function TasksPageContent() {
                                             />
                                         </div>
 
-                                        {/* Assign To - Only show if we already have an assignment or explicitly started an assignment */}
-                                        {isParent && children.length > 0 && !editingTask && assignTo !== '' && (
-                                            <div className="md:col-span-2 space-y-1.5">
-                                                <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Assign To</label>
-                                                <select
-                                                    value={assignTo}
-                                                    onChange={e => setAssignTo(e.target.value)}
-                                                    className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
-                                                >
-                                                    <option value="">Myself (Parent)</option>
-                                                    {children.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
+                                        {/* Assign To - Multi-select Pill Style */}
+                                        {isParent && children.length > 0 && !editingTask && (
+                                            <div className="md:col-span-2 space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Assign To</label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (assignTo.length === children.length) setAssignTo([]);
+                                                            else setAssignTo(children.map(c => c.id));
+                                                        }}
+                                                        className="text-[10px] font-black uppercase tracking-widest text-[#43aa8b] hover:opacity-80 transition-colors"
+                                                    >
+                                                        {assignTo.length === children.length ? 'Deselect All' : 'Select All'}
+                                                    </button>
+                                                </div>
+                                                <div className="flex flex-wrap gap-3">
+                                                    {children.map(c => {
+                                                        const isSelected = assignTo.includes(c.id);
+                                                        return (
+                                                            <button
+                                                                key={c.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    if (isSelected) {
+                                                                        setAssignTo(assignTo.filter(id => id !== c.id));
+                                                                    } else {
+                                                                        setAssignTo([...assignTo, c.id]);
+                                                                    }
+                                                                }}
+                                                                className={`flex items-center gap-3 p-1.5 pr-4 rounded-full border-2 transition-all ${isSelected ? 'bg-emerald-500 border-emerald-400 text-white shadow-md' : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-white'}`}
+                                                            >
+                                                                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-slate-200">
+                                                                    {c.avatarUrl ? (
+                                                                        <img src={c.avatarUrl} alt={c.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-500 font-bold text-xs uppercase">
+                                                                            {c.nickname?.[0] || c.name[0]}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-bold text-sm">{c.nickname || c.name}</span>
+                                                                {isSelected && <Check className="w-3.5 h-3.5" />}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
 
-                                        {/* Rewards - Only show if it is an assigned task AND NOT assigned to self */}
-                                        {assignTo !== '' && assignTo !== currentUserId && (
+                                        {/* Rewards - Show if assignment is selected (at least one child) */}
+                                        {assignTo.length > 0 && !assignTo.includes(currentUserId) && (
                                             <>
                                                 <div className="flex items-center justify-between bg-yellow-50/50 p-3 md:p-4 rounded-xl border border-yellow-100/50">
                                                     <label className="text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.rewardLabel')}</label>
@@ -599,12 +645,13 @@ function TasksPageContent() {
 
                                         <div className="space-y-1.5">
                                             <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Planned Date</label>
-                                            <input
-                                                type="date"
-                                                value={plannedDate}
-                                                onChange={e => setPlannedDate(e.target.value)}
+                                            <DatePicker
+                                                selected={plannedDate}
+                                                onChange={(date: Date | null) => setPlannedDate(date)}
+                                                dateFormat="yyyy-MM-dd"
                                                 className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
                                                 required
+                                                placeholderText="Select date"
                                             />
                                         </div>
 
@@ -644,7 +691,7 @@ function TasksPageContent() {
                                             disabled={isSubmitting}
                                             className={`w-full py-3.5 md:py-4 rounded-2xl text-white font-black tracking-wide shadow-lg transition-all text-base md:text-lg ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : (assignTo === '' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/20 hover:opacity-90' : 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:opacity-90')}`}
                                         >
-                                            {isSubmitting ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? t('common.save') : (assignTo === '' ? t('tasks.createGoal') : t('common.confirm')))}
+                                            {isSubmitting ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? t('common.save') : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.createGoal') : t('common.confirm')))}
                                         </button>
                                         <button type="button" onClick={() => setShowNewTaskModal(false)} className="w-full py-2 text-sm md:text-base text-[#a89880] font-bold hover:text-[#2c2416] transition-colors">
                                             {t('common.cancel')}

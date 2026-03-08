@@ -10,8 +10,8 @@ export async function PATCH(req: Request) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, avatarUrl } = await req.json()
-        if (!name && !avatarUrl) return NextResponse.json({ error: 'Name or AvatarUrl is required' }, { status: 400 })
+        const { name, nickname, avatarUrl } = await req.json()
+        if (!name && !avatarUrl && !nickname) return NextResponse.json({ error: 'Name, Nickname or AvatarUrl is required' }, { status: 400 })
 
         // Find current user from session
         const currentUser = await db.query.users.findFirst({

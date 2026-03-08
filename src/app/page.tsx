@@ -16,11 +16,7 @@ export default function Home() {
   const [zoomedArt, setZoomedArt] = useState<any>(null)
 
   // Artwork Stack State with default rotations
-  const [artworks, setArtworks] = useState([
-    { id: 1, title: 'Summer Day', bg: 'bg-[#ffedb3]', defaultRotate: -15, rotate: -15, x: -40, y: 15, image: '/artwork1.png' },
-    { id: 2, title: 'My Pet', bg: 'bg-[#d0f4de]', defaultRotate: 5, rotate: 5, x: 40, y: -25, image: '/artwork2.png' },
-    { id: 3, title: 'Dream Castle', bg: 'bg-[#ffcfd2]', defaultRotate: 12, rotate: 12, x: 15, y: 40, image: '/artwork1.png' },
-  ])
+  const [artworks, setArtworks] = useState<any[]>([])
 
   React.useEffect(() => {
     fetch('/api/stats')
@@ -29,7 +25,36 @@ export default function Home() {
 
     fetch('/api/system/settings')
       .then(res => res.json())
-      .then(data => setSysSettings(data))
+      .then(data => {
+        setSysSettings(data);
+        if (data.homepageImages) {
+          try {
+            const urls = JSON.parse(data.homepageImages);
+            const bgs = ['bg-[#ffedb3]', 'bg-[#d0f4de]', 'bg-[#ffcfd2]', 'bg-[#c9e4de]', 'bg-[#f4acb7]'];
+            const rotates = [-15, 12, -25, 18, -8];
+            const xs = [-90, 90, -60, 80, -30];
+            const ys = [-50, -60, 70, 60, 20];
+
+            const formatted = urls.map((url: string, i: number) => ({
+              id: i,
+              image: url,
+              bg: bgs[i % bgs.length],
+              defaultRotate: rotates[i % rotates.length],
+              rotate: rotates[i % rotates.length],
+              x: xs[i % xs.length],
+              y: ys[i % ys.length]
+            }));
+            setArtworks(formatted);
+          } catch (e) { }
+        } else {
+          // Default artworks if none configured
+          setArtworks([
+            { id: 1, image: '/artwork1.png', bg: 'bg-[#ffedb3]', defaultRotate: -15, rotate: -15, x: -90, y: -50 },
+            { id: 2, image: '/artwork2.png', bg: 'bg-[#d0f4de]', defaultRotate: 12, rotate: 12, x: 90, y: -60 },
+            { id: 3, image: '/artwork1.png', bg: 'bg-[#ffcfd2]', defaultRotate: -25, rotate: -25, x: -60, y: 70 },
+          ]);
+        }
+      })
   }, [])
 
   const toggleLanguage = React.useCallback(() => {
@@ -104,7 +129,9 @@ export default function Home() {
             <img src="/dog.svg" alt="DoDoo Logo" className="w-full h-full object-contain" />
           </motion.div>
           <div>
-            <span className="font-black text-xl md:text-2xl tracking-tight text-[#2c2416] block leading-none">{t('site.title')}</span>
+            <span className="font-black text-xl md:text-2xl tracking-tight text-[#2c2416] block leading-none">
+              {sysSettings?.systemName || t('site.title')}
+            </span>
             <span className="text-[10px] font-black uppercase tracking-widest text-[#4a3728]/40 mt-1 block leading-none">Family & Growth</span>
           </div>
         </div>

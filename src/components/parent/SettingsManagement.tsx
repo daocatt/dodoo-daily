@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 export default function ProfileManagement({ user }: { user: any }) {
     const { t } = useI18n()
     const [name, setName] = useState(user?.name || '')
+    const [nickname, setNickname] = useState(user?.nickname || '')
     const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '')
     const [uploading, setUploading] = useState(false)
     const [message, setMessage] = useState('')
@@ -49,7 +50,7 @@ export default function ProfileManagement({ user }: { user: any }) {
             const res = await fetch('/api/parent/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, avatarUrl })
+                body: JSON.stringify({ name, nickname, avatarUrl })
             })
             if (res.ok) {
                 setMessage(t('parent.profileUpdateSuccess') || 'Profile updated successfully!')
@@ -115,14 +116,30 @@ export default function ProfileManagement({ user }: { user: any }) {
 
                     <div className="space-y-6 pt-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('gallery.form.titleLabel')}</label>
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Real Name</label>
                             <input
                                 type="text"
                                 className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-purple-100 transition-all outline-none text-xl font-bold text-slate-700"
-                                placeholder="Your Display Name"
+                                placeholder="Your Real Name"
                                 value={name}
                                 onChange={e => { setName(e.target.value); setError(''); setMessage(''); }}
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-indigo-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                                Nickname
+                            </label>
+                            <input
+                                type="text"
+                                className="w-full px-8 py-5 bg-indigo-50/30 border border-indigo-100 rounded-xl focus:ring-4 focus:ring-indigo-100 transition-all outline-none text-xl font-bold text-indigo-700"
+                                placeholder="Your Short Nickname"
+                                value={nickname}
+                                onChange={e => { setNickname(e.target.value); setError(''); setMessage(''); }}
+                            />
+                            <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
+                                💡 Used for login when "Display All Avatars" is disabled (Case Insensitive)
+                            </p>
                         </div>
 
                         {error && <p className="text-sm text-rose-500 font-bold flex items-center justify-center gap-1"><X className="w-4 h-4" /> {error}</p>}

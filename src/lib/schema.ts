@@ -247,6 +247,9 @@ export const systemSettings = sqliteTable("SystemSettings", {
     starsToCoinsRatio: integer("starsToCoinsRatio").default(10).notNull(),
     coinsToRmbRatio: real("coinsToRmbRatio").default(1.0).notNull(),
     timezone: text("timezone").default("Asia/Shanghai").notNull(),
+    systemName: text("systemName").default("DoDoo Family").notNull(),
+    showAllAvatars: integer("showAllAvatars", { mode: "boolean" }).default(true).notNull(),
+    homepageImages: text("homepageImages"), // stringified JSON array
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 

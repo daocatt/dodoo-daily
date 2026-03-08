@@ -34,6 +34,7 @@ export default function ParentDashboard() {
                     setLoading(false)
                     setUser({
                         name: data.name || 'Parent',
+                        nickname: data.nickname || '',
                         avatarUrl: data.avatarUrl,
                         stars: data.goldStars || 0,
                         balance: data.currency || 0

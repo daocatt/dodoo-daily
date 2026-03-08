@@ -18,7 +18,7 @@ interface Child {
     zodiac?: string
     chineseZodiac?: string
     avatarUrl: string | null
-    role: 'CHILD' | 'GRANDPARENT' | 'OTHER'
+    role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
     isArchived: boolean
     isDeleted: boolean
     stats?: {
@@ -164,25 +164,33 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
 
     const activeChildren = children.filter(c => !c.isDeleted && !c.isArchived)
     const renderMemberForm = (member: Partial<Child>, onChange: (val: Partial<Child>) => void) => {
+        const genderEmojis = {
+            MALE: '♂',
+            FEMALE: '♀',
+            OTHER: '⚧'
+        };
+
         return (
             <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('gallery.form.titleLabel')}</label>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Real Name</label>
                         <input
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                             placeholder="Full Name"
                             value={member.name || ''}
                             onChange={e => onChange({ ...member, name: e.target.value })}
+                            required
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')}</label>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')} (Required)</label>
                         <input
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
-                            placeholder="Nickname (Optional)"
+                            placeholder="Nickname"
                             value={member.nickname || ''}
                             onChange={e => onChange({ ...member, nickname: e.target.value })}
+                            required
                         />
                     </div>
                 </div>
@@ -196,28 +204,14 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                     key={g}
                                     type="button"
                                     onClick={() => onChange({ ...member, gender: g })}
-                                    className={`flex-1 py-4 rounded-2xl font-black text-[10px] transition-all border ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border flex items-center justify-center gap-2 ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
                                 >
+                                    <span className="text-lg">{genderEmojis[g]}</span>
                                     {t(`gender.${g.toLowerCase()}` as any)}
                                 </button>
                             ))}
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
-                        <select
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all appearance-none"
-                            value={member.role || 'CHILD'}
-                            onChange={e => onChange({ ...member, role: e.target.value as any })}
-                        >
-                            <option value="CHILD">Child</option>
-                            <option value="GRANDPARENT">Grandparent</option>
-                            <option value="OTHER">Other Relative</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.memberPin')}</label>
                         <input
@@ -227,6 +221,22 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             value={(member as any).pin || ''}
                             onChange={e => onChange({ ...member, pin: e.target.value } as any)}
                         />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
+                        <select
+                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all appearance-none"
+                            value={member.role || 'CHILD'}
+                            onChange={e => onChange({ ...member, role: e.target.value as any })}
+                        >
+                            <option value="CHILD">Child</option>
+                            <option value="PARENT">Parent</option>
+                            <option value="GRANDPARENT">Grandparent</option>
+                            <option value="OTHER">Other Relative</option>
+                        </select>
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>

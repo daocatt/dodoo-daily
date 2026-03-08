@@ -15,7 +15,10 @@ export default function SettingsPage() {
     const [pin, setPin] = useState('')
     const [pinMessage, setPinMessage] = useState('')
     const [pinError, setPinError] = useState('')
+    const [nickname, setNickname] = useState('')
     const [uploading, setUploading] = useState(false)
+    const [message, setMessage] = useState('')
+    const [error, setError] = useState('')
 
     useEffect(() => {
         fetch('/api/stats')
@@ -26,6 +29,7 @@ export default function SettingsPage() {
                     return
                 }
                 setUser(data)
+                setNickname(data.nickname || '')
                 setLoading(false)
             })
             .catch(() => router.push('/login'))
@@ -116,10 +120,52 @@ export default function SettingsPage() {
                                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                             </label>
                         </div>
-                        <div className="text-center">
-                            <h2 className="text-2xl font-extrabold tracking-tight">{user?.name}</h2>
+                        <div className="text-center w-full">
+                            <h2 className="text-2xl font-extrabold tracking-tight">{user?.nickname || user?.name}</h2>
                             <span className="inline-block px-3 py-1 bg-slate-200/50 rounded-full text-xs font-bold uppercase tracking-widest mt-2">{user?.role}</span>
                         </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-indigo-500 uppercase tracking-widest ml-1">Nickname</label>
+                            <input
+                                type="text"
+                                className="w-full px-6 py-4 bg-white/40 border border-indigo-100 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-lg text-indigo-700"
+                                value={nickname}
+                                onChange={e => setNickname(e.target.value)}
+                                placeholder="Your short nickname"
+                            />
+                            <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
+                                💡 Used for login when "Display All Avatars" is disabled (Case Insensitive)
+                            </p>
+                        </div>
+
+                        {error && <p className="text-sm text-rose-500 font-bold px-1">{error}</p>}
+                        {message && <p className="text-sm text-green-600 font-bold px-1">{message}</p>}
+
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const res = await fetch('/api/profile', {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ nickname })
+                                    })
+                                    const data = await res.json()
+                                    if (res.ok) {
+                                        setUser({ ...user, nickname: data.nickname })
+                                        setMessage('Nickname updated!')
+                                        setError('')
+                                    } else {
+                                        setError(data.error || 'Update failed')
+                                    }
+                                } catch (e) { setError('Network error') }
+                            }}
+                            className="w-full py-4 bg-indigo-600 text-white font-extrabold rounded-2xl shadow-lg hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center"
+                        >
+                            Save Nickname Changes
+                        </button>
                     </div>
 
                     {user?.isParent && (

@@ -9,6 +9,7 @@ import NatureBackground from '@/components/NatureBackground'
 type AuthUser = {
     id: string
     name: string
+    nickname: string | null
     role: string
     avatarUrl: string | null
     hasPin: boolean
@@ -22,6 +23,9 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const { t, locale } = useI18n()
+    const [showAllAvatars, setShowAllAvatars] = useState(true)
+    const [systemName, setSystemName] = useState('DoDoo Family')
+    const [nickname, setNickname] = useState('')
 
     // First Launch States
     const [isFirstLaunch, setIsFirstLaunch] = useState(false)
@@ -40,6 +44,8 @@ export default function LoginPage() {
                 if (settingsData.needsSetup && usersData.length === 1 && usersData[0].role === 'PARENT' && usersData[0].name === 'Parent') {
                     setIsFirstLaunch(true)
                 }
+                setShowAllAvatars(settingsData.showAllAvatars ?? true)
+                setSystemName(settingsData.systemName || 'DoDoo Family')
                 setLoading(false)
             })
             .catch(err => {
@@ -106,7 +112,6 @@ export default function LoginPage() {
             const data = await res.json()
 
             if (res.ok && data.success) {
-                // Parent: check if first-run setup wizard is needed
                 if (data.needsSetup) {
                     window.location.href = '/setup'
                 } else {
@@ -114,7 +119,6 @@ export default function LoginPage() {
                 }
             } else {
                 setError(data.error === 'Invalid PIN' ? t('login.error.invalidPin') : (data.error || t('login.error.network')))
-                setLoading(true)
                 setLoading(false)
             }
         } catch (err) {
@@ -137,8 +141,8 @@ export default function LoginPage() {
                             exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
                             className="flex flex-col items-center"
                         >
-                            <h1 className="text-3xl md:text-5xl font-extrabold text-[#4a3728] mb-12 drop-shadow-sm tracking-tight">
-                                {t('login.title')}
+                            <h1 className="text-3xl md:text-5xl font-extrabold text-[#4a3728] mb-12 drop-shadow-sm tracking-tight text-center">
+                                {systemName}
                             </h1>
 
                             {loading ? (
@@ -187,44 +191,89 @@ export default function LoginPage() {
                                     </button>
                                 </form>
                             ) : (
-                                <div className="flex flex-wrap justify-center gap-6 md:gap-12">
-                                    {users.map((u, i) => (
-                                        <motion.button
-                                            key={u.id}
-                                            onClick={() => {
-                                                setSelectedUser(u)
-                                                setPin('')
-                                                setError('')
-                                            }}
-                                            initial={{ opacity: 0, y: 50 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: i * 0.1, type: 'spring' }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className="group flex flex-col items-center gap-6"
-                                        >
-                                            <div className={`w-40 h-40 md:w-56 md:h-56 rounded-2xl bg-[#4a3728]/5 backdrop-blur-md border-2 ${u.role === 'PARENT' ? 'border-[#43aa8b]' : 'border-[#277da1]'} shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-[#4a3728]/10 group-hover:shadow-2xl relative`}>
-                                                <div className={`absolute top-4 left-4 px-3 py-1 text-[10px] md:text-xs font-bold rounded-full text-white z-20 ${u.role === 'PARENT' ? 'bg-[#43aa8b]/90' : 'bg-[#277da1]/90'}`}>
-                                                    {u.role === 'PARENT' ? t('login.parent') : t('login.child')}
+                                showAllAvatars ? (
+                                    <div className="flex flex-wrap justify-center gap-6 md:gap-12">
+                                        {users.map((u, i) => (
+                                            <motion.button
+                                                key={u.id}
+                                                onClick={() => {
+                                                    setSelectedUser(u)
+                                                    setPin('')
+                                                    setError('')
+                                                }}
+                                                initial={{ opacity: 0, y: 50 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.1, type: 'spring' }}
+                                                whileTap={{ scale: 0.98 }}
+                                                className="group flex flex-col items-center gap-6"
+                                            >
+                                                <div className={`w-40 h-40 md:w-56 md:h-56 rounded-2xl bg-[#4a3728]/5 backdrop-blur-md border-2 ${u.role === 'PARENT' ? 'border-[#43aa8b]' : 'border-[#277da1]'} shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-[#4a3728]/10 group-hover:shadow-2xl relative`}>
+                                                    <div className={`absolute top-4 left-4 px-3 py-1 text-[10px] md:text-xs font-bold rounded-full text-white z-20 ${u.role === 'PARENT' ? 'bg-[#43aa8b]/90' : 'bg-[#277da1]/90'}`}>
+                                                        {u.role === 'PARENT' ? t('login.parent') : t('login.child')}
+                                                    </div>
+                                                    {u.avatarUrl ? (
+                                                        <img
+                                                            src={`${u.avatarUrl}?v=4`}
+                                                            alt={u.nickname || u.name}
+                                                            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-125 select-none"
+                                                            onError={(e) => { e.currentTarget.src = "/dog.svg"; }}
+                                                        />
+                                                    ) : (
+                                                        <User className={`w-16 h-16 md:w-20 md:h-20 text-white/80 drop-shadow-sm transition-transform duration-500 ease-out group-hover:scale-125`} />
+                                                    )}
+                                                    <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.2)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                                 </div>
-                                                {u.avatarUrl ? (
-                                                    <img
-                                                        src={`${u.avatarUrl}?v=4`}
-                                                        alt={u.name}
-                                                        className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-125 select-none"
-                                                        onError={(e) => { e.currentTarget.src = "/dog.svg"; }}
-                                                    />
-                                                ) : (
-                                                    <User className={`w-16 h-16 md:w-20 md:h-20 text-white/80 drop-shadow-sm transition-transform duration-500 ease-out group-hover:scale-125`} />
-                                                )}
-                                                {/* Subtle inner shadow effect on hover */}
-                                                <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.2)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                <span className="text-xl md:text-3xl font-bold text-white drop-shadow-md tracking-wide bg-[#4a3728]/40 px-6 py-2 rounded-xl backdrop-blur-md group-hover:bg-[#4a3728]/60 transition-colors">
+                                                    {u.nickname || u.name}
+                                                </span>
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <form
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            const found = users.find(u => (u.nickname || u.name).toLowerCase() === nickname.toLowerCase());
+                                            if (found) {
+                                                setSelectedUser(found);
+                                                setError('');
+                                            } else {
+                                                setError(t('login.error.userNotFound') || 'User not found');
+                                            }
+                                        }}
+                                        className="flex flex-col items-center gap-8 w-full max-w-sm bg-white/40 backdrop-blur-2xl p-10 rounded-3xl border border-white/50 shadow-2xl"
+                                    >
+                                        <div className="w-24 h-24 rounded-2xl bg-white shadow-xl flex items-center justify-center relative -mt-20 border-4 border-white/80">
+                                            <img src="/dog.svg" className="w-16 h-16" alt="logo" />
+                                        </div>
+
+                                        <div className="w-full space-y-4">
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                                    <User className="w-5 h-5 text-[#4a3728]/40" />
+                                                </div>
+                                                <input
+                                                    autoFocus
+                                                    type="text"
+                                                    required
+                                                    value={nickname}
+                                                    onChange={e => setNickname(e.target.value)}
+                                                    placeholder={t('login.nicknamePlaceholder') || "Enter Nickname"}
+                                                    className="w-full pl-14 pr-6 py-5 bg-white/90 rounded-2xl border-2 border-transparent focus:border-[#43aa8b] outline-none transition-all font-black text-xl text-[#4a3728] shadow-sm italic"
+                                                />
                                             </div>
-                                            <span className="text-xl md:text-3xl font-bold text-white drop-shadow-md tracking-wide bg-[#4a3728]/40 px-6 py-2 rounded-xl backdrop-blur-md group-hover:bg-[#4a3728]/60 transition-colors">
-                                                {u.name}
-                                            </span>
-                                        </motion.button>
-                                    ))}
-                                </div>
+
+                                            {error && <div className="text-rose-500 font-bold bg-rose-50 px-4 py-2 rounded-xl text-xs w-full text-center border border-rose-100">{error}</div>}
+
+                                            <button
+                                                type="submit"
+                                                className="w-full py-5 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-2xl font-black text-xl shadow-lg transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
+                                            >
+                                                {t('button.next') || "Next Step"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                )
                             )}
                         </motion.div>
                     ) : (
@@ -315,6 +364,6 @@ export default function LoginPage() {
                     )}
                 </AnimatePresence>
             </div>
-        </div >
+        </div>
     )
 }

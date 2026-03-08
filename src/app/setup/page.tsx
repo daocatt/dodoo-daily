@@ -66,6 +66,10 @@ export default function SetupPage() {
                 setError(t('setup.errorName'))
                 return
             }
+            if (!nickname.trim()) {
+                setError(t('setup.errorNickname'))
+                return
+            }
         }
         setSubmitting(true)
         setError('')
@@ -177,7 +181,9 @@ export default function SetupPage() {
 
                                 {/* Nickname */}
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t('setup.nickname')}</label>
+                                    <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                                        {t('setup.nickname')} <span className="text-rose-400">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         value={nickname}
@@ -252,7 +258,7 @@ export default function SetupPage() {
                             <button
                                 type="button"
                                 onClick={() => handleSubmit(false)}
-                                disabled={submitting || !name.trim() || !avatarFile}
+                                disabled={submitting || !name.trim() || !nickname.trim() || !avatarFile}
                                 className="w-full py-3 md:py-3.5 bg-[#43aa8b] hover:bg-[#3a9679] text-white font-black rounded-xl shadow-lg shadow-[#43aa8b]/30 transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
                             >
                                 {submitting ? (
