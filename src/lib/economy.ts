@@ -4,7 +4,7 @@ import { eq, and, gte, lte, sql } from 'drizzle-orm'
 
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
 
-export async function addBalance(userId: string, type: TransactionType, amount: number, reason: string) {
+export async function addBalance(userId: string, type: TransactionType, amount: number, reason: string, actorId?: string) {
     if (amount === 0) return
 
     // 1. Get current stats
@@ -56,16 +56,16 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
     const updateObj: any = {}
 
     if (type === 'CURRENCY') {
-        newBalance = stats.currency + amount
+        newBalance = Math.max(0, (stats.currency || 0) + amount)
         updateObj.currency = newBalance
     } else if (type === 'GOLD_STAR') {
-        newBalance = stats.goldStars + amount
+        newBalance = Math.max(0, (stats.goldStars || 0) + amount)
         updateObj.goldStars = newBalance
     } else if (type === 'PURPLE_STAR') {
-        newBalance = stats.purpleStars + amount
+        newBalance = Math.max(0, (stats.purpleStars || 0) + amount)
         updateObj.purpleStars = newBalance
     } else if (type === 'ANGER_PENALTY') {
-        newBalance = stats.angerPenalties + amount
+        newBalance = Math.max(0, (stats.angerPenalties || 0) + amount)
         updateObj.angerPenalties = newBalance
     }
 
@@ -78,7 +78,8 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
         type,
         amount,
         balance: newBalance,
-        reason
+        reason,
+        actorId
     })
 
     return { success: true, balance: newBalance }

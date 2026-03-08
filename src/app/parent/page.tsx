@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2, CheckSquare, ShoppingBag as BagIcon, Camera, Lock, UserCircle, Power, Network, LayoutDashboard, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2, CheckSquare, ShoppingBag as BagIcon, Camera, Lock, UserCircle, Power, Network, LayoutDashboard, Image as ImageIcon, Coins } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
 
@@ -32,8 +32,14 @@ export default function ParentDashboard() {
             .then(data => {
                 if (data && data.isParent) {
                     setLoading(false)
-                    setUser({ name: data.name || 'Parent', avatarUrl: data.avatarUrl })
-                } else {
+                    setUser({
+                        name: data.name || 'Parent',
+                        avatarUrl: data.avatarUrl,
+                        stars: data.goldStars || 0,
+                        balance: data.currency || 0
+                    })
+                }
+                else {
                     router.push('/')
                 }
             })
@@ -111,6 +117,7 @@ export default function ParentDashboard() {
                             {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
                         </div>
                     </button>
+
 
                     {/* Media Management */}
                     <button
@@ -195,13 +202,27 @@ export default function ParentDashboard() {
                 </div>
 
                 {view === 'HOME' && user && (
-                    <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
-                        <div className="text-right">
-                            <div className="text-xs font-black text-slate-800">{user.name}</div>
-                            <div className="text-[8px] font-black text-purple-500 uppercase tracking-tighter">Parent Mode</div>
+                    <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                <span className="font-black text-slate-800">{user.stars}</span>
+                            </div>
+                            <div className="w-[1px] h-4 bg-slate-200" />
+                            <div className="flex items-center gap-2">
+                                <Coins className="w-5 h-5 text-amber-500 fill-amber-500" />
+                                <span className="font-black text-slate-800">{user.balance}</span>
+                            </div>
                         </div>
-                        <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
-                            <img src={user.avatarUrl || "/dog.svg"} alt="Me" className="w-full h-full object-cover" />
+
+                        <div className="flex items-center gap-3">
+                            <div className="text-right hidden sm:block">
+                                <div className="text-xs font-black text-slate-800">{user.name}</div>
+                                <div className="text-[8px] font-black text-purple-500 uppercase tracking-tighter">Parent Mode</div>
+                            </div>
+                            <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
+                                <img src={user.avatarUrl || "/dog.svg"} alt="Me" className="w-full h-full object-cover" />
+                            </div>
                         </div>
                     </div>
                 )}

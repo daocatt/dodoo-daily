@@ -1,0 +1,1 @@
+ALTER TABLE `AccountStatsLog` ADD `actorId` text REFERENCES Users(id);

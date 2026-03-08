@@ -21,7 +21,8 @@ export async function GET() {
                 isClosed: false,
                 needsSetup: true,
                 starsToCoinsRatio: 10,
-                coinsToRmbRatio: 1.0
+                coinsToRmbRatio: 1.0,
+                timezone: 'Asia/Shanghai'
             }).returning()
             settings = newSettings
         }
@@ -48,6 +49,7 @@ export async function PATCH(req: NextRequest) {
         if (typeof body.needsSetup === 'boolean') updates.needsSetup = body.needsSetup
         if (body.starsToCoinsRatio !== undefined) updates.starsToCoinsRatio = parseInt(body.starsToCoinsRatio)
         if (body.coinsToRmbRatio !== undefined) updates.coinsToRmbRatio = parseFloat(body.coinsToRmbRatio)
+        if (body.timezone !== undefined) updates.timezone = body.timezone
 
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
 

@@ -35,12 +35,15 @@ export async function PATCH(req: NextRequest) {
     if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { userId, type, amount, reason } = await req.json()
-        if (!userId || !type || amount === undefined || !reason) {
+        const { userId: targetUserId, type, amount, reason } = await req.json()
+        const cookieStore = await cookies()
+        const actorId = cookieStore.get('dodoo_user_id')?.value
+
+        if (!targetUserId || !type || amount === undefined || !reason) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        const [stats] = await db.select().from(accountStats).where(eq(accountStats.userId, userId))
+        const [stats] = await db.select().from(accountStats).where(eq(accountStats.userId, targetUserId))
         if (!stats) return NextResponse.json({ error: 'Stats not found' }, { status: 404 })
 
         let currentBalance = 0
@@ -69,14 +72,15 @@ export async function PATCH(req: NextRequest) {
 
         await db.update(accountStats)
             .set(updateData)
-            .where(eq(accountStats.userId, userId))
+            .where(eq(accountStats.userId, targetUserId))
 
         const [log] = await db.insert(accountStatsLog).values({
-            userId,
+            userId: targetUserId,
             type,
             amount: parseInt(amount),
             balance: currentBalance,
-            reason
+            reason,
+            actorId
         }).returning()
 
         return NextResponse.json({ success: true, balance: currentBalance, log })

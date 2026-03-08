@@ -38,6 +38,7 @@ export const accountStatsLog = sqliteTable("AccountStatsLog", {
     amount: integer("amount").notNull(),
     balance: integer("balance").notNull(),
     reason: text("reason").notNull(),
+    actorId: text("actorId").references(() => users.id),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
@@ -54,20 +55,34 @@ export const guest = sqliteTable("Guest", {
 
 export const task = sqliteTable("Task", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    assignedTo: text("assignedTo").references(() => users.id),
     creatorId: text("creatorId").references(() => users.id),
     title: text("title").notNull(),
     description: text("description"),
     isRepeating: integer("isRepeating", { mode: "boolean" }).default(false).notNull(),
     isMonthlyRepeating: integer("isMonthlyRepeating", { mode: "boolean" }).default(false).notNull(),
     rewardStars: integer("rewardStars").default(1).notNull(),
-    rewardCoins: integer("rewardCoins").default(0).notNull(), // Extra coins for special tasks
-    needsParentConfirmation: integer("needsParentConfirmation", { mode: "boolean" }).default(false).notNull(),
+    rewardCoins: integer("rewardCoins").default(0).notNull(),
+    plannedTime: integer("plannedTime", { mode: "timestamp" }),
+    completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
+    completedById: text("completedById").references(() => users.id),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const assignedTask = sqliteTable("AssignedTask", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    assignerId: text("assignerId").references(() => users.id),
+    assigneeId: text("assigneeId").references(() => users.id),
+    title: text("title").notNull(),
+    description: text("description"),
+    isRepeating: integer("isRepeating", { mode: "boolean" }).default(false).notNull(),
+    isMonthlyRepeating: integer("isMonthlyRepeating", { mode: "boolean" }).default(false).notNull(),
+    rewardStars: integer("rewardStars").default(1).notNull(),
+    rewardCoins: integer("rewardCoins").default(0).notNull(),
     confirmationStatus: text("confirmationStatus", { enum: ["PENDING", "APPROVED", "REJECTED"] }).default("PENDING"),
     plannedTime: integer("plannedTime", { mode: "timestamp" }),
-    startTime: integer("startTime", { mode: "timestamp" }),
-    endTime: integer("endTime", { mode: "timestamp" }),
     completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
+    completedById: text("completedById").references(() => users.id),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
@@ -109,6 +124,7 @@ export const artwork = sqliteTable("Artwork", {
     isSold: integer("isSold", { mode: "boolean" }).default(false).notNull(),
     buyerId: text("buyerId").references(() => guest.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
+    isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
@@ -180,6 +196,7 @@ export const systemSettings = sqliteTable("SystemSettings", {
     needsSetup: integer("needsSetup", { mode: "boolean" }).default(true).notNull(),
     starsToCoinsRatio: integer("starsToCoinsRatio").default(10).notNull(),
     coinsToRmbRatio: real("coinsToRmbRatio").default(1.0).notNull(),
+    timezone: text("timezone").default("Asia/Shanghai").notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 

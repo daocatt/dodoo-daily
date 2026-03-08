@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
         const priceCoins = parseInt(formData.get('priceCoins') as string) || 0
         const albumId = formData.get('albumId') as string
         const targetUserId = formData.get('targetUserId') as string
+        const isPublic = formData.get('isPublic') === 'true'
 
         if (!files || files.length === 0) {
             return NextResponse.json({ error: 'Files are required' }, { status: 400 })
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
                 priceRMB,
                 priceCoins,
                 albumId: albumId || null,
+                isPublic,
             }).returning()
 
             results.push(insertResult[0])

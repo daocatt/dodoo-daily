@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, accountStats, task, purchase, accountStatsLog, growthRecord } from '@/lib/schema'
-import { eq, and, desc, gte, lte, sql } from 'drizzle-orm'
+import { users, accountStats, task, assignedTask, purchase, accountStatsLog, growthRecord } from '@/lib/schema'
+import { eq, and, desc, gte, lte, or, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 async function getAuth() {
@@ -76,15 +76,27 @@ export async function GET(req: NextRequest) {
                 purpleStars: lastWeekLogs.filter(l => l.type === 'PURPLE_STAR' && l.amount > 0).reduce((sum, l) => sum + l.amount, 0),
             }
 
-            // 3. Task completion
-            const tasksCompletedLastWeek = await db.select({ count: sql<number>`count(*)` })
+            // 3. Task completion (Sum of personal tasks and assigned tasks)
+            const personalTasksCount = await db.select({ count: sql<number>`count(*)` })
                 .from(task)
                 .where(and(
-                    eq(task.assignedTo, child.id),
+                    eq(task.creatorId, child.id),
                     eq(task.completed, true),
                     gte(task.updatedAt, lastWeekStart),
                     lte(task.updatedAt, lastWeekEnd)
                 )).get()
+
+            const assignedTasksCount = await db.select({ count: sql<number>`count(*)` })
+                .from(assignedTask)
+                .where(and(
+                    eq(assignedTask.assigneeId, child.id),
+                    eq(assignedTask.completed, true),
+                    eq(assignedTask.confirmationStatus, 'APPROVED'),
+                    gte(assignedTask.updatedAt, lastWeekStart),
+                    lte(assignedTask.updatedAt, lastWeekEnd)
+                )).get()
+
+            const totalCompletedCount = (personalTasksCount?.count || 0) + (assignedTasksCount?.count || 0)
 
             // 4. Growth data (last 14 days for charts)
             const growthData = await db.select()
@@ -100,7 +112,7 @@ export async function GET(req: NextRequest) {
                 ...child,
                 thisWeekStats,
                 lastWeekStats,
-                lastWeekTaskCount: tasksCompletedLastWeek?.count || 0,
+                lastWeekTaskCount: totalCompletedCount,
                 growthData
             }
         }))

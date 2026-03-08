@@ -12,9 +12,13 @@ export default function SystemSettings() {
     const [isClosed, setIsClosed] = useState(false)
     const [starsToCoinsRatio, setStarsToCoinsRatio] = useState(10)
     const [coinsToRmbRatio, setCoinsToRmbRatio] = useState(1.0)
+    const [timezone, setTimezone] = useState('Asia/Shanghai')
     const [loading, setLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
+
+    // All available timezones
+    const timezones = Intl.supportedValuesOf('timeZone')
 
     useEffect(() => {
         fetch('/api/system/settings')
@@ -23,6 +27,7 @@ export default function SystemSettings() {
                 setIsClosed(data.isClosed)
                 setStarsToCoinsRatio(data.starsToCoinsRatio || 10)
                 setCoinsToRmbRatio(data.coinsToRmbRatio || 1.0)
+                setTimezone(data.timezone || 'Asia/Shanghai')
                 setLoading(false)
             })
             .catch(() => setLoading(false))
@@ -40,6 +45,7 @@ export default function SystemSettings() {
                 if (updates.isClosed !== undefined) setIsClosed(updates.isClosed)
                 if (updates.starsToCoinsRatio !== undefined) setStarsToCoinsRatio(updates.starsToCoinsRatio)
                 if (updates.coinsToRmbRatio !== undefined) setCoinsToRmbRatio(updates.coinsToRmbRatio)
+                if (updates.timezone !== undefined) setTimezone(updates.timezone)
                 setShowConfirm(false)
             }
         } catch (e) {
@@ -136,6 +142,34 @@ export default function SystemSettings() {
                                 >
                                     Set
                                 </button>
+                            </div>
+                        </div>
+
+                        {/* Timezone Switcheroo */}
+                        <div className="space-y-2 pt-4 border-t border-slate-100">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">System Timezone</label>
+                            <div className="flex flex-col gap-3">
+                                <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                                    <span className="font-black text-slate-700">{timezone}</span>
+                                    <span className="text-sm font-bold text-slate-400">
+                                        {new Date().toLocaleTimeString(undefined, {
+                                            timeZone: timezone,
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </span>
+                                </div>
+                                <select
+                                    value={timezone}
+                                    onChange={(e) => handleUpdateSettings({ timezone: e.target.value })}
+                                    disabled={isSaving}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all appearance-none cursor-pointer"
+                                >
+                                    {timezones.map(tz => (
+                                        <option key={tz} value={tz}>{tz}</option>
+                                    ))}
+                                </select>
+                                <p className="text-[10px] text-slate-400 font-bold italic">Changing timezone affects how "Today" and task schedules are calculated.</p>
                             </div>
                         </div>
                     </div>

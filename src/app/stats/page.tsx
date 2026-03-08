@@ -14,7 +14,11 @@ import {
     Star,
     Zap,
     Scale,
-    Ruler
+    Ruler,
+    History,
+    Coins,
+    User,
+    CalendarDays
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
@@ -57,6 +61,12 @@ export default function GrowthStatsPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [activeChildIdx, setActiveChildIdx] = useState(0)
+    const [showHistoryModal, setShowHistoryModal] = useState(false)
+    const [historyType, setHistoryType] = useState<'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR'>('CURRENCY')
+    const [historyLogs, setHistoryLogs] = useState<any[]>([])
+    const [historyLoading, setHistoryLoading] = useState(false)
+    const [historyPage, setHistoryPage] = useState(1)
+    const [historyTotal, setHistoryTotal] = useState(0)
 
     // For recording modal
     const [showRecordModal, setShowRecordModal] = useState(false)
@@ -85,6 +95,32 @@ export default function GrowthStatsPage() {
     useEffect(() => {
         fetchData()
     }, [])
+
+    const fetchHistory = async (userId: string, type: string, page: number = 1) => {
+        try {
+            setHistoryLoading(true)
+            const res = await fetch(`/api/stats/logs?userId=${userId}&type=${type}&page=${page}&limit=10`)
+            if (res.ok) {
+                const data = await res.json()
+                setHistoryLogs(data.logs)
+                setHistoryTotal(data.pagination.total)
+                setHistoryPage(data.pagination.page)
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setHistoryLoading(false)
+        }
+    }
+
+    const openHistory = (type: 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR') => {
+        setHistoryType(type)
+        setHistoryPage(1)
+        setShowHistoryModal(true)
+        if (currentChild) {
+            fetchHistory(currentChild.id, type, 1)
+        }
+    }
 
     const handleRecord = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -221,18 +257,27 @@ export default function GrowthStatsPage() {
                     <div className="relative z-10 flex-1 text-center md:text-left">
                         <h2 className="text-4xl font-black text-slate-900 tracking-tight">{currentChild.nickname || currentChild.name}</h2>
                         <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
-                            <div className="bg-amber-50 px-4 py-2 rounded-2xl flex items-center gap-2 border border-amber-100">
+                            <button
+                                onClick={() => openHistory('CURRENCY')}
+                                className="bg-amber-50 px-4 py-2 rounded-2xl flex items-center gap-2 border border-amber-100 hover:scale-105 transition-transform active:scale-95"
+                            >
                                 <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
                                 <span className="text-lg font-black text-amber-600">{currentChild.stats.currency}</span>
-                            </div>
-                            <div className="bg-yellow-50 px-4 py-2 rounded-2xl flex items-center gap-2 border border-yellow-100">
+                            </button>
+                            <button
+                                onClick={() => openHistory('GOLD_STAR')}
+                                className="bg-yellow-50 px-4 py-2 rounded-2xl flex items-center gap-2 border border-yellow-100 hover:scale-105 transition-transform active:scale-95"
+                            >
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                                 <span className="text-lg font-black text-yellow-600">{currentChild.stats.goldStars}</span>
-                            </div>
-                            <div className="bg-purple-50 px-4 py-2 rounded-2xl flex items-center gap-2 border border-purple-100">
+                            </button>
+                            <button
+                                onClick={() => openHistory('PURPLE_STAR')}
+                                className="bg-purple-50 px-4 py-2 rounded-2xl flex items-center gap-2 border border-purple-100 hover:scale-105 transition-transform active:scale-95"
+                            >
                                 <Trophy className="w-4 h-4 text-purple-500 fill-purple-500" />
                                 <span className="text-lg font-black text-purple-600">{currentChild.stats.purpleStars}</span>
-                            </div>
+                            </button>
                         </div>
                     </div>
 
@@ -420,6 +465,130 @@ export default function GrowthStatsPage() {
                                     SAVE RECORD
                                 </button>
                             </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* History Modal */}
+            <AnimatePresence>
+                {showHistoryModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]"
+                        >
+                            {/* Modal Header */}
+                            <div className="p-8 pb-4 relative">
+                                <button
+                                    onClick={() => setShowHistoryModal(false)}
+                                    className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-all"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                                <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                                    <History className="w-6 h-6 text-purple-600" />
+                                    {historyType === 'CURRENCY' ? 'Coins History' :
+                                        historyType === 'GOLD_STAR' ? 'Stars History' : 'Purple Stars History'}
+                                </h2>
+                                <p className="text-slate-400 text-sm mt-1">Transaction logs for {currentChild.nickname || currentChild.name}</p>
+
+                                {/* Mini Tabs inside Modal */}
+                                <div className="flex gap-2 mt-6">
+                                    {[
+                                        { id: 'CURRENCY', label: 'Coins', icon: Zap, color: 'text-amber-500' },
+                                        { id: 'GOLD_STAR', label: 'Stars', icon: Star, color: 'text-yellow-500' },
+                                        { id: 'PURPLE_STAR', label: 'Purple', icon: Trophy, color: 'text-purple-500' }
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => {
+                                                setHistoryType(tab.id as any)
+                                                fetchHistory(currentChild.id, tab.id, 1)
+                                            }}
+                                            className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${historyType === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                                        >
+                                            <tab.icon className={`w-3 h-3 ${tab.color}`} />
+                                            {tab.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="flex-1 overflow-y-auto p-8 pt-2 min-h-[300px]">
+                                {historyLoading ? (
+                                    <div className="flex items-center justify-center h-64">
+                                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-8 h-8 border-4 border-slate-100 border-t-purple-500 rounded-full" />
+                                    </div>
+                                ) : historyLogs.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-64 text-slate-300">
+                                        <History className="w-12 h-12 mb-2" />
+                                        <p className="font-black">No transaction logs yet</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {historyLogs.map(log => (
+                                            <div key={log.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${log.amount > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                        {log.amount > 0 ? `+${log.amount}` : log.amount}
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-black text-slate-800">{log.reason}</div>
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold">
+                                                                <CalendarDays className="w-3 h-3" />
+                                                                {format(new Date(log.createdAt), 'yyyy/MM/dd HH:mm')}
+                                                            </div>
+                                                            {log.actorName && (
+                                                                <div className="flex items-center gap-1 text-[10px] text-purple-500 font-bold">
+                                                                    <User className="w-3 h-3" />
+                                                                    {log.actorName}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">Balance</div>
+                                                    <div className="text-sm font-black text-slate-700">{log.balance}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pagination Footer */}
+                            {historyTotal > 10 && (
+                                <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                                    <button
+                                        disabled={historyPage <= 1 || historyLoading}
+                                        onClick={() => fetchHistory(currentChild.id, historyType, historyPage - 1)}
+                                        className="p-2 rounded-xl hover:bg-white disabled:opacity-30 transition-all"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                        Page {historyPage} of {Math.ceil(historyTotal / 10)}
+                                    </span>
+                                    <button
+                                        disabled={historyPage >= Math.ceil(historyTotal / 10) || historyLoading}
+                                        onClick={() => fetchHistory(currentChild.id, historyType, historyPage + 1)}
+                                        className="p-2 rounded-xl hover:bg-white disabled:opacity-30 transition-all"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            )}
                         </motion.div>
                     </motion.div>
                 )}

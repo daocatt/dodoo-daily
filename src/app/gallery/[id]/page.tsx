@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
@@ -18,6 +18,7 @@ type Artwork = {
     isSold: boolean
     albumId?: string | null
     isArchived?: boolean
+    isPublic?: boolean
 }
 
 type AlbumDetail = {
@@ -45,6 +46,7 @@ export default function AlbumDetailPage() {
     const [editPriceRMB, setEditPriceRMB] = useState('')
     const [editPriceCoins, setEditPriceCoins] = useState('')
     const [editAlbumId, setEditAlbumId] = useState('')
+    const [editIsPublic, setEditIsPublic] = useState(false)
     const [availableAlbums, setAvailableAlbums] = useState<AvailableAlbum[]>([])
     const [editingAlbumTitle, setEditingAlbumTitle] = useState(false)
     const [editAlbumName, setEditAlbumName] = useState('')
@@ -107,7 +109,8 @@ export default function AlbumDetailPage() {
                     title: editTitle,
                     priceCoins: editPriceCoins,
                     albumId: editAlbumId === 'archive' ? null : editAlbumId,
-                    isArchived: editAlbumId === 'archive'
+                    isArchived: editAlbumId === 'archive',
+                    isPublic: editIsPublic
                 })
             })
             if (res.ok) {
@@ -274,6 +277,14 @@ export default function AlbumDetailPage() {
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+
+                                {art.isPublic && (
+                                    <div className="absolute top-2 left-2 px-2 py-1 bg-indigo-500/90 text-white text-[10px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">
+                                        <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
+                                        {t('gallery.detail.exhibitionBadge')}
+                                    </div>
+                                )}
+
                                 <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent ${art.isSold ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-300 flex flex-col justify-end p-4`}>
                                     <h4 className="text-white font-bold text-lg">{art.title}</h4>
 
@@ -306,6 +317,7 @@ export default function AlbumDetailPage() {
                                             setEditPriceRMB(art.priceRMB.toString())
                                             setEditPriceCoins(art.priceCoins.toString())
                                             setEditAlbumId(art.albumId || 'archive')
+                                            setEditIsPublic(art.isPublic || false)
                                             setEditingArtwork(art)
                                         }}
                                         className="absolute top-2 right-2 p-2 bg-white/40 hover:bg-white/60 backdrop-blur rounded-full text-slate-800 transition-colors opacity-0 group-hover:opacity-100"
@@ -367,6 +379,25 @@ export default function AlbumDetailPage() {
                                             <option key={a.id} value={a.id}>{a.title}</option>
                                         ))}
                                     </select>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl ${editIsPublic ? 'bg-purple-500 text-white' : 'bg-slate-200 text-slate-400'} transition-colors`}>
+                                            <Sparkles className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700">{t('gallery.form.isPublicLabel')}</label>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Show on exhibition</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditIsPublic(!editIsPublic)}
+                                        className={`w-12 h-6 rounded-full transition-all relative ${editIsPublic ? 'bg-purple-500 shadow-md ring-4 ring-purple-100' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${editIsPublic ? 'left-7' : 'left-1'}`} />
+                                    </button>
                                 </div>
                                 <div className="flex gap-3 mt-2">
                                     <button

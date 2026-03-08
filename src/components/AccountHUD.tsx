@@ -138,17 +138,17 @@ export default function AccountHUD() {
     const hiddenPrefixes = ['/buy', '/login', '/setup']
     const isGuestFlow = hiddenPrefixes.some(prefix => pathname?.startsWith(prefix))
 
-    // New rule: Hide HUD in sub-pages if user is PARENT
-    const subPages = ['/tasks', '/gallery', '/emotions', '/journal', '/shop']
-    const isParentInSubPage = stats?.isParent && subPages.some(path => pathname?.startsWith(path))
+    // New rule: Hide HUD in sub-pages if they have their own headers
+    const pagesWithHeader = ['/tasks', '/gallery', '/emotions', '/journal', '/shop', '/parent']
+    const isInPageWithHeader = pagesWithHeader.some(path => pathname?.startsWith(path))
 
-    if (isGuestFlow || isParentInSubPage || !stats) return null
+    if (isGuestFlow || isInPageWithHeader || !stats) return null
 
     // RENDER HELPERS
     const renderParentHUD = () => (
         <div className="flex items-center gap-2 group pointer-events-auto">
             {/* Stats Entry */}
-            <Link href="/parent/stats" className="flex items-center gap-1.5 px-3 py-2 hover:opacity-80 transition-all">
+            <Link href="/stats" className="flex items-center gap-1.5 px-3 py-2 hover:opacity-80 transition-all">
                 <Users className="w-4 h-4 text-purple-600" />
                 <span className="text-xs font-black text-slate-700">{children.length} {children.length === 1 ? 'Child' : 'Children'}</span>
             </Link>
@@ -201,7 +201,7 @@ export default function AccountHUD() {
     const renderChildHUD = () => (
         <div className="flex items-center gap-4 pointer-events-auto px-2">
             {/* Self Stats Entry - Simplified to Icons + Numbers */}
-            <Link href="/parent/stats" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
+            <Link href="/stats" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
                 {/* Currency */}
                 <div className="flex items-center gap-1.5" title={t('hud.coins')}>
                     <Coins className="w-4 h-4 text-amber-500" />
@@ -256,7 +256,7 @@ export default function AccountHUD() {
                     <div className="flex items-center gap-4 bg-white/60 backdrop-blur-xl border border-white/40 p-1.5 rounded-[24px] shadow-2xl">
                         {/* Avatar */}
                         <div className="pointer-events-auto">
-                            <Link href={stats.isParent ? "/parent/stats" : "/parent/stats"} className="group relative block">
+                            <Link href="/stats" className="group relative block">
                                 <motion.div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm transition-transform group-hover:scale-110">
                                     <img src={stats.avatarUrl || "/dog.svg"} className="w-full h-full object-cover" />
                                 </motion.div>

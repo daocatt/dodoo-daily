@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { accountStats, users } from '@/lib/schema'
+import { accountStats, users, systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
@@ -16,32 +16,49 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        console.log('[API stats] User ID:', currentUserId)
         const userRecord = await db.select().from(users).where(eq(users.id, currentUserId)).get()
-        if (!userRecord) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (!userRecord) {
+            console.warn('[API stats] User not found in DB:', currentUserId)
+            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
 
         // Check if stats exist, if not create them
         let statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
+        console.log('[API stats] Existing statsRecord:', statsRecord ? 'Found' : 'Not found')
 
         if (!statsRecord) {
-            const [newStats] = await db.insert(accountStats).values({
-                userId: currentUserId,
-                goldStars: 0,
-                purpleStars: 0,
-                angerPenalties: 0,
-                currency: 0,
-            }).returning()
-            statsRecord = newStats
+            console.log('[API stats] Creating new statsRecord for:', currentUserId)
+            try {
+                const results = await db.insert(accountStats).values({
+                    userId: currentUserId,
+                    goldStars: 0,
+                    purpleStars: 0,
+                    angerPenalties: 0,
+                    currency: 0,
+                }).returning()
+
+                statsRecord = results[0]
+                console.log('[API stats] New statsRecord created successfully')
+            } catch (insertError) {
+                console.error('[API stats] Failed to insert statsRecord:', insertError)
+                throw insertError;
+            }
         }
 
-        return NextResponse.json({
+        const responseData = {
             ...statsRecord,
             isParent: currentUserRole === 'PARENT',
-            userId: currentUserId,
-            name: userRecord.nickname || userRecord.name,
-            avatarUrl: userRecord.avatarUrl
-        })
-    } catch (error) {
-        console.error('Failed to fetch account stats:', error)
-        return NextResponse.json({ error: 'Failed to fetch account stats' }, { status: 500 })
+            avatarUrl: userRecord.avatarUrl,
+            timezone: (await db.select({ timezone: systemSettings.timezone }).from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get())?.timezone || 'Asia/Shanghai'
+        }
+
+        return NextResponse.json(responseData)
+    } catch (error: any) {
+        console.error('[API stats] Final error:', error.message, error.stack)
+        return NextResponse.json({
+            error: 'Failed to fetch account stats',
+            details: error.message
+        }, { status: 500 })
     }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare, Power } from 'lucide-react'
+import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare, Power, Coins, UserCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { getZodiac, getChineseZodiac } from '@/lib/utils'
@@ -333,11 +333,11 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 )}
                             </div>
                             <div className="flex gap-4 mt-2">
-                                <span className="text-xs font-bold text-yellow-600 flex items-center gap-1">
-                                    <History className="w-3 h-3" /> {child.stats?.currency || 0}
-                                </span>
                                 <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
-                                    <Star className="w-3 h-3 fill-amber-500" /> {child.stats?.goldStars || 0}
+                                    <Coins className="w-3.5 h-3.5" /> {child.stats?.currency || 0}
+                                </span>
+                                <span className="text-xs font-bold text-yellow-600 flex items-center gap-1">
+                                    <Star className="w-3.5 h-3.5 fill-yellow-500" /> {child.stats?.goldStars || 0}
                                 </span>
                             </div>
                         </div>
@@ -359,6 +359,13 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 >
                                     <Archive className="w-4 h-4" />
                                 </button>
+                                <button
+                                    onClick={() => handleMasquerade(child.id)}
+                                    className="p-2 rounded-lg hover:bg-slate-900 hover:text-white transition-all text-slate-300"
+                                    title="Masquerade (Login as this user)"
+                                >
+                                    <UserCheck className="w-4 h-4" />
+                                </button>
                             </>
                         )}
                         <button
@@ -379,18 +386,11 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         {t('parent.assignTask')}
                     </button>
                     <button
-                        onClick={() => handleMasquerade(child.id)}
-                        className="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-colors flex items-center gap-2"
-                    >
-                        <Power className="w-4 h-4" />
-                        Masquerade
-                    </button>
-                    <button
                         onClick={() => setAdjusting(adjusting === child.id ? null : child.id)}
                         className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${adjusting === child.id ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
                     >
                         <Star className="w-4 h-4" />
-                        Distribute
+                        Reward
                     </button>
                     <button
                         onClick={() => fetchLogs(child.id)}

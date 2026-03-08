@@ -14,8 +14,8 @@ async function checkParent() {
 
 export async function POST(req: NextRequest) {
     try {
-        const { isParent } = await checkParent()
-        if (!isParent) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const { isParent, parentId } = await checkParent()
+        if (!isParent || !parentId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
         const body = await req.json()
         const { targetUserId, type, amount, reason } = body
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
         }
 
-        const res = await addBalance(targetUserId, type as TransactionType, amount, reason || 'Manual adjustment by Parent')
+        const res = await addBalance(targetUserId, type as TransactionType, amount, reason || 'Manual adjustment by Parent', parentId)
 
         if (!res.success) {
             return NextResponse.json({ error: res.error }, { status: 400 })

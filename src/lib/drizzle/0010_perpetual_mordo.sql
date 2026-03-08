@@ -1,0 +1,1 @@
+ALTER TABLE `SystemSettings` ADD `timezone` text DEFAULT 'Asia/Shanghai' NOT NULL;

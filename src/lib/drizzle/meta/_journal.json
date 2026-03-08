@@ -50,6 +50,41 @@
       "when": 1772968895648,
       "tag": "0006_worried_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1772976486273,
+      "tag": "0007_acoustic_rattler",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1772979798478,
+      "tag": "0008_wide_alex_wilder",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1772980133806,
+      "tag": "0009_confused_carnage",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1772987392297,
+      "tag": "0010_perpetual_mordo",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1772988394315,
+      "tag": "0011_moaning_ma_gnuci",
+      "breakpoints": true
     }
   ]
 }

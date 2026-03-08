@@ -48,3 +48,46 @@ export const formatNumber = (num: number): string => {
     }
     return num.toString();
 };
+
+export const getNowInTimezone = (timezone: string = 'Asia/Shanghai', baseDate?: Date | string): Date => {
+    const now = baseDate ? new Date(baseDate) : new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+    });
+    const parts = formatter.formatToParts(now);
+    const getPart = (type: string) => parts.find(p => p.type === type)?.value;
+
+    // Create a date object that "looks like" the time in that timezone
+    // Note: This returns a Date object where the local time components match the target timezone's time.
+    // This is useful for "start of day" calculations in a specific zone.
+    return new Date(
+        parseInt(getPart('year')!),
+        parseInt(getPart('month')!) - 1,
+        parseInt(getPart('day')!),
+        parseInt(getPart('hour')!),
+        parseInt(getPart('minute')!),
+        parseInt(getPart('second')!)
+    );
+};
+
+export const getStartOfDayInTimezone = (timezone: string = 'Asia/Shanghai', offsetDays: number = 0, baseDate?: Date | string): Date => {
+    const date = getNowInTimezone(timezone, baseDate);
+    if (offsetDays !== 0) date.setDate(date.getDate() + offsetDays);
+    date.setHours(0, 0, 0, 0);
+    return date;
+};
+
+export const getTodayStringInTimezone = (timezone: string = 'Asia/Shanghai'): string => {
+    const d = getNowInTimezone(timezone);
+    const yr = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const da = String(d.getDate()).padStart(2, '0');
+    return `${yr}-${mo}-${da}`;
+};

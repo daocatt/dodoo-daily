@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus, Camera, Image as ImageIcon, ChevronLeft, Upload, Archive, X } from 'lucide-react'
+import { Plus, Camera, Image as ImageIcon, ChevronLeft, Upload, Archive, X, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
@@ -14,6 +14,7 @@ type Artwork = {
     imageUrl: string
     priceRMB: number
     priceCoins: number
+    isPublic: boolean
 }
 
 type Album = {
@@ -32,6 +33,7 @@ export default function GalleryPage() {
     const [uploadTitle, setUploadTitle] = useState('')
     const [uploadPriceCoins, setUploadPriceCoins] = useState('')
     const [uploadAlbumId, setUploadAlbumId] = useState('')
+    const [uploadIsPublic, setUploadIsPublic] = useState(false)
     const [uploadFiles, setUploadFiles] = useState<File[]>([])
     const [uploadPreviews, setUploadPreviews] = useState<string[]>([])
     const [uploading, setUploading] = useState(false)
@@ -68,13 +70,9 @@ export default function GalleryPage() {
             const res = await fetch('/api/parent/children')
             if (res.ok) {
                 const data = await res.json()
-                // Include parent themselves in the switcher
-                const self = { id: parentUserId, name: 'Me', avatarUrl: '/dog.svg', isSelf: true }
-                setChildren([self, ...data])
+                setChildren(data)
                 if (data.length > 0 && !selectedChildId) {
                     setSelectedChildId(data[0].id)
-                } else if (!selectedChildId) {
-                    setSelectedChildId(parentUserId)
                 }
             }
         } catch (e) {
@@ -110,7 +108,8 @@ export default function GalleryPage() {
             formData.append('file', file)
         })
         formData.append('title', uploadTitle || uploadFiles[0].name.split('.')[0])
-        formData.append('priceCoins', uploadPriceCoins)
+        formData.append('priceCoins', uploadPriceCoins || '0')
+        formData.append('isPublic', uploadIsPublic.toString())
 
         if (selectedChildId) {
             formData.append('targetUserId', selectedChildId)
@@ -137,6 +136,7 @@ export default function GalleryPage() {
                 setUploadFiles([])
                 setUploadPreviews([])
                 setUploadPriceCoins('')
+                setUploadIsPublic(false) // Reset public status
                 fetchAlbums(selectedChildId) // Refresh
             }
         } catch (err) {
@@ -189,19 +189,6 @@ export default function GalleryPage() {
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
-                    {isParent && children.length > 1 && (
-                        <div className="flex items-center gap-1.5 bg-white/40 p-1.5 rounded-2xl mr-2">
-                            {children.map(c => (
-                                <button
-                                    key={c.id}
-                                    onClick={() => setSelectedChildId(c.id)}
-                                    className={`w-8 h-8 rounded-xl overflow-hidden border-2 transition-all ${selectedChildId === c.id ? 'border-purple-500 scale-105 shadow-md' : 'border-transparent opacity-50 grayscale hover:grayscale-0 hover:opacity-100'}`}
-                                >
-                                    <img src={c.avatarUrl || "/dog.svg"} alt={c.name} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
-                    )}
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="flex items-center justify-center p-2 rounded-2xl bg-purple-500/80 hover:bg-purple-500 backdrop-blur-md transition-colors text-white shadow-sm border border-purple-400 aspect-square"
@@ -266,7 +253,14 @@ export default function GalleryPage() {
                                                 whileHover={{ scale: 1.05, rotate: 0, zIndex: 20 }}
                                             >
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={art.imageUrl} alt={art.title} className="w-full h-full object-cover" />
+                                                <img src={art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+
+                                                {art.isPublic && (
+                                                    <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-indigo-500/90 text-white text-[8px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">
+                                                        <Sparkles className="w-2.5 h-2.5 text-amber-300 fill-amber-300" />
+                                                        POSTER
+                                                    </div>
+                                                )}
                                             </motion.div>
                                         ))
                                     )}
@@ -367,6 +361,20 @@ export default function GalleryPage() {
                                             Please select at least one image.
                                         </p>
                                     )}
+                                </div>
+
+                                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl border border-purple-100">
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles className={`w-4 h-4 ${uploadIsPublic ? 'text-purple-500' : 'text-slate-400'}`} />
+                                        <label className="text-xs font-bold text-slate-700">{t('gallery.form.isPublicLabel')}</label>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUploadIsPublic(!uploadIsPublic)}
+                                        className={`w-10 h-5 rounded-full transition-all relative ${uploadIsPublic ? 'bg-purple-500' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${uploadIsPublic ? 'left-5.5' : 'left-0.5'}`} />
+                                    </button>
                                 </div>
                                 <button
                                     type="submit"

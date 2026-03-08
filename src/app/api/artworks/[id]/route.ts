@@ -10,7 +10,7 @@ export async function PUT(
     try {
         const { id } = await params
         const body = await req.json()
-        const { title, albumId, priceRMB, priceCoins, isArchived } = body
+        const { title, albumId, priceRMB, priceCoins, isArchived, isPublic } = body
 
         const currentArtwork = await db.select().from(artwork).where(eq(artwork.id, id))
         if (currentArtwork.length === 0) {
@@ -23,6 +23,7 @@ export async function PUT(
         if (priceRMB !== undefined) updateData.priceRMB = parseFloat(priceRMB) || 0
         if (priceCoins !== undefined) updateData.priceCoins = parseInt(priceCoins, 10) || 0
         if (isArchived !== undefined) updateData.isArchived = isArchived
+        if (isPublic !== undefined) updateData.isPublic = isPublic
 
         const updated = await db.update(artwork)
             .set(updateData)
