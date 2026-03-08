@@ -12,17 +12,9 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    serverActions: {
-      allowedOrigins: [
-        'localhost:3000',
-        'localhost:3001',
-        '127.0.0.1:3000',
-        '127.0.0.1:3001',
-        'dodoo.local'
-      ]
-    }
-  }
+  allowedDevOrigins: [
+    'dodoo.local'
+  ]
 };
 
 export default withPWA(nextConfig);
