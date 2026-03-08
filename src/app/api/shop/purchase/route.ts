@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { shopItem, purchase, accountStats, users } from '@/lib/schema'
+import { shopItem, purchase, accountStats } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-
-async function getDefaultChildId() {
-    const kids = await db.select().from(users).where(eq(users.role, 'CHILD'))
-    return kids.length > 0 ? kids[0].id : null
-}
+import { cookies } from 'next/headers'
 
 export async function POST(req: NextRequest) {
     try {
+        const cookieStore = await cookies()
+        const childId = cookieStore.get('dodoo_user_id')?.value
+
         const body = await req.json()
         const { itemId } = body
 
@@ -17,8 +16,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
         }
 
-        const childId = await getDefaultChildId()
-        if (!childId) return NextResponse.json({ error: 'No child account found' }, { status: 404 })
+        if (!childId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         // 1. Fetch Item details
         const items = await db.select().from(shopItem).where(eq(shopItem.id, itemId))

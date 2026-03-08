@@ -13,19 +13,20 @@ export async function GET() {
         const currentUserRole = cookieStore.get('dodoo_role')?.value
 
         if (!currentUserId) {
+            console.warn('[API stats] No currentUserId in cookies')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        console.log('[API stats] User ID:', currentUserId)
+        console.log('[API stats] Fetching stats for user:', currentUserId)
+
         const userRecord = await db.select().from(users).where(eq(users.id, currentUserId)).get()
         if (!userRecord) {
-            console.warn('[API stats] User not found in DB:', currentUserId)
+            console.error('[API stats] User record not found for id:', currentUserId)
             return NextResponse.json({ error: 'User not found' }, { status: 404 })
         }
 
-        // Check if stats exist, if not create them
+        // Fetch or create stats
         let statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
-        console.log('[API stats] Existing statsRecord:', statsRecord ? 'Found' : 'Not found')
 
         if (!statsRecord) {
             console.log('[API stats] Creating new statsRecord for:', currentUserId)
@@ -37,25 +38,30 @@ export async function GET() {
                     angerPenalties: 0,
                     currency: 0,
                 }).returning()
-
                 statsRecord = results[0]
-                console.log('[API stats] New statsRecord created successfully')
-            } catch (insertError) {
-                console.error('[API stats] Failed to insert statsRecord:', insertError)
-                throw insertError;
+            } catch (insertError: any) {
+                console.error('[API stats] Insert failed:', insertError.message)
+                // Fallback: maybe it was created by another request in parallel
+                statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
+                if (!statsRecord) throw insertError
             }
         }
+
+        const settings = await db.select({ timezone: systemSettings.timezone })
+            .from(systemSettings)
+            .where(eq(systemSettings.id, 'app_settings'))
+            .get()
 
         const responseData = {
             ...statsRecord,
             isParent: currentUserRole === 'PARENT',
             avatarUrl: userRecord.avatarUrl,
-            timezone: (await db.select({ timezone: systemSettings.timezone }).from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get())?.timezone || 'Asia/Shanghai'
+            timezone: settings?.timezone || 'Asia/Shanghai'
         }
 
         return NextResponse.json(responseData)
     } catch (error: any) {
-        console.error('[API stats] Final error:', error.message, error.stack)
+        console.error('[API stats] Critical error:', error.message, error.stack)
         return NextResponse.json({
             error: 'Failed to fetch account stats',
             details: error.message

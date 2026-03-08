@@ -2,17 +2,38 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Store, Coins, ShoppingBag, CheckCircle2, AlertCircle, Plus } from 'lucide-react'
+import { ChevronLeft, Store, Coins, ShoppingBag, CheckCircle2, AlertCircle, Plus, Sparkles, Clock, X, Package, Heart, History, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
+import { format } from 'date-fns'
+import EmojiPicker from '@/components/EmojiPicker'
 
 type ShopItem = {
     id: string
     name: string
+    description: string | null
     costCoins: number
     iconUrl: string | null
     stock: number
+}
+
+type Order = {
+    id: string
+    itemName: string
+    itemIcon: string | null
+    costCoins: number
+    status: string
+    createdAt: string
+}
+
+type Wish = {
+    id: string
+    name: string
+    description: string | null
+    imageUrl: string | null
+    status: 'PENDING' | 'APPROVED' | 'CANCELED'
+    createdAt: string
 }
 
 export default function ShopPage() {
@@ -21,11 +42,15 @@ export default function ShopPage() {
     const [purchasingId, setPurchasingId] = useState<string | null>(null)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
     const [isParent, setIsParent] = useState(false)
+    const [confirmItem, setConfirmItem] = useState<ShopItem | null>(null)
 
     const [showAddModal, setShowAddModal] = useState(false)
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [newName, setNewName] = useState('')
-    const [newCost, setNewCost] = useState('')
+    const [newDesc, setNewDesc] = useState('')
     const [newEmoji, setNewEmoji] = useState('🎁')
+
+
     const { t } = useI18n()
 
     useEffect(() => {
@@ -57,7 +82,9 @@ export default function ShopPage() {
         }
     }
 
+
     const handlePurchase = async (item: ShopItem) => {
+        setConfirmItem(null)
         setPurchasingId(item.id)
         setMessage(null)
 
@@ -86,19 +113,20 @@ export default function ShopPage() {
 
     const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!newName || !newCost) return
+        if (!newName) return
 
         try {
-            const res = await fetch('/api/shop', {
+            const res = await fetch('/api/shop/wishes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newName, costCoins: newCost, iconUrl: newEmoji })
+                body: JSON.stringify({ name: newName, description: newDesc, imageUrl: newEmoji })
             })
             if (res.ok) {
                 setShowAddModal(false)
                 setNewName('')
-                setNewCost('')
-                fetchItems()
+                setNewDesc('')
+                setMessage({ text: 'Wish submitted! Waiting for Parent approval.', type: 'success' })
+                setTimeout(() => setMessage(null), 4000)
             }
         } catch (err) {
             console.error(err)
@@ -120,13 +148,38 @@ export default function ShopPage() {
                     </span>
                 </div>
                 {!isParent && (
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-sm font-bold text-white shadow-sm border border-amber-400"
-                    >
-                        <Plus className="w-4 h-4" />
-                        {t('shop.newWish')}
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href="/shop/orders"
+                            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-amber-700 border border-white/50 shadow-sm"
+                        >
+                            <Package className="w-4 h-4" />
+                            My Orders
+                        </Link>
+                        <Link
+                            href="/shop/wishes"
+                            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-amber-700 border border-white/50 shadow-sm"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            My Wishes
+                        </Link>
+
+                        {/* Mobile Icons */}
+                        <Link
+                            href="/shop/orders"
+                            className="flex md:hidden w-10 h-10 items-center justify-center rounded-full bg-white/40 border border-white/50 text-amber-700"
+                        >
+                            <Package className="w-5 h-5" />
+                        </Link>
+
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 transition-colors text-sm font-black text-white shadow-lg shadow-amber-500/30 active:scale-95 border-2 border-amber-400"
+                        >
+                            <Plus className="w-4 h-4" />
+                            {t('shop.newWish')}
+                        </button>
+                    </div>
                 )}
             </header>
 
@@ -181,11 +234,11 @@ export default function ShopPage() {
 
                                     {!isParent ? (
                                         <button
-                                            onClick={() => handlePurchase(item)}
+                                            onClick={() => setConfirmItem(item)}
                                             disabled={purchasingId === item.id}
                                             className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 transition-all active:scale-95 disabled:grayscale"
                                         >
-                                            {purchasingId === item.id ? t('common.loading') : t('shop.buyWithCoins')}
+                                            {purchasingId === item.id ? t('common.loading') : 'Buy Now'}
                                         </button>
                                     ) : (
                                         <button
@@ -202,7 +255,62 @@ export default function ShopPage() {
                 )}
             </main>
 
-            {/* Add Item Modal */}
+            {/* Purchase Confirmation Modal */}
+            <AnimatePresence>
+                {confirmItem && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setConfirmItem(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 40 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 40 }}
+                            className="w-full max-w-sm bg-white rounded-[32px] shadow-2xl overflow-hidden border border-amber-100"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-8 flex flex-col items-center text-center gap-5">
+                                <div className="w-24 h-24 flex items-center justify-center text-6xl bg-amber-50 border-2 border-amber-200 rounded-[24px] shadow-inner">
+                                    {confirmItem.iconUrl?.startsWith('http') || confirmItem.iconUrl?.startsWith('/') ? (
+                                        <img src={confirmItem.iconUrl} className="w-full h-full object-cover rounded-[22px]" />
+                                    ) : (
+                                        confirmItem.iconUrl || '🎁'
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-black text-slate-800 mb-1">{confirmItem.name}</h3>
+                                    <p className="text-slate-500 font-medium text-sm">Are you sure you want to buy this?</p>
+                                </div>
+                                <div className="flex items-center gap-2 bg-amber-50 border-2 border-amber-200 px-6 py-3 rounded-2xl">
+                                    <Coins className="w-5 h-5 text-amber-500" />
+                                    <span className="font-black text-2xl text-amber-600">{confirmItem.costCoins}</span>
+                                    <span className="font-bold text-amber-500 text-sm">coins will be deducted</span>
+                                </div>
+                                <div className="flex gap-3 w-full pt-2">
+                                    <button
+                                        onClick={() => setConfirmItem(null)}
+                                        className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black hover:bg-slate-200 transition-colors active:scale-95"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={() => handlePurchase(confirmItem)}
+                                        disabled={purchasingId === confirmItem.id}
+                                        className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95 disabled:grayscale"
+                                    >
+                                        {purchasingId === confirmItem.id ? 'Buying...' : 'Confirm!'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Add Wish Modal */}
             <AnimatePresence>
                 {showAddModal && (
                     <motion.div
@@ -215,61 +323,80 @@ export default function ShopPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-xl overflow-hidden shadow-2xl flex flex-col"
+                            className="w-full max-w-md max-h-[90dvh] bg-white rounded-[40px] shadow-2xl flex flex-col border border-amber-100 overflow-hidden"
                         >
-                            <div className="p-6 border-b border-[#f5f0e8] flex justify-between items-center bg-amber-50">
-                                <h3 className="text-xl font-bold flex items-center gap-2 text-amber-700"><ShoppingBag className="w-5 h-5" /> {t('shop.form.addTitle')}</h3>
+                            <div className="p-6 border-b border-amber-100 flex justify-between items-center bg-amber-50">
+                                <h3 className="text-xl font-black flex items-center gap-2 text-amber-800"><Sparkles className="w-5 h-5 text-amber-500" /> Make a Wish</h3>
+                                <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-800"><X className="w-5 h-5" /></button>
                             </div>
-                            <form onSubmit={handleAddItem} className="p-6 flex flex-col gap-5">
-                                <div>
-                                    <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('shop.form.nameLabel')}</label>
-                                    <input
-                                        type="text"
-                                        value={newName}
-                                        onChange={e => setNewName(e.target.value)}
-                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-amber-400 outline-none font-bold text-lg"
-                                        placeholder="e.g. Cinema Trip"
-                                        required
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('shop.form.costLabel')}</label>
-                                        <input
-                                            type="number"
-                                            value={newCost}
-                                            onChange={e => setNewCost(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-amber-400 outline-none font-bold text-lg"
-                                            placeholder="100"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-2">{t('shop.form.emojiLabel')}</label>
-                                        <input
-                                            type="text"
-                                            value={newEmoji}
-                                            onChange={e => setNewEmoji(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-4 focus:ring-4 focus:ring-amber-400 outline-none font-bold text-lg"
-                                            placeholder="Emoji (e.g. 🎁) or Image URL"
-                                        />
-                                    </div>
-                                </div>
+                            <div className="flex-1 overflow-y-auto p-6 sm:p-8 pt-4 custom-scrollbar">
+                                <form onSubmit={handleAddItem} className="flex flex-col gap-6">
+                                    <div className="flex flex-row items-center gap-4">
+                                        <div className="flex flex-col gap-1.5 shrink-0">
+                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">Icon</label>
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowEmojiPicker(v => !v)}
+                                                    className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-4xl sm:text-5xl bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-[20px] shadow-inner transition-all active:scale-95"
+                                                    title="Click to pick an emoji"
+                                                >
+                                                    {newEmoji.startsWith('http') || newEmoji.startsWith('/') ? (
+                                                        <img src={newEmoji} className="w-full h-full object-cover rounded-[18px]" />
+                                                    ) : (
+                                                        newEmoji
+                                                    )}
+                                                </button>
+                                                {showEmojiPicker && (
+                                                    <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-amber-100 p-3">
+                                                        <EmojiPicker
+                                                            onSelect={(emoji) => {
+                                                                setNewEmoji(emoji)
+                                                                setShowEmojiPicker(false)
+                                                            }}
+                                                            currentEmoji={newEmoji}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
 
-                                <button
-                                    type="submit"
-                                    className="mt-2 w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black tracking-wide shadow-lg hover:opacity-90 transition-opacity text-lg"
-                                >
-                                    {t('shop.form.confirm')}
-                                </button>
-                                <button type="button" onClick={() => setShowAddModal(false)} className="py-2 text-[#a89880] font-bold hover:text-[#2c2416]">
-                                    {t('common.cancel')}
-                                </button>
-                            </form>
+                                        <div className="flex-1 flex flex-col gap-1.5">
+                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">Wish Name</label>
+                                            <input
+                                                type="text"
+                                                value={newName}
+                                                onChange={e => setNewName(e.target.value)}
+                                                className="w-full bg-amber-50/50 border-2 border-amber-100 rounded-[20px] p-4 focus:border-amber-400 outline-none font-black text-xl transition-all h-16 sm:h-20 placeholder:text-amber-200"
+                                                placeholder="e.g. New Toy"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">Description (Optional)</label>
+                                        <textarea
+                                            value={newDesc}
+                                            onChange={e => setNewDesc(e.target.value)}
+                                            className="w-full bg-amber-50/50 border-2 border-amber-100 rounded-[20px] p-4 sm:p-5 focus:border-amber-400 outline-none font-bold transition-all min-h-[100px] placeholder:text-amber-200 resize-none"
+                                            placeholder="Tell us more about it..."
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full py-5 rounded-[24px] bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-lg shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95 border-b-4 border-orange-700 mt-2"
+                                    >
+                                        Submit Wish
+                                    </button>
+                                </form>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
+
         </div>
     )
 }

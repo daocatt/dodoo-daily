@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-
 const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
@@ -14,7 +13,9 @@ const nextConfig: NextConfig = {
   },
   allowedDevOrigins: [
     'dodoo.local'
-  ]
-};
+  ],
+  // Add an empty turbopack config to silence the error with custom webpack
+  turbopack: {}
+} as NextConfig;
 
 export default withPWA(nextConfig);

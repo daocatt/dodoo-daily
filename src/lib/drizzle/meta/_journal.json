@@ -85,6 +85,20 @@
       "when": 1772988394315,
       "tag": "0011_moaning_ma_gnuci",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1772989130816,
+      "tag": "0012_legal_firestar",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1772990629469,
+      "tag": "0013_add_separate_log_tables",
+      "breakpoints": true
     }
   ]
 }

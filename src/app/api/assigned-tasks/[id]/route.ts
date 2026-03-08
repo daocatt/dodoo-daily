@@ -23,6 +23,7 @@ export async function PUT(
 
         const [currentTask] = await db.select().from(assignedTask).where(eq(assignedTask.id, id))
         if (!currentTask) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        if (!currentTask.assigneeId) return NextResponse.json({ error: 'Assignee not found' }, { status: 400 })
 
         const { id: currentUserId, role } = await getCurrentUser()
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

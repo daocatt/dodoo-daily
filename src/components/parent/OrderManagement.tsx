@@ -18,6 +18,7 @@ const statusColors: any = {
     'PENDING': 'bg-amber-100 text-amber-600',
     'SHIPPED': 'bg-blue-100 text-blue-600',
     'COMPLETED': 'bg-green-100 text-green-600',
+    'CONFIRMED': 'bg-green-100 text-green-600',
     'CANCELLED': 'bg-red-100 text-red-600'
 }
 
@@ -103,38 +104,54 @@ export default function OrderManagement() {
                             )}
 
                             <div className="flex flex-wrap gap-2 pt-2">
-                                <button
-                                    onClick={() => handleUpdate(order.id, { status: 'PENDING' })}
-                                    className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 border rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors"
-                                >
-                                    <Clock className="w-3.5 h-3.5" /> PENDING
-                                </button>
-                                <button
-                                    onClick={() => handleUpdate(order.id, { status: 'SHIPPED' })}
-                                    className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors"
-                                >
-                                    <Truck className="w-3.5 h-3.5" /> {t('button.ship')}
-                                </button>
-                                <button
-                                    onClick={() => handleUpdate(order.id, { status: 'COMPLETED' })}
-                                    className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold hover:bg-green-100 transition-colors"
-                                >
-                                    <CheckCircle className="w-3.5 h-3.5" /> {t('button.complete')}
-                                </button>
-                                <button
-                                    onClick={() => handleUpdate(order.id, { status: 'CANCELLED' })}
-                                    className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors"
-                                >
-                                    <XCircle className="w-3.5 h-3.5" /> {t('common.cancel')}
-                                </button>
+                                {order.status === 'PENDING' && (
+                                    <>
+                                        <button
+                                            onClick={() => handleUpdate(order.id, { status: 'CONFIRMED' })}
+                                            className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-4 py-3 bg-green-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-green-200 hover:bg-green-600 transition-all active:scale-95"
+                                        >
+                                            <CheckCircle className="w-4 h-4" /> CONFIRM
+                                        </button>
+                                        <button
+                                            onClick={() => handleUpdate(order.id, { status: 'CANCELLED' })}
+                                            className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-4 py-3 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black hover:bg-rose-100 transition-all active:scale-95 border border-rose-100"
+                                        >
+                                            <XCircle className="w-4 h-4" /> CANCEL & REFUND
+                                        </button>
+                                    </>
+                                )}
+                                {order.status === 'CONFIRMED' && (
+                                    <button
+                                        onClick={() => handleUpdate(order.id, { status: 'SHIPPED' })}
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-4 py-3 bg-blue-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-blue-200 hover:bg-blue-600 transition-all active:scale-95"
+                                    >
+                                        <Truck className="w-4 h-4" /> SHIP ITEM
+                                    </button>
+                                )}
+                                {(order.status === 'SHIPPED') && (
+                                    <button
+                                        onClick={() => handleUpdate(order.id, { status: 'COMPLETED' })}
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-4 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"
+                                    >
+                                        <CheckCircle className="w-4 h-4" /> COMPLETE
+                                    </button>
+                                )}
+                                {order.status !== 'PENDING' && order.status !== 'CANCELLED' && (
+                                    <button
+                                        onClick={() => handleUpdate(order.id, { status: 'CANCELLED' })}
+                                        className="px-4 py-3 bg-slate-50 text-slate-400 rounded-2xl text-xs font-black hover:text-rose-500 hover:bg-rose-50 transition-all"
+                                    >
+                                        CANCEL
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => {
                                         const msg = prompt('Enter remarks:', order.remarks || '')
                                         if (msg !== null) handleUpdate(order.id, { remarks: msg })
                                     }}
-                                    className="px-3 py-2 border rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50"
+                                    className="px-4 py-3 border-2 border-slate-50 rounded-2xl text-xs font-black flex items-center gap-1.5 hover:bg-slate-50 transition-colors"
                                 >
-                                    <MessageSquare className="w-3.5 h-3.5" /> {t('button.remarks')}
+                                    <MessageSquare className="w-4 h-4 text-slate-400" /> {t('button.remarks')}
                                 </button>
                             </div>
                         </div>

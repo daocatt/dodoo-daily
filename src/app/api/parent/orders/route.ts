@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { purchase, users, shopItem } from '@/lib/schema'
+import { purchase, users, shopItem, accountStats } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { addBalance } from '@/lib/economy'
 
 async function isParent() {
     const cookieStore = await cookies()
@@ -52,10 +53,18 @@ export async function PATCH(req: NextRequest) {
         const { id, status, remarks } = await req.json()
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
+        const existingOrder = await db.select().from(purchase).where(eq(purchase.id, id)).get()
+        if (!existingOrder) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+
         const updateData: any = {}
         if (status !== undefined) updateData.status = status
         if (remarks !== undefined) updateData.remarks = remarks
         updateData.updatedAt = new Date()
+
+        // Handle refund if cancelling a previously non-cancelled order
+        if (status === 'CANCELLED' && existingOrder.status !== 'CANCELLED') {
+            await addBalance(existingOrder.userId!, existingOrder.costCoins, 'CURRENCY', `Order #${id.slice(0, 8)} cancelled-refund`)
+        }
 
         const [order] = await db.update(purchase)
             .set(updateData)

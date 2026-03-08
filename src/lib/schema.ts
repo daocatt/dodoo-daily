@@ -42,6 +42,36 @@ export const accountStatsLog = sqliteTable("AccountStatsLog", {
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
 });
 
+export const currencyLog = sqliteTable("CurrencyLog", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    amount: integer("amount").notNull(),
+    balance: integer("balance").notNull(),
+    reason: text("reason").notNull(),
+    actorId: text("actorId").references(() => users.id),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+});
+
+export const goldStarLog = sqliteTable("GoldStarLog", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    amount: integer("amount").notNull(),
+    balance: integer("balance").notNull(),
+    reason: text("reason").notNull(),
+    actorId: text("actorId").references(() => users.id),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+});
+
+export const purpleStarLog = sqliteTable("PurpleStarLog", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    amount: integer("amount").notNull(),
+    balance: integer("balance").notNull(),
+    reason: text("reason").notNull(),
+    actorId: text("actorId").references(() => users.id),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+});
+
 export const guest = sqliteTable("Guest", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
@@ -181,6 +211,17 @@ export const purchase = sqliteTable("Purchase", {
     costCoins: integer("costCoins").notNull(),
     status: text("status").default("PENDING").notNull(),
     remarks: text("remarks"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export const wish = sqliteTable("Wish", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    name: text("name").notNull(),
+    description: text("description"),
+    imageUrl: text("imageUrl"),
+    status: text("status").default("PENDING").notNull(), // PENDING, APPROVED, CANCELED
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });

@@ -1,5 +1,5 @@
 import { db } from './db'
-import { accountStats, accountStatsLog, task, systemSettings } from './schema'
+import { accountStats, accountStatsLog, task, systemSettings, currencyLog, goldStarLog, purpleStarLog } from './schema'
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
 
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
@@ -72,15 +72,24 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
     // 3. Update Stats
     await db.update(accountStats).set(updateObj).where(eq(accountStats.userId, userId))
 
-    // 4. Log Transaction
-    await db.insert(accountStatsLog).values({
+    // 4. Log Transaction (Also write to specific tables as requested)
+    const logData = {
         userId,
-        type,
         amount,
         balance: newBalance,
         reason,
         actorId
-    })
+    }
+
+    await db.insert(accountStatsLog).values({ ...logData, type })
+
+    if (type === 'CURRENCY') {
+        await db.insert(currencyLog).values(logData)
+    } else if (type === 'GOLD_STAR') {
+        await db.insert(goldStarLog).values(logData)
+    } else if (type === 'PURPLE_STAR') {
+        await db.insert(purpleStarLog).values(logData)
+    }
 
     return { success: true, balance: newBalance }
 }
