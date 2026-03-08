@@ -13,13 +13,13 @@ export const users = sqliteTable("Users", {
     role: text("role", { enum: ["PARENT", "CHILD", "GRANDPARENT", "OTHER"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
     gender: text("gender", { enum: ["MALE", "FEMALE", "OTHER"] }).default("OTHER"),
-    birthDate: integer("birthDate", { mode: "timestamp" }),
+    birthDate: integer("birthDate", { mode: "timestamp_ms" }),
     zodiac: text("zodiac"),
     chineseZodiac: text("chineseZodiac"),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
-    lastLoginAt: integer("lastLoginAt", { mode: "timestamp" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    lastLoginAt: integer("lastLoginAt", { mode: "timestamp_ms" }),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const accountStats = sqliteTable("AccountStats", {
@@ -28,7 +28,7 @@ export const accountStats = sqliteTable("AccountStats", {
     purpleStars: integer("purpleStars").default(0).notNull(),
     angerPenalties: integer("angerPenalties").default(0).notNull(),
     currency: integer("currency").default(0).notNull(),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 export const accountStatsLog = sqliteTable("AccountStatsLog", {
@@ -39,7 +39,7 @@ export const accountStatsLog = sqliteTable("AccountStatsLog", {
     balance: integer("balance").notNull(),
     reason: text("reason").notNull(),
     actorId: text("actorId").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const currencyLog = sqliteTable("CurrencyLog", {
@@ -49,7 +49,7 @@ export const currencyLog = sqliteTable("CurrencyLog", {
     balance: integer("balance").notNull(),
     reason: text("reason").notNull(),
     actorId: text("actorId").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const goldStarLog = sqliteTable("GoldStarLog", {
@@ -59,7 +59,7 @@ export const goldStarLog = sqliteTable("GoldStarLog", {
     balance: integer("balance").notNull(),
     reason: text("reason").notNull(),
     actorId: text("actorId").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const purpleStarLog = sqliteTable("PurpleStarLog", {
@@ -69,14 +69,14 @@ export const purpleStarLog = sqliteTable("PurpleStarLog", {
     balance: integer("balance").notNull(),
     reason: text("reason").notNull(),
     actorId: text("actorId").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const guest = sqliteTable("Guest", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
     phone: text("phone"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 // -----------------------------------------------------------------------------
@@ -92,11 +92,11 @@ export const task = sqliteTable("Task", {
     isMonthlyRepeating: integer("isMonthlyRepeating", { mode: "boolean" }).default(false).notNull(),
     rewardStars: integer("rewardStars").default(1).notNull(),
     rewardCoins: integer("rewardCoins").default(0).notNull(),
-    plannedTime: integer("plannedTime", { mode: "timestamp" }),
+    plannedTime: integer("plannedTime", { mode: "timestamp_ms" }),
     completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
     completedById: text("completedById").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 export const assignedTask = sqliteTable("AssignedTask", {
@@ -110,11 +110,11 @@ export const assignedTask = sqliteTable("AssignedTask", {
     rewardStars: integer("rewardStars").default(1).notNull(),
     rewardCoins: integer("rewardCoins").default(0).notNull(),
     confirmationStatus: text("confirmationStatus", { enum: ["PENDING", "APPROVED", "REJECTED"] }).default("PENDING"),
-    plannedTime: integer("plannedTime", { mode: "timestamp" }),
+    plannedTime: integer("plannedTime", { mode: "timestamp_ms" }),
     completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
     completedById: text("completedById").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ export const emotionRecord = sqliteTable("EmotionRecord", {
     type: text("type").default("ANGER").notNull(),
     notes: text("notes"),
     resolved: integer("resolved", { mode: "boolean" }).default(false).notNull(),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 // -----------------------------------------------------------------------------
@@ -139,8 +139,8 @@ export const album = sqliteTable("Album", {
     userId: text("userId").references(() => users.id),
     title: text("title").notNull(),
     coverUrls: text("coverUrls"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 export const artwork = sqliteTable("Artwork", {
@@ -155,7 +155,7 @@ export const artwork = sqliteTable("Artwork", {
     buyerId: text("buyerId").references(() => guest.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const order = sqliteTable("Order", {
@@ -165,8 +165,8 @@ export const order = sqliteTable("Order", {
     amountRMB: real("amountRMB").notNull(),
     status: text("status").default("PENDING").notNull(),
     qrCodeUrl: text("qrCodeUrl"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -182,9 +182,9 @@ export const journal = sqliteTable("Journal", {
     imageUrls: text("imageUrls"),
     voiceUrl: text("voiceUrl"),
     isMilestone: integer("isMilestone", { mode: "boolean" }).default(false).notNull(),
-    milestoneDate: integer("milestoneDate", { mode: "timestamp" }),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    milestoneDate: integer("milestoneDate", { mode: "timestamp_ms" }),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -201,8 +201,8 @@ export const shopItem = sqliteTable("ShopItem", {
     deliveryDays: integer("deliveryDays").default(1).notNull(),
     isActive: integer("isActive", { mode: "boolean" }).default(true).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 export const purchase = sqliteTable("Purchase", {
@@ -216,8 +216,8 @@ export const purchase = sqliteTable("Purchase", {
     itemDescription: text("itemDescription"),
     status: text("status").default("PENDING").notNull(),
     remarks: text("remarks"),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 export const wish = sqliteTable("Wish", {
@@ -230,9 +230,9 @@ export const wish = sqliteTable("Wish", {
     // CONFIRMED = parent acknowledged (may or may not have added to shop)
     // REJECTED  = parent declined
     status: text("status").default("PENDING").notNull(),
-    addedToShopAt: integer("addedToShopAt", { mode: "timestamp" }), // set when added to shop, prevents re-adding
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    addedToShopAt: integer("addedToShopAt", { mode: "timestamp_ms" }), // set when added to shop, prevents re-adding
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -250,7 +250,7 @@ export const systemSettings = sqliteTable("SystemSettings", {
     systemName: text("systemName").default("DoDoo Family").notNull(),
     showAllAvatars: integer("showAllAvatars", { mode: "boolean" }).default(true).notNull(),
     homepageImages: text("homepageImages"), // stringified JSON array
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -269,8 +269,8 @@ export const media = sqliteTable("Media", {
     key: text("key").notNull(),
     bucket: text("bucket"),
     userId: text("userId").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
 // -----------------------------------------------------------------------------
@@ -282,6 +282,6 @@ export const growthRecord = sqliteTable("GrowthRecord", {
     userId: text("userId").notNull().references(() => users.id),
     height: real("height"), // in cm
     weight: real("weight"), // in kg
-    date: integer("date", { mode: "timestamp" }).notNull(),
-    createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
+    date: integer("date", { mode: "timestamp_ms" }).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });

@@ -40,9 +40,14 @@ async function run() {
         const localPath = path.join(__dirname, 'src', 'lib', 'drizzle');
         const migrationsFolder = fs.existsSync(localPath) ? localPath : dockerPath;
 
+        // Disable FKs during migration because SQLite table recreation often triggers them
+        sqlite.prepare('PRAGMA foreign_keys = OFF').run();
+
         await migrate(db, {
             migrationsFolder
         });
+
+        sqlite.prepare('PRAGMA foreign_keys = ON').run();
 
         console.log('✅ Migrations completed.');
 
