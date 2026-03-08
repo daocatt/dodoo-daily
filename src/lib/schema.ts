@@ -178,14 +178,24 @@ export const journal = sqliteTable("Journal", {
     authorId: text("authorId").references(() => users.id),
     authorRole: text("authorRole").notNull(),
     text: text("text"),
-    imageUrl: text("imageUrl"),
-    imageUrls: text("imageUrls"),
+    imageUrl: text("imageUrl"), // Still used for backward compatibility/thumbnail
+    imageUrls: text("imageUrls"), // Still used as a JSON cache
     voiceUrl: text("voiceUrl"),
     isMilestone: integer("isMilestone", { mode: "boolean" }).default(false).notNull(),
     milestoneDate: integer("milestoneDate", { mode: "timestamp_ms" }),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
+
+export const journalMedia = sqliteTable("JournalMedia", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    journalId: text("journalId").notNull().references(() => journal.id, { onDelete: 'cascade' }),
+    type: text("type", { enum: ["IMAGE", "VOICE", "VIDEO"] }).default("IMAGE").notNull(),
+    url: text("url").notNull(),
+    sortOrder: integer("sortOrder").default(0).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
 
 // -----------------------------------------------------------------------------
 // SHOP / CONSUMPTION SYSTEM

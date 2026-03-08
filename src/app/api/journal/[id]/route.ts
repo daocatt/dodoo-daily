@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { journal, users } from '@/lib/schema'
-import { eq, and, or } from 'drizzle-orm'
+import { journal, users, journalMedia } from '@/lib/schema'
+import { eq, and, or, asc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(
@@ -40,9 +40,16 @@ export async function GET(
             return NextResponse.json({ error: 'Not found' }, { status: 404 })
         }
 
+        // Fetch associated media from the new table
+        const media = await db.select()
+            .from(journalMedia)
+            .where(eq(journalMedia.journalId, id))
+            .orderBy(asc(journalMedia.sortOrder))
+
         const entry = {
             ...rawEntry,
-            authorName: rawEntry.authorNickname || rawEntry.authorName
+            authorName: rawEntry.authorNickname || rawEntry.authorName,
+            media: media || []
         }
 
         return NextResponse.json(entry)
@@ -51,6 +58,7 @@ export async function GET(
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 }
+
 
 export async function PATCH(
     req: NextRequest,
@@ -78,16 +86,35 @@ export async function PATCH(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        await db.update(journal)
-            .set({
-                text: text || existingJournal.text,
-                imageUrl: imageUrls && imageUrls.length > 0 ? imageUrls[0] : existingJournal.imageUrl,
-                imageUrls: imageUrls ? JSON.stringify(imageUrls) : existingJournal.imageUrls,
-                isMilestone: isMilestone !== undefined ? !!isMilestone : existingJournal.isMilestone,
-                milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : existingJournal.milestoneDate,
-                updatedAt: new Date()
-            })
-            .where(eq(journal.id, id))
+        await db.transaction(async (tx) => {
+            await tx.update(journal)
+                .set({
+                    text: text || existingJournal.text,
+                    imageUrl: (imageUrls && imageUrls.length > 0) ? imageUrls[0] : existingJournal.imageUrl,
+                    imageUrls: imageUrls ? JSON.stringify(imageUrls) : existingJournal.imageUrls,
+                    isMilestone: isMilestone !== undefined ? !!isMilestone : existingJournal.isMilestone,
+                    milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : existingJournal.milestoneDate,
+                    updatedAt: new Date()
+                })
+                .where(eq(journal.id, id))
+
+            // Sync JournalMedia
+            if (imageUrls && Array.isArray(imageUrls)) {
+                // Simplest way: clear and re-insert
+                await tx.delete(journalMedia).where(eq(journalMedia.journalId, id))
+
+                const mediaItems = imageUrls.map((url, index) => ({
+                    journalId: id,
+                    type: 'IMAGE' as const,
+                    url,
+                    sortOrder: index
+                }))
+
+                if (mediaItems.length > 0) {
+                    await tx.insert(journalMedia).values(mediaItems)
+                }
+            }
+        })
 
         // After update, re-fetch with join to return the full author info
         const rawEntryAfterUpdate = await db.select({
@@ -111,9 +138,15 @@ export async function PATCH(
             .where(eq(journal.id, id))
             .get()
 
+        const updatedMedia = await db.select()
+            .from(journalMedia)
+            .where(eq(journalMedia.journalId, id))
+            .orderBy(asc(journalMedia.sortOrder))
+
         const finalEntry = {
             ...rawEntryAfterUpdate,
-            authorName: rawEntryAfterUpdate?.authorNickname || rawEntryAfterUpdate?.authorName
+            authorName: rawEntryAfterUpdate?.authorNickname || rawEntryAfterUpdate?.authorName,
+            media: updatedMedia || []
         }
 
         return NextResponse.json(finalEntry)
@@ -122,3 +155,4 @@ export async function PATCH(
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 }
+

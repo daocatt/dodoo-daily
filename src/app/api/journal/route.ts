@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { journal, users } from '@/lib/schema'
+import { journal, users, journalMedia } from '@/lib/schema'
 import { desc, eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
-
 import { count } from 'drizzle-orm'
 
 export async function GET(req: NextRequest) {
@@ -73,20 +72,62 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Journal must have content' }, { status: 400 })
         }
 
-        const newEntry = await db.insert(journal).values({
-            authorId: currentUserId,
-            authorRole: currentUserRole,
-            text,
-            imageUrl: imageUrl || (imageUrls && imageUrls.length > 0 ? imageUrls[0] : null),
-            imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,
-            voiceUrl: voiceUrl || null,
-            isMilestone: !!isMilestone,
-            milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : new Date()
-        }).returning()
+        // Use a transaction to ensure both journal and media are saved
+        const result = await db.transaction(async (tx) => {
+            const [newEntry] = await tx.insert(journal).values({
+                authorId: currentUserId,
+                authorRole: currentUserRole,
+                text,
+                imageUrl: imageUrl || (imageUrls && imageUrls.length > 0 ? imageUrls[0] : null),
+                imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,
+                voiceUrl: voiceUrl || null,
+                isMilestone: !!isMilestone,
+                milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : new Date()
+            }).returning()
 
-        return NextResponse.json(newEntry[0])
+            // Insert into journalMedia
+            const mediaItems: any[] = []
+
+            // Add images
+            if (imageUrls && Array.isArray(imageUrls)) {
+                imageUrls.forEach((url, index) => {
+                    mediaItems.push({
+                        journalId: newEntry.id,
+                        type: 'IMAGE',
+                        url,
+                        sortOrder: index
+                    })
+                })
+            } else if (imageUrl) {
+                mediaItems.push({
+                    journalId: newEntry.id,
+                    type: 'IMAGE',
+                    url: imageUrl,
+                    sortOrder: 0
+                })
+            }
+
+            // Add voice
+            if (voiceUrl) {
+                mediaItems.push({
+                    journalId: newEntry.id,
+                    type: 'VOICE',
+                    url: voiceUrl,
+                    sortOrder: 0
+                })
+            }
+
+            if (mediaItems.length > 0) {
+                await tx.insert(journalMedia).values(mediaItems)
+            }
+
+            return newEntry
+        })
+
+        return NextResponse.json(result)
     } catch (error) {
         console.error('Failed to create journal:', error)
         return NextResponse.json({ error: 'Failed to create journal' }, { status: 500 })
     }
 }
+

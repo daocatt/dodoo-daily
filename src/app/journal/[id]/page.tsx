@@ -73,11 +73,17 @@ export default function JournalDetailPage() {
                     setEditIsMilestone(data.isMilestone)
 
                     let parsedImages: string[] = []
-                    try {
-                        if (data.imageUrls) parsedImages = JSON.parse(data.imageUrls)
-                        else if (data.imageUrl) parsedImages = [data.imageUrl]
-                    } catch (e) {
-                        if (data.imageUrl) parsedImages = [data.imageUrl]
+                    if (data.media && Array.isArray(data.media)) {
+                        parsedImages = data.media
+                            .filter((m: any) => m.type === 'IMAGE')
+                            .map((m: any) => m.url)
+                    } else {
+                        try {
+                            if (data.imageUrls) parsedImages = JSON.parse(data.imageUrls)
+                            else if (data.imageUrl) parsedImages = [data.imageUrl]
+                        } catch (e) {
+                            if (data.imageUrl) parsedImages = [data.imageUrl]
+                        }
                     }
                     setEditExistingImages(parsedImages)
 
