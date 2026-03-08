@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { motion } from 'motion/react'
-import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
@@ -16,6 +16,8 @@ type Artwork = {
     priceRMB: number
     priceCoins: number
     isSold: boolean
+    albumId?: string | null
+    isArchived?: boolean
 }
 
 type AlbumDetail = {
@@ -47,6 +49,12 @@ export default function AlbumDetailPage() {
     const [editingAlbumTitle, setEditingAlbumTitle] = useState(false)
     const [editAlbumName, setEditAlbumName] = useState('')
     const [updating, setUpdating] = useState(false)
+    const [confirmModal, setConfirmModal] = useState<{
+        type: 'delete_artwork' | 'delete_album' | 'error',
+        title: string,
+        message: string,
+        onConfirm?: () => void
+    } | null>(null)
 
     const { t } = useI18n()
 
@@ -66,7 +74,13 @@ export default function AlbumDetailPage() {
 
     const fetchAlbumDetail = async (id: string) => {
         try {
-            const res = await fetch(`/api/albums/${id}`)
+            const url = new URL(`${window.location.origin}/api/albums/${id}`)
+            // Try to find if we're looking at a specific user's gallery from the parent view
+            const searchParams = new URLSearchParams(window.location.search)
+            const targetId = searchParams.get('userId')
+            if (targetId) url.searchParams.set('userId', targetId)
+
+            const res = await fetch(url.toString())
             if (res.ok) {
                 const data = await res.json()
                 setAlbum(data)
@@ -91,7 +105,6 @@ export default function AlbumDetailPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: editTitle,
-                    priceRMB: editPriceRMB,
                     priceCoins: editPriceCoins,
                     albumId: editAlbumId === 'archive' ? null : editAlbumId,
                     isArchived: editAlbumId === 'archive'
@@ -110,9 +123,18 @@ export default function AlbumDetailPage() {
 
     const handleArchiveArtwork = async () => {
         if (!editingArtwork) return
-        if (!confirm('Are you sure you want to delete/archive this artwork?')) return
 
-        setUpdating(true)
+        setConfirmModal({
+            type: 'delete_artwork',
+            title: editingArtwork.isSold ? t('parent.confirmArchive') : t('parent.confirmDelete'),
+            message: editingArtwork.isSold ? t('parent.confirmArchiveDesc') : t('parent.confirmDeleteDesc'),
+            onConfirm: performArchiveArtwork
+        })
+    }
+
+    const performArchiveArtwork = async () => {
+        if (!editingArtwork) return
+        setConfirmModal(null)
         try {
             const res = await fetch(`/api/artworks/${editingArtwork.id}`, {
                 method: 'DELETE'
@@ -143,6 +165,39 @@ export default function AlbumDetailPage() {
                 setEditingAlbumTitle(false)
                 fetchAlbumDetail(params.id as string)
             }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setUpdating(false)
+        }
+    }
+
+    const handleDeleteAlbum = async () => {
+        if (!album) return
+
+        if (album.artworks.length > 0) {
+            setConfirmModal({
+                type: 'error',
+                title: 'Cannot Delete Album',
+                message: 'This album still contains artworks. Please move or delete them first before removing the album.'
+            })
+            return
+        }
+
+        setConfirmModal({
+            type: 'delete_album',
+            title: 'Delete Album?',
+            message: 'Are you sure you want to permanently delete this album? This action cannot be undone.',
+            onConfirm: performDeleteAlbum
+        })
+    }
+
+    const performDeleteAlbum = async () => {
+        setConfirmModal(null)
+        setUpdating(true)
+        try {
+            const res = await fetch(`/api/albums/${params.id}`, { method: 'DELETE' })
+            if (res.ok) router.push('/gallery')
         } catch (err) {
             console.error(err)
         } finally {
@@ -184,7 +239,7 @@ export default function AlbumDetailPage() {
                     <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800 flex items-center gap-2">
                         <ImageIcon className="w-6 h-6 text-indigo-500" />
                         {album.title}
-                        {isParent && album.id !== 'archive' && (
+                        {album.id !== 'archive' && (
                             <button
                                 onClick={() => {
                                     setEditAlbumName(album.title)
@@ -224,13 +279,12 @@ export default function AlbumDetailPage() {
 
                                     {art.isSold ? (
                                         <div className="mt-4 flex items-center justify-between">
-                                            <span className="text-gray-300 text-sm font-bold line-through">¥ {art.priceRMB ?? 0}</span>
+                                            <span className="text-gray-300 text-sm font-bold"></span>
                                             <span className="text-green-400 font-bold uppercase tracking-widest bg-green-500/20 px-3 py-1 rounded-full text-sm">{t('gallery.detail.collected')}</span>
                                         </div>
                                     ) : (
                                         <>
                                             <div className="flex justify-between items-center mt-2">
-                                                <span className="text-purple-300 text-sm font-bold">¥ {art.priceRMB ?? 0}</span>
                                                 <span className="text-amber-400 text-sm font-bold">{art.priceCoins ?? 0} {t('hud.coins')}</span>
                                             </div>
                                             <button
@@ -245,21 +299,19 @@ export default function AlbumDetailPage() {
                                         </>
                                     )}
 
-                                    {isParent && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                setEditTitle(art.title)
-                                                setEditPriceRMB(art.priceRMB.toString())
-                                                setEditPriceCoins(art.priceCoins.toString())
-                                                setEditAlbumId(art.albumId || 'archive')
-                                                setEditingArtwork(art)
-                                            }}
-                                            className="absolute top-2 right-2 p-2 bg-white/40 hover:bg-white/60 backdrop-blur rounded-full text-slate-800 transition-colors opacity-0 group-hover:opacity-100"
-                                        >
-                                            <Settings className="w-5 h-5" />
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setEditTitle(art.title)
+                                            setEditPriceRMB(art.priceRMB.toString())
+                                            setEditPriceCoins(art.priceCoins.toString())
+                                            setEditAlbumId(art.albumId || 'archive')
+                                            setEditingArtwork(art)
+                                        }}
+                                        className="absolute top-2 right-2 p-2 bg-white/40 hover:bg-white/60 backdrop-blur rounded-full text-slate-800 transition-colors opacity-0 group-hover:opacity-100"
+                                    >
+                                        <Settings className="w-5 h-5" />
+                                    </button>
                                 </div>
                             </motion.div>
                         ))}
@@ -291,23 +343,14 @@ export default function AlbumDetailPage() {
                                         required
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">Price (RMB)</label>
-                                        <input
-                                            type="number"
-                                            value={editPriceRMB}
-                                            onChange={e => setEditPriceRMB(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">Price (Coins)</label>
+                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
                                         <input
                                             type="number"
                                             value={editPriceCoins}
                                             onChange={e => setEditPriceCoins(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
                                         />
                                     </div>
                                 </div>
@@ -317,6 +360,7 @@ export default function AlbumDetailPage() {
                                         value={editAlbumId}
                                         onChange={e => setEditAlbumId(e.target.value)}
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-indigo-400 outline-none"
+                                        required
                                     >
                                         <option value="archive">Archives (Hidden from public)</option>
                                         {availableAlbums.map(a => (
@@ -370,17 +414,76 @@ export default function AlbumDetailPage() {
                                     required
                                 />
                             </div>
-                            <button
-                                type="submit"
-                                disabled={updating}
-                                className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold tracking-wide shadow-lg opacity-90 hover:opacity-100 transition-opacity disabled:grayscale"
-                            >
-                                {updating ? 'Saving...' : 'Save Changes'}
-                            </button>
+                            <div className="flex gap-3 mt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteAlbum}
+                                    disabled={updating}
+                                    className="px-4 py-3 rounded-xl bg-red-100 text-red-600 hover:bg-red-200 font-bold transition-colors"
+                                >
+                                    <Trash className="w-5 h-5" />
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={updating}
+                                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold tracking-wide shadow-lg opacity-90 hover:opacity-100 transition-opacity disabled:grayscale"
+                                >
+                                    {updating ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
                         </form>
                     </motion.div>
                 </div>
             )}
+            {/* Custom Confirmation Modal */}
+            <AnimatePresence>
+                {confirmModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 border border-slate-100"
+                        >
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 mx-auto ${confirmModal.type === 'error' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'}`}>
+                                <AlertTriangle className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-2xl font-black text-center text-slate-800 mb-2">
+                                {confirmModal.title}
+                            </h3>
+                            <p className="text-center text-slate-500 font-medium mb-8">
+                                {confirmModal.message}
+                            </p>
+                            <div className="flex gap-3">
+                                {confirmModal.type !== 'error' && (
+                                    <button
+                                        onClick={confirmModal.onConfirm}
+                                        className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 active:scale-95"
+                                    >
+                                        {t('button.apply')}
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setConfirmModal(null)}
+                                    className={`flex-1 py-4 rounded-2xl font-bold transition-all ${confirmModal.type === 'error' ? 'bg-slate-800 text-white hover:bg-black' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                                >
+                                    {confirmModal.type === 'error' ? 'Understood' : t('button.cancel')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Poster Generator Modal */}
+            <AnimatePresence>
+                {posterArtwork && (
+                    <PosterGenerator
+                        artwork={posterArtwork}
+                        onClose={() => setPosterArtwork(null)}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     )
 }

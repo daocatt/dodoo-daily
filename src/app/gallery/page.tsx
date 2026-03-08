@@ -30,7 +30,6 @@ export default function GalleryPage() {
 
     // Upload Form State
     const [uploadTitle, setUploadTitle] = useState('')
-    const [uploadPriceRMB, setUploadPriceRMB] = useState('')
     const [uploadPriceCoins, setUploadPriceCoins] = useState('')
     const [uploadAlbumId, setUploadAlbumId] = useState('')
     const [uploadFiles, setUploadFiles] = useState<File[]>([])
@@ -100,6 +99,10 @@ export default function GalleryPage() {
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
         if (uploadFiles.length === 0) return
+        if (!uploadAlbumId && albums.length === 0) {
+            alert(t('gallery.album.required'))
+            return
+        }
 
         setUploading(true)
         const formData = new FormData()
@@ -107,7 +110,6 @@ export default function GalleryPage() {
             formData.append('file', file)
         })
         formData.append('title', uploadTitle || uploadFiles[0].name.split('.')[0])
-        formData.append('priceRMB', uploadPriceRMB)
         formData.append('priceCoins', uploadPriceCoins)
 
         if (selectedChildId) {
@@ -115,12 +117,14 @@ export default function GalleryPage() {
         }
 
         // Option to put into selected album
-        if (uploadAlbumId) {
-            formData.append('albumId', uploadAlbumId)
-        } else if (albums.length > 0) {
-            formData.append('albumId', albums[0].id)
+        const finalAlbumId = uploadAlbumId || (albums.length > 0 ? albums[0].id : null)
+        if (finalAlbumId) {
+            formData.append('albumId', finalAlbumId)
+        } else {
+            setUploading(false)
+            alert('Please create an album first.')
+            return
         }
-
         try {
             const res = await fetch('/api/upload', {
                 method: 'POST',
@@ -132,7 +136,6 @@ export default function GalleryPage() {
                 uploadPreviews.forEach(URL.revokeObjectURL)
                 setUploadFiles([])
                 setUploadPreviews([])
-                setUploadPriceRMB('')
                 setUploadPriceCoins('')
                 fetchAlbums(selectedChildId) // Refresh
             }
@@ -213,15 +216,13 @@ export default function GalleryPage() {
                     >
                         <Plus className="w-5 h-5" />
                     </button>
-                    {isParent && (
-                        <button
-                            onClick={() => router.push('/gallery/archive')}
-                            className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
-                            title="Archives"
-                        >
-                            <Archive className="w-5 h-5" />
-                        </button>
-                    )}
+                    <button
+                        onClick={() => router.push('/gallery/archive')}
+                        className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
+                        title="Archives"
+                    >
+                        <Archive className="w-5 h-5" />
+                    </button>
                 </div>
             </header >
 
@@ -305,16 +306,7 @@ export default function GalleryPage() {
                                         required
                                     />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceRmbLabel')}</label>
-                                        <input
-                                            type="number"
-                                            value={uploadPriceRMB}
-                                            onChange={e => setUploadPriceRMB(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
-                                        />
-                                    </div>
+                                <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
                                         <input
@@ -331,8 +323,9 @@ export default function GalleryPage() {
                                         value={uploadAlbumId}
                                         onChange={e => setUploadAlbumId(e.target.value)}
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
+                                        required
                                     >
-                                        <option value="">{t('gallery.form.noAlbumOption')}</option>
+                                        <option value="" disabled>{t('gallery.form.selectAlbum') || 'Select an album'}</option>
                                         {albums.map(a => (
                                             <option key={a.id} value={a.id}>{a.title}</option>
                                         ))}

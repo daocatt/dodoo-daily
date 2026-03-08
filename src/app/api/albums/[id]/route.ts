@@ -9,6 +9,8 @@ export async function GET(
 ) {
     try {
         const { id } = await params
+        const { searchParams } = new URL(req.url)
+        const targetUserId = searchParams.get('userId')
 
         const albums = await db.select().from(album).where(eq(album.id, id))
 
@@ -52,5 +54,25 @@ export async function PUT(
     } catch (error) {
         console.error('Failed to update album:', error)
         return NextResponse.json({ error: 'Failed to update album' }, { status: 500 })
+    }
+}
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params
+
+        // Un-assign artworks from this album before deleting
+        await db.update(artwork)
+            .set({ albumId: null })
+            .where(eq(artwork.albumId, id))
+
+        await db.delete(album).where(eq(album.id, id))
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('Failed to delete album:', error)
+        return NextResponse.json({ error: 'Failed to delete album' }, { status: 500 })
     }
 }
