@@ -2,15 +2,13 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { accountStats, users, systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
-        const cookieStore = await cookies()
-        const currentUserId = cookieStore.get('dodoo_user_id')?.value
-        const currentUserRole = cookieStore.get('dodoo_role')?.value
+        const { userId: currentUserId, role: currentUserRole } = await getSessionUser()
 
         if (!currentUserId) {
             console.warn('[API stats] No currentUserId in cookies')

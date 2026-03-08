@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { shopItem } from '@/lib/schema'
 import { desc, eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 async function isParent() {
-    const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
+    const { role } = await getSessionUser()
     return role === 'PARENT'
 }
 
@@ -15,6 +16,7 @@ export async function GET() {
         const items = await db.select().from(shopItem)
             .where(eq(shopItem.isDeleted, false))
             .orderBy(desc(shopItem.createdAt))
+            .all()
 
         if (items.length === 0) {
             const defaults = [
