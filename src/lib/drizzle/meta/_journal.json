@@ -99,6 +99,13 @@
       "when": 1772990629469,
       "tag": "0013_add_separate_log_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1741456000000,
+      "tag": "0014_shop_and_wish_improvements",
+      "breakpoints": true
     }
   ]
 }

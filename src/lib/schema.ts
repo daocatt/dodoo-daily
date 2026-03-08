@@ -200,6 +200,7 @@ export const shopItem = sqliteTable("ShopItem", {
     stock: integer("stock").default(-1).notNull(),
     deliveryDays: integer("deliveryDays").default(1).notNull(),
     isActive: integer("isActive", { mode: "boolean" }).default(true).notNull(),
+    isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
@@ -209,6 +210,10 @@ export const purchase = sqliteTable("Purchase", {
     userId: text("userId").references(() => users.id),
     itemId: text("itemId").notNull().references(() => shopItem.id),
     costCoins: integer("costCoins").notNull(),
+    // Snapshot fields — preserve item info even if the item is later deleted
+    itemName: text("itemName"),
+    itemIconUrl: text("itemIconUrl"),
+    itemDescription: text("itemDescription"),
     status: text("status").default("PENDING").notNull(),
     remarks: text("remarks"),
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
@@ -221,7 +226,11 @@ export const wish = sqliteTable("Wish", {
     name: text("name").notNull(),
     description: text("description"),
     imageUrl: text("imageUrl"),
-    status: text("status").default("PENDING").notNull(), // PENDING, APPROVED, CANCELED
+    // PENDING | CONFIRMED | REJECTED
+    // CONFIRMED = parent acknowledged (may or may not have added to shop)
+    // REJECTED  = parent declined
+    status: text("status").default("PENDING").notNull(),
+    addedToShopAt: integer("addedToShopAt", { mode: "timestamp" }), // set when added to shop, prevents re-adding
     createdAt: integer("createdAt", { mode: "timestamp" }).default(sql`(strftime('%s', 'now'))`),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });

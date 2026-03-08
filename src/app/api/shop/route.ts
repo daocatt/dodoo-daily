@@ -12,7 +12,9 @@ async function isParent() {
 
 export async function GET() {
     try {
-        const items = await db.select().from(shopItem).orderBy(desc(shopItem.createdAt))
+        const items = await db.select().from(shopItem)
+            .where(eq(shopItem.isDeleted, false))
+            .orderBy(desc(shopItem.createdAt))
 
         if (items.length === 0) {
             const defaults = [
@@ -103,10 +105,9 @@ export async function DELETE(req: NextRequest) {
         const { id } = await req.json()
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
-        // Hard delete or Soft delete? Let's do hard delete but only if no purchases exist?
-        // Actually soft delete is safer.
+        // Soft delete — keeps the row for order history, just marks as deleted
         await db.update(shopItem)
-            .set({ isActive: false })
+            .set({ isDeleted: true, isActive: false, updatedAt: new Date() })
             .where(eq(shopItem.id, id))
 
         return NextResponse.json({ success: true })

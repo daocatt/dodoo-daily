@@ -13,7 +13,8 @@ type Wish = {
     name: string
     description: string | null
     imageUrl: string | null
-    status: 'PENDING' | 'APPROVED' | 'CANCELED'
+    status: 'PENDING' | 'CONFIRMED' | 'REJECTED'
+    addedToShopAt: number | null
     createdAt: string
 }
 
@@ -39,7 +40,7 @@ export default function WishesPage() {
 
     return (
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-purple-50 text-slate-800">
-            <AnimatedSky color="#f3e8ff" />
+            <AnimatedSky />
 
             <header className="relative z-10 flex items-center justify-between p-6 backdrop-blur-md bg-white/40 border-b border-purple-200 shadow-sm">
                 <div className="flex items-center gap-4">
@@ -49,9 +50,9 @@ export default function WishesPage() {
                     <div>
                         <h1 className="text-2xl font-black tracking-tight text-purple-900 flex items-center gap-3">
                             <Sparkles className="w-7 h-7 text-purple-500" />
-                            My Wishes
+                            {t('wish.myWishes')}
                         </h1>
-                        <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mt-0.5">Waiting for parents</p>
+                        <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest mt-0.5">{t('wish.waitingForParents')}</p>
                     </div>
                 </div>
             </header>
@@ -60,17 +61,17 @@ export default function WishesPage() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-4">
                         <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-500 rounded-full animate-spin" />
-                        <p className="font-black text-purple-400 animate-pulse text-sm uppercase tracking-widest">Loading wishes...</p>
+                        <p className="font-black text-purple-400 animate-pulse text-sm uppercase tracking-widest">{t('wish.loadingWishes')}</p>
                     </div>
                 ) : wishes.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-32 text-center">
                         <div className="w-24 h-24 bg-white rounded-[32px] shadow-xl shadow-purple-200/50 flex items-center justify-center mb-6 border border-purple-100 animate-bounce">
                             <Heart className="w-12 h-12 text-purple-200" />
                         </div>
-                        <h2 className="text-2xl font-black text-purple-900 mb-2">No wishes yet</h2>
-                        <p className="text-purple-600 font-medium max-w-xs">Ask for something you'd like to see in the shop!</p>
+                        <h2 className="text-2xl font-black text-purple-900 mb-2">{t('wish.noWishes')}</h2>
+                        <p className="text-purple-600 font-medium max-w-xs">{t('wish.noWishesDesc')}</p>
                         <Link href="/shop" className="mt-8 px-8 py-3 bg-purple-500 text-white font-black rounded-2xl shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all active:scale-95">
-                            Make a Wish
+                            {t('shop.newWish')}
                         </Link>
                     </div>
                 ) : (
@@ -97,23 +98,26 @@ export default function WishesPage() {
                                             <div className="flex items-center gap-3">
                                                 <Clock className="w-4 h-4 text-purple-300" />
                                                 <span className="text-xs font-black text-purple-400 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-lg border border-purple-100/50">
-                                                    Requested: {format(new Date(wish.createdAt), 'MMM d, yyyy')}
+                                                    {t('wish.requested')} {format(new Date(wish.createdAt), 'MMM d, yyyy')}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="shrink-0 text-right">
-                                            <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm ${wish.status === 'CONFIRMED' || wish.status === 'APPROVED' ? 'bg-green-500 text-white shadow-green-100' :
-                                                    wish.status === 'REJECTED' || wish.status === 'CANCELED' ? 'bg-rose-100 text-rose-600' :
-                                                        'bg-purple-100 text-purple-700 font-black'
+                                            <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm ${wish.status === 'CONFIRMED'
+                                                    ? (wish.addedToShopAt ? 'bg-blue-500 text-white shadow-blue-100' : 'bg-green-500 text-white shadow-green-100')
+                                                    : wish.status === 'REJECTED'
+                                                        ? 'bg-rose-100 text-rose-600'
+                                                        : 'bg-purple-100 text-purple-700'
                                                 }`}>
-                                                {wish.status === 'CONFIRMED' || wish.status === 'APPROVED' ? 'Confirmed' :
-                                                    wish.status === 'REJECTED' || wish.status === 'CANCELED' ? 'Rejected' : 'Waiting'}
+                                                {wish.status === 'CONFIRMED'
+                                                    ? (wish.addedToShopAt ? t('shop.wishes.addedToShop') : t('shop.wishes.confirmed'))
+                                                    : wish.status === 'REJECTED' ? t('shop.wishes.rejected') : t('shop.wishes.pending')}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="relative">
                                         <p className="text-slate-600 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl italic">
-                                            {wish.description || "No description provided."}
+                                            {wish.description || t('wish.noDescription')}
                                         </p>
                                     </div>
                                 </div>

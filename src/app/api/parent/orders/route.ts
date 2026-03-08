@@ -22,6 +22,10 @@ export async function GET() {
             remarks: purchase.remarks,
             createdAt: purchase.createdAt,
             updatedAt: purchase.updatedAt,
+            // Snapshot fields (safe even if item is deleted)
+            itemName: purchase.itemName,
+            itemIconUrl: purchase.itemIconUrl,
+            itemDescription: purchase.itemDescription,
             user: {
                 id: users.id,
                 name: users.name,
@@ -39,7 +43,18 @@ export async function GET() {
             .orderBy(desc(purchase.createdAt))
             .all()
 
-        return NextResponse.json(orders)
+        // Merge: prefer snapshot fields, fall back to live join
+        const merged = orders.map(o => ({
+            ...o,
+            item: {
+                id: o.item?.id ?? '',
+                name: o.itemName ?? o.item?.name ?? '(已删除)',
+                iconUrl: o.itemIconUrl ?? o.item?.iconUrl ?? null,
+                description: o.itemDescription ?? null,
+            }
+        }))
+
+        return NextResponse.json(merged)
     } catch (error) {
         console.error('Failed to fetch orders:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
@@ -61,9 +76,9 @@ export async function PATCH(req: NextRequest) {
         if (remarks !== undefined) updateData.remarks = remarks
         updateData.updatedAt = new Date()
 
-        // Handle refund if cancelling a previously non-cancelled order
-        if (status === 'CANCELLED' && existingOrder.status !== 'CANCELLED') {
-            await addBalance(existingOrder.userId!, existingOrder.costCoins, 'CURRENCY', `Order #${id.slice(0, 8)} cancelled-refund`)
+        // Refund coins when status is set to REFUNDED (and wasn't already)
+        if (status === 'REFUNDED' && existingOrder.status !== 'REFUNDED') {
+            await addBalance(existingOrder.userId!, existingOrder.costCoins, 'CURRENCY', `Order #${id.slice(0, 8)} refunded`)
         }
 
         const [order] = await db.update(purchase)

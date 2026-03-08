@@ -49,9 +49,9 @@ export default function OrdersPage() {
                     <div>
                         <h1 className="text-2xl font-black tracking-tight text-slate-800 flex items-center gap-3">
                             <Package className="w-7 h-7 text-amber-500" />
-                            My Orders
+                            {t('order.myOrders')}
                         </h1>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Purchase History</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{t('order.purchaseHistory')}</p>
                     </div>
                 </div>
             </header>
@@ -60,17 +60,17 @@ export default function OrdersPage() {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-32 gap-4">
                         <div className="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin" />
-                        <p className="font-black text-slate-400 animate-pulse text-sm uppercase tracking-widest">Loading orders...</p>
+                        <p className="font-black text-slate-400 animate-pulse text-sm uppercase tracking-widest">{t('order.loadingOrders')}</p>
                     </div>
                 ) : orders.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-32 text-center">
                         <div className="w-24 h-24 bg-white rounded-[32px] shadow-xl shadow-slate-200/50 flex items-center justify-center mb-6 border border-slate-100">
                             <History className="w-12 h-12 text-slate-200" />
                         </div>
-                        <h2 className="text-2xl font-black text-slate-800 mb-2">No orders yet</h2>
-                        <p className="text-slate-500 font-medium max-w-xs">Items you buy in the shop will appear here!</p>
+                        <h2 className="text-2xl font-black text-slate-800 mb-2">{t('parent.noOrders')}</h2>
+                        <p className="text-slate-500 font-medium max-w-xs">{t('order.noOrdersDesc')}</p>
                         <Link href="/shop" className="mt-8 px-8 py-3 bg-amber-500 text-white font-black rounded-2xl shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95">
-                            Go Shopping
+                            {t('order.goShopping')}
                         </Link>
                     </div>
                 ) : (
@@ -102,13 +102,14 @@ export default function OrdersPage() {
                                     </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <div className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm ${order.status === 'COMPLETED' ? 'bg-slate-900 text-white shadow-slate-200' :
-                                            order.status === 'CONFIRMED' ? 'bg-green-500 text-white shadow-green-200' :
-                                                order.status === 'SHIPPED' ? 'bg-blue-500 text-white shadow-blue-200' :
-                                                    order.status === 'CANCELLED' ? 'bg-rose-100 text-rose-600' :
-                                                        'bg-amber-100 text-amber-700 shadow-amber-100'
+                                    <div className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm ${order.status === 'COMPLETED' ? 'bg-green-500 text-white shadow-green-200' :
+                                        order.status === 'REFUNDED' ? 'bg-rose-100 text-rose-600' :
+                                            'bg-amber-100 text-amber-700 shadow-amber-100'
                                         }`}>
-                                        {order.status === 'CANCELLED' ? 'CANCELLED/REFUNDED' : order.status}
+                                        {order.status === 'PENDING' ? t('order.status.pending') :
+                                            order.status === 'COMPLETED' ? t('order.status.completed') :
+                                                order.status === 'REFUNDED' ? t('order.status.refunded') :
+                                                    order.status}
                                     </div>
                                 </div>
                             </motion.div>

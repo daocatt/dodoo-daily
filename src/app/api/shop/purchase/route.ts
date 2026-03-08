@@ -37,12 +37,15 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Not enough coins' }, { status: 400 })
         }
 
-        // 4. Record Purchase
+        // 4. Record Purchase (with item snapshot so history survives item deletion)
         const newPurchase = await db.insert(purchase).values({
             userId: childId,
             itemId: item.id,
             costCoins: item.costCoins,
-            status: 'COMPLETED',
+            itemName: item.name,
+            itemIconUrl: item.iconUrl,
+            itemDescription: item.description,
+            status: 'PENDING',
         }).returning()
 
         // 5. Deduct Coins

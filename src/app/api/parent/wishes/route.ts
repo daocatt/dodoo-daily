@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { wish, users, shopItem } from '@/lib/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, isNull } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 async function isParent() {
@@ -20,6 +20,7 @@ export async function GET() {
             description: wish.description,
             imageUrl: wish.imageUrl,
             status: wish.status,
+            addedToShopAt: wish.addedToShopAt,
             createdAt: wish.createdAt,
             user: {
                 id: users.id,
@@ -49,30 +50,48 @@ export async function POST(req: NextRequest) {
         const [existingWish] = await db.select().from(wish).where(eq(wish.id, wishId))
         if (!existingWish) return NextResponse.json({ error: 'Wish not found' }, { status: 404 })
 
-        if (action === 'APPROVE') {
-            if (costCoins === undefined) return NextResponse.json({ error: 'costCoins is required' }, { status: 400 })
-
-            // 1. Create shop item
-            await db.insert(shopItem).values({
-                name: existingWish.name,
-                description: existingWish.description,
-                costCoins: parseInt(costCoins),
-                iconUrl: existingWish.imageUrl || '🎁',
-                isActive: true
-            })
-
-            // 2. Update wish status
+        // ── CONFIRM: parent acknowledges, does NOT add to shop ──────────────
+        if (action === 'CONFIRM') {
             await db.update(wish)
                 .set({ status: 'CONFIRMED', updatedAt: new Date() })
                 .where(eq(wish.id, wishId))
 
-            return NextResponse.json({ success: true, message: 'Wish approved and added to shop' })
-        } else if (action === 'CANCEL' || action === 'REJECT') {
+            return NextResponse.json({ success: true, message: 'Wish confirmed' })
+        }
+
+        // ── ADD_TO_SHOP: confirm + create shop item ───────────────────────────
+        if (action === 'ADD_TO_SHOP') {
+            if (costCoins === undefined) {
+                return NextResponse.json({ error: 'costCoins is required' }, { status: 400 })
+            }
+            // Prevent duplicates
+            if (existingWish.addedToShopAt) {
+                return NextResponse.json({ error: 'Already added to shop' }, { status: 409 })
+            }
+
+            await db.insert(shopItem).values({
+                name: existingWish.name,
+                description: existingWish.description,
+                costCoins: parseInt(costCoins),
+                iconUrl: existingWish.imageUrl || null,
+                isActive: true,
+                isDeleted: false,
+            })
+
+            await db.update(wish)
+                .set({ status: 'CONFIRMED', addedToShopAt: new Date(), updatedAt: new Date() })
+                .where(eq(wish.id, wishId))
+
+            return NextResponse.json({ success: true, message: 'Wish added to shop' })
+        }
+
+        // ── REJECT: parent declines ───────────────────────────────────────────
+        if (action === 'REJECT' || action === 'CANCEL') {
             await db.update(wish)
                 .set({ status: 'REJECTED', updatedAt: new Date() })
                 .where(eq(wish.id, wishId))
 
-            return NextResponse.json({ success: true, message: 'Wish canceled' })
+            return NextResponse.json({ success: true, message: 'Wish rejected' })
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
