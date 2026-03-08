@@ -37,6 +37,13 @@ export default function NewJournalPage() {
     const [postDate, setPostDate] = useState(getLocalISOString())
     const [posting, setPosting] = useState(false)
 
+    // Revoke object URLs to prevent memory leaks
+    React.useEffect(() => {
+        return () => {
+            imagePreviews.forEach(url => URL.revokeObjectURL(url))
+        }
+    }, [imagePreviews])
+
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return
         const files = Array.from(e.target.files).slice(0, 20 - images.length)

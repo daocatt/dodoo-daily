@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { journal, users } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
+import { eq, and, or } from 'drizzle-orm'
+import { getSessionUser } from '@/lib/auth'
 
 export async function GET(
     req: NextRequest,
@@ -9,6 +10,9 @@ export async function GET(
 ) {
     try {
         const { id } = await params
+        const { userId } = await getSessionUser()
+        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
         if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
 
         const rawEntry = await db.select({
@@ -54,16 +58,33 @@ export async function PATCH(
 ) {
     try {
         const { id } = await params
+        const { userId, role } = await getSessionUser()
+
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
         const body = await req.json()
         const { text, imageUrls, isMilestone, milestoneDate } = body
 
+        // Check if journal exists and access control
+        const existingJournal = await db.select().from(journal).where(eq(journal.id, id)).get()
+        if (!existingJournal) {
+            return NextResponse.json({ error: 'Not found' }, { status: 404 })
+        }
+
+        // Only author or parent can edit
+        if (existingJournal.authorId !== userId && role !== 'PARENT') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
         await db.update(journal)
             .set({
-                text,
-                imageUrl: imageUrls && imageUrls.length > 0 ? imageUrls[0] : null,
-                imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,
-                isMilestone,
-                milestoneDate: milestoneDate ? new Date(milestoneDate) : null,
+                text: text || existingJournal.text,
+                imageUrl: imageUrls && imageUrls.length > 0 ? imageUrls[0] : existingJournal.imageUrl,
+                imageUrls: imageUrls ? JSON.stringify(imageUrls) : existingJournal.imageUrls,
+                isMilestone: isMilestone !== undefined ? !!isMilestone : existingJournal.isMilestone,
+                milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : existingJournal.milestoneDate,
                 updatedAt: new Date()
             })
             .where(eq(journal.id, id))

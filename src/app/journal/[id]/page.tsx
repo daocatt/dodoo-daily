@@ -55,6 +55,13 @@ export default function JournalDetailPage() {
     const [saving, setSaving] = useState(false)
     const [activeIndex, setActiveIndex] = useState(0)
 
+    // Revoke object URLs on unmount to prevent memory leaks
+    useEffect(() => {
+        return () => {
+            newPreviews.forEach(url => URL.revokeObjectURL(url))
+        }
+    }, [newPreviews])
+
     useEffect(() => {
         const fetchDetail = async () => {
             try {

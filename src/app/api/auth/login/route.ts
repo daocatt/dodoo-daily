@@ -22,6 +22,19 @@ export async function POST(req: Request) {
         // Set session cookie
         const cookieStore = await cookies()
         const maxAge = rememberMe ? 60 * 60 * 24 * 365 : 60 * 60 * 24
+
+        // 1. Issue JWT (New)
+        const { signSessionJWT } = await import('@/lib/auth')
+        const token = await signSessionJWT(user.id, user.role)
+        cookieStore.set('dodoo_session', token, {
+            maxAge,
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        })
+
+        // 2. Keep legacy cookies for now (to support existing UI logic if any)
         cookieStore.set('dodoo_user_id', user.id, { maxAge, path: '/' })
         cookieStore.set('dodoo_role', user.role, { maxAge, path: '/' })
 
