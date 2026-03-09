@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
 import { eq, and, not, or } from 'drizzle-orm'
+import { getSessionUser } from '@/lib/auth'
 
 export async function PATCH(req: Request) {
-    const cookieStore = await cookies()
-    const session = cookieStore.get('dodoo_user_id')?.value
+    const { userId: session } = await getSessionUser()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {

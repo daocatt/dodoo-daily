@@ -2,19 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
-
-async function getParentId() {
-    const cookieStore = await cookies()
-    const id = cookieStore.get('dodoo_user_id')?.value
-    return { id, isParent: cookieStore.get('dodoo_role')?.value === 'PARENT' }
-}
 
 export async function POST(req: NextRequest) {
     try {
-        const { id, isParent } = await getParentId()
-        if (!isParent || !id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const { userId, role } = await getSessionUser()
+        if (role !== 'PARENT' || !userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
         const body = await req.json()
         const { amount, type } = body // type: 'CURRENCY' or 'GOLD_STAR'
@@ -23,7 +17,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Positive amount required' }, { status: 400 })
         }
 
-        const res = await addBalance(id, type || 'CURRENCY', amount, 'Auto-recharge by Parent')
+        const res = await addBalance(userId, type || 'CURRENCY', amount, 'Auto-recharge by Parent')
 
         if (!res.success) {
             return NextResponse.json({ error: res.error }, { status: 400 })

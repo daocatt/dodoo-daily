@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
 
-async function isParent() {
-    const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
+async function checkIsParent() {
+    const { role } = await getSessionUser()
     return role === 'PARENT'
 }
 
@@ -43,7 +42,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const body = await req.json()

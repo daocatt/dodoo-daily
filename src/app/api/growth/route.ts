@@ -2,17 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { growthRecord, users } from '@/lib/schema'
 import { eq, and, desc, gte, lte } from 'drizzle-orm'
-import { cookies } from 'next/headers'
-
-async function getAuth() {
-    const cookieStore = await cookies()
-    const userId = cookieStore.get('dodoo_user_id')?.value
-    const role = cookieStore.get('dodoo_role')?.value
-    return { userId, role }
-}
+import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
-    const { userId, role } = await getAuth()
+    const { userId, role } = await getSessionUser()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
@@ -37,7 +30,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const { userId, role } = await getAuth()
+    const { userId, role } = await getSessionUser()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {

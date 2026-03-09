@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
 
 export async function POST(req: NextRequest) {
     try {
-        const cookieStore = await cookies()
-        const role = cookieStore.get('dodoo_role')?.value
-        const actorId = cookieStore.get('dodoo_user_id')?.value
+        const { userId: actorId, role } = await getSessionUser()
 
         if (role !== 'PARENT' || !actorId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

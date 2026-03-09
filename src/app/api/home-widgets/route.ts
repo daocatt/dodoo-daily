@@ -1,0 +1,95 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { homeWidget } from '@/lib/schema'
+import { eq, and } from 'drizzle-orm'
+import { getSessionUser } from '@/lib/auth'
+
+export async function GET(req: NextRequest) {
+    const { userId } = await getSessionUser()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    try {
+        const widgets = await db.select().from(homeWidget).where(eq(homeWidget.userId, userId)).all()
+
+        // If no widgets, provide default layout
+        if (widgets.length === 0) {
+            const defaults = [
+                { type: 'TASKS', size: 'WIDE', x: 0, y: 0 },
+                { type: 'NOTES', size: 'SQUARE', x: 4, y: 0 },
+                { type: 'JOURNAL', size: 'ICON', x: 6, y: 0 },
+                { type: 'PHOTOS', size: 'ICON', x: 7, y: 0 },
+                { type: 'SHOP', size: 'SQUARE', x: 0, y: 2 }
+            ]
+
+            const inserted = []
+            for (const item of defaults) {
+                const res = await db.insert(homeWidget).values({
+                    userId,
+                    ...item
+                }).returning()
+                inserted.push(res[0])
+            }
+            return NextResponse.json(inserted)
+        }
+
+        return NextResponse.json(widgets)
+    } catch (e) {
+        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    }
+}
+
+export async function PATCH(req: NextRequest) {
+    const { userId } = await getSessionUser()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    try {
+        const body = await req.json()
+        const { widgets } = body // Array of {id, x, y, size}
+
+        for (const w of widgets) {
+            await db.update(homeWidget)
+                .set({ x: w.x, y: w.y, size: w.size, updatedAt: new Date() })
+                .where(and(eq(homeWidget.id, w.id), eq(homeWidget.userId, userId)))
+        }
+
+        return NextResponse.json({ success: true })
+    } catch (e) {
+        return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
+    }
+}
+
+export async function POST(req: NextRequest) {
+    const { userId } = await getSessionUser()
+    if (!userId) {
+        console.warn('[API widgets POST] Unauthorized - no userId')
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    try {
+        const body = await req.json()
+        const { type, size, x, y } = body
+        console.log('[API widgets POST] Creating widget:', { userId, type, size, x, y })
+        const [res] = await db.insert(homeWidget).values({ userId, type, size, x, y }).returning()
+        console.log('[API widgets POST] Success:', res)
+        return NextResponse.json(res)
+    } catch (e) {
+        console.error('[API widgets POST] Error:', e)
+        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    const { userId } = await getSessionUser()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
+
+    try {
+        await db.delete(homeWidget).where(and(eq(homeWidget.id, id), eq(homeWidget.userId, userId)))
+        return NextResponse.json({ success: true })
+    } catch (e) {
+        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
+    }
+}

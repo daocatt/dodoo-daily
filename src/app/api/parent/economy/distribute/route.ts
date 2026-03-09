@@ -5,17 +5,13 @@ import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance, TransactionType } from '@/lib/economy'
 
-async function checkParent() {
-    const cookieStore = await cookies()
-    const id = cookieStore.get('dodoo_user_id')?.value
-    const role = cookieStore.get('dodoo_role')?.value
-    return { isParent: role === 'PARENT', parentId: id }
-}
+import { getSessionUser } from '@/lib/auth'
+import { addBalance, TransactionType } from '@/lib/economy'
 
 export async function POST(req: NextRequest) {
     try {
-        const { isParent, parentId } = await checkParent()
-        if (!isParent || !parentId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const { userId: parentId, role } = await getSessionUser()
+        if (role !== 'PARENT' || !parentId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
         const body = await req.json()
         const { targetUserId, type, amount, reason } = body

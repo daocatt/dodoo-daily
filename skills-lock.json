@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "drag-and-drop": {
+      "source": "wodsmith/thewodapp",
+      "sourceType": "github",
+      "computedHash": "4aaec569f24024d8bd2fd19e7229212abe93bdbff5e770c5c63e29378ede7dda"
+    },
+    "framer-motion-animator": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "computedHash": "d0137ba04049bf8926bc80f6a5e2b82d94b5633b6445a85dbfb26ab4f1b104c6"
+    },
+    "react-expert": {
+      "source": "reactjs/react.dev",
+      "sourceType": "github",
+      "computedHash": "e53cc1a286987b7f28ba5cdd29e8ebacdde0d5822d40e938652fec8c47f33efa"
+    }
+  }
+}

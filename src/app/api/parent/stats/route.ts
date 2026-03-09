@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { accountStats, accountStatsLog, users } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
 
-async function isParent() {
-    const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
+async function checkIsParent() {
+    const { role } = await getSessionUser()
     return role === 'PARENT'
 }
 
 export async function GET(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const { searchParams } = new URL(req.url)
@@ -32,12 +31,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId: actorId, role } = await getSessionUser()
+    if (role !== 'PARENT' || !actorId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const { userId: targetUserId, type, amount, reason } = await req.json()
-        const cookieStore = await cookies()
-        const actorId = cookieStore.get('dodoo_user_id')?.value
 
         if (!targetUserId || !type || amount === undefined || !reason) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })

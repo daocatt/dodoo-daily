@@ -311,3 +311,17 @@ export const familyNote = sqliteTable("FamilyNote", {
     isPinned: integer("isPinned", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
+// -----------------------------------------------------------------------------
+// USER DASHBOARD / BENTO GRID SYSTEM
+// -----------------------------------------------------------------------------
+
+export const homeWidget = sqliteTable("HomeWidget", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    type: text("type").notNull(), // 'TASKS', 'NOTES', 'JOURNAL', 'PHOTOS', 'SHOP', etc.
+    size: text("size").notNull().default("SMALL"), // 'SMALL' (1x1), 'MEDIUM' (2x1), 'LARGE' (2x2), 'XL' (4x2)
+    x: integer("x").notNull(),
+    y: integer("y").notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});

@@ -1,317 +1,714 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Languages, CheckSquare, Smile, Store, Book, Settings, Image as ImageIcon, ShieldAlert, ChevronRight, X, Maximize2 } from 'lucide-react'
+import { Settings, Maximize2, Trash2, Check, Layout, Store, Sparkles, Smile, CheckSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
-import FamilyNoteBoard from '@/components/FamilyNoteBoard'
 import { useI18n } from '@/contexts/I18nContext'
+import { clsx } from 'clsx'
 
-interface Stats {
-  isParent: boolean
+// Bento Widgets
+import NotesWidget from '@/components/widgets/NotesWidget'
+import TasksWidget from '@/components/widgets/TasksWidget'
+import JournalWidget from '@/components/widgets/JournalWidget'
+import PhotoWidget from '@/components/widgets/PhotoWidget'
+
+type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
+
+interface Widget {
+  id: string
+  type: string
+  size: WidgetSize
+  x: number
+  y: number
+}
+
+// Map sizes to grid spans (cols x rows)
+const SIZE_MAP: Record<WidgetSize, { w: number; h: number }> = {
+  ICON: { w: 1, h: 1 },
+  SQUARE: { w: 2, h: 2 },
+  WIDE: { w: 4, h: 2 },
+  TALL: { w: 4, h: 4 },
+  GIANT: { w: 8, h: 4 },
 }
 
 interface SystemSettings {
-  isClosed: boolean
   systemName: string
-  homepageImages?: string
+  isClosed?: boolean
+  needsSetup?: boolean
 }
 
-interface Artwork {
-  id: number
-  image: string
-  bg: string
-  defaultRotate: number
-  rotate: number
-  x: number
-  y: number
-  title?: string
+const SIZE_LABELS: Record<WidgetSize, string> = {
+  ICON: '1×1',
+  SQUARE: '2×2',
+  WIDE: '4×2',
+  TALL: '4×4',
+  GIANT: '8×4',
 }
+
+const GAP = 12   // px between tiles
+const PAD = 24   // stage inner padding (matches p-6 in main)
 
 export default function Home() {
   const router = useRouter()
   const { locale, setLocale, t } = useI18n()
-  const [stats, setStats] = React.useState<Stats | null>(null)
-  const [sysSettings, setSysSettings] = React.useState<SystemSettings | null>(null)
-  const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null)
-  const [zoomedArt, setZoomedArt] = useState<Artwork | null>(null)
+  const [widgets, setWidgets] = useState<Widget[]>([])
+  const [sysSettings, setSysSettings] = useState<SystemSettings | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [sizeMenuId, setSizeMenuId] = useState<string | null>(null)
 
-  // Artwork Stack State with default rotations
-  const [artworks, setArtworks] = useState<Artwork[]>([])
+  // Real-time drag preview tracking
+  const [dragPreview, setDragPreview] = useState<{ x: number, y: number, w: number, h: number } | null>(null)
 
-  React.useEffect(() => {
-    fetch('/api/stats')
-      .then(res => res.json())
-      .then(data => setStats(data))
+  // Responsive Grid Configuration
+  const [stageW, setStageW] = useState(1200)
+  const [stageH, setStageH] = useState(800)
+  const stageRef = useRef<HTMLDivElement>(null)
 
-    fetch('/api/system/settings')
-      .then(res => res.json())
-      .then(data => {
-        setSysSettings(data);
-        if (data.homepageImages) {
-          try {
-            const urls = JSON.parse(data.homepageImages);
-            const bgs = ['bg-[#ffedb3]', 'bg-[#d0f4de]', 'bg-[#ffcfd2]', 'bg-[#c9e4de]', 'bg-[#f4acb7]'];
-            const rotates = [-15, 12, -25, 18, -8];
-            const xs = [-90, 90, -60, 80, -30];
-            const ys = [-50, -60, 70, 60, 20];
+  // Recalculate cell size and center the grid area
+  const dimensions = React.useMemo(() => {
+    // Determine column count based on width
+    const currentCols = stageW >= 1024 ? 8 : 4
 
-            const formatted = urls.map((url: string, i: number) => ({
-              id: i,
-              image: url,
-              bg: bgs[i % bgs.length],
-              defaultRotate: rotates[i % rotates.length],
-              rotate: rotates[i % rotates.length],
-              x: xs[i % xs.length],
-              y: ys[i % ys.length]
-            }));
-            setArtworks(formatted);
-          } catch (e) { }
-        } else {
-          // Default artworks if none configured
-          setArtworks([
-            { id: 1, image: '/artwork1.png', bg: 'bg-[#ffedb3]', defaultRotate: -15, rotate: -15, x: -90, y: -50 },
-            { id: 2, image: '/artwork2.png', bg: 'bg-[#d0f4de]', defaultRotate: 12, rotate: 12, x: 90, y: -60 },
-            { id: 3, image: '/artwork1.png', bg: 'bg-[#ffcfd2]', defaultRotate: -25, rotate: -25, x: -60, y: 70 },
-          ]);
-        }
-      })
+    // Calculate cell width to fit exactly in stage width (minus paddings)
+    const availableWidth = stageW - PAD * 2
+    let cw = (availableWidth - (currentCols - 1) * GAP) / currentCols
+
+    // CAP CELL SIZE: Prevent widgets from being gigantic on super-wide screens
+    // Max 180px for 8 columns = ~1500px total grid width
+    const maxCw = currentCols === 8 ? 180 : 300
+    if (cw > maxCw) cw = maxCw
+
+    // ENFORCE SQUARE: cellH = cellW
+    const ch = cw
+
+    return { cellW: cw, cellH: ch, gridCols: currentCols }
+  }, [stageW])
+
+  const { cellW, cellH, gridCols } = dimensions
+
+  // Global Grid-to-Pixel Mapper
+  // These now return coordinates relative to the centered grid area
+  const toLeft = (x: number) => x * (cellW + GAP)
+  const toTop = (y: number) => y * (cellH + GAP)
+
+  // Track grab offset to ensure perfect snapping
+  const [grabOffset, setGrabOffset] = useState({ x: 0, y: 0 })
+
+  const fetchData = useCallback(async () => {
+    console.log("Home: Fetching data...")
+    try {
+      const [settingsRes, widgetsRes] = await Promise.all([
+        fetch('/api/system/settings'),
+        fetch('/api/home-widgets'),
+      ])
+      const settings = await settingsRes.json()
+      const widgetsData = await widgetsRes.json()
+      console.log("Home: Data received:", { settings, widgetsData })
+      setSysSettings(settings)
+      if (Array.isArray(widgetsData)) {
+        setWidgets(widgetsData)
+      } else {
+        console.error("Home: widgetsData is not an array", widgetsData)
+        setWidgets([])
+      }
+    } catch (e) {
+      console.error("Home: Fetch failed", e)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  const toggleLanguage = React.useCallback(() => {
-    setLocale(locale === 'en' ? 'zh-CN' : 'en')
-  }, [locale, setLocale])
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
-  const cycleArtwork = (clickedId: number) => {
-    const isTop = artworks[artworks.length - 1].id === clickedId
+  // Resizable stage tracking
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const el = stageRef.current
+    if (!el) return
 
-    if (isTop) {
-      // Second click on top: Zoom in
-      setZoomedArt(artworks[artworks.length - 1])
+    const updateSize = () => {
+      if (el) {
+        setStageW(el.clientWidth)
+        setStageH(el.clientHeight)
+      }
+    }
+
+    const ro = new ResizeObserver(() => {
+      window.requestAnimationFrame(updateSize)
+    })
+    ro.observe(el)
+    updateSize()
+
+    // Also listen to window resize for col changes
+    window.addEventListener('resize', updateSize)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', updateSize)
+    }
+  }, [])
+
+  const saveWidgets = async (next: Widget[]) => {
+    setWidgets(next)
+    try {
+      await fetch('/api/home-widgets', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ widgets: next }),
+      })
+    } catch { }
+  }
+
+  const resolveOverlap = (moved: Widget, all: Widget[]): Widget[] => {
+    // 1. Start with the moved widget as priority
+    const placed: Widget[] = [moved]
+
+    // 2. Sort others by position (top-to-bottom, left-to-right) for consistent reflow
+    const others = all
+      .filter(w => w.id !== moved.id)
+      .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+
+    // Helper for collision check
+    const isPosOccupied = (x: number, y: number, sw: number, sh: number, currentPlaced: Widget[]) => {
+      return currentPlaced.some(p => {
+        const pSize = SIZE_MAP[p.size as WidgetSize] || SIZE_MAP.ICON
+        return x < p.x + pSize.w && x + sw > p.x && y < p.y + pSize.h && y + sh > p.y
+      })
+    }
+
+    // 3. Process each widget
+    for (const other of others) {
+      const s = SIZE_MAP[other.size as WidgetSize] || SIZE_MAP.ICON
+
+      // Try to keep it at its original position first (STABILITY)
+      if (!isPosOccupied(other.x, other.y, s.w, s.h, placed)) {
+        placed.push(other)
+        continue
+      }
+
+      // If occupied, find the nearest available slot (REFLOW)
+      let found = false
+      for (let ty = other.y; !found; ty++) {
+        // Search path:
+        // On the same row: try right side first, then left side
+        // On subsequent rows: standard left-to-right
+        const xSearchOrder: number[] = []
+        if (ty === other.y) {
+          for (let tx = other.x + 1; tx <= gridCols - s.w; tx++) xSearchOrder.push(tx)
+          for (let tx = 0; tx < other.x; tx++) xSearchOrder.push(tx)
+        } else {
+          for (let tx = 0; tx <= gridCols - s.w; tx++) xSearchOrder.push(tx)
+        }
+
+        for (const tx of xSearchOrder) {
+          if (!isPosOccupied(tx, ty, s.w, s.h, placed)) {
+            placed.push({ ...other, x: tx, y: ty })
+            found = true
+            break
+          }
+        }
+
+        if (ty > other.y + 30) break // Safety break
+      }
+
+      // Absolute fallback if no space found (should not happen with dynamic height)
+      if (!found) {
+        let ty = other.y + 1
+        while (isPosOccupied(0, ty, s.w, s.h, placed)) ty++
+        placed.push({ ...other, x: 0, y: ty })
+      }
+    }
+
+    return placed
+  }
+
+  const updateWidgetSize = (id: string, nextSize: WidgetSize) => {
+    const w = widgets.find(x => x.id === id)
+    if (!w) return
+
+    const s = SIZE_MAP[nextSize]
+    const moved = {
+      ...w,
+      size: nextSize,
+      x: Math.min(w.x, gridCols - s.w)
+    }
+    const nextWidgets = resolveOverlap(moved, widgets)
+    saveWidgets(nextWidgets)
+    setSizeMenuId(null)
+  }
+
+  const removeWidget = (id: string) => {
+    const next = widgets.filter(w => w.id !== id)
+    saveWidgets(next)
+    fetch(`/api/home-widgets?id=${id}`, { method: 'DELETE' }).catch(() => { })
+  }
+
+  const addWidget = async (type: string) => {
+    if (widgets.some(w => w.type === type)) {
+      console.warn(`[Home] Widget type ${type} already exists.`)
       return
     }
 
-    // Move to front and set rotate to 0
-    const newArtworks = artworks.map(art => {
-      return { ...art, rotate: art.defaultRotate }
-    })
+    console.log("[Home] Requesting addition of widget:", type)
 
-    const clickedIdx = newArtworks.findIndex(a => a.id === clickedId)
-    const [item] = newArtworks.splice(clickedIdx, 1)
+    // Simple logic to place new widget below the lowest existing one
+    const maxY = widgets.reduce((acc, w) => {
+      const s = SIZE_MAP[w.size] || SIZE_MAP.ICON
+      return Math.max(acc, w.y + s.h)
+    }, 0)
 
-    item.rotate = 0
-    newArtworks.push(item)
+    try {
+      const res = await fetch('/api/home-widgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, size: 'ICON', x: 0, y: maxY }),
+      })
 
-    setArtworks(newArtworks)
+      if (res.ok) {
+        const data = await res.json()
+        console.log("[Home] Widget added successfully:", data)
+        setWidgets(prev => [...prev, data])
+      } else {
+        const errorText = await res.text()
+        console.error("[Home] API error adding widget:", res.status, errorText)
+      }
+    } catch (e) {
+      console.error("[Home] Network error adding widget:", e)
+    }
   }
 
-  const menuItems = React.useMemo(() => [
-    { title: t('menu.tasks'), icon: CheckSquare, href: '/tasks', bg: 'bg-[#43aa8b]', shadow: 'shadow-[#43aa8b]/30', iconBg: 'bg-[#3a9679]' },
-    // { title: t('menu.emotions'), icon: Smile, href: '/emotions', bg: 'bg-[#f8961e]', shadow: 'shadow-[#f8961e]/30', iconBg: 'bg-[#df841a]' },
-    { title: t('menu.gallery'), icon: ImageIcon, href: '/gallery', bg: 'bg-[#e9b500]', shadow: 'shadow-[#e9b500]/30', iconBg: 'bg-[#cfa000]' },
-    { title: t('menu.journal'), icon: Book, href: '/journal', bg: 'bg-[#277da1]', shadow: 'shadow-[#277da1]/30', iconBg: 'bg-[#206a89]' },
-    { title: t('menu.shop'), icon: Store, href: '/shop', bg: 'bg-[#c47f5a]', shadow: 'shadow-[#c47f5a]/30', iconBg: 'bg-[#a86a48]' },
-  ], [t])
+  const renderWidgetContent = (w: Widget) => {
+    // ICON Mode: Minimalist Icon + Title
+    if (w.size === 'ICON') {
+      const config = {
+        TASKS: { Icon: CheckSquare, color: 'bg-emerald-100 text-emerald-600', label: 'Tasks' },
+        NOTES: { Icon: Smile, color: 'bg-amber-100 text-amber-600', label: 'Notes' },
+        JOURNAL: { Icon: Sparkles, color: 'bg-indigo-100 text-indigo-600', label: 'Journal' },
+        PHOTOS: { Icon: Layout, color: 'bg-rose-100 text-rose-600', label: 'Photos' },
+        SHOP: { Icon: Store, color: 'bg-amber-400 text-amber-900', label: 'Shop' },
+      }[w.type] || { Icon: Layout, color: 'bg-slate-100 text-slate-600', label: w.type }
 
-  // System Closed View
-  if (sysSettings?.isClosed && !stats?.isParent) {
+      const { Icon, color, label } = config
+
+      return (
+        <div className="w-full h-full bg-white/60 backdrop-blur-xl flex flex-col items-center justify-center p-2 rounded-[2rem] border border-white/80 transition-colors group-hover:bg-white/80">
+          <div className={clsx("w-9 h-9 rounded-2xl flex items-center justify-center mb-1.5 shadow-sm", color)}>
+            <Icon className="w-4.5 h-4.5" />
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</span>
+        </div>
+      )
+    }
+
+    const inner = (() => {
+      switch (w.type) {
+        case 'TASKS': return <TasksWidget size={w.size} />
+        case 'NOTES': return <NotesWidget size={w.size} />
+        case 'JOURNAL': return <JournalWidget size={w.size} />
+        case 'PHOTOS': return <PhotoWidget size={w.size} />
+        case 'SHOP':
+          return (
+            <div className="w-full h-full bg-amber-400 rounded-[2rem] flex flex-col items-center justify-center gap-2 border-4 border-white shadow-xl">
+              <Store className="w-10 h-10 text-amber-900" />
+              <span className="font-black text-amber-900">Shop</span>
+            </div>
+          )
+        default:
+          return (
+            <div className="w-full h-full bg-slate-100 rounded-[2rem] flex items-center justify-center text-[10px] text-slate-400">
+              Unknown: {w.type}
+            </div>
+          )
+      }
+    })()
+
     return (
-      <div className="h-dvh flex flex-col items-center justify-center bg-rose-50 p-8 text-center space-y-8">
-        <NatureBackground />
-        <div className="relative z-10 w-32 h-32 bg-rose-100 rounded-xl flex items-center justify-center shadow-inner">
-          <ShieldAlert className="w-16 h-16 text-rose-500" />
-        </div>
-        <div className="relative z-10 space-y-4">
-          <h1 className="text-4xl font-black text-rose-900">{t('system.closed')}</h1>
-          <p className="text-rose-700/60 max-w-md font-bold text-lg">{t('system.closedDesc')}</p>
-        </div>
-        <button
-          onClick={() => window.location.href = '/login'}
-          className="relative z-10 px-8 py-4 bg-rose-500 text-white rounded-2xl font-black shadow-xl shadow-rose-200"
-        >
-          {t('login.back')} / Re-login
-        </button>
+      <div
+        className="w-full h-full overflow-hidden rounded-[2rem]"
+        onClick={() => {
+          if (isEditing) return
+          const routes: Record<string, string> = {
+            NOTES: '/notes', SHOP: '/shop',
+            TASKS: '/tasks', JOURNAL: '/journal', PHOTOS: '/gallery',
+          }
+          if (routes[w.type]) router.push(routes[w.type])
+        }}
+      >
+        {inner}
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-slate-50">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-dvh flex flex-col relative text-[#4a3728]">
+    <div className="h-dvh w-full flex flex-col relative overflow-hidden bg-[#fafaf9]">
+      {console.log("[Home] Rendering. stageW:", stageW, "effectiveW:", (stageW > 100 ? stageW : (typeof window !== 'undefined' ? window.innerWidth : 1200)), "widgets:", widgets.length)}
       <NatureBackground />
 
-      {/* Header */}
-      <header className="relative z-10 flex justify-between items-center p-4 md:p-6 md:px-12 backdrop-blur-md bg-white/40 border-b border-[#4a3728]/10 shrink-0">
-        <div className="flex items-center gap-4">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center -ml-2"
-          >
-            <img src="/dog.svg" alt="DoDoo Logo" className="w-full h-full object-contain" />
-          </motion.div>
+      {/* ─── Header ─── */}
+      <header className="relative z-[100] flex shrink-0 justify-between items-center h-[60px] px-6 backdrop-blur-xl bg-white/30 border-b border-black/5">
+        <div className="flex items-center gap-2.5">
+          <motion.img
+            whileHover={{ rotate: 15 }}
+            src="/dog.svg"
+            alt="Logo"
+            className="w-8 h-8 object-contain cursor-pointer"
+            onClick={() => router.push('/')}
+          />
           <div>
-            <span className="font-black text-xl md:text-2xl tracking-tight text-[#2c2416] block leading-none">
-              {sysSettings?.systemName || t('site.title')}
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#4a3728]/40 mt-1 block leading-none">Family & Growth</span>
+            <p className="font-black text-[15px] tracking-tight text-[#1c1917] leading-none uppercase">
+              {sysSettings?.systemName || 'DoDoo Family'}
+            </p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#4a3728]/40 mt-0.5">
+              Dashboard
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => stats?.isParent ? router.push('/parent') : router.push('/settings')}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/60 hover:bg-white/90 border border-white/80 transition-all shadow-sm text-[#2c2416] active:scale-95"
+          {/* Bento Edit Toggle */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsEditing(v => !v)}
+            className={clsx(
+              'p-2 rounded-xl border-2 flex items-center justify-center transition-all',
+              isEditing
+                ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200'
+                : 'bg-white/80 border-white/60 text-slate-500 shadow-sm'
+            )}
+            title="Edit Layout"
+          >
+            {isEditing ? <Check className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
+          </motion.button>
+
+          {/* Settings Entry (Gear) */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => router.push('/settings')}
+            className="p-2 rounded-xl bg-white/80 border-white/60 text-slate-500 shadow-sm border-2 flex items-center justify-center transition-all"
+            title="Settings"
           >
             <Settings className="w-5 h-5" />
-          </button>
+          </motion.button>
+
+          {/* Lang toggle */}
           <button
-            onClick={toggleLanguage}
-            className="flex items-center justify-center min-w-[3.5rem] px-4 py-2 rounded-full bg-[#4a3728]/8 hover:bg-[#4a3728]/15 border border-[#4a3728]/15 transition-all text-xs font-black text-[#2c2416] active:scale-95"
+            onClick={() => setLocale(locale === 'en' ? 'zh-CN' : 'en')}
+            className="px-3 py-1.5 text-[10px] font-black rounded-xl bg-white/60 border border-black/5 text-[#2c2416] shadow-sm active:scale-95 transition-all h-9"
           >
             {locale === 'en' ? '中' : 'EN'}
           </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-12 p-4 md:p-8 lg:p-12 pb-12 items-center lg:items-center">
+      {/* ─── Bento Stage ─── */}
+      <main ref={stageRef} className="relative flex-1 z-10 overflow-x-hidden overflow-y-auto w-full h-full pb-32">
+        {/* Scrollable grid content area */}
+        {cellW > 10 && (
+          <div
+            className="relative mx-auto"
+            style={{
+              width: gridCols * cellW + (gridCols - 1) * GAP,
+              height: toTop(Math.max(6, (Array.isArray(widgets) ? widgets : []).reduce((max, w) => {
+                const s = SIZE_MAP[w.size as WidgetSize] || SIZE_MAP.ICON
+                return Math.max(max, (w.y || 0) + s.h)
+              }, 4))) + PAD * 2,
+              minHeight: '100%',
+              paddingTop: PAD,
+              paddingBottom: PAD,
+            }}
+          >
+            {/* 1. Unified Ghost Lines */}
+            {isEditing && (
+              <div className="absolute inset-0 pointer-events-none" style={{ top: PAD }}>
+                {Array.from({ length: gridCols * 12 }).map((_, i) => {
+                  const x = i % gridCols
+                  const y = Math.floor(i / gridCols)
+                  return (
+                    <div
+                      key={`ghost-${i}`}
+                      className="absolute border-2 border-indigo-500/5 rounded-[2.5rem]"
+                      style={{
+                        left: toLeft(x),
+                        top: toTop(y),
+                        width: cellW,
+                        height: cellH
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            )}
 
-        {/* Left Side: Display - Interaction Refined */}
-        <div className="flex-1 w-full flex flex-col justify-center items-center py-8 lg:py-0">
-          <div className="relative h-64 sm:h-80 lg:h-[32rem] w-full flex items-center justify-center perspective-2000">
-            {artworks.map((art, index) => {
-              const isTop = index === artworks.length - 1
-              return (
+            {/* 2. Drag Preview (Ghost Slot) */}
+            <AnimatePresence>
+              {isEditing && dragPreview && activeId && (
                 <motion.div
-                  key={art.id}
-                  layoutId={`artwork-${art.id}`}
-                  initial={false}
+                  initial={{ opacity: 0, scale: 0.8 }}
                   animate={{
-                    rotate: art.rotate,
-                    x: art.x,
-                    y: art.y,
-                    zIndex: index,
-                    scale: isTop ? 1.05 : 1,
+                    opacity: 1,
+                    scale: 1,
+                    left: toLeft(dragPreview.x),
+                    top: toTop(dragPreview.y) + PAD,
                   }}
-                  whileHover={{
-                    y: art.y - 10,
-                    scale: isTop ? 1.08 : 1.02,
-                    rotate: isTop ? 0 : art.rotate,
-                    transition: { duration: 0.2 }
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute border-2 border-dashed border-indigo-400/40 bg-indigo-500/5 rounded-[2.5rem] z-0"
+                  style={{
+                    width: dragPreview.w * cellW + (dragPreview.w - 1) * GAP,
+                    height: dragPreview.h * cellH + (dragPreview.h - 1) * GAP,
                   }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => cycleArtwork(art.id)}
-                  className={`absolute w-44 h-56 sm:w-56 sm:h-72 lg:w-72 lg:h-96 ${art.bg} rounded-xl p-4 shadow-2xl border-8 border-white overflow-hidden cursor-pointer select-none`}
-                >
-                  <div className="w-full h-full rounded-lg bg-white/40 overflow-hidden flex items-center justify-center border border-white/20 pointer-events-none">
-                    <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
-                  </div>
+                />
+              )}
+            </AnimatePresence>
 
-                  {isTop && (
-                    <div className="absolute bottom-6 right-6 p-2 bg-white/80 backdrop-blur-md rounded-xl shadow-lg text-[#4a3728]/40">
-                      <Maximize2 className="w-4 h-4" />
+            {/* Widgets content */}
+            {widgets.length > 0 ? (
+              widgets.map(w => {
+                // Compatibility Fallback: Map legacy names if they still exist in DB
+                const legacyMap: Record<string, WidgetSize> = {
+                  'SMALL': 'ICON', 'MEDIUM': 'SQUARE', 'LARGE': 'WIDE', 'XL': 'GIANT'
+                }
+                const currentSize = (legacyMap[w.size] || w.size) as WidgetSize
+                const sizeConfig = SIZE_MAP[currentSize] || SIZE_MAP.ICON
+
+                const { w: spanW, h: spanH } = sizeConfig
+                const pixelW = spanW * cellW + (spanW - 1) * GAP
+                const pixelH = spanH * cellH + (spanH - 1) * GAP
+                const pixelL = toLeft(w.x)
+                const pixelT = toTop(w.y)
+
+                return (
+                  <motion.div
+                    key={w.id}
+                    layout
+                    drag={isEditing}
+                    dragMomentum={false}
+                    dragElastic={1}
+                    // Crucial: Use dragConstraints 0 to simulate the "anchor" effect from the example
+                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                    animate={{
+                      scale: isEditing ? (activeId === w.id ? 1.05 : 0.98) : 1,
+                      zIndex: activeId === w.id ? 100 : (isEditing ? 50 : 10),
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 700,
+                      damping: 38
+                    }}
+                    onPointerDown={(e) => {
+                      if (isEditing) {
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        setGrabOffset({
+                          x: e.clientX - rect.left,
+                          y: e.clientY - rect.top
+                        })
+                        setActiveId(w.id)
+                      }
+                    }}
+                    whileDrag={{
+                      scale: 1.1,
+                      zIndex: 200,
+                      boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.5)"
+                    }}
+                    onDragStart={() => setActiveId(w.id)}
+                    onDrag={(_, info) => {
+                      if (!stageRef.current) return
+                      const rect = stageRef.current.querySelector('.relative.mx-auto')?.getBoundingClientRect()
+                      if (!rect) return
+
+                      // Calculate position relative to the centered grid area
+                      const currentX = info.point.x - rect.left - grabOffset.x
+                      const currentY = info.point.y - rect.top - PAD - grabOffset.y
+
+                      const nx = Math.max(0, Math.min(gridCols - spanW, Math.round(currentX / (cellW + GAP))))
+                      const ny = Math.max(0, Math.round(currentY / (cellH + GAP)))
+
+                      if (!dragPreview || dragPreview.x !== nx || dragPreview.y !== ny) {
+                        setDragPreview({ x: nx, y: ny, w: spanW, h: spanH })
+                      }
+                    }}
+                    onDragEnd={(_, info) => {
+                      if (!isEditing || !stageRef.current) return
+                      const rect = stageRef.current.querySelector('.relative.mx-auto')?.getBoundingClientRect()
+                      if (!rect) return
+
+                      const currentX = info.point.x - rect.left - grabOffset.x
+                      const currentY = info.point.y - rect.top - PAD - grabOffset.y
+
+                      const nx = Math.max(0, Math.min(gridCols - spanW, Math.round(currentX / (cellW + GAP))))
+                      const ny = Math.max(0, Math.round(currentY / (cellH + GAP)))
+
+                      const moved = { ...w, x: nx, y: ny }
+                      const next = resolveOverlap(moved, widgets)
+
+                      setWidgets([...next])
+                      saveWidgets(next)
+                      setActiveId(null)
+                      setDragPreview(null)
+                    }}
+                    className="absolute"
+                    style={{
+                      width: pixelW,
+                      height: pixelH,
+                      left: pixelL,
+                      top: pixelT + PAD,
+                      touchAction: 'none'
+                    }}
+                  >
+                    <div className="relative w-full h-full select-none group">
+                      {renderWidgetContent(w)}
+                      <AnimatePresence>
+                        {isEditing && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className={clsx(
+                              "absolute inset-0 rounded-[2rem] border-[3px] z-20 transition-colors",
+                              activeId === w.id ? "border-indigo-500 bg-indigo-500/[0.05]" : "border-indigo-500/20 bg-transparent"
+                            )}
+                          >
+                            <div className="absolute top-2 right-2 flex flex-col gap-1.5" onPointerDown={e => e.stopPropagation()}>
+                              <div className="relative">
+                                <button
+                                  onClick={() => setSizeMenuId(sizeMenuId === w.id ? null : w.id)}
+                                  className={clsx(
+                                    "p-2 rounded-xl bg-white shadow-xl border transition-all",
+                                    sizeMenuId === w.id ? "text-indigo-600 border-indigo-200" : "text-slate-400 border-slate-100 hover:text-indigo-600"
+                                  )}
+                                  title="Change Size"
+                                >
+                                  <Maximize2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <AnimatePresence>
+                                  {sizeMenuId === w.id && (
+                                    <motion.div
+                                      initial={{ opacity: 0, x: 10, scale: 0.9 }}
+                                      animate={{ opacity: 1, x: 0, scale: 1 }}
+                                      exit={{ opacity: 0, x: 10, scale: 0.9 }}
+                                      className="absolute right-full mr-3 top-0 bg-white/90 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl border border-white p-2 flex gap-1 z-[300] min-w-max"
+                                    >
+                                      {(gridCols === 8 ? ['ICON', 'SQUARE', 'WIDE', 'TALL', 'GIANT'] : ['ICON', 'SQUARE', 'WIDE', 'TALL'])
+                                        .map((s) => {
+                                          const config = SIZE_MAP[s as WidgetSize]
+                                          return (
+                                            <button
+                                              key={s}
+                                              onClick={() => updateWidgetSize(w.id, s as WidgetSize)}
+                                              className={clsx(
+                                                "px-3 py-2 rounded-xl flex flex-col items-center gap-1.5 transition-all",
+                                                w.size === s ? "bg-indigo-50 text-indigo-600" : "hover:bg-slate-50 text-slate-400 hover:text-slate-600"
+                                              )}
+                                            >
+                                              <div className="flex flex-wrap gap-0.5" style={{ width: 14, height: 14 }}>
+                                                {Array.from({ length: config.w * config.h }).slice(0, 4).map((_, i) => (
+                                                  <div key={i} className={clsx("w-1.5 h-1.5 rounded-[1px]", w.size === s ? "bg-indigo-400" : "bg-slate-300")} />
+                                                ))}
+                                              </div>
+                                              <span className="text-[8px] font-black">{SIZE_LABELS[s as WidgetSize]}</span>
+                                            </button>
+                                          )
+                                        })}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+
+                              <button
+                                onClick={e => { e.stopPropagation(); removeWidget(w.id) }}
+                                className="p-2 rounded-xl bg-white text-rose-400 shadow-xl border border-rose-50 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                title="Remove"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  )}
-                </motion.div>
-              )
-            })}
+                  </motion.div>
+                )
+              })
+            ) : (
+              <div className="flex items-center justify-center h-[400px] text-slate-400 font-medium w-full">
+                {loading ? "Initializing..." : "No widgets. Click Reset to fix."}
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Right Side: Menu List */}
-        <div className="w-full lg:w-[24rem] flex items-center justify-center lg:justify-end shrink-0 pb-12 lg:pb-0">
-          <div className="flex flex-col w-full max-w-md lg:max-w-none space-y-3">
-            {menuItems.map((item, idx) => (
-              <motion.button
-                key={item.title}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                onMouseEnter={() => setHoveredIdx(idx)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                onClick={() => router.push(item.href)}
-                className={`relative group flex items-center justify-between p-3 md:p-4 transition-all duration-200 rounded-lg w-full text-left overflow-hidden ${item.bg} ${item.shadow} shadow-lg hover:shadow-xl hover:brightness-110 active:scale-[0.98]`}
-              >
-                {/* Bottom sweep highlight bar */}
-                <AnimatePresence>
-                  {hoveredIdx === idx && (
-                    <motion.div
-                      key="sweep"
-                      className="absolute bottom-0 left-0 h-[3px] w-full origin-left"
-                      style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.9) 50%, rgba(255,255,255,0.4) 100%)' }}
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{ scaleX: 1, opacity: 1 }}
-                      exit={{ scaleX: 0, opacity: 0 }}
-                      transition={{ duration: 0.35, ease: 'easeOut' }}
-                    />
-                  )}
-                </AnimatePresence>
-
-                {/* Subtle inner glow on hover */}
-                <AnimatePresence>
-                  {hoveredIdx === idx && (
-                    <motion.div
-                      key="glow"
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 60%)' }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  )}
-                </AnimatePresence>
-
-                <div className="flex items-center gap-4 relative z-10 transition-transform group-hover:translate-x-1 duration-200">
-                  <div className={`w-10 h-10 rounded-md ${item.iconBg} flex items-center justify-center shadow-sm`}>
-                    <item.icon className="w-5 h-5 text-white/90" />
-                  </div>
-                  <span className="font-black text-lg md:text-xl text-white tracking-tight drop-shadow-sm">{item.title}</span>
-                </div>
-
-                <ChevronRight className={`w-5 h-5 text-white/70 relative z-10 transition-all duration-200 ${hoveredIdx === idx ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} />
-              </motion.button>
-            ))}
-          </div>
-        </div>
+        )}
       </main>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
-        <FamilyNoteBoard />
-      </div>
-
-      {/* LIGHTBOX ZOOM MODAL */}
       <AnimatePresence>
-        {zoomedArt && (
+        {isEditing && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setZoomedArt(null)}
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 md:p-12 cursor-zoom-out"
+            initial={{ y: 120 }}
+            animate={{ y: 0 }}
+            exit={{ y: 120 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-white/80 backdrop-blur-2xl px-6 py-4 rounded-[2.5rem] border-2 border-white shadow-2xl"
           >
-            <button className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors z-[110]">
-              <X className="w-6 h-6" />
-            </button>
-            <motion.div
-              layoutId={`artwork-${zoomedArt.id}`}
-              className={`relative max-w-full max-h-full aspect-[3/4] ${zoomedArt.bg} rounded-xl p-4 md:p-6 shadow-2xl border-4 md:border-8 border-white overflow-hidden flex items-center justify-center`}
-              style={{
-                height: 'auto',
-                width: 'auto',
-                maxHeight: '90vh',
-                maxWidth: '90vw'
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            {['TASKS', 'NOTES', 'JOURNAL', 'PHOTOS', 'SHOP'].map(type => {
+              const isAdded = widgets.some(w => w.type === type)
+              return (
+                <button
+                  key={type}
+                  disabled={isAdded}
+                  onClick={() => addWidget(type)}
+                  className={clsx(
+                    "px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border",
+                    isAdded
+                      ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50"
+                      : "bg-slate-100/80 hover:bg-white hover:text-indigo-600 border-transparent hover:border-indigo-100"
+                  )}
+                >
+                  {isAdded ? '✓ ' : '+ '} {type}
+                </button>
+              )
+            })}
+            <div className="w-[1px] h-6 bg-slate-200 mx-1" />
+            <button
+              onClick={async () => {
+                if (!confirm('Reset layout to defaults?')) return
+                await Promise.all(widgets.map(w =>
+                  fetch(`/api/home-widgets?id=${w.id}`, { method: 'DELETE' })
+                ))
+                window.location.reload()
               }}
+              className="px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all"
             >
-              <div className="w-full h-full rounded-2xl bg-white/40 overflow-hidden flex items-center justify-center border border-white/20">
-                <img src={zoomedArt.image} alt={zoomedArt.title} className="max-w-full max-h-full object-contain pointer-events-none" />
-              </div>
-            </motion.div>
+              Reset All
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className="px-6 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all flex items-center gap-2"
+            >
+              <Check className="w-3.5 h-3.5" />
+              Save
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
+      <style jsx global>{`
+        html, body { overflow: hidden; height: 100%; }
+        /* Prevent elastic scroll on mobile so drag works better */
+        body { overscroll-behavior-y: none; }
+      `}</style>
     </div>
   )
 }
