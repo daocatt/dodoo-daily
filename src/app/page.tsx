@@ -85,25 +85,28 @@ export default function Home() {
 
   // Recalculate cell size and center the grid area
   const dimensions = React.useMemo(() => {
-    // Determine column count based on width
-    const currentCols = stageW >= 1024 ? 8 : 4
+    const isLargeScreen = stageW >= 1024
+    const currentCols = isLargeScreen ? 8 : 4
+    const currentMaxRows = isLargeScreen ? 4 : 6
 
-    // Calculate cell width to fit exactly in stage width (minus paddings)
     const availableWidth = stageW - PAD * 2
     let cw = (availableWidth - (currentCols - 1) * GAP) / currentCols
 
     // CAP CELL SIZE: Prevent widgets from being gigantic on super-wide screens
-    // Max 180px for 8 columns = ~1500px total grid width
-    const maxCw = currentCols === 8 ? 180 : 300
+    const maxCw = currentCols === 8 ? 160 : 250
     if (cw > maxCw) cw = maxCw
 
-    // ENFORCE SQUARE: cellH = cellW
-    const ch = cw
+    const safePaddingBottom = 120
+    const availableHeight = stageH - PAD - safePaddingBottom
+    const ch = (availableHeight - (currentMaxRows - 1) * GAP) / currentMaxRows
 
-    return { cellW: cw, cellH: ch, gridCols: currentCols }
-  }, [stageW])
+    let finalCellSize = Math.min(cw, ch)
+    if (finalCellSize < 50) finalCellSize = 50
 
-  const { cellW, cellH, gridCols } = dimensions
+    return { cellW: finalCellSize, cellH: finalCellSize, gridCols: currentCols, maxRows: currentMaxRows }
+  }, [stageW, stageH])
+
+  const { cellW, cellH, gridCols, maxRows } = dimensions
 
   const pageCount = React.useMemo(() => {
     if (isEditing) return 2
@@ -112,16 +115,20 @@ export default function Home() {
   }, [widgets, gridCols, isEditing])
 
   const gridWidth = gridCols * cellW + (gridCols - 1) * GAP
-  const pageOffsetX = (stageW - gridWidth) / 2
+  const gridHeight = maxRows * cellH + (maxRows - 1) * GAP
+
+  const pageOffsetX = Math.max(0, (stageW - gridWidth) / 2)
+  const safePaddingBottom = 80 // slightly less than 120 because dots are floating
+  const availableH = stageH - PAD - safePaddingBottom
+  const pageOffsetY = Math.max(0, (availableH - gridHeight) / 2)
 
   // Global Grid-to-Pixel Mapper
-  // centers the grid within each page
   const toLeft = (x: number) => {
     const pageIndex = Math.floor(x / gridCols)
     const xInPage = x % gridCols
     return (pageIndex * stageW) + pageOffsetX + (xInPage * (cellW + GAP))
   }
-  const toTop = (y: number) => y * (cellH + GAP)
+  const toTop = (y: number) => pageOffsetY + y * (cellH + GAP)
 
   // Track grab offset to ensure perfect snapping
   const [grabOffset, setGrabOffset] = useState({ x: 0, y: 0 })
@@ -200,7 +207,12 @@ export default function Home() {
   }
 
   const resolveOverlap = (moved: Widget, all: Widget[]): Widget[] => {
-    // 1. Start with the moved widget as priority
+    // 1. Initial constraint check on moved widget
+    const movedSize = SIZE_MAP[moved.size] || SIZE_MAP.ICON
+    if (moved.y > maxRows - movedSize.h) {
+      moved.y = 0;
+      moved.x = Math.max(moved.x, gridCols * (Math.floor(moved.x / gridCols) + 1));
+    }
     const placed: Widget[] = [moved]
 
     // 2. Sort others by position (top-to-bottom, left-to-right) for consistent reflow
@@ -211,52 +223,64 @@ export default function Home() {
     // Helper for collision check
     const isPosOccupied = (x: number, y: number, sw: number, sh: number, currentPlaced: Widget[]) => {
       return currentPlaced.some(p => {
-        const pSize = SIZE_MAP[p.size as WidgetSize] || SIZE_MAP.ICON
+        const pSize = SIZE_MAP[p.size] || SIZE_MAP.ICON
         return x < p.x + pSize.w && x + sw > p.x && y < p.y + pSize.h && y + sh > p.y
       })
     }
 
     // 3. Process each widget
     for (const other of others) {
-      const s = SIZE_MAP[other.size as WidgetSize] || SIZE_MAP.ICON
+      const s = SIZE_MAP[other.size] || SIZE_MAP.ICON
+
+      let startX = other.x;
+      let startY = other.y;
+
+      // Keep inside vertical bounds
+      if (startY + s.h > maxRows) {
+        startY = 0;
+        startX = Math.max(startX, gridCols * (Math.floor(startX / gridCols) + 1));
+      }
 
       // Try to keep it at its original position first (STABILITY)
-      if (!isPosOccupied(other.x, other.y, s.w, s.h, placed)) {
+      if (startX === other.x && startY === other.y && !isPosOccupied(other.x, other.y, s.w, s.h, placed)) {
         placed.push(other)
         continue
       }
 
-      // If occupied, find the nearest available slot (REFLOW)
       let found = false
-      for (let ty = other.y; !found; ty++) {
-        // Search path:
-        // On the same row: try right side first, then left side
-        // On subsequent rows: standard left-to-right
-        const xSearchOrder: number[] = []
-        if (ty === other.y) {
-          for (let tx = other.x + 1; tx <= gridCols - s.w; tx++) xSearchOrder.push(tx)
-          for (let tx = 0; tx < other.x; tx++) xSearchOrder.push(tx)
-        } else {
-          for (let tx = 0; tx <= gridCols - s.w; tx++) xSearchOrder.push(tx)
-        }
+      outerLoop:
+      for (let page = Math.floor(startX / gridCols); page < 20; page++) {
+        const baseTx = page * gridCols;
+        const startYInPage = (page === Math.floor(startX / gridCols)) ? startY : 0;
 
-        for (const tx of xSearchOrder) {
-          if (!isPosOccupied(tx, ty, s.w, s.h, placed)) {
-            placed.push({ ...other, x: tx, y: ty })
-            found = true
-            break
+        for (let ty = startYInPage; ty <= maxRows - s.h; ty++) {
+          const startXInPage = (page === Math.floor(startX / gridCols) && ty === startY) ? (startX % gridCols) : 0;
+          for (let xOff = startXInPage; xOff <= gridCols - s.w; xOff++) {
+            const tx = baseTx + xOff;
+            if (!isPosOccupied(tx, ty, s.w, s.h, placed)) {
+              placed.push({ ...other, x: tx, y: ty })
+              found = true
+              break outerLoop;
+            }
           }
         }
 
-        if (ty > other.y + 30) break // Safety break
+        if (startYInPage > 0) {
+          for (let ty = 0; ty < startYInPage; ty++) {
+            for (let xOff = 0; xOff <= gridCols - s.w; xOff++) {
+              const tx = baseTx + xOff;
+              if (!isPosOccupied(tx, ty, s.w, s.h, placed)) {
+                placed.push({ ...other, x: tx, y: ty })
+                found = true
+                break outerLoop;
+              }
+            }
+          }
+        }
       }
 
-      // Absolute fallback if no space found (should not happen with dynamic height)
-      if (!found) {
-        let ty = other.y + 1
-        while (isPosOccupied(0, ty, s.w, s.h, placed)) ty++
-        placed.push({ ...other, x: 0, y: ty })
-      }
+      // Absolute fallback if no space found (should just place to edge safely)
+      if (!found) placed.push({ ...other, x: 0, y: 0 })
     }
 
     return placed
@@ -298,14 +322,24 @@ export default function Home() {
         })
       }
 
-      // Find an empty slot
-      let ny = 0
-      while (isPosOccupied(0, ny, 2, 2, widgets)) ny++
+      // Find an empty slot horizontally across pages
+      let foundSlot = false;
+      let nx = 0;
+      let ny = 0;
+      for (let page = 0; page < 10 && !foundSlot; page++) {
+        for (let ty = 0; ty <= maxRows - 2 && !foundSlot; ty++) {
+          for (let tx = page * gridCols; tx <= page * gridCols + gridCols - 2 && !foundSlot; tx++) {
+            if (!isPosOccupied(tx, ty, 2, 2, widgets)) {
+              nx = tx; ny = ty; foundSlot = true;
+            }
+          }
+        }
+      }
 
       const res = await fetch('/api/home-widgets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, x: 0, y: ny, size: 'SQUARE' })
+        body: JSON.stringify({ type, x: nx, y: ny, size: 'SQUARE' })
       })
 
       if (res.ok) {
@@ -492,8 +526,8 @@ export default function Home() {
           if (page !== currentPage) setCurrentPage(page)
         }}
         className={clsx(
-          "relative flex-1 z-10 w-full h-full overflow-y-auto no-scrollbar scroll-smooth", // Base container
-          !isEditing ? "snap-x snap-mandatory overflow-x-auto hide-scrollbar" : "overflow-x-auto overflow-y-auto custom-scrollbar"
+          "relative flex-1 z-10 w-full h-full overflow-y-hidden no-scrollbar scroll-smooth", // Base container
+          !isEditing ? "snap-x snap-mandatory overflow-x-auto hide-scrollbar" : "overflow-x-auto overflow-y-hidden custom-scrollbar"
         )}
       >
         {/* Scrollable grid content area */}
@@ -524,7 +558,7 @@ export default function Home() {
             {/* 1. Unified Ghost Lines */}
             {isEditing && (
               <div className="absolute inset-0 pointer-events-none" style={{ top: PAD }}>
-                {Array.from({ length: (gridCols * pageCount) * 12 }).map((_, i) => {
+                {Array.from({ length: (gridCols * pageCount) * maxRows }).map((_, i) => {
                   const x = i % (gridCols * pageCount)
                   const y = Math.floor(i / (gridCols * pageCount))
                   return (
@@ -622,10 +656,10 @@ export default function Home() {
                       if (!rect) return
 
                       const currentX = info.point.x - rect.left - grabOffset.x
-                      const currentY = info.point.y - rect.top - PAD - grabOffset.y
+                      const currentY = info.point.y - rect.top - PAD - grabOffset.y - pageOffsetY
 
                       const nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, Math.round(currentX / (cellW + GAP))))
-                      const ny = Math.max(0, Math.round(currentY / (cellH + GAP)))
+                      const ny = Math.max(0, Math.min(maxRows - spanH, Math.round(currentY / (cellH + GAP))))
 
                       if (!dragPreview || dragPreview.x !== nx || dragPreview.y !== ny) {
                         setDragPreview({ x: nx, y: ny, w: spanW, h: spanH })
@@ -637,10 +671,10 @@ export default function Home() {
                       if (!rect) return
 
                       const currentX = info.point.x - rect.left - grabOffset.x
-                      const currentY = info.point.y - rect.top - PAD - grabOffset.y
+                      const currentY = info.point.y - rect.top - PAD - grabOffset.y - pageOffsetY
 
                       const nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, Math.round(currentX / (cellW + GAP))))
-                      const ny = Math.max(0, Math.round(currentY / (cellH + GAP)))
+                      const ny = Math.max(0, Math.min(maxRows - spanH, Math.round(currentY / (cellH + GAP))))
 
                       const moved = { ...w, x: nx, y: ny }
                       const next = resolveOverlap(moved, widgets)
