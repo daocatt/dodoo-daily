@@ -1,3 +1,7 @@
+/**
+ * DoDoo Daily Database Schema
+ * Version: 1.0.0 (Initial Release)
+ */
 import { sql } from "drizzle-orm";
 import { text, integer, sqliteTable, real } from "drizzle-orm/sqlite-core";
 

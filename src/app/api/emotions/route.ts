@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         }).returning()
 
         // Give penalty
-        let stats = await db.select().from(accountStats).where(eq(accountStats.userId, childId))
+        const stats = await db.select().from(accountStats).where(eq(accountStats.userId, childId))
         if (stats.length === 0) {
             await db.insert(accountStats).values({
                 userId: childId,

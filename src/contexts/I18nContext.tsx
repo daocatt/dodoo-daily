@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 
 type Locale = 'en' | 'zh-CN'
 
@@ -597,19 +597,19 @@ interface I18nContextProps {
 const I18nContext = createContext<I18nContextProps | undefined>(undefined)
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-    const [locale, setLocale] = useState<Locale>('en')
-
-    useEffect(() => {
-        const saved = localStorage.getItem('dodoo-locale') as Locale
-        if (saved && ['en', 'zh-CN'].includes(saved)) {
-            setLocale(saved)
-        } else {
+    const [locale, setLocale] = useState<Locale>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('dodoo-locale') as Locale
+            if (saved && ['en', 'zh-CN'].includes(saved)) {
+                return saved
+            }
             const browserLang = navigator.language
-            if (browserLang.toLowerCase().includes('zh')) {
-                setLocale('zh-CN')
+            if (browserLang && browserLang.toLowerCase().includes('zh')) {
+                return 'zh-CN'
             }
         }
-    }, [])
+        return 'en'
+    })
 
     const handleSetLocale = (newLocale: Locale) => {
         setLocale(newLocale)

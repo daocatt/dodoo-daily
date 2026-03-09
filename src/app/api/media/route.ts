@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
         const type = searchParams.get('type');
         const search = searchParams.get('search');
 
-        let conditions = [];
+        const conditions = [];
         if (type && type !== 'ALL') {
             conditions.push(eq(mediaTable.fileType, type));
         }
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
         const results = await query.all();
         return NextResponse.json(results);
-    } catch (error: any) {
+    } catch (error) {
         console.error('List media failed:', error);
         return NextResponse.json({ error: 'Failed to list media' }, { status: 500 });
     }

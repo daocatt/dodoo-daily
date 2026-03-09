@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { assignedTask, users } from '@/lib/schema'
-import { desc, eq, and, or, sql } from 'drizzle-orm'
+import { assignedTask } from '@/lib/schema'
+import { desc, eq, and, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 async function getCurrentUser() {
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         })
             .from(assignedTask)
 
-        let filters = [];
+        const filters = [];
         if (role === 'PARENT') {
             if (targetUserId) {
                 filters.push(eq(assignedTask.assigneeId, targetUserId));
@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
         const tasks = await query.where(and(...filters)).orderBy(desc(assignedTask.createdAt));
 
         return NextResponse.json(tasks)
-    } catch (error: any) {
-        console.error('Failed to fetch assigned tasks:', error.message)
+    } catch (error) {
+        console.error('Failed to fetch assigned tasks:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

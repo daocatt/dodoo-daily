@@ -1,1 +1,0 @@
-ALTER TABLE `Artwork` ADD `isPublic` integer DEFAULT false NOT NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE `Task` ADD `completedById` text REFERENCES Users(id);

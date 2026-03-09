@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { task, accountStats, accountStatsLog } from '@/lib/schema'
+import { task } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
@@ -12,10 +12,6 @@ async function getCurrentUser() {
     return { id, role }
 }
 
-async function checkParent() {
-    const { role } = await getCurrentUser()
-    return role === 'PARENT'
-}
 
 export async function PUT(
     req: NextRequest,
@@ -35,7 +31,7 @@ export async function PUT(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        let updateData: any = {}
+        const updateData: Record<string, unknown> = {}
 
         if (completed !== undefined) {
             updateData.completed = completed
@@ -75,7 +71,8 @@ export async function DELETE(
 
         await db.delete(task).where(eq(task.id, id))
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (error) {
+        console.error('Failed to delete personal task:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

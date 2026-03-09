@@ -1,1 +1,0 @@
-ALTER TABLE `Task` ADD `creatorId` text REFERENCES Users(id);

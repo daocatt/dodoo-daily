@@ -28,7 +28,7 @@ export async function PUT(
         const { id: currentUserId, role } = await getCurrentUser()
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-        let updateData: any = {}
+        const updateData: Record<string, unknown> = {}
 
         // Completion logic
         if (completed !== undefined) {
@@ -94,7 +94,8 @@ export async function DELETE(
 
         await db.delete(assignedTask).where(eq(assignedTask.id, id))
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (error) {
+        console.error('Failed to delete assigned task:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

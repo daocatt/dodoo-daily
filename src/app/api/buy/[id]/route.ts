@@ -53,7 +53,7 @@ export async function POST(
 
         // 4. Update Account Stats for the SPECIFIC user who created the art
         if (art.userId) {
-            let stats = await db.select().from(accountStats).where(eq(accountStats.userId, art.userId))
+            const stats = await db.select().from(accountStats).where(eq(accountStats.userId, art.userId))
             const earnings = art.priceCoins || Math.floor(art.priceRMB * 10)
 
             if (stats.length === 0) {
