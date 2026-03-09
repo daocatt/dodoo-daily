@@ -118,9 +118,7 @@ export default function Home() {
   const gridHeight = maxRows * cellH + (maxRows - 1) * GAP
 
   const pageOffsetX = Math.max(0, (stageW - gridWidth) / 2)
-  const safePaddingBottom = 80 // slightly less than 120 because dots are floating
-  const availableH = stageH - PAD - safePaddingBottom
-  const pageOffsetY = Math.max(0, (availableH - gridHeight) / 2)
+  const pageOffsetY = Math.max(0, (stageH - gridHeight) / 2)
 
   // Global Grid-to-Pixel Mapper
   const toLeft = (x: number) => {
@@ -537,10 +535,8 @@ export default function Home() {
             className="relative transition-all duration-700 ease-in-out"
             style={{
               width: pageCount * stageW, // Exact Page-based width
-              height: isEditing ? 'auto' : '100%',
+              height: '100%',
               minHeight: '100%',
-              paddingTop: PAD,
-              paddingBottom: PAD + 120, // More bottom padding for dots/footer
             }}
           >
             {/* 0. Multiple-Screen Snap Markers & Page Visualizers */}
@@ -557,7 +553,7 @@ export default function Home() {
             )}
             {/* 1. Unified Ghost Lines */}
             {isEditing && (
-              <div className="absolute inset-0 pointer-events-none" style={{ top: PAD }}>
+              <div className="absolute inset-0 pointer-events-none">
                 {Array.from({ length: (gridCols * pageCount) * maxRows }).map((_, i) => {
                   const x = i % (gridCols * pageCount)
                   const y = Math.floor(i / (gridCols * pageCount))
@@ -655,11 +651,19 @@ export default function Home() {
                       const rect = stageRef.current.querySelector('#grid-stage')?.getBoundingClientRect()
                       if (!rect) return
 
-                      const currentX = info.point.x - rect.left - grabOffset.x
-                      const currentY = info.point.y - rect.top - PAD - grabOffset.y - pageOffsetY
+                      const absoluteX = info.point.x - rect.left - grabOffset.x
+                      const absoluteY = info.point.y - rect.top - grabOffset.y
 
-                      const nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, Math.round(currentX / (cellW + GAP))))
-                      const ny = Math.max(0, Math.min(maxRows - spanH, Math.round(currentY / (cellH + GAP))))
+                      const pageIdx = Math.max(0, Math.floor(absoluteX / stageW))
+                      const xWithinPage = absoluteX - (pageIdx * stageW) - pageOffsetX
+                      const nxInPage = Math.round(xWithinPage / (cellW + GAP))
+                      let nx = (pageIdx * gridCols) + nxInPage
+
+                      const yWithinPage = absoluteY - pageOffsetY
+                      let ny = Math.round(yWithinPage / (cellH + GAP))
+
+                      nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, nx))
+                      ny = Math.max(0, Math.min(maxRows - spanH, ny))
 
                       if (!dragPreview || dragPreview.x !== nx || dragPreview.y !== ny) {
                         setDragPreview({ x: nx, y: ny, w: spanW, h: spanH })
@@ -670,11 +674,19 @@ export default function Home() {
                       const rect = stageRef.current.querySelector('#grid-stage')?.getBoundingClientRect()
                       if (!rect) return
 
-                      const currentX = info.point.x - rect.left - grabOffset.x
-                      const currentY = info.point.y - rect.top - PAD - grabOffset.y - pageOffsetY
+                      const absoluteX = info.point.x - rect.left - grabOffset.x
+                      const absoluteY = info.point.y - rect.top - grabOffset.y
 
-                      const nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, Math.round(currentX / (cellW + GAP))))
-                      const ny = Math.max(0, Math.min(maxRows - spanH, Math.round(currentY / (cellH + GAP))))
+                      const pageIdx = Math.max(0, Math.floor(absoluteX / stageW))
+                      const xWithinPage = absoluteX - (pageIdx * stageW) - pageOffsetX
+                      const nxInPage = Math.round(xWithinPage / (cellW + GAP))
+                      let nx = (pageIdx * gridCols) + nxInPage
+
+                      const yWithinPage = absoluteY - pageOffsetY
+                      let ny = Math.round(yWithinPage / (cellH + GAP))
+
+                      nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, nx))
+                      ny = Math.max(0, Math.min(maxRows - spanH, ny))
 
                       const moved = { ...w, x: nx, y: ny }
                       const next = resolveOverlap(moved, widgets)
@@ -703,7 +715,7 @@ export default function Home() {
                       width: pixelW,
                       height: pixelH,
                       left: pixelL,
-                      top: pixelT + PAD,
+                      top: pixelT,
                       touchAction: 'none'
                     }}
                   >
