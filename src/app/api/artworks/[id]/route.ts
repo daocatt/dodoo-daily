@@ -17,7 +17,7 @@ export async function PUT(
             return NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
         }
 
-        const updateData: any = {}
+        const updateData: Partial<typeof artwork.$inferInsert> = {}
         if (title !== undefined) updateData.title = title
         if (albumId !== undefined) updateData.albumId = albumId || null
         if (priceRMB !== undefined) updateData.priceRMB = parseFloat(priceRMB) || 0

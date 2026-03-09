@@ -48,7 +48,7 @@ export async function PATCH(req: Request) {
             }
         }
 
-        const updates: any = {}
+        const updates: Partial<typeof users.$inferInsert> = {}
         if (name) updates.name = name
         if (nickname) updates.nickname = nickname
         if (avatarUrl) updates.avatarUrl = avatarUrl

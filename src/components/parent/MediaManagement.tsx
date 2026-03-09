@@ -45,7 +45,7 @@ export default function MediaManagement() {
     const [editing, setEditing] = useState<string | null>(null)
     const [editName, setEditName] = useState('')
 
-    const fetchMedia = async () => {
+    const fetchMedia = React.useCallback(async () => {
         setLoading(true)
         try {
             const res = await fetch(`/api/media?type=${filter}&search=${search}`)
@@ -58,11 +58,11 @@ export default function MediaManagement() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [filter, search])
 
     useEffect(() => {
         fetchMedia()
-    }, [filter])
+    }, [fetchMedia])
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()

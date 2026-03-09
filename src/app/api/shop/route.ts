@@ -78,7 +78,7 @@ export async function PATCH(req: NextRequest) {
 
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
-        const updateData: any = {}
+        const updateData: Partial<typeof shopItem.$inferInsert> & { updatedAt?: Date } = {}
         if (name !== undefined) updateData.name = name
         if (description !== undefined) updateData.description = description
         if (costCoins !== undefined) updateData.costCoins = parseInt(costCoins)

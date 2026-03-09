@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
         }
 
         // Choose table based on type
-        let logs: any[] = []
-        let totalCountResult: any = 0
+        let logs: Record<string, unknown>[] = []
+        let totalCountResult: { count: number } | undefined = undefined
 
         if (type === 'CURRENCY') {
             logs = await db.select({
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
         } else {
             // Fallback to unified log if no type or other type
             const whereClause = type
-                ? and(eq(accountStatsLog.userId, targetUserId), eq(accountStatsLog.type, type as any))
+                ? and(eq(accountStatsLog.userId, targetUserId), eq(accountStatsLog.type, type as typeof accountStatsLog.$inferInsert.type))
                 : eq(accountStatsLog.userId, targetUserId)
 
             logs = await db.select({

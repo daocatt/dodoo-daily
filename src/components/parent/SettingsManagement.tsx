@@ -5,7 +5,15 @@ import { User, Camera, Check, X, Loader2, Save, Lock, ShieldCheck } from 'lucide
 import { useI18n } from '@/contexts/I18nContext'
 import { motion } from 'framer-motion'
 
-export default function ProfileManagement({ user }: { user: any }) {
+type User = {
+    id: string
+    name: string
+    nickname: string | null
+    avatarUrl: string | null
+    role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
+}
+
+export default function ProfileManagement({ user }: { user: User }) {
     const { t } = useI18n()
     const [name, setName] = useState(user?.name || '')
     const [nickname, setNickname] = useState(user?.nickname || '')
@@ -138,7 +146,7 @@ export default function ProfileManagement({ user }: { user: any }) {
                                 onChange={e => { setNickname(e.target.value); setError(''); setMessage(''); }}
                             />
                             <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
-                                💡 Used for login when "Display All Avatars" is disabled (Case Insensitive)
+                                💡 Used for login when &quot;Display All Avatars&quot; is disabled (Case Insensitive)
                             </p>
                         </div>
 

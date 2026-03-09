@@ -14,11 +14,13 @@ import SystemSettings from '@/components/parent/SystemSettings'
 import MediaManagement from '@/components/parent/MediaManagement'
 
 interface ParentUser {
+    id: string
     name: string
-    nickname: string
+    nickname: string | null
     avatarUrl: string | null
     stars: number
     balance: number
+    role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
 }
 
 export default function ParentDashboard() {
@@ -41,11 +43,13 @@ export default function ParentDashboard() {
                 if (data && data.isParent) {
                     setLoading(false)
                     setUser({
+                        id: data.userId || '',
                         name: data.name || 'Parent',
                         nickname: data.nickname || '',
                         avatarUrl: data.avatarUrl,
                         stars: data.goldStars || 0,
-                        balance: data.currency || 0
+                        balance: data.currency || 0,
+                        role: 'PARENT'
                     })
                 }
                 else {

@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
             }).returning()
 
             // Insert into journalMedia
-            const mediaItems: any[] = []
+            const mediaItems: (typeof journalMedia.$inferInsert)[] = []
 
             // Add images
             if (imageUrls && Array.isArray(imageUrls)) {

@@ -7,16 +7,37 @@ import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
 
+interface Stats {
+  isParent: boolean
+}
+
+interface SystemSettings {
+  isClosed: boolean
+  systemName: string
+  homepageImages?: string
+}
+
+interface Artwork {
+  id: number
+  image: string
+  bg: string
+  defaultRotate: number
+  rotate: number
+  x: number
+  y: number
+  title?: string
+}
+
 export default function Home() {
   const router = useRouter()
   const { locale, setLocale, t } = useI18n()
-  const [stats, setStats] = React.useState<any>(null)
-  const [sysSettings, setSysSettings] = React.useState<any>(null)
+  const [stats, setStats] = React.useState<Stats | null>(null)
+  const [sysSettings, setSysSettings] = React.useState<SystemSettings | null>(null)
   const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null)
-  const [zoomedArt, setZoomedArt] = useState<any>(null)
+  const [zoomedArt, setZoomedArt] = useState<Artwork | null>(null)
 
   // Artwork Stack State with default rotations
-  const [artworks, setArtworks] = useState<any[]>([])
+  const [artworks, setArtworks] = useState<Artwork[]>([])
 
   React.useEffect(() => {
     fetch('/api/stats')

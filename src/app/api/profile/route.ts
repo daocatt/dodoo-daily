@@ -35,7 +35,7 @@ export async function PATCH(req: Request) {
             }
         }
 
-        const updates: any = {}
+        const updates: Partial<typeof users.$inferInsert> & { updatedAt?: Date } = {}
         if (name !== undefined) updates.name = name.trim()
         if (nickname !== undefined) updates.nickname = nickname ? nickname.trim() : null
         if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl

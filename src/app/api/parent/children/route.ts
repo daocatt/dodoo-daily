@@ -151,7 +151,7 @@ export async function PATCH(req: NextRequest) {
             }
         }
 
-        const updateData: any = {}
+        const updateData: Partial<typeof users.$inferInsert> = {}
         if (name !== undefined) updateData.name = name
         if (nickname !== undefined) updateData.nickname = nickname
         if (gender !== undefined) updateData.gender = gender

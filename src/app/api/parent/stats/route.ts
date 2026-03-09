@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest) {
         if (!stats) return NextResponse.json({ error: 'Stats not found' }, { status: 404 })
 
         let currentBalance = 0
-        const updateData: any = {}
+        const updateData: Partial<typeof accountStats.$inferInsert> = {}
 
         switch (type) {
             case 'CURRENCY':

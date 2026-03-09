@@ -48,7 +48,7 @@ export default function SystemSettings() {
         setTimeout(() => setToast(null), 3000)
     }
 
-    const handleUpdateSettings = async (updates: any) => {
+    const handleUpdateSettings = async (updates: Record<string, unknown>) => {
         setIsSaving(true)
         try {
             const res = await fetch('/api/system/settings', {

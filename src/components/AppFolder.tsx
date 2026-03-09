@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import {
     motion,
     AnimatePresence,
@@ -34,6 +35,7 @@ const OPEN_H = 420
 
 export default function AppFolder() {
     const { t } = useI18n()
+    const router = useRouter()
     const [phase, setPhase] = useState<'closed' | 'opening' | 'open' | 'closing'>('closed')
     const [isFullyOpen, setIsFullyOpen] = useState(false)
 
@@ -94,7 +96,7 @@ export default function AppFolder() {
             else e.stopPropagation()
             return
         }
-        if (app.isInternal) window.location.href = app.url
+        if (app.isInternal) router.push(app.url)
         else window.open(app.url, '_blank', 'noopener,noreferrer')
     }
 

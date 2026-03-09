@@ -25,6 +25,7 @@ type JournalEntry = {
     milestoneDate: string | null
     createdAt: string
     updatedAt: string
+    media?: { type: 'IMAGE' | 'VOICE'; url: string }[]
 }
 
 const formatDate = (date: string | number | Date) => {
@@ -75,8 +76,8 @@ export default function JournalDetailPage() {
                     let parsedImages: string[] = []
                     if (data.media && Array.isArray(data.media)) {
                         parsedImages = data.media
-                            .filter((m: any) => m.type === 'IMAGE')
-                            .map((m: any) => m.url)
+                            .filter((m: { type: string; url: string }) => m.type === 'IMAGE')
+                            .map((m: { type: string; url: string }) => m.url)
                     } else {
                         try {
                             if (data.imageUrls) parsedImages = JSON.parse(data.imageUrls)

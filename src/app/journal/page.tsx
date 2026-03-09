@@ -267,7 +267,7 @@ export default function JournalPage() {
                         </div>
                     ) : (
                         <TimelineView
-                            entries={entries as any}
+                            entries={entries}
                             onImageClick={(imgs, idx) => setLightbox({ images: imgs, index: idx })}
                             onEntryClick={(id) => router.push(`/journal/${id}`)}
                         />

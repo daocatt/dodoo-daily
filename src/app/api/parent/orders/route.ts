@@ -71,7 +71,7 @@ export async function PATCH(req: NextRequest) {
         const existingOrder = await db.select().from(purchase).where(eq(purchase.id, id)).get()
         if (!existingOrder) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-        const updateData: any = {}
+        const updateData: Partial<typeof purchase.$inferInsert> & { updatedAt?: Date } = {}
         if (status !== undefined) updateData.status = status
         if (remarks !== undefined) updateData.remarks = remarks
         updateData.updatedAt = new Date()

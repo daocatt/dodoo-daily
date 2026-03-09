@@ -7,10 +7,19 @@ import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import NatureBackground from '@/components/NatureBackground'
 
+interface User {
+    id: string
+    name: string
+    nickname?: string | null
+    role: string
+    avatarUrl: string | null
+    isParent?: boolean
+}
+
 export default function SettingsPage() {
     const { t } = useI18n()
     const router = useRouter()
-    const [user, setUser] = useState<any>(null)
+    const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
     const [pin, setPin] = useState('')
     const [pinMessage, setPinMessage] = useState('')
@@ -137,7 +146,7 @@ export default function SettingsPage() {
                                 placeholder="Your short nickname"
                             />
                             <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
-                                💡 Used for login when "Display All Avatars" is disabled (Case Insensitive)
+                                💡 Used for login when &quot;Display All Avatars&quot; is disabled (Case Insensitive)
                             </p>
                         </div>
 

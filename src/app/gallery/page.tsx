@@ -23,6 +23,12 @@ type Album = {
     artworks: Artwork[]
 }
 
+type Child = {
+    id: string
+    name: string
+    avatarUrl: string | null
+}
+
 export default function GalleryPage() {
     const [albums, setAlbums] = useState<Album[]>([])
     const [loading, setLoading] = useState(true)
@@ -42,7 +48,7 @@ export default function GalleryPage() {
     const [showNewAlbumModal, setShowNewAlbumModal] = useState(false)
     const [isParent, setIsParent] = useState(false)
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
-    const [children, setChildren] = useState<any[]>([])
+    const [children, setChildren] = useState<Child[]>([])
 
     const router = useRouter()
 

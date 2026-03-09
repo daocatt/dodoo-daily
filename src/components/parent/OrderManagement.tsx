@@ -53,25 +53,25 @@ export default function OrderManagement() {
     const [remarkText, setRemarkText] = useState('')
     const remarkRef = useRef<HTMLTextAreaElement>(null)
 
-    const fetchOrders = async () => {
+    const fetchOrders = React.useCallback(async () => {
         try {
             const res = await fetch('/api/parent/orders')
             const data = await res.json()
             setOrders(data)
         } catch (e) { console.error(e) }
         finally { setLoading(false) }
-    }
+    }, [])
 
-    useEffect(() => { fetchOrders() }, [])
+    useEffect(() => { fetchOrders() }, [fetchOrders])
 
     useEffect(() => {
         if (remarkModal.open) {
             setRemarkText(remarkModal.current)
             setTimeout(() => remarkRef.current?.focus(), 100)
         }
-    }, [remarkModal.open])
+    }, [remarkModal.open, remarkModal.current])
 
-    const handleUpdate = async (id: string, data: any) => {
+    const handleUpdate = async (id: string, data: Record<string, unknown>) => {
         setUpdating(id)
         try {
             const res = await fetch('/api/parent/orders', {

@@ -9,12 +9,9 @@ import {
     Power,
     Users,
     TrendingUp,
-    Scale,
-    Ruler,
     X,
     Plus,
     Activity,
-    LogOut,
     ArrowLeft
 } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
@@ -33,9 +30,16 @@ type Stats = {
     userId?: string
 }
 
+type Child = {
+    id: string
+    name: string
+    nickname: string | null
+    avatarUrl: string | null
+}
+
 export default function AccountHUD() {
     const [stats, setStats] = useState<Stats | null>(null)
-    const [children, setChildren] = useState<any[]>([])
+    const [children, setChildren] = useState<Child[]>([])
     const [showGrowthModal, setShowGrowthModal] = useState(false)
     const [height, setHeight] = useState('')
     const [weight, setWeight] = useState('')
@@ -46,7 +50,6 @@ export default function AccountHUD() {
     const [rechargeType, setRechargeType] = useState<'CURRENCY' | 'GOLD_STAR'>('CURRENCY')
 
     const pathname = usePathname()
-    const router = useRouter()
     const { t } = useI18n()
 
 
@@ -258,7 +261,7 @@ export default function AccountHUD() {
                         <div className="pointer-events-auto">
                             <Link href="/stats" className="group relative block">
                                 <motion.div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm transition-transform group-hover:scale-110">
-                                    <img src={stats.avatarUrl || "/dog.svg"} className="w-full h-full object-cover" />
+                                    <img src={stats.avatarUrl || "/dog.svg"} alt={stats.name || 'User'} className="w-full h-full object-cover" />
                                 </motion.div>
                                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
                                     <div className={`w-2 h-2 rounded-full ${stats.isParent ? 'bg-purple-500' : 'bg-emerald-500 animate-pulse'}`} />
@@ -285,7 +288,7 @@ export default function AccountHUD() {
                                         <div className="flex gap-2">
                                             {children.map(c => (
                                                 <button key={c.id} type="button" onClick={() => setTargetChildId(c.id)} className={`w-12 h-12 rounded-xl overflow-hidden border-4 transition-all ${targetChildId === c.id ? 'border-purple-500' : 'border-transparent opacity-60'}`}>
-                                                    <img src={c.avatarUrl || "/dog.svg"} className="w-full h-full object-cover" />
+                                                    <img src={c.avatarUrl || "/dog.svg"} alt={c.name} className="w-full h-full object-cover" />
                                                 </button>
                                             ))}
                                         </div>

@@ -30,6 +30,20 @@ type Task = {
     isAssigned?: boolean // Locally flag to distinguish
 }
 
+type Child = {
+    id: string
+    name: string
+    nickname: string | null
+    avatarUrl: string | null
+}
+
+type ParentInfo = {
+    id: string
+    name: string
+    nickname: string
+    avatarUrl: string | null
+}
+
 function TasksPageContent() {
     const searchParams = useSearchParams()
     const assignToParam = searchParams.get('assignTo')
@@ -38,11 +52,11 @@ function TasksPageContent() {
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
     const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'daily' | 'monthly' | 'assigns'>('today')
     const [isParent, setIsParent] = useState(false)
-    const [children, setChildren] = useState<any[]>([])
+    const [children, setChildren] = useState<Child[]>([])
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
     const [assignTo, setAssignTo] = useState<string[]>([]) // Changed to array
     const [currentUserId, setCurrentUserId] = useState<string>('')
-    const [parentInfo, setParentInfo] = useState<any>(null)
+    const [parentInfo, setParentInfo] = useState<ParentInfo | null>(null)
     const [systemTimezone, setSystemTimezone] = useState('Asia/Shanghai')
     const { t } = useI18n()
 
@@ -97,8 +111,8 @@ function TasksPageContent() {
             ])
             const [pData, aData] = await Promise.all([pRes.json(), aRes.json()])
 
-            const personal = (Array.isArray(pData) ? pData : []).map((t: any) => ({ ...t, isAssigned: false }));
-            const assigned = (Array.isArray(aData) ? aData : []).map((t: any) => ({ ...t, isAssigned: true }));
+            const personal = (Array.isArray(pData) ? pData : []).map((t: Task) => ({ ...t, isAssigned: false }));
+            const assigned = (Array.isArray(aData) ? aData : []).map((t: Task) => ({ ...t, isAssigned: true }));
 
             setTasks([...personal, ...assigned])
         } catch (err) {

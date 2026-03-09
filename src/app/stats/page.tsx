@@ -55,6 +55,18 @@ interface ChildStats {
     growthData: GrowthRecord[]
 }
 
+interface HistoryLog {
+    id: string
+    userId: string
+    type: 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
+    amount: number
+    balance: number
+    reason: string
+    createdAt: string
+    actorId?: string | null
+    actorName?: string | null
+}
+
 export default function GrowthStatsPage() {
     const { t, locale } = useI18n()
     const [children, setChildren] = useState<ChildStats[] | null>(null)
@@ -63,7 +75,7 @@ export default function GrowthStatsPage() {
     const [activeChildIdx, setActiveChildIdx] = useState(0)
     const [showHistoryModal, setShowHistoryModal] = useState(false)
     const [historyType, setHistoryType] = useState<'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR'>('CURRENCY')
-    const [historyLogs, setHistoryLogs] = useState<any[]>([])
+    const [historyLogs, setHistoryLogs] = useState<HistoryLog[]>([])
     const [historyLoading, setHistoryLoading] = useState(false)
     const [historyPage, setHistoryPage] = useState(1)
     const [historyTotal, setHistoryTotal] = useState(0)
@@ -510,8 +522,9 @@ export default function GrowthStatsPage() {
                                         <button
                                             key={tab.id}
                                             onClick={() => {
-                                                setHistoryType(tab.id as any)
-                                                fetchHistory(currentChild.id, tab.id, 1)
+                                                const newType = tab.id as 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR'
+                                                setHistoryType(newType)
+                                                fetchHistory(currentChild.id, newType, 1)
                                             }}
                                             className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${historyType === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                                         >

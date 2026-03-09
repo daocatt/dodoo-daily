@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { CheckSquare, Plus, Star, User, Trash2, Clock, Check, X } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, Star, User, Trash2, Clock } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 
 interface Child {
@@ -24,7 +24,7 @@ interface Task {
 }
 
 export default function TaskManagement({ preSelectId }: { preSelectId?: string | null }) {
-    const { t } = useI18n()
+    const { } = useI18n()
     const [children, setChildren] = useState<Child[]>([])
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
@@ -119,7 +119,7 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
                         onClick={() => setSelectedChild(child.id)}
                         className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${selectedChild === child.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
                     >
-                        {child.avatarUrl && <img src={child.avatarUrl} className="w-4 h-4 rounded-full object-cover" />}
+                        {child.avatarUrl && <img src={child.avatarUrl} alt={child.name} className="w-4 h-4 rounded-full object-cover" />}
                         {child.name}
                     </button>
                 ))}
