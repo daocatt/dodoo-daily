@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
             .where(eq(users.id, targetUserId))
 
         return NextResponse.json({ success: true, avatarUrl })
-    } catch (error: any) {
+    } catch (error) {
         console.error('Failed to upload avatar:', error)
         return NextResponse.json({ error: error.message || 'Failed to upload' }, { status: 500 })
     }

@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
             .orderBy(desc(task.createdAt))
 
         return NextResponse.json(personalTasks)
-    } catch (error: any) {
+    } catch (error) {
         console.error('Failed to fetch personal tasks:', error.message, error.stack)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

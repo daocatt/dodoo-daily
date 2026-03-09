@@ -12,7 +12,7 @@ export async function PATCH(
 
         const updated = await renameMedia(id, name);
         return NextResponse.json(updated);
-    } catch (error: any) {
+    } catch (error) {
         console.error('Rename failed:', error);
         return NextResponse.json({ error: error.message || 'Rename failed' }, { status: 500 });
     }
@@ -26,7 +26,7 @@ export async function DELETE(
         const { id } = await params;
         await deleteMedia(id);
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error) {
         console.error('Delete failed:', error);
         return NextResponse.json({ error: error.message || 'Delete failed' }, { status: 500 });
     }

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         const mediaItem = await uploadMedia(file, 'IMAGE', currentUserId);
 
         return NextResponse.json({ success: true, url: mediaItem.path })
-    } catch (error: any) {
+    } catch (error) {
         console.error('Failed to upload system media:', error)
         return NextResponse.json({ error: error.message || 'Failed to upload' }, { status: 500 })
     }

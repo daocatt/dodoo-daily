@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash2, Archive, History, Camera, Check, X, BarChart3, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, CheckSquare, Power, Coins, UserCheck } from 'lucide-react'
+import { Plus, Trash2, Archive, History, Camera, X, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, Coins, UserCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { getZodiac, getChineseZodiac } from '@/lib/utils'
@@ -21,6 +21,7 @@ interface Child {
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
     isArchived: boolean
     isDeleted: boolean
+    pin?: string
     stats?: {
         goldStars: number
         purpleStars: number
@@ -37,7 +38,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const [editingChild, setEditingChild] = useState<Partial<Child> | null>(null)
     const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
     const [showLogs, setShowLogs] = useState<string | null>(null)
-    const [logs, setLogs] = useState<any[]>([])
+    const [logs, setLogs] = useState<Record<string, unknown>[]>([])
     const [adjusting, setAdjusting] = useState<string | null>(null)
     const [adjData, setAdjData] = useState({ type: 'CURRENCY', amount: 0, reason: '' })
     const [showArchived, setShowArchived] = useState(false)
@@ -207,7 +208,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                     className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border flex items-center justify-center gap-2 ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
                                 >
                                     <span className="text-lg">{genderEmojis[g]}</span>
-                                    {t(`gender.${g.toLowerCase()}` as any)}
+                                    {t(`gender.${g.toLowerCase()}`)}
                                 </button>
                             ))}
                         </div>
@@ -218,8 +219,8 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                             placeholder="4 Digit PIN"
                             maxLength={4}
-                            value={(member as any).pin || ''}
-                            onChange={e => onChange({ ...member, pin: e.target.value } as any)}
+                            value={member.pin || ''}
+                            onChange={e => onChange({ ...member, pin: e.target.value })}
                         />
                     </div>
                 </div>
@@ -230,7 +231,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         <select
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all appearance-none"
                             value={member.role || 'CHILD'}
-                            onChange={e => onChange({ ...member, role: e.target.value as any })}
+                            onChange={e => onChange({ ...member, role: e.target.value as Child['role'] })}
                         >
                             <option value="CHILD">Child</option>
                             <option value="PARENT">Parent</option>

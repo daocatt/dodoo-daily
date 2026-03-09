@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Check, X, Star, Coins, User, Calendar, Loader2, CheckCircle2 } from 'lucide-react'
+import { Check, X, Star, Coins, User, Loader2, CheckCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -14,6 +14,8 @@ interface PendingTask {
     assigneeNickname: string
     assigneeAvatar: string | null
     updatedAt: string
+    completed: boolean
+    confirmationStatus: string
 }
 
 export default function TaskConfirmation() {
@@ -27,7 +29,7 @@ export default function TaskConfirmation() {
             const res = await fetch('/api/assigned-tasks')
             const data = await res.json()
             // Filter only for tasks that are completed but NOT yet approved/rejected
-            const pending = data.filter((t: any) => t.completed && t.confirmationStatus === 'PENDING')
+            const pending = data.filter((t: PendingTask) => t.completed && t.confirmationStatus === 'PENDING')
             setTasks(pending)
         } catch (e) {
             console.error('Failed to fetch pending tasks:', e)
@@ -97,7 +99,7 @@ export default function TaskConfirmation() {
                                     <div className="relative">
                                         <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-50 flex items-center justify-center">
                                             {task.assigneeAvatar ? (
-                                                <img src={task.assigneeAvatar} alt="" className="w-full h-full object-cover" />
+                                                <img src={task.assigneeAvatar} alt={task.assigneeNickname} className="w-full h-full object-cover" />
                                             ) : (
                                                 <User className="w-6 h-6 text-slate-300" />
                                             )}

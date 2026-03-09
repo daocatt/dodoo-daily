@@ -37,7 +37,7 @@ export async function GET() {
                     currency: 0,
                 }).returning()
                 statsRecord = results[0]
-            } catch (insertError: any) {
+            } catch(insertError) {
                 console.error('[API stats] Insert failed:', insertError.message)
                 // Fallback: maybe it was created by another request in parallel
                 statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
@@ -60,7 +60,7 @@ export async function GET() {
         }
 
         return NextResponse.json(responseData)
-    } catch (error: any) {
+    } catch (error) {
         console.error('[API stats] Critical error:', error.message, error.stack)
         return NextResponse.json({
             error: 'Failed to fetch account stats',

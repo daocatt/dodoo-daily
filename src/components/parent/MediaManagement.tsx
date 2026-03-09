@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import {
-    Upload, File, Image as ImageIcon, Music, Video,
-    FileText, Trash2, Edit3, Search, Filter,
+    Upload, Image as ImageIcon, Music, Video,
+    FileText, Trash2, Edit3, Search,
     Loader2, X, Check, ExternalLink, HardDrive, Cloud
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -54,7 +54,7 @@ export default function MediaManagement() {
                 setMedia(data)
             }
         } catch (err) {
-            console.error(err)
+            console.error('Failed to fetch media:', err)
         } finally {
             setLoading(false)
         }
@@ -87,7 +87,7 @@ export default function MediaManagement() {
                 fetchMedia()
             }
         } catch (err) {
-            console.error(err)
+            console.error('Upload failed:', err)
         } finally {
             setUploading(false)
         }
@@ -152,7 +152,7 @@ export default function MediaManagement() {
                 <div className="flex items-center gap-3">
                     <select
                         value={uploadType}
-                        onChange={(e) => setUploadType(e.target.value as any)}
+                        onChange={(e) => setUploadType(e.target.value as MediaRecord['fileType'])}
                         className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
                         {TYPE_FILTERS.filter(f => f.value !== 'ALL').map(f => (
@@ -192,8 +192,8 @@ export default function MediaManagement() {
                             key={f.value}
                             onClick={() => setFilter(f.value)}
                             className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${filter === f.value
-                                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-200'
-                                    : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
+                                ? 'bg-orange-500 text-white shadow-lg shadow-orange-200'
+                                : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
                                 }`}
                         >
                             {f.label}

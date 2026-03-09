@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, ShieldAlert, Users, Settings, Loader2, CheckSquare, ShoppingBag as BagIcon, Camera, Lock, UserCircle, Power, Network, LayoutDashboard, Image as ImageIcon, Coins } from 'lucide-react'
+import { ArrowLeft, Star, Users, Loader2, ShoppingBag as BagIcon, UserCircle, Power, Image as ImageIcon, Coins } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
 
@@ -13,12 +13,20 @@ import ProfileManagement from '@/components/parent/SettingsManagement'
 import SystemSettings from '@/components/parent/SystemSettings'
 import MediaManagement from '@/components/parent/MediaManagement'
 
+interface ParentUser {
+    name: string
+    nickname: string
+    avatarUrl: string | null
+    stars: number
+    balance: number
+}
+
 export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA'>('HOME')
-    const [user, setUser] = useState<any>(null)
+    const [user, setUser] = useState<ParentUser | null>(null)
 
     useEffect(() => {
         fetch('/api/stats')
@@ -222,7 +230,7 @@ export default function ParentDashboard() {
                                 <div className="text-[8px] font-black text-purple-500 uppercase tracking-tighter">Parent Mode</div>
                             </div>
                             <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
-                                <img src={user.avatarUrl || "/dog.svg"} alt="Me" className="w-full h-full object-cover" />
+                                <img src={user.avatarUrl || "/dog.svg"} alt={user.name} className="w-full h-full object-cover" />
                             </div>
                         </div>
                     </div>

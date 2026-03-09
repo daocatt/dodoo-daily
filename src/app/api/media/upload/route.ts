@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
         const media = await uploadMedia(file, type, authenticatedUserId);
         return NextResponse.json(media);
-    } catch (error: any) {
+    } catch (error) {
         console.error('Upload failed:', error);
         return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
     }

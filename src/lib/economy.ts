@@ -1,5 +1,5 @@
 import { db } from './db'
-import { accountStats, accountStatsLog, task, systemSettings, currencyLog, goldStarLog, purpleStarLog } from './schema'
+import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog } from './schema'
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
 
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
@@ -53,7 +53,7 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
     }
 
     let newBalance = 0
-    const updateObj: any = {}
+    const updateObj: Record<string, unknown> = {}
 
     if (type === 'CURRENCY') {
         newBalance = Math.max(0, (stats.currency || 0) + amount)
