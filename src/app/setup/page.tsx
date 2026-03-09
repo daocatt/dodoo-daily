@@ -57,6 +57,7 @@ export default function SetupPage() {
     }
 
     const handleSubmit = async (skip = false) => {
+        if (submitting) return
         if (!skip) {
             if (!avatarFile) {
                 setError(t('setup.errorAvatar'))

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "79e42b31-f5fe-41d5-a53e-3d5c1408f0e7",
+  "id": "5a9a2a0f-0d2e-43dc-8c88-f978ec39dcc2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "AccountStats": {
@@ -681,6 +681,75 @@
           "tableTo": "Users",
           "columnsFrom": [
             "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "FamilyNote": {
+      "name": "FamilyNote",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "authorId": {
+          "name": "authorId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'#FEF3C7'"
+        },
+        "isPinned": {
+          "name": "isPinned",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "FamilyNote_authorId_Users_id_fk": {
+          "name": "FamilyNote_authorId_Users_id_fk",
+          "tableFrom": "FamilyNote",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "authorId"
           ],
           "columnsTo": [
             "id"

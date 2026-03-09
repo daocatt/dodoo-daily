@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Power, ShieldAlert, Cpu, RotateCcw, AlertTriangle, Check, X, Loader2, Camera, LayoutHeader, LayoutGrid, Image as ImageIcon, Globe, Bell } from 'lucide-react'
+import { Power, ShieldAlert, Cpu, RotateCcw, AlertTriangle, Check, X, Loader2, Camera, LayoutHeader, LayoutGrid, Image as ImageIcon, Globe, Bell, Github, Mail, ExternalLink, Info, Heart } from 'lucide-react'
+import pkg from '@/../package.json'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
@@ -302,6 +303,72 @@ export default function SystemSettings() {
                 </div>
             </div>
 
+            {/* About Section */}
+            <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+                    <Info className="w-48 h-48 -rotate-12" />
+                </div>
+
+                <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
+                    <div className="relative group/logo">
+                        <div className="w-32 h-32 rounded-[2.5rem] bg-indigo-50 flex items-center justify-center p-6 shadow-indigo-100 shadow-2xl transition-all group-hover/logo:scale-110 group-hover/logo:rotate-3">
+                            <img src="/dog.svg" alt="DoDoo Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border-2 border-white">
+                            v{pkg.version}
+                        </div>
+                    </div>
+
+                    <div className="flex-1 text-center md:text-left space-y-4">
+                        <div className="space-y-1">
+                            <h3 className="text-3xl font-black text-slate-800 tracking-tight">DoDoo Daily</h3>
+                            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Modern Family Companion System</p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
+                            <a
+                                href="https://github.com/daocatt/dodoo-daily"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-black transition-all shadow-lg active:scale-95"
+                            >
+                                <Github className="w-4 h-4" />
+                                <span>GitHub</span>
+                                <ExternalLink className="w-3 h-3 opacity-50" />
+                            </a>
+
+                            <a
+                                href="https://zwq.me"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all active:scale-95"
+                            >
+                                <Globe className="w-4 h-4" />
+                                <span>Feedback & Info</span>
+                                <ExternalLink className="w-3 h-3 opacity-50" />
+                            </a>
+
+                            <a
+                                href="mailto:dev@zwq.me"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-sm font-bold hover:bg-rose-100 transition-all active:scale-95"
+                            >
+                                <Mail className="w-4 h-4" />
+                                <span>Contact Developer</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-12 pt-8 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-300">
+                    <div className="flex items-center gap-1.5">
+                        Made with <Heart className="w-3 h-3 text-rose-400 fill-rose-400" /> for my Family
+                    </div>
+                    <div>
+                        © {new Date().getFullYear()} DoDoo Daily Project
+                    </div>
+                </div>
+            </div>
+
             {/* Confirm Modal */}
             <AnimatePresence>
                 {showConfirm && (
@@ -341,6 +408,6 @@ export default function SystemSettings() {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     )
 }

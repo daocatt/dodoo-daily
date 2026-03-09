@@ -43,6 +43,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const [adjData, setAdjData] = useState({ type: 'CURRENCY', amount: 0, reason: '' })
     const [showArchived, setShowArchived] = useState(false)
     const [confirmModal, setConfirmModal] = useState<{ type: 'delete' | 'archive', childId: string } | null>(null)
+    const [processing, setProcessing] = useState(false)
 
     const fetchChildren = async () => {
         try {
@@ -61,7 +62,8 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     }, [])
 
     const handleSave = async (data: Partial<Child>) => {
-        if (!data.name) return
+        if (!data.name || processing) return
+        setProcessing(true)
         try {
             const method = data.id ? 'PATCH' : 'POST'
             await fetch('/api/parent/children', {
@@ -71,12 +73,13 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
             })
             setNewChild({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
             setEditingChild(null)
-            setShowAdd(false)
             fetchChildren()
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     const handleMasquerade = async (userId: string) => {
+        if (processing) return
+        setProcessing(true)
         try {
             const res = await fetch('/api/parent/masquerade', {
                 method: 'POST',
@@ -87,10 +90,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                 const data = await res.json()
                 window.location.href = data.redirect || '/'
             }
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     const handleAvatarUpload = async (id: string, file: File) => {
+        if (processing) return
+        setProcessing(true)
         const formData = new FormData()
         formData.append('file', file)
         formData.append('userId', id)
@@ -108,11 +113,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                 })
                 fetchChildren()
             }
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     const handleAdjust = async () => {
-        if (!adjusting) return
+        if (!adjusting || processing) return
+        setProcessing(true)
         try {
             await fetch('/api/parent/economy/distribute', {
                 method: 'POST',
@@ -125,19 +131,23 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
             setAdjusting(null)
             setAdjData({ type: 'CURRENCY', amount: 0, reason: '' })
             fetchChildren()
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     const fetchLogs = async (userId: string) => {
+        if (processing) return
+        setProcessing(true)
         try {
             const res = await fetch(`/api/parent/logs?userId=${userId}`)
             const data = await res.json()
             setLogs(data)
             setShowLogs(userId)
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     const handleArchive = async (id: string) => {
+        if (processing) return
+        setProcessing(true)
         try {
             await fetch('/api/parent/children', {
                 method: 'PATCH',
@@ -146,10 +156,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
             })
             setConfirmModal(null)
             fetchChildren()
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     const handleDelete = async (id: string) => {
+        if (processing) return
+        setProcessing(true)
         try {
             await fetch('/api/parent/children', {
                 method: 'DELETE',
@@ -158,7 +170,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
             })
             setConfirmModal(null)
             fetchChildren()
-        } catch (e) { console.error(e) }
+        } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
 
     if (loading) return <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('common.loading')}</div>
@@ -404,6 +416,17 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         Reward
                     </button>
                     <button
+                        onClick={() => handleMasquerade(child.id)}
+                        disabled={processing}
+                        className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all border border-transparent hover:border-blue-100 group/btn active:scale-[0.98] disabled:opacity-50"
+                    >
+                        <div className="flex items-center gap-3">
+                            <UserCheck className="w-5 h-5 text-blue-500 group-hover/btn:scale-110 transition-transform" />
+                            <span className="font-bold text-slate-800">{processing ? t('common.loading') : 'Login / Masquerade'}</span>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                    <button
                         onClick={() => fetchLogs(child.id)}
                         className="px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors flex items-center gap-2"
                     >
@@ -467,8 +490,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             />
 
                             <div className="flex gap-2">
-                                <button onClick={handleAdjust} className="flex-1 bg-blue-500 text-white rounded-xl font-bold py-3 shadow-md hover:bg-blue-600 transition-colors active:scale-[0.98]">
-                                    {t('button.apply')}
+                                <button
+                                    onClick={handleAdjust}
+                                    disabled={processing}
+                                    className="flex-1 bg-blue-500 text-white rounded-xl font-bold py-3 shadow-md hover:bg-blue-600 transition-colors active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {processing ? t('common.loading') : t('button.apply')}
                                 </button>
                                 <button onClick={() => setAdjusting(null)} className="px-6 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">
                                     {t('button.cancel')}
@@ -538,10 +565,11 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         <div className="mt-10 flex gap-4">
                             <button
                                 onClick={() => handleSave(editingChild || newChild)}
-                                className="flex-1 bg-blue-600 text-white rounded-lg font-black py-4 text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                disabled={processing}
+                                className="flex-1 bg-blue-600 text-white rounded-lg font-black py-4 text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
                             >
                                 <Save className="w-5 h-5" />
-                                {editingChild ? t('button.save') : t('button.create')}
+                                {processing ? t('common.loading') : (editingChild ? t('button.save') : t('button.create'))}
                             </button>
                             <button
                                 onClick={() => { setShowAdd(false); setEditingChild(null); }}
@@ -639,9 +667,10 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => confirmModal.type === 'delete' ? handleDelete(confirmModal.childId) : handleArchive(confirmModal.childId)}
-                                    className={`flex-1 py-4 text-white rounded-2xl font-black transition-all shadow-lg active:scale-95 ${confirmModal.type === 'delete' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-800 hover:bg-black shadow-slate-200'}`}
+                                    disabled={processing}
+                                    className={`flex-1 py-4 text-white rounded-2xl font-black transition-all shadow-lg active:scale-95 disabled:opacity-50 ${confirmModal.type === 'delete' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-800 hover:bg-black shadow-slate-200'}`}
                                 >
-                                    {confirmModal.type === 'delete' ? t('button.delete') : t('button.apply')}
+                                    {processing ? t('common.loading') : (confirmModal.type === 'delete' ? t('button.delete') : t('button.apply'))}
                                 </button>
                                 <button
                                     onClick={() => setConfirmModal(null)}

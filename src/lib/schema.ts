@@ -299,3 +299,15 @@ export const growthRecord = sqliteTable("GrowthRecord", {
     date: integer("date", { mode: "timestamp_ms" }).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
+// -----------------------------------------------------------------------------
+// FAMILY INTERACTION (Notes / Message Board)
+// -----------------------------------------------------------------------------
+
+export const familyNote = sqliteTable("FamilyNote", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    authorId: text("authorId").notNull().references(() => users.id),
+    text: text("text").notNull(),
+    color: text("color").default("#FEF3C7"), // Default post-it yellow
+    isPinned: integer("isPinned", { mode: "boolean" }).default(false).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});

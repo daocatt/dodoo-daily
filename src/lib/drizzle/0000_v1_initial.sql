@@ -92,6 +92,16 @@ CREATE TABLE `EmotionRecord` (
 	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `FamilyNote` (
+	`id` text PRIMARY KEY NOT NULL,
+	`authorId` text NOT NULL,
+	`text` text NOT NULL,
+	`color` text DEFAULT '#FEF3C7',
+	`isPinned` integer DEFAULT false NOT NULL,
+	`createdAt` integer DEFAULT (unixepoch() * 1000),
+	FOREIGN KEY (`authorId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `GoldStarLog` (
 	`id` text PRIMARY KEY NOT NULL,
 	`userId` text NOT NULL,

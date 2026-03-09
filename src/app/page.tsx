@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Languages, CheckSquare, Smile, Store, Book, Settings, Image as ImageIcon, ShieldAlert, ChevronRight, X, Maximize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
+import FamilyNoteBoard from '@/components/FamilyNoteBoard'
 import { useI18n } from '@/contexts/I18nContext'
 
 interface Stats {
@@ -136,7 +137,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-dvh flex flex-col relative overflow-hidden text-[#4a3728]">
+    <div className="min-h-dvh flex flex-col relative text-[#4a3728]">
       <NatureBackground />
 
       {/* Header */}
@@ -174,7 +175,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-12 p-4 md:p-8 lg:p-12 pb-32 lg:pb-12 items-center lg:items-center overflow-y-auto lg:overflow-hidden">
+      <main className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-12 p-4 md:p-8 lg:p-12 pb-12 items-center lg:items-center">
 
         {/* Left Side: Display - Interaction Refined */}
         <div className="flex-1 w-full flex flex-col justify-center items-center py-8 lg:py-0">
@@ -275,6 +276,10 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
+        <FamilyNoteBoard />
+      </div>
 
       {/* LIGHTBOX ZOOM MODAL */}
       <AnimatePresence>
