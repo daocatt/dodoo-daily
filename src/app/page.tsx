@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings, Maximize2, Trash2, Check, Layout, Store, Sparkles, Smile, CheckSquare } from 'lucide-react'
+import { Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag, Heart, StickyNote, CheckCircle2, Trophy, Images, Layout, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
@@ -13,6 +13,7 @@ import NotesWidget from '@/components/widgets/NotesWidget'
 import TasksWidget from '@/components/widgets/TasksWidget'
 import JournalWidget from '@/components/widgets/JournalWidget'
 import PhotoWidget from '@/components/widgets/PhotoWidget'
+import MilestoneWidget from '@/components/widgets/MilestoneWidget'
 
 type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
 
@@ -50,6 +51,16 @@ const SIZE_LABELS: Record<WidgetSize, string> = {
 const GAP = 12   // px between tiles
 const PAD = 24   // stage inner padding (matches p-6 in main)
 
+interface Particle {
+  initRotate: number
+  targetX: number
+  targetY: number
+  targetRotate: number
+  width: number
+  height: number
+  color: string
+}
+
 export default function Home() {
   const router = useRouter()
   const { locale, setLocale, t } = useI18n()
@@ -59,6 +70,10 @@ export default function Home() {
   const [isEditing, setIsEditing] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [sizeMenuId, setSizeMenuId] = useState<string | null>(null)
+  const [confetti, setConfetti] = useState<{ x: number, y: number, particles: Particle[] } | null>(null)
+
+  // Carousel State
+  const [currentPage, setCurrentPage] = useState(0)
 
   // Real-time drag preview tracking
   const [dragPreview, setDragPreview] = useState<{ x: number, y: number, w: number, h: number } | null>(null)
@@ -90,13 +105,36 @@ export default function Home() {
 
   const { cellW, cellH, gridCols } = dimensions
 
+  const pageCount = React.useMemo(() => {
+    if (isEditing) return 2
+    const hasWidgetInPage2 = widgets.some(w => w.x >= gridCols)
+    return hasWidgetInPage2 ? 2 : 1
+  }, [widgets, gridCols, isEditing])
+
+  const gridWidth = gridCols * cellW + (gridCols - 1) * GAP
+  const pageOffsetX = (stageW - gridWidth) / 2
+
   // Global Grid-to-Pixel Mapper
-  // These now return coordinates relative to the centered grid area
-  const toLeft = (x: number) => x * (cellW + GAP)
+  // centers the grid within each page
+  const toLeft = (x: number) => {
+    const pageIndex = Math.floor(x / gridCols)
+    const xInPage = x % gridCols
+    return (pageIndex * stageW) + pageOffsetX + (xInPage * (cellW + GAP))
+  }
   const toTop = (y: number) => y * (cellH + GAP)
 
   // Track grab offset to ensure perfect snapping
   const [grabOffset, setGrabOffset] = useState({ x: 0, y: 0 })
+
+  const audioRefStart = useRef<HTMLAudioElement | null>(null)
+  const audioRefEnd = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    audioRefStart.current = new Audio('/sounds/drag_start.wav')
+    audioRefEnd.current = new Audio('/sounds/drag_end.wav')
+    audioRefStart.current.volume = 0.2
+    audioRefEnd.current.volume = 0.3
+  }, [])
 
   const fetchData = useCallback(async () => {
     console.log("Home: Fetching data...")
@@ -139,14 +177,11 @@ export default function Home() {
       }
     }
 
-    const ro = new ResizeObserver(() => {
-      window.requestAnimationFrame(updateSize)
-    })
-    ro.observe(el)
     updateSize()
-
-    // Also listen to window resize for col changes
     window.addEventListener('resize', updateSize)
+    const ro = new ResizeObserver(updateSize)
+    ro.observe(el)
+
     return () => {
       ro.disconnect()
       window.removeEventListener('resize', updateSize)
@@ -254,25 +289,45 @@ export default function Home() {
       return
     }
 
-    console.log("[Home] Requesting addition of widget:", type)
-
-    // Simple logic to place new widget below the lowest existing one
-    const maxY = widgets.reduce((acc, w) => {
-      const s = SIZE_MAP[w.size] || SIZE_MAP.ICON
-      return Math.max(acc, w.y + s.h)
-    }, 0)
-
     try {
+      // Helper for collision check (re-defined or passed from resolveOverlap)
+      const isPosOccupied = (x: number, y: number, sw: number, sh: number, currentPlaced: Widget[]) => {
+        return currentPlaced.some(p => {
+          const pSize = SIZE_MAP[p.size as WidgetSize] || SIZE_MAP.ICON
+          return x < p.x + pSize.w && x + sw > p.x && y < p.y + pSize.h && y + sh > p.y
+        })
+      }
+
+      // Find an empty slot
+      let ny = 0
+      while (isPosOccupied(0, ny, 2, 2, widgets)) ny++
+
       const res = await fetch('/api/home-widgets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, size: 'ICON', x: 0, y: maxY }),
+        body: JSON.stringify({ type, x: 0, y: ny, size: 'SQUARE' })
       })
 
       if (res.ok) {
         const data = await res.json()
         console.log("[Home] Widget added successfully:", data)
         setWidgets(prev => [...prev, data])
+        // Trigger effect
+        const px = PAD + 1 * (cellW + GAP)
+        const py = PAD + ny * (cellH + GAP)
+        const colors = ['#f43f5e', '#fbbf24', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
+        const np = Array.from({ length: 24 }).map((_, i) => ({
+          initRotate: Math.random() * 360,
+          targetX: (Math.random() - 0.5) * 400,
+          targetY: (Math.random() - 0.5) * 400 - 100,
+          targetRotate: Math.random() * 720,
+          width: Math.random() * 2 + 1,
+          height: Math.random() * 20 + 20,
+          color: colors[i % colors.length]
+        }))
+
+        setConfetti({ x: px, y: py, particles: np })
+        setTimeout(() => setConfetti(null), 1000)
       } else {
         const errorText = await res.text()
         console.error("[Home] API error adding widget:", res.status, errorText)
@@ -283,24 +338,41 @@ export default function Home() {
   }
 
   const renderWidgetContent = (w: Widget) => {
-    // ICON Mode: Minimalist Icon + Title
+    const handleWidgetClick = () => {
+      if (isEditing) return
+      const routes: Record<string, string> = {
+        NOTES: '/notes', SHOP: '/shop',
+        TASKS: '/tasks', JOURNAL: '/journal', PHOTOS: '/gallery',
+        MILESTONE: '/journal?filter=milestone'
+      }
+      if (routes[w.type]) router.push(routes[w.type])
+    }
+
+    // ICON Mode: Large Icon on Solid Brand Background
     if (w.size === 'ICON') {
       const config = {
-        TASKS: { Icon: CheckSquare, color: 'bg-emerald-100 text-emerald-600', label: 'Tasks' },
-        NOTES: { Icon: Smile, color: 'bg-amber-100 text-amber-600', label: 'Notes' },
-        JOURNAL: { Icon: Sparkles, color: 'bg-indigo-100 text-indigo-600', label: 'Journal' },
-        PHOTOS: { Icon: Layout, color: 'bg-rose-100 text-rose-600', label: 'Photos' },
-        SHOP: { Icon: Store, color: 'bg-amber-400 text-amber-900', label: 'Shop' },
-      }[w.type] || { Icon: Layout, color: 'bg-slate-100 text-slate-600', label: w.type }
+        TASKS: { Icon: CheckCircle2, color: 'bg-blue-500', shadow: 'shadow-blue-500/20', label: 'Tasks' },
+        NOTES: { Icon: StickyNote, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: 'Notes' },
+        JOURNAL: { Icon: Heart, color: 'bg-rose-500', shadow: 'shadow-rose-500/20', label: 'Journal' },
+        PHOTOS: { Icon: Images, color: 'bg-purple-500', shadow: 'shadow-purple-500/20', label: 'Photos' },
+        SHOP: { Icon: ShoppingBag, color: 'bg-amber-400', shadow: 'shadow-amber-500/20', label: 'Shop' },
+        MILESTONE: { Icon: Trophy, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: 'Milestones' },
+      }[w.type] || { Icon: ListTodo, color: 'bg-slate-500', shadow: 'shadow-slate-500/10', label: w.type }
 
-      const { Icon, color, label } = config
+      const { Icon, color, shadow, label } = config
 
       return (
-        <div className="w-full h-full bg-white/60 backdrop-blur-xl flex flex-col items-center justify-center p-2 rounded-[2rem] border border-white/80 transition-colors group-hover:bg-white/80">
-          <div className={clsx("w-9 h-9 rounded-2xl flex items-center justify-center mb-1.5 shadow-sm", color)}>
-            <Icon className="w-4.5 h-4.5" />
+        <div
+          onClick={handleWidgetClick}
+          className={clsx(
+            "w-full h-full flex flex-col items-center justify-center p-2 rounded-3xl border-2 border-white/30 transition-all cursor-pointer active:scale-95 hover:scale-[1.02]",
+            color, shadow, "shadow-xl text-white"
+          )}
+        >
+          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mb-1.5 shadow-inner backdrop-blur-md transition-transform group-hover:scale-110">
+            <Icon className="w-7 h-7" />
           </div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90">{label}</span>
         </div>
       )
     }
@@ -311,16 +383,19 @@ export default function Home() {
         case 'NOTES': return <NotesWidget size={w.size} />
         case 'JOURNAL': return <JournalWidget size={w.size} />
         case 'PHOTOS': return <PhotoWidget size={w.size} />
+        case 'MILESTONE': return <MilestoneWidget size={w.size} />
         case 'SHOP':
+          const iconSize = w.size === 'GIANT' ? "w-24 h-24" : (w.size === 'WIDE' || w.size === 'TALL') ? "w-20 h-20" : "w-14 h-14"
           return (
-            <div className="w-full h-full bg-amber-400 rounded-[2rem] flex flex-col items-center justify-center gap-2 border-4 border-white shadow-xl">
-              <Store className="w-10 h-10 text-amber-900" />
-              <span className="font-black text-amber-900">Shop</span>
+            <div className="w-full h-full bg-amber-400 rounded-3xl flex flex-col items-center justify-center gap-6 shadow-xl overflow-hidden relative border-none">
+              <ShoppingBag className={clsx(iconSize, "text-amber-900 transition-all duration-500 group-hover:scale-110 drop-shadow-lg")} />
+              <span className="font-black text-amber-900 uppercase text-[12px] tracking-[0.3em] bg-white/30 px-6 py-1.5 rounded-full backdrop-blur-sm border border-white/40 shadow-sm">Shop</span>
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/30 via-transparent to-black/5 pointer-events-none" />
             </div>
           )
         default:
           return (
-            <div className="w-full h-full bg-slate-100 rounded-[2rem] flex items-center justify-center text-[10px] text-slate-400">
+            <div className="w-full h-full bg-slate-100 rounded-3xl flex items-center justify-center text-[10px] text-slate-400">
               Unknown: {w.type}
             </div>
           )
@@ -329,15 +404,8 @@ export default function Home() {
 
     return (
       <div
-        className="w-full h-full overflow-hidden rounded-[2rem]"
-        onClick={() => {
-          if (isEditing) return
-          const routes: Record<string, string> = {
-            NOTES: '/notes', SHOP: '/shop',
-            TASKS: '/tasks', JOURNAL: '/journal', PHOTOS: '/gallery',
-          }
-          if (routes[w.type]) router.push(routes[w.type])
-        }}
+        className="w-full h-full overflow-hidden rounded-3xl"
+        onClick={handleWidgetClick}
       >
         {inner}
       </div>
@@ -356,6 +424,7 @@ export default function Home() {
     <div className="h-dvh w-full flex flex-col relative overflow-hidden bg-[#fafaf9]">
       {console.log("[Home] Rendering. stageW:", stageW, "effectiveW:", (stageW > 100 ? stageW : (typeof window !== 'undefined' ? window.innerWidth : 1200)), "widgets:", widgets.length)}
       <NatureBackground />
+      <Confetti config={confetti} />
 
       {/* ─── Header ─── */}
       <header className="relative z-[100] flex shrink-0 justify-between items-center h-[60px] px-6 backdrop-blur-xl bg-white/30 border-b border-black/5">
@@ -414,37 +483,60 @@ export default function Home() {
       </header>
 
       {/* ─── Bento Stage ─── */}
-      <main ref={stageRef} className="relative flex-1 z-10 overflow-x-hidden overflow-y-auto w-full h-full pb-32">
+      <main
+        ref={stageRef}
+        onScroll={(e) => {
+          if (isEditing) return
+          const scrollLeft = e.currentTarget.scrollLeft
+          const page = Math.round(scrollLeft / stageW)
+          if (page !== currentPage) setCurrentPage(page)
+        }}
+        className={clsx(
+          "relative flex-1 z-10 w-full h-full overflow-y-auto no-scrollbar scroll-smooth", // Base container
+          !isEditing ? "snap-x snap-mandatory overflow-x-auto hide-scrollbar" : "overflow-x-auto overflow-y-auto custom-scrollbar"
+        )}
+      >
         {/* Scrollable grid content area */}
         {cellW > 10 && (
           <div
-            className="relative mx-auto"
+            id="grid-stage"
+            className="relative transition-all duration-700 ease-in-out"
             style={{
-              width: gridCols * cellW + (gridCols - 1) * GAP,
-              height: toTop(Math.max(6, (Array.isArray(widgets) ? widgets : []).reduce((max, w) => {
-                const s = SIZE_MAP[w.size as WidgetSize] || SIZE_MAP.ICON
-                return Math.max(max, (w.y || 0) + s.h)
-              }, 4))) + PAD * 2,
+              width: pageCount * stageW, // Exact Page-based width
+              height: isEditing ? 'auto' : '100%',
               minHeight: '100%',
               paddingTop: PAD,
-              paddingBottom: PAD,
+              paddingBottom: PAD + 120, // More bottom padding for dots/footer
             }}
           >
+            {/* 0. Multiple-Screen Snap Markers & Page Visualizers */}
+            {!isEditing && (
+              <div className="absolute inset-y-0 left-0 pointer-events-none flex">
+                {Array.from({ length: pageCount }).map((_, i) => (
+                  <div
+                    key={`snap-${i}`}
+                    className="snap-start shrink-0 pointer-events-none"
+                    style={{ width: stageW, height: 1 }}
+                  />
+                ))}
+              </div>
+            )}
             {/* 1. Unified Ghost Lines */}
             {isEditing && (
               <div className="absolute inset-0 pointer-events-none" style={{ top: PAD }}>
-                {Array.from({ length: gridCols * 12 }).map((_, i) => {
-                  const x = i % gridCols
-                  const y = Math.floor(i / gridCols)
+                {Array.from({ length: (gridCols * pageCount) * 12 }).map((_, i) => {
+                  const x = i % (gridCols * pageCount)
+                  const y = Math.floor(i / (gridCols * pageCount))
                   return (
                     <div
                       key={`ghost-${i}`}
-                      className="absolute border-2 border-indigo-500/5 rounded-[2.5rem]"
+                      className="absolute border border-dashed rounded-3xl"
                       style={{
                         left: toLeft(x),
                         top: toTop(y),
                         width: cellW,
-                        height: cellH
+                        height: cellH,
+                        borderColor: 'rgba(0, 0, 0, 0.05)'
                       }}
                     />
                   )
@@ -464,7 +556,7 @@ export default function Home() {
                     top: toTop(dragPreview.y) + PAD,
                   }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute border-2 border-dashed border-indigo-400/40 bg-indigo-500/5 rounded-[2.5rem] z-0"
+                  className="absolute border-2 border-dashed border-indigo-400/40 bg-indigo-500/5 rounded-[40px] z-0"
                   style={{
                     width: dragPreview.w * cellW + (dragPreview.w - 1) * GAP,
                     height: dragPreview.h * cellH + (dragPreview.h - 1) * GAP,
@@ -500,7 +592,7 @@ export default function Home() {
                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                     animate={{
                       scale: isEditing ? (activeId === w.id ? 1.05 : 0.98) : 1,
-                      zIndex: activeId === w.id ? 100 : (isEditing ? 50 : 10),
+                      zIndex: sizeMenuId === w.id ? 150 : (activeId === w.id ? 100 : (isEditing ? 50 : 10)),
                     }}
                     transition={{
                       type: 'spring',
@@ -510,6 +602,7 @@ export default function Home() {
                     onPointerDown={(e) => {
                       if (isEditing) {
                         const rect = e.currentTarget.getBoundingClientRect()
+                        audioRefStart.current?.play().catch(() => { })
                         setGrabOffset({
                           x: e.clientX - rect.left,
                           y: e.clientY - rect.top
@@ -525,14 +618,13 @@ export default function Home() {
                     onDragStart={() => setActiveId(w.id)}
                     onDrag={(_, info) => {
                       if (!stageRef.current) return
-                      const rect = stageRef.current.querySelector('.relative.mx-auto')?.getBoundingClientRect()
+                      const rect = stageRef.current.querySelector('#grid-stage')?.getBoundingClientRect()
                       if (!rect) return
 
-                      // Calculate position relative to the centered grid area
                       const currentX = info.point.x - rect.left - grabOffset.x
                       const currentY = info.point.y - rect.top - PAD - grabOffset.y
 
-                      const nx = Math.max(0, Math.min(gridCols - spanW, Math.round(currentX / (cellW + GAP))))
+                      const nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, Math.round(currentX / (cellW + GAP))))
                       const ny = Math.max(0, Math.round(currentY / (cellH + GAP)))
 
                       if (!dragPreview || dragPreview.x !== nx || dragPreview.y !== ny) {
@@ -541,13 +633,13 @@ export default function Home() {
                     }}
                     onDragEnd={(_, info) => {
                       if (!isEditing || !stageRef.current) return
-                      const rect = stageRef.current.querySelector('.relative.mx-auto')?.getBoundingClientRect()
+                      const rect = stageRef.current.querySelector('#grid-stage')?.getBoundingClientRect()
                       if (!rect) return
 
                       const currentX = info.point.x - rect.left - grabOffset.x
                       const currentY = info.point.y - rect.top - PAD - grabOffset.y
 
-                      const nx = Math.max(0, Math.min(gridCols - spanW, Math.round(currentX / (cellW + GAP))))
+                      const nx = Math.max(0, Math.min((gridCols * pageCount) - spanW, Math.round(currentX / (cellW + GAP))))
                       const ny = Math.max(0, Math.round(currentY / (cellH + GAP)))
 
                       const moved = { ...w, x: nx, y: ny }
@@ -555,6 +647,20 @@ export default function Home() {
 
                       setWidgets([...next])
                       saveWidgets(next)
+                      audioRefEnd.current?.play().catch(() => { })
+                      const colors = ['#f43f5e', '#fbbf24', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899']
+                      const np = Array.from({ length: 24 }).map((_, i) => ({
+                        initRotate: Math.random() * 360,
+                        targetX: (Math.random() - 0.5) * 400,
+                        targetY: (Math.random() - 0.5) * 400 - 100,
+                        targetRotate: Math.random() * 720,
+                        width: Math.random() * 2 + 1,
+                        height: Math.random() * 20 + 20,
+                        color: colors[i % colors.length]
+                      }))
+                      setConfetti({ x: info.point.x, y: info.point.y, particles: np })
+                      setTimeout(() => setConfetti(null), 1000)
+
                       setActiveId(null)
                       setDragPreview(null)
                     }}
@@ -576,7 +682,7 @@ export default function Home() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className={clsx(
-                              "absolute inset-0 rounded-[2rem] border-[3px] z-20 transition-colors",
+                              "absolute inset-0 rounded-3xl border-[3px] z-20 transition-colors",
                               activeId === w.id ? "border-indigo-500 bg-indigo-500/[0.05]" : "border-indigo-500/20 bg-transparent"
                             )}
                           >
@@ -599,7 +705,7 @@ export default function Home() {
                                       initial={{ opacity: 0, x: 10, scale: 0.9 }}
                                       animate={{ opacity: 1, x: 0, scale: 1 }}
                                       exit={{ opacity: 0, x: 10, scale: 0.9 }}
-                                      className="absolute right-full mr-3 top-0 bg-white/90 backdrop-blur-2xl rounded-[1.5rem] shadow-2xl border border-white p-2 flex gap-1 z-[300] min-w-max"
+                                      className="absolute right-full mr-3 top-0 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white p-2 flex gap-1 z-[300] min-w-max"
                                     >
                                       {(gridCols === 8 ? ['ICON', 'SQUARE', 'WIDE', 'TALL', 'GIANT'] : ['ICON', 'SQUARE', 'WIDE', 'TALL'])
                                         .map((s) => {
@@ -650,8 +756,28 @@ export default function Home() {
               </div>
             )}
           </div>
-        )}
-      </main>
+        )
+        }
+      </main >
+
+      {/* ─── Pagination Dots (iOS Style) ─── */}
+      {!isEditing && pageCount > 1 && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[150] flex gap-2.5 px-4 py-2 rounded-full bg-black/5 backdrop-blur-sm">
+          {Array.from({ length: pageCount }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                stageRef.current?.scrollTo({ left: i * stageW, behavior: 'smooth' })
+                setCurrentPage(i)
+              }}
+              className={clsx(
+                "w-2 h-2 rounded-full transition-all duration-300",
+                currentPage === i ? "bg-slate-800 scale-125 shadow-sm" : "bg-slate-800/20"
+              )}
+            />
+          ))}
+        </div>
+      )}
 
       <AnimatePresence>
         {isEditing && (
@@ -659,10 +785,10 @@ export default function Home() {
             initial={{ y: 120 }}
             animate={{ y: 0 }}
             exit={{ y: 120 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-white/80 backdrop-blur-2xl px-6 py-4 rounded-[2.5rem] border-2 border-white shadow-2xl"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-white/80 backdrop-blur-2xl px-6 py-4 rounded-[40px] border-2 border-white shadow-2xl"
           >
             <Sparkles className="w-4 h-4 text-amber-400" />
-            {['TASKS', 'NOTES', 'JOURNAL', 'PHOTOS', 'SHOP'].map(type => {
+            {['TASKS', 'NOTES', 'JOURNAL', 'PHOTOS', 'SHOP', 'MILESTONE'].map(type => {
               const isAdded = widgets.some(w => w.type === type)
               return (
                 <button
@@ -709,6 +835,48 @@ export default function Home() {
         /* Prevent elastic scroll on mobile so drag works better */
         body { overscroll-behavior-y: none; }
       `}</style>
+    </div >
+  )
+}
+
+function Confetti({ config }: { config: { x: number, y: number, particles: Particle[] } | null }) {
+  if (!config) return null
+  const { x, y, particles } = config
+
+  return (
+    <div
+      className="fixed inset-0 pointer-events-none z-[999]"
+      style={{ left: 0, top: 0 }}
+    >
+      {particles.map((p, i) => (
+        <motion.div
+          key={i}
+          initial={{
+            x,
+            y,
+            opacity: 1,
+            rotate: p.initRotate,
+            scale: 0.5
+          }}
+          animate={{
+            x: x + p.targetX,
+            y: y + p.targetY,
+            opacity: 0,
+            rotate: p.targetRotate,
+            scale: [0.5, 1, 0]
+          }}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut"
+          }}
+          className="absolute rounded-full"
+          style={{
+            backgroundColor: p.color,
+            width: p.width,
+            height: p.height,
+          }}
+        />
+      ))}
     </div>
   )
 }

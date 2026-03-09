@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { CheckSquare, Circle, CheckCircle2, Star, Coins } from 'lucide-react'
+import { CheckCircle2, Circle, Star, Coins } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Task {
@@ -32,21 +32,21 @@ export default function TasksWidget({ size = 'ICON' }: { size?: string }) {
     }, [size, displayCount])
 
     if (loading) return (
-        <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-[2.5rem] animate-pulse" />
+        <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-3xl animate-pulse" />
     )
 
     const completedCount = tasks.filter(t => t.status !== 'PENDING').length
 
     return (
         <motion.div
-            whileHover={{ y: -5, scale: 1.01 }}
+            whileHover={{ scale: 1.01 }}
             onClick={() => router.push('/tasks')}
-            className="w-full h-full bg-emerald-50/40 backdrop-blur-xl rounded-[2rem] p-4 md:p-5 border border-emerald-100/50 shadow-xl shadow-emerald-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
+            className="w-full h-full bg-emerald-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-emerald-100/50 shadow-xl shadow-emerald-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
         >
             <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-3'}`}>
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
-                        <CheckSquare className="w-4 h-4" />
+                        <CheckCircle2 className="w-4 h-4" />
                     </div>
                     {size !== 'ICON' && (
                         <span className="text-[11px] font-black text-slate-800 tracking-tight uppercase opacity-60">Tasks</span>

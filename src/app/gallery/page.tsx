@@ -57,34 +57,11 @@ export default function GalleryPage() {
             .then(res => res.json())
             .then(data => {
                 setIsParent(data.isParent)
-                if (data.isParent) {
-                    fetchChildren(data.userId)
-                } else {
-                    fetchAlbums(null)
-                }
+                fetchAlbums(null)
             })
     }, [])
 
-    useEffect(() => {
-        if (isParent) {
-            fetchAlbums(selectedChildId)
-        }
-    }, [selectedChildId, isParent])
 
-    const fetchChildren = async (parentUserId: string) => {
-        try {
-            const res = await fetch('/api/parent/children')
-            if (res.ok) {
-                const data = await res.json()
-                setChildren(data)
-                if (data.length > 0 && !selectedChildId) {
-                    setSelectedChildId(data[0].id)
-                }
-            }
-        } catch (e) {
-            console.error(e)
-        }
-    }
 
     const fetchAlbums = async (targetId: string | null) => {
         setLoading(true)

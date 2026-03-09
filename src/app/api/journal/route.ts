@@ -15,7 +15,9 @@ export async function GET(req: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '10')
         const offset = (page - 1) * limit
 
-        const rawEntries = await db.select({
+        const isMilestoneFilter = searchParams.get('isMilestone') === 'true'
+
+        const baseQuery = db.select({
             id: journal.id,
             authorId: journal.authorId,
             authorRole: journal.authorRole,
@@ -33,6 +35,16 @@ export async function GET(req: NextRequest) {
         })
             .from(journal)
             .leftJoin(users, eq(journal.authorId, users.id))
+
+        if (isMilestoneFilter) {
+            // @ts-expect-error: Drizzle where clause typing issue with dynamic query
+            baseQuery.where(eq(journal.isMilestone, true))
+        } else if (searchParams.get('excludeMilestones') === 'true') {
+            // @ts-expect-error: Drizzle where clause typing issue with dynamic query
+            baseQuery.where(eq(journal.isMilestone, false))
+        }
+
+        const rawEntries = await baseQuery
             .orderBy(desc(journal.milestoneDate), desc(journal.createdAt))
             .limit(limit)
             .offset(offset)
@@ -73,8 +85,8 @@ export async function POST(req: NextRequest) {
         }
 
         // Use a transaction to ensure both journal and media are saved
-        const result = await db.transaction(async (tx) => {
-            const [newEntry] = await tx.insert(journal).values({
+        const result = db.transaction((tx) => {
+            const [newEntry] = tx.insert(journal).values({
                 authorId: currentUserId,
                 authorRole: currentUserRole,
                 text,
@@ -83,7 +95,7 @@ export async function POST(req: NextRequest) {
                 voiceUrl: voiceUrl || null,
                 isMilestone: !!isMilestone,
                 milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : new Date()
-            }).returning()
+            }).returning().all()
 
             // Insert into journalMedia
             const mediaItems: (typeof journalMedia.$inferInsert)[] = []
@@ -118,7 +130,7 @@ export async function POST(req: NextRequest) {
             }
 
             if (mediaItems.length > 0) {
-                await tx.insert(journalMedia).values(mediaItems)
+                tx.insert(journalMedia).values(mediaItems).run()
             }
 
             return newEntry

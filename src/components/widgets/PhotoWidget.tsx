@@ -1,83 +1,136 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { Image as ImageIcon, Camera, Heart } from 'lucide-react'
+import { motion, AnimatePresence, type PanInfo } from 'motion/react'
+import { Images, Camera } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 
-interface Media {
+interface PhotoEntry {
     id: string
-    url: string
-    type: string
+    imageUrl: string
+    title: string
 }
 
 export default function PhotoWidget({ size = 'ICON' }: { size?: string }) {
-    const [photos, setPhotos] = useState<Media[]>([])
+    const [photos, setPhotos] = useState<PhotoEntry[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
+    const [currentIndex, setCurrentIndex] = useState(0)
     const router = useRouter()
-
-    const displayCount = size === 'ICON' ? 0 : size === 'SQUARE' ? 4 : 8;
 
     useEffect(() => {
         if (size === 'ICON') return
-        fetch('/api/media')
+        fetch(`/api/artworks?limit=10`)
             .then(res => res.json())
             .then(data => {
-                setPhotos(data.slice(0, displayCount))
+                setPhotos(Array.isArray(data) ? data : [])
                 setLoading(false)
             })
             .catch(() => setLoading(false))
-    }, [size, displayCount])
+    }, [size])
+
+    // Auto-play carousel
+    useEffect(() => {
+        if (photos.length <= 1) return
+        const timer = setInterval(() => {
+            setCurrentIndex(prev => (prev + 1) % photos.length)
+        }, 6000)
+        return () => clearInterval(timer)
+    }, [photos.length])
+
+    const handleDragEnd = (_: unknown, info: PanInfo) => {
+        const swipeThreshold = 50;
+        if (info.offset.x < -swipeThreshold) {
+            setCurrentIndex(prev => (prev + 1) % photos.length)
+        } else if (info.offset.x > swipeThreshold) {
+            setCurrentIndex(prev => (prev - 1 + photos.length) % photos.length)
+        }
+    }
 
     if (loading) return (
-        <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-[2.5rem] animate-pulse" />
+        <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-3xl animate-pulse" />
     )
+
+    if (size === 'ICON') return null
 
     return (
         <motion.div
-            whileHover={{ y: -5, scale: 1.01 }}
-            onClick={() => router.push('/gallery')}
-            className="w-full h-full bg-purple-50/40 backdrop-blur-xl rounded-[2rem] p-4 md:p-5 border border-purple-100/50 shadow-xl shadow-purple-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
+            whileHover={{ scale: 1.01 }}
+            className="w-full h-full bg-slate-900 rounded-3xl shadow-2xl flex flex-col group overflow-hidden relative cursor-pointer"
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-3'}`}>
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
-                        <ImageIcon className="w-4 h-4" />
-                    </div>
-                    {size !== 'ICON' && (
-                        <span className="text-[11px] font-black text-slate-800 tracking-tight uppercase opacity-60">Photos</span>
-                    )}
-                </div>
-            </div>
+            <AnimatePresence mode="popLayout" initial={false}>
+                {photos.length > 0 ? (
+                    <motion.div
+                        key={photos[currentIndex].id}
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30
+                        }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        onDragEnd={handleDragEnd}
+                        className="absolute inset-0 z-0 touch-none"
+                    >
+                        <img
+                            src={photos[currentIndex].imageUrl}
+                            className="w-full h-full object-cover select-none"
+                            alt={photos[currentIndex].title}
+                            draggable={false}
+                        />
+                        {/* Elegant Vignette Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
 
-            {size !== 'ICON' && (
-                <div
-                    className={clsx(
-                        "flex-1 grid gap-1.5 overflow-hidden rounded-xl",
-                        size === 'SQUARE' ? 'grid-cols-2' : 'grid-cols-4'
-                    )}
-                >
-                    {photos.length > 0 ? (
-                        photos.map((photo, idx) => (
-                            <motion.div
-                                key={photo.id}
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="relative aspect-square rounded-xl overflow-hidden shadow-inner bg-slate-100 group/img"
-                            >
-                                <img src={photo.url} className="w-full h-full object-cover transition-transform group-hover/img:scale-110 duration-500" />
-                                <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-all" />
-                            </motion.div>
-                        ))
-                    ) : (
-                        <div className="col-span-2 h-full flex flex-col items-center justify-center text-purple-300 opacity-50 italic text-[10px] space-y-2">
-                            <span>No photos yet</span>
+                        {/* Content Overlay */}
+                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end pointer-events-none">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Latest Artwork</span>
+                                <p className="text-sm font-bold text-white truncate max-w-[150px] drop-shadow-md">
+                                    {photos[currentIndex].title}
+                                </p>
+                            </div>
                         </div>
-                    )}
+                    </motion.div>
+                ) : (
+                    <div className="absolute inset-0 bg-purple-50 flex flex-col items-center justify-center text-purple-300 gap-3">
+                        <Camera className="w-10 h-10 opacity-20" />
+                        <span className="text-xs font-bold italic opacity-40">Your gallery is empty</span>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Clickable Dots Navigation */}
+            {/* Clickable Dots Navigation - Explicitly Bottom Right */}
+            {photos.length > 1 && (
+                <div className="absolute bottom-6 right-6 flex flex-row gap-1.5 z-20 px-2.5 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/10">
+                    {photos.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentIndex(i);
+                            }}
+                            className={clsx(
+                                "h-1.5 rounded-full transition-all duration-300",
+                                i === currentIndex ? "w-5 bg-white shadow-[0_0_10px_rgba(255,255,255,0.4)]" : "w-1.5 bg-white/30 hover:bg-white/50"
+                            )}
+                        />
+                    ))}
                 </div>
             )}
+
+            {/* Top Navigation Overlay */}
+            <div className="absolute inset-0 z-10 pointer-events-none" onClick={() => router.push('/gallery')}>
+                {/* Brand Tag */}
+                <div className="absolute top-4 left-4 flex items-center gap-2 pointer-events-auto">
+                    <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg">
+                        <Images className="w-4 h-4" />
+                    </div>
+                </div>
+            </div>
         </motion.div>
     )
 }

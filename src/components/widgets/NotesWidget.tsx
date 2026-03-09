@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Smile, Pin, ChevronRight } from 'lucide-react'
+import { StickyNote, ChevronRight, Pin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Note {
@@ -32,19 +32,19 @@ export default function NotesWidget({ size = 'ICON' }: { size?: string }) {
     }, [size, displayCount])
 
     if (loading) return (
-        <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-[2.5rem] animate-pulse" />
+        <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-3xl animate-pulse" />
     )
 
     return (
         <motion.div
-            whileHover={{ y: -5, scale: 1.01 }}
+            whileHover={{ scale: 1.01 }}
             onClick={() => router.push('/notes')}
-            className="w-full h-full bg-amber-50/40 backdrop-blur-xl rounded-[2rem] p-4 md:p-5 border border-amber-100/50 shadow-xl shadow-amber-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
+            className="w-full h-full bg-amber-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-amber-100/50 shadow-xl shadow-amber-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
         >
             <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-3'}`}>
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
-                        <Smile className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
+                        <StickyNote className="w-4 h-4" />
                     </div>
                     {size !== 'ICON' && (
                         <span className="text-[11px] font-black text-slate-800 tracking-tight uppercase opacity-60">Pined</span>

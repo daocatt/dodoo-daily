@@ -86,8 +86,8 @@ export async function PATCH(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
-        await db.transaction(async (tx) => {
-            await tx.update(journal)
+        db.transaction((tx) => {
+            tx.update(journal)
                 .set({
                     text: text || existingJournal.text,
                     imageUrl: (imageUrls && imageUrls.length > 0) ? imageUrls[0] : existingJournal.imageUrl,
@@ -97,11 +97,12 @@ export async function PATCH(
                     updatedAt: new Date()
                 })
                 .where(eq(journal.id, id))
+                .run()
 
             // Sync JournalMedia
             if (imageUrls && Array.isArray(imageUrls)) {
                 // Simplest way: clear and re-insert
-                await tx.delete(journalMedia).where(eq(journalMedia.journalId, id))
+                tx.delete(journalMedia).where(eq(journalMedia.journalId, id)).run()
 
                 const mediaItems = imageUrls.map((url, index) => ({
                     journalId: id,
@@ -111,7 +112,7 @@ export async function PATCH(
                 }))
 
                 if (mediaItems.length > 0) {
-                    await tx.insert(journalMedia).values(mediaItems)
+                    tx.insert(journalMedia).values(mediaItems).run()
                 }
             }
         })
