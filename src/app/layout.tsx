@@ -3,20 +3,35 @@ import './globals.css'
 import { I18nProvider } from '@/contexts/I18nContext'
 import AccountHUD from '@/components/AccountHUD'
 import Script from 'next/script'
+import { db } from '@/lib/db'
+import { systemSettings } from '@/lib/schema'
+import { eq } from 'drizzle-orm'
 
-export const metadata: Metadata = {
-  title: 'DoDoo Daily - A Tool for Children',
-  description: 'DoDoo Daily. A tool to trace habits, emotions, and art for kids.',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'DoDoo Daily',
-  },
-  icons: {
-    icon: '/dog.svg',
-    shortcut: '/dog.svg',
-    apple: '/dog.svg',
+export async function generateMetadata(): Promise<Metadata> {
+  let systemName = 'DoDoo Daily'
+  try {
+    const settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
+    if (settings?.systemName) {
+      systemName = settings.systemName
+    }
+  } catch (error) {
+    console.error('Failed to fetch system name for metadata:', error)
+  }
+
+  return {
+    title: `${systemName} - Tools for Family Daily`,
+    description: `${systemName}. Trace habits, emotions, and art for family.`,
+    manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: 'default',
+      title: systemName,
+    },
+    icons: {
+      icon: '/dog.svg',
+      shortcut: '/dog.svg',
+      apple: '/dog.svg',
+    }
   }
 }
 
