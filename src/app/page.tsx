@@ -122,15 +122,14 @@ export default function Home() {
 
     // Adaptive rows: Very tall screens (like iPad Portrait) get more rows
     const isPortrait = stageH > stageW
-    const currentMaxRows = isPortrait ? 7 : (isDesktop ? 4 : 5)
+    // For mobile, we might want more rows, but for desktop we fix it at 4 as per spec
+    const currentMaxRows = isDesktop ? 4 : (isPortrait ? 7 : 5)
 
     // Gap responsive
     const currentGap = stageW < 600 ? 10 : 12
 
     // Progressive Padding (留白)
-    // 10% of width on smaller screens, fixed in pixels on desktop
-    // Progressive Padding (留白) - 6% is more standard for tablets to avoid excessive empty space
-    const currentPad = stageW < 1024 ? (stageW * 0.06) : 80
+    const currentPad = stageW < 1024 ? (stageW * 0.04) : 60
 
     const availableWidth = stageW - (currentPad * 2)
     const availableHeight = stageH - 120 // Header + Padding
@@ -138,26 +137,35 @@ export default function Home() {
     const cw = (availableWidth - (currentCols - 1) * currentGap) / currentCols
     const ch = (availableHeight - (currentMaxRows - 1) * currentGap) / currentMaxRows
 
+    // CRITICAL: Take the minimum to ensure no overflow
     let cellSize = Math.min(cw, ch)
 
-    // Limits: Max 150 to ensure desktop/tablet/mobile differentiation
+    // Limits
     if (cellSize > 140) cellSize = 140
     if (cellSize < 30) cellSize = 30
 
     const gridWidth = currentCols * cellSize + (currentCols - 1) * currentGap
     const gridHeight = currentMaxRows * cellSize + (currentMaxRows - 1) * currentGap
 
-    return { cellSize, gridCols: currentCols, maxRows: currentMaxRows, gridWidth, gridHeight, currentGap }
+    // Page offsets for absolute centering
+    const pageOffsetX = (stageW - gridWidth) / 2
+    const pageOffsetY = (stageH - 60 - gridHeight) / 2 // 60 is NAV_H
+
+    return { cellSize, gridCols: currentCols, maxRows: currentMaxRows, gridWidth, gridHeight, currentGap, pageOffsetX, pageOffsetY }
   }, [stageW, stageH])
 
-  const { cellSize, gridCols, maxRows, gridWidth, gridHeight, currentGap } = dimensions
+  const { cellSize, gridCols, maxRows, gridWidth, gridHeight, currentGap, pageOffsetX, pageOffsetY } = dimensions
 
-  // Temporarily force single page as requested
-  const pageCount = 1
+  // Carousel Configuration
+  const pageCount = 3
 
   // Global Grid-to-Pixel Mapper (Relative to grid-stage)
-  const toLeft = (x: number) => x * (cellSize + currentGap)
-  const toTop = (y: number) => y * (cellSize + currentGap)
+  const toLeft = (x: number) => {
+    const page = Math.floor(x / gridCols)
+    const localX = x % gridCols
+    return page * stageW + pageOffsetX + localX * (cellSize + currentGap)
+  }
+  const toTop = (y: number) => pageOffsetY + y * (cellSize + currentGap)
 
   // Track grab offset to ensure perfect snapping
   const [grabOffset, setGrabOffset] = useState({ x: 0, y: 0 })
@@ -206,29 +214,33 @@ export default function Home() {
     if (gridCols === 8) return widgets
 
     const sorted = [...widgets].sort((a, b) => (a.y - b.y) || (a.x - b.x))
-    const grid: boolean[][] = Array.from({ length: 100 }, () => Array(gridCols).fill(false))
+    // Multi-page safe grid for projection
+    const grid: boolean[][] = Array.from({ length: 20 }, () => Array(gridCols * pageCount).fill(false))
 
     return sorted.map(w => {
       const { w: spanW, h: spanH } = getWidgetSpan(w.size, gridCols)
 
-      // Try to find the first available spot starting from its projected position
-      const projX = Math.floor(w.x * gridCols / 8)
+      // Projection maintaining page boundary
+      const originalPage = Math.floor(w.x / 8)
+      const localX = w.x % 8
+      const projLocalX = Math.floor(localX * gridCols / 8)
+      const projX = originalPage * gridCols + projLocalX
       const projY = w.y
 
-      // Simple search for next available slot to avoid overlap
+      // Simple search for next available slot TO PRESERVE PAGE
       let found = false
-      for (let y = projY; y < 100 && !found; y++) {
-        for (let x = (y === projY ? projX : 0); x <= gridCols - spanW; x++) {
+      // Priority 1: Search within the same page
+      for (let y = projY; y < maxRows && !found; y++) {
+        for (let x = (y === projY ? projX : originalPage * gridCols); x <= (originalPage + 1) * gridCols - spanW; x++) {
           let conflict = false
           for (let dy = 0; dy < spanH; dy++) {
             for (let dx = 0; dx < spanW; dx++) {
-              if (grid[y + dy][x + dx]) { conflict = true; break; }
+              if (y + dy >= 20 || grid[y + dy][x + dx]) { conflict = true; break; }
             }
             if (conflict) break
           }
 
           if (!conflict) {
-            // Place it
             for (let dy = 0; dy < spanH; dy++) {
               for (let dx = 0; dx < spanW; dx++) {
                 grid[y + dy][x + dx] = true
@@ -240,10 +252,31 @@ export default function Home() {
         }
       }
 
-      // Fallback (should not happen with length 100)
+      // Priority 2: Full scan (only if page is full)
+      for (let y = 0; y < maxRows && !found; y++) {
+        for (let x = 0; x <= gridCols * pageCount - spanW; x++) {
+          let conflict = false
+          for (let dy = 0; dy < spanH; dy++) {
+            for (let dx = 0; dx < spanW; dx++) {
+              if (y + dy >= 20 || grid[y + dy][x + dx]) { conflict = true; break; }
+            }
+            if (conflict) break
+          }
+          if (!conflict) {
+            for (let dy = 0; dy < spanH; dy++) {
+              for (let dx = 0; dx < spanW; dx++) {
+                grid[y + dy][x + dx] = true
+              }
+            }
+            found = true
+            return { ...w, dx: x, dy: y, dw: spanW, dh: spanH }
+          }
+        }
+      }
+
       return { ...w, dx: projX, dy: projY, dw: spanW, dh: spanH }
     })
-  }, [widgets, gridCols, maxRows])
+  }, [widgets, gridCols, maxRows, pageCount])
 
   // Resizable stage tracking
   useEffect(() => {
@@ -284,9 +317,9 @@ export default function Home() {
   }
 
   const resolveOverlap = (moved: Widget, all: Widget[]): Widget[] => {
-    // 1. Initial constraint check on moved widget (Clamping only)
     const sMoved = getWidgetSpan(moved.size, gridCols)
-    moved.x = Math.max(0, Math.min(gridCols - sMoved.w, moved.x))
+    // Clamp within the multi-page grid boundary
+    moved.x = Math.max(0, Math.min(gridCols * pageCount - sMoved.w, moved.x))
     moved.y = Math.max(0, Math.min(maxRows - sMoved.h, moved.y))
 
     const placed: Widget[] = [moved]
@@ -304,29 +337,41 @@ export default function Home() {
     for (const other of others) {
       const s = getWidgetSpan(other.size, gridCols)
 
+      // 1. Try its current position
       if (!isPosOccupied(other.x, other.y, s.w, s.h, placed) &&
-        other.x + s.w <= gridCols &&
+        other.x + s.w <= gridCols * pageCount &&
         other.y + s.h <= maxRows) {
         placed.push(other)
         continue
       }
 
-      let found = false
-      // Strictly search only within the first page
-      for (let ty = 0; ty <= maxRows - s.h; ty++) {
-        for (let tx = 0; tx <= gridCols - s.w; tx++) {
+      // 2. Try to find a slot ON THE SAME PAGE as its original position
+      const originalPage = Math.floor(other.x / gridCols)
+      let foundOnSamePage = false
+      for (let ty = 0; ty <= maxRows - s.h && !foundOnSamePage; ty++) {
+        for (let tx = originalPage * gridCols; tx <= (originalPage + 1) * gridCols - s.w && !foundOnSamePage; tx++) {
           if (!isPosOccupied(tx, ty, s.w, s.h, placed)) {
             placed.push({ ...other, x: tx, y: ty })
-            found = true
-            break
+            foundOnSamePage = true
           }
         }
-        if (found) break
       }
 
-      if (!found) {
-        // Absolute fallback: push to the last possible valid position
-        placed.push({ ...other, x: gridCols - s.w, y: maxRows - s.h })
+      if (foundOnSamePage) continue
+
+      // 3. Absolute Search across ALL pages (fallback)
+      let foundAnything = false
+      for (let ty = 0; ty <= maxRows - s.h && !foundAnything; ty++) {
+        for (let tx = 0; tx <= gridCols * pageCount - s.w && !foundAnything; tx++) {
+          if (!isPosOccupied(tx, ty, s.w, s.h, placed)) {
+            placed.push({ ...other, x: tx, y: ty })
+            foundAnything = true
+          }
+        }
+      }
+
+      if (!foundAnything) {
+        placed.push({ ...other, x: gridCols * pageCount - s.w, y: maxRows - s.h })
       }
     }
     return placed
@@ -340,7 +385,7 @@ export default function Home() {
     const moved = {
       ...w,
       size: nextSize,
-      x: Math.min(w.x, gridCols - s.w)
+      x: Math.min(w.x, gridCols * pageCount - s.w)
     }
     const nextWidgets = resolveOverlap(moved, widgets)
     saveWidgets(nextWidgets)
@@ -354,13 +399,8 @@ export default function Home() {
   }
 
   const addWidget = async (type: string) => {
-    if (widgets.some(w => w.type === type)) {
-      console.warn(`[Home] Widget type ${type} already exists.`)
-      return
-    }
-
+    // Repeated widgets are now allowed
     try {
-      // Helper for collision check (re-defined or passed from resolveOverlap)
       const isPosOccupied = (x: number, y: number, sw: number, sh: number, currentPlaced: Widget[]) => {
         return currentPlaced.some(p => {
           const pSize = getWidgetSpan(p.size as WidgetSize, gridCols)
@@ -372,7 +412,7 @@ export default function Home() {
       let foundSlot = false;
       let nx = 0;
       let ny = 0;
-      for (let page = 0; page < 10 && !foundSlot; page++) {
+      for (let page = 0; page < pageCount && !foundSlot; page++) {
         for (let ty = 0; ty <= maxRows - 2 && !foundSlot; ty++) {
           for (let tx = page * gridCols; tx <= page * gridCols + gridCols - 2 && !foundSlot; tx++) {
             if (!isPosOccupied(tx, ty, 2, 2, widgets)) {
@@ -582,7 +622,7 @@ export default function Home() {
                 : "top-0 h-[60px] px-6"
             )}
           >
-            <div className="flex items-center gap-2 sm:gap-6 flex-1 overflow-hidden">
+            <div className="flex items-center gap-3 sm:gap-6 flex-1 overflow-hidden pr-2">
               <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/30 shrink-0">
                 <Sparkles className="w-3 h-3" />
                 <span className="text-[9px] font-black uppercase tracking-widest hidden xs:inline">Edit</span>
@@ -590,7 +630,25 @@ export default function Home() {
 
               <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
 
-              <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1">
+              {/* Page Switcher in Edit HUD */}
+              <div className="flex items-center bg-white/5 rounded-full p-1 gap-1 shrink-0">
+                {Array.from({ length: pageCount }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i)}
+                    className={clsx(
+                      "px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tighter transition-all shrink-0",
+                      currentPage === i ? "bg-white text-black" : "text-white/40 hover:text-white"
+                    )}
+                  >
+                    Page {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
+
+              <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1 flex-1">
                 {[
                   { type: 'TASKS', Icon: CheckCircle2 },
                   { type: 'NOTES', Icon: StickyNote },
@@ -599,20 +657,16 @@ export default function Home() {
                   { type: 'SHOP', Icon: ShoppingBag },
                   { type: 'MILESTONE', Icon: Trophy }
                 ].map(({ type, Icon }) => {
-                  const isAdded = widgets.some(w => w.type === type)
                   return (
                     <button
                       key={type}
-                      disabled={isAdded}
                       onClick={() => addWidget(type)}
                       className={clsx(
-                        "w-11 h-11 rounded-full flex items-center justify-center transition-all group relative",
-                        isAdded
-                          ? "text-white/10 cursor-not-allowed"
-                          : "text-white/50 hover:text-white hover:bg-white/10"
+                        "w-10 h-10 rounded-full flex items-center justify-center transition-all group relative shrink-0",
+                        "text-white/50 hover:text-white hover:bg-white/10"
                       )}
                     >
-                      <Icon className="w-5 h-5" />
+                      <Icon className="w-4 h-4" />
                       <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-black text-white text-[9px] font-black uppercase tracking-widest rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[210] border border-white/10">
                         {type}
                       </span>
@@ -622,7 +676,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <button
                 onClick={async () => {
                   if (!confirm('Reset layout to defaults?')) return
@@ -631,7 +685,8 @@ export default function Home() {
                   ))
                   window.location.reload()
                 }}
-                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-400 transition-colors"
+                className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#ffffff20] hover:text-rose-400/60 transition-colors"
+                title="Wipe everything"
               >
                 Reset
               </button>
@@ -651,12 +706,7 @@ export default function Home() {
       {/* ─── Bento Stage ─── */}
       <main
         ref={stageRef}
-        className={clsx(
-          "relative flex-1 z-10 w-full h-full flex justify-center no-scrollbar transition-all duration-300",
-          gridCols === 8
-            ? "items-center overflow-hidden"
-            : "items-start overflow-y-auto pt-4 pb-48"
-        )}
+        className="relative flex-1 z-10 w-full h-full flex justify-center no-scrollbar transition-all duration-300 items-center overflow-hidden"
         style={{
           // @ts-expect-error custom property
           '--cell-size': `${cellSize}px`
@@ -671,67 +721,68 @@ export default function Home() {
         />
         {/* Scrollable grid content area */}
         {cellSize > 10 && (
-          <div
-            id="grid-stage"
-            className="relative"
-            style={{
-              width: gridWidth,
-              height: gridHeight,
-            }}
-          >
-            {/* 0. Multiple-Screen Snap Markers & Page Visualizers */}
-            {!isEditing && (
-              <div className="absolute inset-y-0 left-0 pointer-events-none flex">
-                {Array.from({ length: pageCount }).map((_, i) => (
-                  <div
-                    key={`snap-${i}`}
-                    className="snap-start shrink-0 pointer-events-none"
-                    style={{ width: stageW, height: 1 }}
-                  />
-                ))}
-              </div>
-            )}
-            {/* 1. Unified Ghost Lines */}
-            {isEditing && (
-              <div className="absolute inset-0 pointer-events-none">
-                {Array.from({ length: (gridCols * pageCount) * maxRows }).map((_, i) => {
-                  const x = i % (gridCols * pageCount)
-                  const y = Math.floor(i / (gridCols * pageCount))
-                  return (
-                    <div
-                      key={`ghost-${i}`}
-                      className="absolute border border-dashed rounded-3xl"
-                      style={{
-                        left: toLeft(x),
-                        top: toTop(y),
-                        width: cellSize,
-                        height: cellSize,
-                        borderColor: 'rgba(0, 0, 0, 0.05)'
-                      }}
-                    />
-                  )
-                })}
-              </div>
-            )}
-
-            {/* 2. Drag Preview (Ghost Slot) */}
-            <AnimatePresence>
-              {isEditing && dragPreview && activeId && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    left: toLeft(dragPreview.x),
-                    top: toTop(dragPreview.y),
-                    width: dragPreview.w * cellSize + (dragPreview.w - 1) * currentGap,
-                    height: dragPreview.h * cellSize + (dragPreview.h - 1) * currentGap
-                  }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute rounded-3xl bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 z-20"
-                />
+          <div className="w-full h-full relative">
+            <motion.div
+              id="grid-stage"
+              className="absolute inset-0 flex"
+              animate={{ x: -currentPage * stageW }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              drag={!isEditing && "x"}
+              dragConstraints={{ left: -(pageCount - 1) * stageW, right: 0 }}
+              onDragEnd={(_, info) => {
+                if (isEditing) return
+                if (info.offset.x < -100 && currentPage < pageCount - 1) {
+                  setCurrentPage(prev => prev + 1)
+                } else if (info.offset.x > 100 && currentPage > 0) {
+                  setCurrentPage(prev => prev - 1)
+                }
+              }}
+            >
+              {/* 1. Unified Ghost Lines */}
+              {isEditing && (
+                <div className="absolute inset-0 pointer-events-none">
+                  {Array.from({ length: pageCount }).map((_, pIdx) => (
+                    <div key={`page-ghosts-${pIdx}`} className="absolute top-0" style={{ left: pIdx * stageW }}>
+                      {Array.from({ length: gridCols * maxRows }).map((_, i) => {
+                        const x = i % gridCols
+                        const y = Math.floor(i / gridCols)
+                        return (
+                          <div
+                            key={`ghost-${pIdx}-${i}`}
+                            className="absolute border border-dashed rounded-3xl"
+                            style={{
+                              left: pageOffsetX + x * (cellSize + currentGap),
+                              top: pageOffsetY + y * (cellSize + currentGap),
+                              width: cellSize,
+                              height: cellSize,
+                              borderColor: 'rgba(0, 0, 0, 0.05)'
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
               )}
-            </AnimatePresence>
+
+              {/* 2. Drag Preview (Ghost Slot) */}
+              <AnimatePresence>
+                {isEditing && dragPreview && activeId && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      left: toLeft(dragPreview.x),
+                      top: toTop(dragPreview.y),
+                      width: dragPreview.w * cellSize + (dragPreview.w - 1) * currentGap,
+                      height: dragPreview.h * cellSize + (dragPreview.h - 1) * currentGap
+                    }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute rounded-3xl bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 z-20"
+                  />
+                )}
+              </AnimatePresence>
 
             {displayWidgets.length > 0 ? (
               displayWidgets.map(w => {
@@ -793,13 +844,14 @@ export default function Home() {
                       const rect = stageRef.current.querySelector('#grid-stage')?.getBoundingClientRect()
                       if (!rect) return
 
-                      const absoluteX = info.point.x - rect.left - grabOffset.x
+                      const absoluteX = info.point.x - rect.left - grabOffset.x + (currentPage * stageW)
                       const absoluteY = info.point.y - rect.top - grabOffset.y
 
-                      const nx = Math.round(absoluteX / (cellSize + currentGap))
-                      const ny = Math.round(absoluteY / (cellSize + currentGap))
+                      // Adjust based on pageOffsetX and pageOffsetY
+                      const nx = Math.round((absoluteX - pageOffsetX) / (cellSize + currentGap))
+                      const ny = Math.round((absoluteY - pageOffsetY) / (cellSize + currentGap))
 
-                      const finalNx = Math.max(0, Math.min(gridCols - spanW, nx))
+                      const finalNx = Math.max(0, Math.min(gridCols * pageCount - spanW, nx))
                       const finalNy = Math.max(0, Math.min(maxRows - spanH, ny))
 
                       if (!dragPreview || dragPreview.x !== finalNx || dragPreview.y !== finalNy) {
@@ -811,13 +863,13 @@ export default function Home() {
                       const rect = stageRef.current.querySelector('#grid-stage')?.getBoundingClientRect()
                       if (!rect) return
 
-                      const absoluteX = info.point.x - rect.left - grabOffset.x
+                      const absoluteX = info.point.x - rect.left - grabOffset.x + (currentPage * stageW)
                       const absoluteY = info.point.y - rect.top - grabOffset.y
 
-                      const nx = Math.round(absoluteX / (cellSize + currentGap))
-                      const ny = Math.round(absoluteY / (cellSize + currentGap))
+                      const nx = Math.round((absoluteX - pageOffsetX) / (cellSize + currentGap))
+                      const ny = Math.round((absoluteY - pageOffsetY) / (cellSize + currentGap))
 
-                      const finalNx = Math.max(0, Math.min(gridCols - spanW, nx))
+                      const finalNx = Math.max(0, Math.min(gridCols * pageCount - spanW, nx))
                       const finalNy = Math.max(0, Math.min(maxRows - spanH, ny))
 
                       const moved = { ...w, x: finalNx, y: finalNy }
@@ -927,10 +979,10 @@ export default function Home() {
                 {loading ? "Initializing..." : "No widgets. Click Reset to fix."}
               </div>
             )}
-          </div>
-        )
-        }
-      </main >
+          </motion.div>
+        </div>
+      )}
+    </main>
 
       {/* ─── Pagination Dots (iOS Style) ─── */}
       {
@@ -939,10 +991,7 @@ export default function Home() {
             {Array.from({ length: pageCount }).map((_, i) => (
               <button
                 key={i}
-                onClick={() => {
-                  stageRef.current?.scrollTo({ left: i * stageW, behavior: 'smooth' })
-                  setCurrentPage(i)
-                }}
+                onClick={() => setCurrentPage(i)}
                 className={clsx(
                   "w-2 h-2 rounded-full transition-all duration-300",
                   currentPage === i ? "bg-slate-800 scale-125 shadow-sm" : "bg-slate-800/20"

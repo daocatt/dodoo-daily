@@ -313,11 +313,11 @@
 /* ─────────────────────────────────────────────────────────
    Hide scrollbar for nav menus on mobile
 ───────────────────────────────────────────────────────── */
-.hide-scrollbar {
+.hide-scrollbar, .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none;    /* Firefox */
 }
-.hide-scrollbar::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar {
   display: none;            /* Chrome, Safari and Opera */
 }
 
