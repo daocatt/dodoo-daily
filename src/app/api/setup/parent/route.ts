@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
             avatarUrl = mediaItem.path;
         }
 
-        // Update the parent's name and avatar
+        // Update the parent's name, nickname, and avatar
         await db.update(users)
-            .set({ name: trimmedName, avatarUrl })
+            .set({ name: trimmedName, nickname: trimmedName, avatarUrl })
             .where(eq(users.id, parentUser.id))
 
         // Log the parent in automatically by setting session cookies

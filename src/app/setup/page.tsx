@@ -32,6 +32,7 @@ export default function SetupPage() {
     const [avatarFile, setAvatarFile] = useState<File | null>(null)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState('')
+    const [nicknameTouched, setNicknameTouched] = useState(false)
 
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -174,7 +175,11 @@ export default function SetupPage() {
                                         autoFocus
                                         type="text"
                                         value={name}
-                                        onChange={e => setName(e.target.value)}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setName(val);
+                                            if (!nicknameTouched) setNickname(val);
+                                        }}
                                         placeholder={t('setup.namePlaceholder')}
                                         className="w-full px-3 py-2 md:py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:ring-[#43aa8b]/20 focus:border-[#43aa8b] outline-none transition-all"
                                     />
@@ -188,7 +193,10 @@ export default function SetupPage() {
                                     <input
                                         type="text"
                                         value={nickname}
-                                        onChange={e => setNickname(e.target.value)}
+                                        onChange={e => {
+                                            setNickname(e.target.value);
+                                            setNicknameTouched(true);
+                                        }}
                                         placeholder={t('setup.nicknamePlaceholder')}
                                         className="w-full px-3 py-2 md:py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-800 placeholder:text-slate-300 focus:ring-4 focus:ring-[#43aa8b]/20 focus:border-[#43aa8b] outline-none transition-all"
                                     />

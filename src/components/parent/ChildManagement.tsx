@@ -44,6 +44,8 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const [showArchived, setShowArchived] = useState(false)
     const [confirmModal, setConfirmModal] = useState<{ type: 'delete' | 'archive', childId: string } | null>(null)
     const [processing, setProcessing] = useState(false)
+    const [nicknameTouched, setNicknameTouched] = useState(false)
+    const [editNicknameTouched, setEditNicknameTouched] = useState(false)
 
     const fetchChildren = async () => {
         try {
@@ -73,6 +75,8 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
             })
             setNewChild({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
             setEditingChild(null)
+            setNicknameTouched(false)
+            setEditNicknameTouched(false)
             fetchChildren()
         } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
@@ -192,7 +196,17 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                             placeholder="Full Name"
                             value={member.name || ''}
-                            onChange={e => onChange({ ...member, name: e.target.value })}
+                            onChange={e => {
+                                const val = e.target.value;
+                                const isEditing = !!member.id;
+                                const touched = isEditing ? editNicknameTouched : nicknameTouched;
+
+                                if (!touched) {
+                                    onChange({ ...member, name: val, nickname: val });
+                                } else {
+                                    onChange({ ...member, name: val });
+                                }
+                            }}
                             required
                         />
                     </div>
@@ -202,7 +216,11 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                             placeholder="Nickname"
                             value={member.nickname || ''}
-                            onChange={e => onChange({ ...member, nickname: e.target.value })}
+                            onChange={e => {
+                                onChange({ ...member, nickname: e.target.value });
+                                if (member.id) setEditNicknameTouched(true);
+                                else setNicknameTouched(true);
+                            }}
                             required
                         />
                     </div>
@@ -572,7 +590,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 {processing ? t('common.loading') : (editingChild ? t('button.save') : t('button.create'))}
                             </button>
                             <button
-                                onClick={() => { setShowAdd(false); setEditingChild(null); }}
+                                onClick={() => {
+                                    setShowAdd(false);
+                                    setEditingChild(null);
+                                    setNicknameTouched(false);
+                                    setEditNicknameTouched(false);
+                                }}
                                 className="px-10 bg-slate-100 text-slate-500 rounded-lg font-bold hover:bg-slate-200 transition-all text-lg"
                             >
                                 {t('button.cancel')}
