@@ -15,11 +15,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# ⚡ 从非当前目录(通过 Docker BuildKit secret)挂载 .env 文件
-# 在群晖构建时，系统会读取外部的 .env，并在构建阶段应用(如 NEXT_PUBLIC_ 变量)
-RUN --mount=type=secret,id=ext_env \
-    if [ -f /run/secrets/ext_env ]; then cat /run/secrets/ext_env > .env; fi && \
-    npm run build
+# Standard build without secrets
+RUN npm run build
 
 # ============================================================
 # Stage 2: Runner (minimal production image)
