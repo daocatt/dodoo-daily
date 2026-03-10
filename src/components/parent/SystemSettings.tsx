@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Power, ShieldAlert, Cpu, RotateCcw, AlertTriangle, Check, X, Loader2, Camera, LayoutHeader, LayoutGrid, Image as ImageIcon, Globe, Bell, Github, Mail, ExternalLink, Info, Heart } from 'lucide-react'
+import { Power, ShieldAlert, Cpu, RotateCcw, AlertTriangle, Check, X, Loader2, Camera, LayoutGrid, Image as ImageIcon, Globe, Bell, Github, Mail, ExternalLink, Info, Heart } from 'lucide-react'
 import pkg from '@/../package.json'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
@@ -65,7 +65,7 @@ export default function SystemSettings() {
                 if (updates.systemName !== undefined) setSystemName(updates.systemName)
                 if (updates.showAllAvatars !== undefined) setShowAllAvatars(updates.showAllAvatars)
                 if (updates.homepageImages !== undefined) {
-                    try { setHomepageImages(JSON.parse(updates.homepageImages)) } catch (e) { }
+                    try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (e) { }
                 }
                 showToast('Settings updated successfully!')
                 setShowConfirm(false)

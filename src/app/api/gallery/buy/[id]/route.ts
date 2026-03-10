@@ -39,7 +39,7 @@ export async function POST(
         // Transaction
         // 1. Deduct from Parent
         const deductRes = await addBalance(parentId, 'CURRENCY', -art.priceCoins, `Bought poster: ${art.title}`)
-        if (!deductRes.success) return NextResponse.json({ error: 'Transaction failed' }, { status: 500 })
+        if (!deductRes || !deductRes.success) return NextResponse.json({ error: 'Transaction failed' }, { status: 500 })
 
         // 2. Add to Child
         await addBalance(art.userId!, 'CURRENCY', art.priceCoins, `Sold poster: ${art.title} to Parent`)

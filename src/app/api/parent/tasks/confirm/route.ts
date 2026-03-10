@@ -25,12 +25,12 @@ export async function POST(req: NextRequest) {
         }
 
         if (action === 'APPROVE') {
-            if (currentTask.assignedTo) {
+            if (currentTask.assigneeId) {
                 // Award stars
-                await addBalance(currentTask.assignedTo, 'GOLD_STAR', currentTask.rewardStars, `Assigned Task Approved: ${currentTask.title}`, actorId)
+                await addBalance(currentTask.assigneeId, 'GOLD_STAR', currentTask.rewardStars, `Assigned Task Approved: ${currentTask.title}`, actorId)
                 // Award coins if any
                 if (currentTask.rewardCoins > 0) {
-                    await addBalance(currentTask.assignedTo, 'CURRENCY', currentTask.rewardCoins, `Bonus for Task: ${currentTask.title}`, actorId)
+                    await addBalance(currentTask.assigneeId, 'CURRENCY', currentTask.rewardCoins, `Bonus for Task: ${currentTask.title}`, actorId)
                 }
             }
 

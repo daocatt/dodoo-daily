@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
 
         const res = await addBalance(userId, type || 'CURRENCY', amount, 'Auto-recharge by Parent')
 
-        if (!res.success) {
-            return NextResponse.json({ error: res.error }, { status: 400 })
+        if (!res || !res.success) {
+            return NextResponse.json({ error: res?.error || 'Transaction failed' }, { status: 400 })
         }
 
         return NextResponse.json({ success: true, balance: res.balance })

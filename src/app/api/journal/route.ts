@@ -37,10 +37,8 @@ export async function GET(req: NextRequest) {
             .leftJoin(users, eq(journal.authorId, users.id))
 
         if (isMilestoneFilter) {
-            // @ts-expect-error: Drizzle where clause typing issue with dynamic query
             baseQuery.where(eq(journal.isMilestone, true))
         } else if (searchParams.get('excludeMilestones') === 'true') {
-            // @ts-expect-error: Drizzle where clause typing issue with dynamic query
             baseQuery.where(eq(journal.isMilestone, false))
         }
 

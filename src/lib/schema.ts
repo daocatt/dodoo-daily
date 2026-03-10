@@ -90,21 +90,6 @@ export const guest = sqliteTable("Guest", {
 export const task = sqliteTable("Task", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     creatorId: text("creatorId").references(() => users.id),
-    title: text("title").notNull(),
-    description: text("description"),
-    isRepeating: integer("isRepeating", { mode: "boolean" }).default(false).notNull(),
-    isMonthlyRepeating: integer("isMonthlyRepeating", { mode: "boolean" }).default(false).notNull(),
-    rewardStars: integer("rewardStars").default(1).notNull(),
-    rewardCoins: integer("rewardCoins").default(0).notNull(),
-    plannedTime: integer("plannedTime", { mode: "timestamp_ms" }),
-    completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
-    completedById: text("completedById").references(() => users.id),
-    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
-    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
-});
-
-export const assignedTask = sqliteTable("AssignedTask", {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     assignerId: text("assignerId").references(() => users.id),
     assigneeId: text("assigneeId").references(() => users.id),
     title: text("title").notNull(),
@@ -113,7 +98,7 @@ export const assignedTask = sqliteTable("AssignedTask", {
     isMonthlyRepeating: integer("isMonthlyRepeating", { mode: "boolean" }).default(false).notNull(),
     rewardStars: integer("rewardStars").default(1).notNull(),
     rewardCoins: integer("rewardCoins").default(0).notNull(),
-    confirmationStatus: text("confirmationStatus", { enum: ["PENDING", "APPROVED", "REJECTED"] }).default("PENDING"),
+    confirmationStatus: text("confirmationStatus", { enum: ["PENDING", "APPROVED", "REJECTED"] }),
     plannedTime: integer("plannedTime", { mode: "timestamp_ms" }),
     completed: integer("completed", { mode: "boolean" }).default(false).notNull(),
     completedById: text("completedById").references(() => users.id),

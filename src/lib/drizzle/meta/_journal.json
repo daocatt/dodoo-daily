@@ -15,6 +15,13 @@
       "when": 1773057731255,
       "tag": "0001_optimal_micromacro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1773132054447,
+      "tag": "0002_freezing_black_panther",
+      "breakpoints": true
     }
   ]
 }

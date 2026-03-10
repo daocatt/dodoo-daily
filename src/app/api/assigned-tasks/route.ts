@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { assignedTask } from '@/lib/schema'
-import { desc, eq, and, sql } from 'drizzle-orm'
+import { task } from '@/lib/schema'
+import { desc, eq, and, sql, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
@@ -12,41 +12,44 @@ export async function GET(req: NextRequest) {
         const { searchParams } = new URL(req.url)
         const targetUserId = searchParams.get('userId')
 
-        // Fetch assigned tasks
+        // Fetch assigned tasks (where assignerId is set)
         const query = db.select({
-            id: assignedTask.id,
-            title: assignedTask.title,
-            description: assignedTask.description,
-            rewardStars: assignedTask.rewardStars,
-            rewardCoins: assignedTask.rewardCoins,
-            assignerId: assignedTask.assignerId,
-            assigneeId: assignedTask.assigneeId,
-            completed: assignedTask.completed,
-            completedById: assignedTask.completedById,
-            plannedTime: assignedTask.plannedTime,
-            confirmationStatus: assignedTask.confirmationStatus,
-            isRepeating: assignedTask.isRepeating,
-            isMonthlyRepeating: assignedTask.isMonthlyRepeating,
-            updatedAt: assignedTask.updatedAt,
-            createdAt: assignedTask.createdAt,
-            assigneeNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = AssignedTask.assigneeId)`,
-            assigneeAvatar: sql<string>`(SELECT avatarUrl FROM Users WHERE id = AssignedTask.assigneeId)`,
-            completedByNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = AssignedTask.completedById)`,
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            rewardStars: task.rewardStars,
+            rewardCoins: task.rewardCoins,
+            assignerId: task.assignerId,
+            assigneeId: task.assigneeId,
+            completed: task.completed,
+            completedById: task.completedById,
+            plannedTime: task.plannedTime,
+            confirmationStatus: task.confirmationStatus,
+            isRepeating: task.isRepeating,
+            isMonthlyRepeating: task.isMonthlyRepeating,
+            updatedAt: task.updatedAt,
+            createdAt: task.createdAt,
+            assigneeNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = Task.assigneeId)`,
+            assigneeAvatar: sql<string>`(SELECT avatarUrl FROM Users WHERE id = Task.assigneeId)`,
+            completedByNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = Task.completedById)`,
         })
-            .from(assignedTask)
+            .from(task)
 
         const filters = [];
+        // Ensure we only get assigned tasks
+        filters.push(isNotNull(task.assignerId));
+
         if (role === 'PARENT') {
             if (targetUserId) {
-                filters.push(eq(assignedTask.assigneeId, targetUserId));
+                filters.push(eq(task.assigneeId, targetUserId));
             } else {
-                filters.push(eq(assignedTask.assignerId, id));
+                filters.push(eq(task.assignerId, id));
             }
         } else {
-            filters.push(eq(assignedTask.assigneeId, id));
+            filters.push(eq(task.assigneeId, id));
         }
 
-        const tasks = await query.where(and(...filters)).orderBy(desc(assignedTask.createdAt));
+        const tasks = await query.where(and(...filters)).orderBy(desc(task.createdAt));
 
         return NextResponse.json(tasks)
     } catch (error) {
@@ -58,28 +61,29 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const { userId: id, role } = await getSessionUser()
-        if (!id || role !== 'PARENT') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        if (role !== 'PARENT' || !id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 
         const body = await req.json()
-        const { title, description, rewardStars, rewardCoins, isRepeating, isMonthlyRepeating, plannedTime, assignedTo } = body
+        const { title, description, rewardStars, rewardCoins, assignedTo, plannedTime, isRepeating, isMonthlyRepeating } = body
 
         if (!title || !assignedTo) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
 
-        const newTask = await db.insert(assignedTask).values({
+        const [newTask] = await db.insert(task).values({
             assignerId: id,
             assigneeId: assignedTo,
+            creatorId: id,
             title,
-            description: description || null,
-            rewardStars: rewardStars ? parseInt(rewardStars) : 1,
-            rewardCoins: rewardCoins ? parseInt(rewardCoins) : 0,
-            confirmationStatus: 'PENDING',
-            isRepeating: !!isRepeating,
-            isMonthlyRepeating: !!isMonthlyRepeating,
+            description,
+            rewardStars: rewardStars || 1,
+            rewardCoins: rewardCoins || 0,
             plannedTime: plannedTime ? new Date(plannedTime) : null,
-            completed: false,
+            confirmationStatus: 'PENDING',
+            isRepeating: isRepeating || false,
+            isMonthlyRepeating: isMonthlyRepeating || false,
+            completed: false
         }).returning()
 
-        return NextResponse.json(newTask[0])
+        return NextResponse.json(newTask)
     } catch (error) {
         console.error('Failed to create assigned task:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

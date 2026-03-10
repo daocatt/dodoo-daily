@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task, users } from '@/lib/schema'
-import { desc, eq, and, or, sql } from 'drizzle-orm'
+import { desc, eq, and, or, sql, isNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
         const { userId: id } = await getSessionUser()
         if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-        // Fetch personal tasks only
+        // Fetch personal tasks only (assignerId is null)
         const personalTasks = await db.select({
             id: task.id,
             title: task.title,
@@ -27,12 +27,12 @@ export async function GET(req: NextRequest) {
             completedByNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = Task.completedById)`,
         })
             .from(task)
-            .where(eq(task.creatorId, id))
+            .where(and(eq(task.creatorId, id), isNull(task.assignerId)))
             .orderBy(desc(task.createdAt))
 
         return NextResponse.json(personalTasks)
     } catch (error) {
-        console.error('Failed to fetch personal tasks:', error.message, error.stack)
+        console.error('Failed to fetch personal tasks:', (error as Error).message, (error as Error).stack)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

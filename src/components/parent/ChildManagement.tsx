@@ -30,6 +30,15 @@ interface Child {
     }
 }
 
+interface BalanceLog {
+    id: string
+    amount: number
+    type: string
+    reason: string
+    balance: number
+    createdAt: string
+}
+
 export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: string) => void }) {
     const { t } = useI18n()
     const [children, setChildren] = useState<Child[]>([])
@@ -38,7 +47,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const [editingChild, setEditingChild] = useState<Partial<Child> | null>(null)
     const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
     const [showLogs, setShowLogs] = useState<string | null>(null)
-    const [logs, setLogs] = useState<Record<string, unknown>[]>([])
+    const [logs, setLogs] = useState<BalanceLog[]>([])
     const [adjusting, setAdjusting] = useState<string | null>(null)
     const [adjData, setAdjData] = useState({ type: 'CURRENCY', amount: 0, reason: '' })
     const [showArchived, setShowArchived] = useState(false)

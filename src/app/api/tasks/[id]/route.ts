@@ -1,17 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { eq, and, isNull } from 'drizzle-orm'
+import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
-
-async function getCurrentUser() {
-    const cookieStore = await cookies()
-    const id = cookieStore.get('dodoo_user_id')?.value
-    const role = cookieStore.get('dodoo_role')?.value
-    return { id, role }
-}
-
 
 export async function PUT(
     req: NextRequest,
@@ -22,11 +14,11 @@ export async function PUT(
         const body = await req.json()
         const { completed, title, isRepeating, isMonthlyRepeating, plannedTime } = body
 
-        const t = await db.select().from(task).where(eq(task.id, id))
+        const t = await db.select().from(task).where(and(eq(task.id, id), isNull(task.assignerId)))
         if (t.length === 0) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
 
         const currentTask = t[0]
-        const { id: currentUserId } = await getCurrentUser()
+        const { userId: currentUserId } = await getSessionUser()
         if (!currentUserId || currentTask.creatorId !== currentUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -64,9 +56,11 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id: currentUserId } = await getCurrentUser()
+        const { userId: currentUserId } = await getSessionUser()
+        if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
         const { id } = await params
-        const [t] = await db.select().from(task).where(eq(task.id, id))
+        const [t] = await db.select().from(task).where(and(eq(task.id, id), isNull(task.assignerId)))
         if (!t || t.creatorId !== currentUserId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
         await db.delete(task).where(eq(task.id, id))

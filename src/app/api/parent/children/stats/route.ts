@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, accountStats, task, assignedTask, purchase, accountStatsLog, growthRecord } from '@/lib/schema'
-import { eq, and, desc, gte, lte, or, sql } from 'drizzle-orm'
+import { users, accountStats, task, purchase, accountStatsLog, growthRecord } from '@/lib/schema'
+import { eq, and, desc, gte, lte, or, sql, isNull, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
@@ -74,19 +74,21 @@ export async function GET(req: NextRequest) {
                 .from(task)
                 .where(and(
                     eq(task.creatorId, child.id),
+                    isNull(task.assignerId),
                     eq(task.completed, true),
                     gte(task.updatedAt, lastWeekStart),
                     lte(task.updatedAt, lastWeekEnd)
                 )).get()
 
             const assignedTasksCount = await db.select({ count: sql<number>`count(*)` })
-                .from(assignedTask)
+                .from(task)
                 .where(and(
-                    eq(assignedTask.assigneeId, child.id),
-                    eq(assignedTask.completed, true),
-                    eq(assignedTask.confirmationStatus, 'APPROVED'),
-                    gte(assignedTask.updatedAt, lastWeekStart),
-                    lte(assignedTask.updatedAt, lastWeekEnd)
+                    eq(task.assigneeId, child.id),
+                    isNotNull(task.assignerId),
+                    eq(task.completed, true),
+                    eq(task.confirmationStatus, 'APPROVED'),
+                    gte(task.updatedAt, lastWeekStart),
+                    lte(task.updatedAt, lastWeekEnd)
                 )).get()
 
             const totalCompletedCount = (personalTasksCount?.count || 0) + (assignedTasksCount?.count || 0)

@@ -561,7 +561,7 @@ function TasksPageContent() {
                             exit={{ scale: 0.95, y: 10 }}
                             className="w-full max-w-sm md:max-w-2xl bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
                         >
-                            <div className={`p-4 md:p-5 border-b flex justify-between items-center ${assignTo === '' ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
+                            <div className={`p-4 md:p-5 border-b flex justify-between items-center ${assignTo.length === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
                                 <h3 className="text-lg md:text-xl font-black flex items-center gap-2 text-slate-800">
                                     {editingTask ? <Edit2 className="w-5 h-5 text-blue-500" /> : (assignTo.length === 0 ? <Plus className="w-5 h-5 text-blue-500" /> : <Users className="w-5 h-5 text-emerald-500" />)}
                                     {editingTask ? 'Edit Task' : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.newTask') : t('parent.assignTask') || 'Assign Task')}
@@ -703,7 +703,7 @@ function TasksPageContent() {
                                         <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className={`w-full py-3.5 md:py-4 rounded-2xl text-white font-black tracking-wide shadow-lg transition-all text-base md:text-lg ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : (assignTo === '' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/20 hover:opacity-90' : 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:opacity-90')}`}
+                                            className={`w-full py-3.5 md:py-4 rounded-2xl text-white font-black tracking-wide shadow-lg transition-all text-base md:text-lg ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : (assignTo.length === 0 ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/20 hover:opacity-90' : 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:opacity-90')}`}
                                         >
                                             {isSubmitting ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? t('common.save') : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.createGoal') : t('common.confirm')))}
                                         </button>

@@ -78,7 +78,7 @@ export default function SettingsPage() {
             })
             const data = await res.json()
             if (res.ok) {
-                setUser({ ...user, avatarUrl: data.avatarUrl })
+                if (user) setUser({ ...user, avatarUrl: data.avatarUrl })
             }
         } catch (e) { console.error(e) }
         finally { setUploading(false) }
@@ -163,7 +163,7 @@ export default function SettingsPage() {
                                     })
                                     const data = await res.json()
                                     if (res.ok) {
-                                        setUser({ ...user, nickname: data.nickname })
+                                        if (user) setUser({ ...user, nickname: data.nickname })
                                         setMessage('Nickname updated!')
                                         setError('')
                                     } else {

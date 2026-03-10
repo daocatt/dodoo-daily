@@ -3,8 +3,6 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
-import { addBalance, TransactionType } from '@/lib/economy'
-
 import { getSessionUser } from '@/lib/auth'
 import { addBalance, TransactionType } from '@/lib/economy'
 
@@ -21,9 +19,9 @@ export async function POST(req: NextRequest) {
         }
 
         const res = await addBalance(targetUserId, type as TransactionType, amount, reason || 'Manual adjustment by Parent', parentId)
-
-        if (!res.success) {
-            return NextResponse.json({ error: res.error }, { status: 400 })
+        
+        if (!res || !res.success) {
+            return NextResponse.json({ error: res?.error || 'Transaction failed' }, { status: 400 })
         }
 
         return NextResponse.json({ success: true, balance: res.balance })

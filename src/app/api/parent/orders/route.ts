@@ -76,9 +76,8 @@ export async function PATCH(req: NextRequest) {
         if (remarks !== undefined) updateData.remarks = remarks
         updateData.updatedAt = new Date()
 
-        // Refund coins when status is set to REFUNDED (and wasn't already)
         if (status === 'REFUNDED' && existingOrder.status !== 'REFUNDED') {
-            await addBalance(existingOrder.userId!, existingOrder.costCoins, 'CURRENCY', `Order #${id.slice(0, 8)} refunded`)
+            await addBalance(existingOrder.userId!, 'CURRENCY', existingOrder.costCoins, `Order #${id.slice(0, 8)} refunded`)
         }
 
         const [order] = await db.update(purchase)

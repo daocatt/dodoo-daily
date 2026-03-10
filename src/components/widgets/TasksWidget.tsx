@@ -2,15 +2,19 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { CheckCircle2, Circle, Star, Coins } from 'lucide-react'
+import { CheckCircle2, Circle, Star, Coins, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Task {
     id: string
     title: string
-    status: 'PENDING' | 'COMPLETED' | 'CONFIRMED'
-    goldStarReward: number
-    currencyReward: number
+    completed: boolean
+    rewardStars: number
+    rewardCoins: number
+    confirmationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
+    isAssigned?: boolean
+    plannedTime?: string | number | null
+    createdAt?: string | number | null
 }
 
 export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
@@ -18,35 +22,66 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
 
+    const isIcon = size === 'ICON'
+    const themeColor = isIcon ? 'emerald' : 'blue'
+
+    const formatTaskDate = (dateStr: string | number | null) => {
+        if (!dateStr) return ''
+        const d = new Date(dateStr)
+        const today = new Date()
+        if (d.toDateString() === today.toDateString()) return 'Today'
+        return d.toLocaleDateString([], { month: '2-digit', day: '2-digit' })
+    }
+
     const displayCount = size === 'ICON' ? 0 : size === 'SQUARE' ? 4 : 8;
 
     useEffect(() => {
         if (size === 'ICON') return
-        fetch('/api/tasks')
-            .then(res => res.json())
-            .then(data => {
-                setTasks(data.slice(0, displayCount))
+        const fetchAllTasks = async () => {
+            try {
+                const [pRes, aRes] = await Promise.all([
+                    fetch('/api/tasks'),
+                    fetch('/api/assigned-tasks')
+                ])
+                const [pData, aData] = await Promise.all([pRes.json(), aRes.json()])
+
+                const personal = (Array.isArray(pData) ? pData : []).map((t: Task) => ({ ...t, isAssigned: false }));
+                const assigned = (Array.isArray(aData) ? aData : []).map((t: Task) => ({ ...t, isAssigned: true }));
+
+                // Combine and prioritize pending/incomplete
+                const combined = [...personal, ...assigned]
+                    .sort((a, b) => {
+                        if (a.completed !== b.completed) return a.completed ? 1 : -1
+                        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+                    })
+
+                setTasks(combined.slice(0, displayCount))
                 setLoading(false)
-            })
-            .catch(() => setLoading(false))
+            } catch (err) {
+                console.error(err)
+                setLoading(false)
+            }
+        }
+        fetchAllTasks()
     }, [size, displayCount])
 
     if (loading) return (
         <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-3xl animate-pulse" />
     )
 
-    const completedCount = tasks.filter(t => t.status !== 'PENDING').length
+    const totalCount = tasks.length
+    const completedCount = tasks.filter(t => t.completed).length
 
     return (
         <motion.div
             whileHover={{ scale: 1.01 }}
             onClick={() => router.push('/tasks')}
-            className="w-full h-full bg-emerald-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-emerald-100/50 shadow-xl shadow-emerald-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
+            className={`w-full h-full bg-${themeColor}-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-${themeColor}-100/50 shadow-xl shadow-${themeColor}-200/20 flex flex-col group overflow-hidden relative cursor-pointer`}
         >
             <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <div className="flex items-center gap-2">
                     <div
-                        className="rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
+                        className={`rounded-xl bg-${themeColor}-100 flex items-center justify-center text-${themeColor}-600 shadow-sm transition-transform group-hover:rotate-12 outline-none`}
                         style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
                     >
                         <CheckCircle2 style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
@@ -60,12 +95,12 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                         </span>
                     )}
                 </div>
-                {size !== 'ICON' && (
+                {size !== 'ICON' && tasks.length > 0 && (
                     <div
-                        className="px-2 py-0.5 bg-emerald-100/80 rounded-full font-black text-emerald-700 uppercase tracking-widest leading-none"
+                        className={`px-2 py-0.5 bg-${themeColor}-100/80 rounded-full font-black text-${themeColor}-700 uppercase tracking-widest leading-none`}
                         style={{ fontSize: Math.max(7, cellSize * 0.07) }}
                     >
-                        {completedCount}/{tasks.length}
+                        {completedCount}/{totalCount}
                     </div>
                 )}
             </div>
@@ -79,49 +114,65 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                                 initial={{ x: 20, opacity: 0 }}
                                 animate={{ x: 0, opacity: 1 }}
                                 transition={{ delay: idx * 0.05 }}
-                                className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-emerald-200 transition-colors shadow-sm"
+                                className={`flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-${themeColor}-200 transition-colors shadow-sm min-w-0`}
                             >
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                    {task.status === 'PENDING' ? (
-                                        <Circle
-                                            className="text-emerald-300 shrink-0"
-                                            style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
-                                        />
+                                <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                                    {task.completed ? (
+                                        <div className="relative flex items-center justify-center shrink-0">
+                                            <CheckCircle2
+                                                className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : `text-${themeColor}-500`}
+                                                style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
+                                            />
+                                        </div>
                                     ) : (
-                                        <CheckCircle2
-                                            className="text-emerald-500 shrink-0"
+                                        <Circle
+                                            className={`text-${themeColor}-300 shrink-0`}
                                             style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
                                         />
                                     )}
                                     <span
-                                        className={`font-bold text-slate-700 truncate ${task.status !== 'PENDING' ? 'line-through opacity-40' : ''}`}
+                                        className={`font-bold text-slate-700 truncate ${task.completed ? 'line-through opacity-40' : ''}`}
                                         style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                                     >
                                         {task.title}
                                     </span>
                                 </div>
-                                {(size !== 'SMALL' && (task.goldStarReward > 0 || task.currencyReward > 0)) && (
-                                    <div className="flex items-center gap-1 shrink-0 ml-1">
-                                        {task.goldStarReward > 0 && (
-                                            <div className="flex items-center gap-0.4 px-1 py-0.4 bg-amber-50 rounded-full">
-                                                <Star style={{ width: cellSize * 0.1, height: cellSize * 0.1 }} className="text-amber-500 fill-amber-500" />
-                                                <span style={{ fontSize: cellSize * 0.06 }} className="font-black text-amber-700">{task.goldStarReward}</span>
-                                            </div>
-                                        )}
-                                        {task.currencyReward > 0 && (
-                                            <div className="flex items-center gap-0.4 px-1 py-0.4 bg-blue-50 rounded-full">
-                                                <Coins style={{ width: cellSize * 0.1, height: cellSize * 0.1 }} className="text-blue-500" />
-                                                <span style={{ fontSize: cellSize * 0.06 }} className="font-black text-blue-700">{task.currencyReward}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                
+                                <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
+                                    {task.plannedTime && (
+                                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100/80 rounded-lg text-slate-500 shrink-0">
+                                            <Calendar style={{ width: cellSize * 0.08, height: cellSize * 0.08 }} className="opacity-70" />
+                                            <span className="font-bold tabular-nums" style={{ fontSize: Math.max(7, cellSize * 0.07) }}>
+                                                {formatTaskDate(task.plannedTime)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    {(size !== 'SQUARE' && size !== 'SMALL') && (task.rewardStars > 0 || task.rewardCoins > 0) && (
+                                        <div className="flex items-center gap-1 shrink-0">
+                                            {task.rewardStars > 0 && (
+                                                <div className="flex items-center gap-0.5 px-1 py-0.5 bg-amber-50/80 rounded-full">
+                                                    <Star style={{ width: cellSize * 0.09, height: cellSize * 0.09 }} className="text-amber-500 fill-amber-500 font-bold" />
+                                                    <span style={{ fontSize: Math.max(7, cellSize * 0.07) }} className="font-black text-amber-700">{task.rewardStars}</span>
+                                                </div>
+                                            )}
+                                            {task.rewardCoins > 0 && (
+                                                <div className="flex items-center gap-0.5 px-1 py-0.5 bg-blue-50/80 rounded-full">
+                                                    <Coins style={{ width: cellSize * 0.09, height: cellSize * 0.09 }} className="text-blue-500" />
+                                                    <span style={{ fontSize: Math.max(7, cellSize * 0.07) }} className="font-black text-blue-700">{task.rewardCoins}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         ))
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-emerald-300 opacity-40 italic text-[9px]">
-                            <span>Clear!</span>
-                        </div>
+                        size !== 'ICON' && (
+                            <div className={`h-full flex flex-col items-center justify-center text-${themeColor}-300 opacity-40 italic text-[9px]`}>
+                                <span>Clear!</span>
+                            </div>
+                        )
                     )}
                 </AnimatePresence>
             </div>

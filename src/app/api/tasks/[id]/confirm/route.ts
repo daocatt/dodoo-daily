@@ -30,9 +30,9 @@ export async function POST(
             }
 
             // Award Rewards
-            await addBalance(t.assignedTo!, 'GOLD_STAR', t.rewardStars, `Assigned Task Approved: ${t.title}`)
+            await addBalance(t.assigneeId!, 'GOLD_STAR', t.rewardStars, `Assigned Task Approved: ${t.title}`)
             if (t.rewardCoins > 0) {
-                await addBalance(t.assignedTo!, 'CURRENCY', t.rewardCoins, `Assigned Task Bonus Coins: ${t.title}`)
+                await addBalance(t.assigneeId!, 'CURRENCY', t.rewardCoins, `Assigned Task Bonus Coins: ${t.title}`)
             }
 
             await db.update(task).set({

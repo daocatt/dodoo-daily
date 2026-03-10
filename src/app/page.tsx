@@ -17,12 +17,24 @@ import MilestoneWidget from '@/components/widgets/MilestoneWidget'
 
 type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
 
+interface SystemSettings {
+  systemName: string
+  timezone: string
+}
+
 interface Widget {
   id: string
   type: string
   size: WidgetSize
   x: number
   y: number
+}
+
+interface ProjectedWidget extends Widget {
+  dx: number
+  dy: number
+  dw: number
+  dh: number
 }
 
 // Map sizes to grid spans (cols x rows)
@@ -107,7 +119,7 @@ export default function Home() {
 
   // Recalculate cell size and center the grid area
   const dimensions = React.useMemo(() => {
-    if (stageW < 100) return { cellSize: 0, gridCols: 8, maxRows: 4, gridWidth: 0, gridHeight: 0, currentGap: 0 }
+    if (stageW < 100) return { cellSize: 0, gridCols: 8, maxRows: 4, gridWidth: 0, gridHeight: 0, currentGap: 0, pageOffsetX: 0, pageOffsetY: 0 }
 
     // REFINED Breakpoints for better device mapping:
     // < 600px: 4 cols (Modern Phones)
@@ -556,7 +568,6 @@ export default function Home() {
 
   return (
     <div className="h-dvh w-full flex flex-col relative overflow-hidden bg-[#fafaf9]">
-      {console.log("[Home] Rendering. stageW:", stageW, "effectiveW:", (stageW > 100 ? stageW : (typeof window !== 'undefined' ? window.innerWidth : 1200)), "widgets:", widgets.length)}
       <NatureBackground />
       <Confetti config={confetti} />
 
@@ -788,7 +799,7 @@ export default function Home() {
               displayWidgets.map(w => {
                 // If it's a display widget, it has dx, dy, dw, dh
                 // Otherwise it's from widgets (8-col)
-                const packed = w as { dx: number; dy: number; dw: number; dh: number }
+                const packed = w as unknown as ProjectedWidget
                 const isPacked = 'dx' in w
                 const spanW = isPacked ? packed.dw : getWidgetSpan(w.size, gridCols).w
                 const spanH = isPacked ? packed.dh : getWidgetSpan(w.size, gridCols).h

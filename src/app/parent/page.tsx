@@ -74,7 +74,7 @@ export default function ParentDashboard() {
             }} />
             case 'REWARDS': return <ShopManagement />
             case 'ORDERS': return <OrderManagement />
-            case 'PROFILE': return <ProfileManagement user={user} />
+            case 'PROFILE': return user ? <ProfileManagement user={user} /> : null
             case 'SYSTEM': return <SystemSettings />
             case 'MEDIA': return <MediaManagement />
             default: return (

@@ -5,7 +5,7 @@ import { eq, and, gte, lte, sql } from 'drizzle-orm'
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
 
 export async function addBalance(userId: string, type: TransactionType, amount: number, reason: string, actorId?: string) {
-    if (amount === 0) return
+    if (amount === 0) return { success: true }
 
     // 1. Get current stats
     let stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
@@ -105,7 +105,7 @@ export async function convertStarsToCoins(userId: string, starAmount: number) {
 
     // Deduct Stars
     const deductRes = await addBalance(userId, 'GOLD_STAR', -starsToDeduct, 'Exchange for Coins')
-    if (!deductRes.success) return deductRes
+    if (!deductRes || !deductRes.success) return deductRes || { success: false, error: 'Unknown error' }
 
     // Add Coins
     const addRes = await addBalance(userId, 'CURRENCY', coinsToAdd, `Exchanged ${starsToDeduct} stars`)
