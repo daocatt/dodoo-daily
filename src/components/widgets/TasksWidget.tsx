@@ -13,7 +13,7 @@ interface Task {
     currencyReward: number
 }
 
-export default function TasksWidget({ size = 'ICON' }: { size?: string }) {
+export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
@@ -43,17 +43,28 @@ export default function TasksWidget({ size = 'ICON' }: { size?: string }) {
             onClick={() => router.push('/tasks')}
             className="w-full h-full bg-emerald-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-emerald-100/50 shadow-xl shadow-emerald-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-3'}`}>
+            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
-                        <CheckCircle2 className="w-4 h-4" />
+                    <div
+                        className="rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
+                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
+                    >
+                        <CheckCircle2 style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
                     </div>
                     {size !== 'ICON' && (
-                        <span className="text-[11px] font-black text-slate-800 tracking-tight uppercase opacity-60">Tasks</span>
+                        <span
+                            className="font-black text-slate-800 tracking-tight uppercase opacity-60"
+                            style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                        >
+                            Tasks
+                        </span>
                     )}
                 </div>
                 {size !== 'ICON' && (
-                    <div className="px-2 py-0.5 bg-emerald-100/80 rounded-full text-[8px] font-black text-emerald-700 uppercase tracking-widest leading-none">
+                    <div
+                        className="px-2 py-0.5 bg-emerald-100/80 rounded-full font-black text-emerald-700 uppercase tracking-widest leading-none"
+                        style={{ fontSize: Math.max(7, cellSize * 0.07) }}
+                    >
                         {completedCount}/{tasks.length}
                     </div>
                 )}
@@ -72,11 +83,20 @@ export default function TasksWidget({ size = 'ICON' }: { size?: string }) {
                             >
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     {task.status === 'PENDING' ? (
-                                        <Circle className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                                        <Circle
+                                            className="text-emerald-300 shrink-0"
+                                            style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
+                                        />
                                     ) : (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                        <CheckCircle2
+                                            className="text-emerald-500 shrink-0"
+                                            style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
+                                        />
                                     )}
-                                    <span className={`text-[10px] font-bold text-slate-700 truncate ${task.status !== 'PENDING' ? 'line-through opacity-40' : ''}`}>
+                                    <span
+                                        className={`font-bold text-slate-700 truncate ${task.status !== 'PENDING' ? 'line-through opacity-40' : ''}`}
+                                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                                    >
                                         {task.title}
                                     </span>
                                 </div>
@@ -84,14 +104,14 @@ export default function TasksWidget({ size = 'ICON' }: { size?: string }) {
                                     <div className="flex items-center gap-1 shrink-0 ml-1">
                                         {task.goldStarReward > 0 && (
                                             <div className="flex items-center gap-0.4 px-1 py-0.4 bg-amber-50 rounded-full">
-                                                <Star className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                                <span className="text-[7px] font-black text-amber-700">{task.goldStarReward}</span>
+                                                <Star style={{ width: cellSize * 0.1, height: cellSize * 0.1 }} className="text-amber-500 fill-amber-500" />
+                                                <span style={{ fontSize: cellSize * 0.06 }} className="font-black text-amber-700">{task.goldStarReward}</span>
                                             </div>
                                         )}
                                         {task.currencyReward > 0 && (
                                             <div className="flex items-center gap-0.4 px-1 py-0.4 bg-blue-50 rounded-full">
-                                                <Coins className="w-2.5 h-2.5 text-blue-500" />
-                                                <span className="text-[7px] font-black text-blue-700">{task.currencyReward}</span>
+                                                <Coins style={{ width: cellSize * 0.1, height: cellSize * 0.1 }} className="text-blue-500" />
+                                                <span style={{ fontSize: cellSize * 0.06 }} className="font-black text-blue-700">{task.currencyReward}</span>
                                             </div>
                                         )}
                                     </div>

@@ -8,7 +8,7 @@
 
 - **无垂直滚动（No Vertical Scroll）**：无论在何种屏幕尺寸或极端比例下，首页内容必须完全容纳在计算好的视口高度（屏幕高度减去顶部导航栏等占据的高度）内。
 - **整屏翻页（Carousel/Snap Pagination）**：第二屏或第三屏的切换应当是整页滑动的，像 Carousel 或 iOS 主页面那样，而不是连续的自由水平滚动。
-- **绝对居中对齐（Absolute Centering）**：在遇到屏幕过宽或过高的极端情况时，整个计算好的网格应当在可用视口内水平和垂直居中。
+- **绝对居中对齐（Absolute Centering）**：在遇到屏幕过宽或过高的极端情况时，整个计算好的网格应当在可用视口内水平和垂直绝对居中（目前基于屏幕 `stageW` 和 `stageH` 动态计算 `pageOffsetX` 和 `pageOffsetY` 实现）。8列布局在大屏下会根据此逻辑在屏幕正中央显示。
 
 ## 3. 断点与网格定义 (Breakpoints & Grid System)
 

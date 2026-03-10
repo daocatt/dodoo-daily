@@ -13,7 +13,7 @@ interface Note {
     isPinned: boolean
 }
 
-export default function NotesWidget({ size = 'ICON' }: { size?: string }) {
+export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
     const [notes, setNotes] = useState<Note[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
@@ -41,17 +41,28 @@ export default function NotesWidget({ size = 'ICON' }: { size?: string }) {
             onClick={() => router.push('/notes')}
             className="w-full h-full bg-amber-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-amber-100/50 shadow-xl shadow-amber-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-3'}`}>
+            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
-                        <StickyNote className="w-4 h-4" />
+                    <div
+                        className="rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
+                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
+                    >
+                        <StickyNote style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
                     </div>
                     {size !== 'ICON' && (
-                        <span className="text-[11px] font-black text-slate-800 tracking-tight uppercase opacity-60">Pined</span>
+                        <span
+                            className="font-black text-slate-800 tracking-tight uppercase opacity-60"
+                            style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                        >
+                            Pined
+                        </span>
                     )}
                 </div>
                 {size !== 'ICON' && (
-                    <div className="px-2 py-0.5 bg-amber-100/80 rounded-full text-[8px] font-black text-amber-700 uppercase tracking-widest leading-none">
+                    <div
+                        className="px-2 py-0.5 bg-amber-100/80 rounded-full font-black text-amber-700 uppercase tracking-widest leading-none"
+                        style={{ fontSize: Math.max(7, cellSize * 0.07) }}
+                    >
                         {notes.length}
                     </div>
                 )}
@@ -70,12 +81,18 @@ export default function NotesWidget({ size = 'ICON' }: { size?: string }) {
                             >
                                 <div className="flex items-center gap-2 flex-1 overflow-hidden">
                                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: note.color || '#FEF3C7' }} />
-                                    <p className={`text-[10px] font-bold text-slate-700 truncate ${size === 'SMALL' ? 'line-clamp-2' : ''}`}>
+                                    <p
+                                        className={`font-bold text-slate-700 truncate ${size === 'SMALL' ? 'line-clamp-2' : ''}`}
+                                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                                    >
                                         {note.text}
                                     </p>
                                 </div>
                                 {note.isPinned && (
-                                    <Pin className="w-2.5 h-2.5 text-amber-500 fill-amber-500 shrink-0 ml-1" />
+                                    <Pin
+                                        className="text-amber-500 fill-amber-500 shrink-0 ml-1"
+                                        style={{ width: cellSize * 0.1, height: cellSize * 0.1 }}
+                                    />
                                 )}
                             </motion.div>
                         ))

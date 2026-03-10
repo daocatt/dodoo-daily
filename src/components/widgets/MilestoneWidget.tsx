@@ -12,7 +12,7 @@ interface Milestone {
     milestoneDate: string | number
 }
 
-export default function MilestoneWidget({ size = 'ICON' }: { size?: string }) {
+export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
     const [milestones, setMilestones] = useState<Milestone[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
@@ -47,14 +47,22 @@ export default function MilestoneWidget({ size = 'ICON' }: { size?: string }) {
             onClick={() => router.push('/journal?filter=milestone')}
             className="w-full h-full bg-orange-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border-2 border-orange-100 hover:border-orange-400 shadow-xl shadow-orange-200/10 flex flex-col group overflow-hidden relative cursor-pointer transition-all duration-300"
         >
-            <div className="flex items-center justify-between mb-2">
+            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-orange-100/80 flex items-center justify-center text-orange-600 shadow-sm transition-transform group-hover:rotate-12">
-                        <Trophy className="w-4 h-4" />
+                    <div
+                        className="rounded-xl bg-orange-100/80 flex items-center justify-center text-orange-600 shadow-sm transition-transform group-hover:rotate-12"
+                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
+                    >
+                        <Trophy style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
                     </div>
-                    <span className="text-[11px] font-black text-orange-900/40 tracking-tight uppercase">Milestones</span>
+                    <span
+                        className="font-black text-orange-900/40 tracking-tight uppercase"
+                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                    >
+                        Milestones
+                    </span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-orange-300 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight style={{ width: cellSize * 0.15, height: cellSize * 0.15 }} className="text-orange-300 group-hover:translate-x-1 transition-transform" />
             </div>
 
             <div className="flex-1 flex flex-col justify-center relative min-h-[140px]">
@@ -84,10 +92,16 @@ export default function MilestoneWidget({ size = 'ICON' }: { size?: string }) {
                                             "flex flex-col items-center text-center w-full",
                                             isTop ? "mb-auto pb-2" : "mt-auto pt-2"
                                         )}>
-                                            <span className="text-[7px] font-black text-orange-500 uppercase tracking-tight mb-0.5 bg-orange-50 px-1.5 py-0.5 rounded-md">
+                                            <span
+                                                className="font-black text-orange-500 uppercase tracking-tight mb-0.5 bg-orange-50 px-1.5 py-0.5 rounded-md"
+                                                style={{ fontSize: Math.max(6, cellSize * 0.05) }}
+                                            >
                                                 {d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                             </span>
-                                            <p className="text-[9px] font-bold text-slate-700 line-clamp-2 leading-tight">
+                                            <p
+                                                className="font-bold text-slate-700 line-clamp-2 leading-tight"
+                                                style={{ fontSize: Math.max(8, cellSize * 0.08) }}
+                                            >
                                                 {m.text}
                                             </p>
                                         </div>

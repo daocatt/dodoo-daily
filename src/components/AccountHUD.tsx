@@ -59,6 +59,15 @@ export default function AccountHUD() {
 
     const pathname = usePathname()
     const { t } = useI18n()
+    const [isMobile, setIsMobile] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => window.innerWidth < 610
+        setIsMobile(checkMobile())
+        const handleResize = () => setIsMobile(checkMobile())
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     const fetchData = useCallback(async () => {
         try {
@@ -157,11 +166,16 @@ export default function AccountHUD() {
 
     return (
         <>
-            <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none w-auto max-w-full px-4">
+            <div
+                className={clsx(
+                    "fixed left-1/2 -translate-x-1/2 z-[1000] pointer-events-none w-auto max-w-[95vw] px-2 transition-all duration-500",
+                    isMobile ? "bottom-6" : "top-6"
+                )}
+            >
                 <motion.div
-                    initial={{ y: -100, opacity: 0 }}
+                    initial={{ y: isMobile ? 100 : -100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="bg-white/60 backdrop-blur-2xl px-4 py-1.5 rounded-full border border-white/80 shadow-[0_12px_40px_rgba(0,0,0,0.08)] flex items-center gap-4 pointer-events-auto ring-1 ring-black/[0.02]"
+                    className="bg-white/80 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/80 shadow-[0_12px_40px_rgba(0,0,0,0.12)] flex items-center gap-3 sm:gap-4 pointer-events-auto ring-1 ring-black/[0.05]"
                 >
                     {/* Profile Section */}
                     <div className="flex items-center gap-3 pr-4 border-r border-black/[0.05]">
@@ -198,16 +212,16 @@ export default function AccountHUD() {
                         </div>
                     </div>
 
-                    {/* Children Section (Parent only) */}
+                    {/* Children Section (Parent only) - Hidden on extreme mobile to save space */}
                     {stats.isParent && children.length > 0 && (
-                        <Link href="/stats" className="flex items-center gap-1.5 px-1 hover:opacity-70 transition-opacity">
+                        <Link href="/stats" className="hidden sm:flex items-center gap-1.5 px-1 hover:opacity-70 transition-opacity">
                             <UsersRound className="w-4 h-4 text-slate-400 fill-slate-400 shrink-0" />
                             <span className="text-[13px] font-medium text-slate-600">{children.length}</span>
                         </Link>
                     )}
 
                     {/* Economy Section */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         {/* Coins */}
                         {stats.isParent ? (
                             <button

@@ -12,7 +12,7 @@ interface PhotoEntry {
     title: string
 }
 
-export default function PhotoWidget({ size = 'ICON' }: { size?: string }) {
+export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
     const [photos, setPhotos] = useState<PhotoEntry[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -85,10 +85,18 @@ export default function PhotoWidget({ size = 'ICON' }: { size?: string }) {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
 
                         {/* Content Overlay */}
-                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end pointer-events-none">
+                        <div className="absolute left-4 bottom-4 right-4 flex justify-between items-end pointer-events-none">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-1">Latest Artwork</span>
-                                <p className="text-sm font-bold text-white truncate max-w-[150px] drop-shadow-md">
+                                <span
+                                    className="font-black text-white/60 uppercase tracking-widest mb-1"
+                                    style={{ fontSize: Math.max(7, cellSize * 0.08) }}
+                                >
+                                    Latest Artwork
+                                </span>
+                                <p
+                                    className="font-bold text-white truncate max-w-[200px] drop-shadow-md"
+                                    style={{ fontSize: Math.max(10, cellSize * 0.12) }}
+                                >
                                     {photos[currentIndex].title}
                                 </p>
                             </div>

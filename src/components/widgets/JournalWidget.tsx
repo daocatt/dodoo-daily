@@ -12,7 +12,7 @@ interface Journal {
     createdAt: number
 }
 
-export default function JournalWidget({ size = 'ICON' }: { size?: string }) {
+export default function JournalWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
     const [entries, setEntries] = useState<Journal[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
@@ -38,13 +38,21 @@ export default function JournalWidget({ size = 'ICON' }: { size?: string }) {
             onClick={() => router.push('/journal')}
             className="w-full h-full bg-blue-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-blue-100/50 shadow-xl shadow-blue-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-3'}`}>
+            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm transition-transform group-hover:rotate-12 outline-none">
-                        <Heart className="w-4 h-4" />
+                    <div
+                        className="rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
+                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
+                    >
+                        <Heart style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
                     </div>
                     {size !== 'ICON' && (
-                        <span className="text-[11px] font-black text-indigo-800 tracking-tight uppercase opacity-60">Journal</span>
+                        <span
+                            className="font-black text-indigo-800 tracking-tight uppercase opacity-60"
+                            style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                        >
+                            Journal
+                        </span>
                     )}
                 </div>
             </div>
@@ -61,10 +69,16 @@ export default function JournalWidget({ size = 'ICON' }: { size?: string }) {
                                 className="bg-white/50 backdrop-blur-sm p-3 rounded-2xl border border-white/60 shadow-sm hover:shadow-md transition-all group/item"
                             >
                                 <div className="flex justify-between items-start gap-2">
-                                    <p className="text-[11px] leading-relaxed text-slate-700 font-bold line-clamp-2">
+                                    <p
+                                        className="text-[11px] leading-relaxed text-slate-700 font-bold line-clamp-2"
+                                        style={{ fontSize: Math.max(9, cellSize * 0.1) }}
+                                    >
                                         {item.text}
                                     </p>
-                                    <span className="text-[8px] font-black text-indigo-400 opacity-60 mt-0.5 whitespace-nowrap">
+                                    <span
+                                        className="font-black text-indigo-400 opacity-60 mt-0.5 whitespace-nowrap"
+                                        style={{ fontSize: Math.max(7, cellSize * 0.07) }}
+                                    >
                                         {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 </div>
