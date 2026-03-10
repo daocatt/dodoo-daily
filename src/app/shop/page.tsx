@@ -125,7 +125,7 @@ export default function ShopPage() {
                 setShowAddModal(false)
                 setNewName('')
                 setNewDesc('')
-                setMessage({ text: 'Wish submitted! Waiting for Parent approval.', type: 'success' })
+                setMessage({ text: t('shop.wish.submitted'), type: 'success' })
                 setTimeout(() => setMessage(null), 4000)
             }
         } catch (err) {
@@ -154,14 +154,14 @@ export default function ShopPage() {
                             className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-amber-700 border border-white/50 shadow-sm"
                         >
                             <Package className="w-4 h-4" />
-                            My Orders
+                            {t('shop.orders.myOrders')}
                         </Link>
                         <Link
                             href="/shop/wishes"
                             className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-amber-700 border border-white/50 shadow-sm"
                         >
                             <Sparkles className="w-4 h-4" />
-                            My Wishes
+                            {t('shop.wishes.myWishes')}
                         </Link>
 
                         {/* Mobile Icons */}
@@ -238,7 +238,7 @@ export default function ShopPage() {
                                             disabled={purchasingId === item.id}
                                             className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 transition-all active:scale-95 disabled:grayscale"
                                         >
-                                            {purchasingId === item.id ? t('common.loading') : 'Buy Now'}
+                                            {purchasingId === item.id ? t('common.loading') : t('shop.buyNow')}
                                         </button>
                                     ) : (
                                         <button
@@ -282,26 +282,26 @@ export default function ShopPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-2xl font-black text-slate-800 mb-1">{confirmItem.name}</h3>
-                                    <p className="text-slate-500 font-medium text-sm">Are you sure you want to buy this?</p>
+                                    <p className="text-slate-500 font-medium text-sm">{t('shop.confirmBuy')}</p>
                                 </div>
                                 <div className="flex items-center gap-2 bg-amber-50 border-2 border-amber-200 px-6 py-3 rounded-2xl">
                                     <Coins className="w-5 h-5 text-amber-500" />
                                     <span className="font-black text-2xl text-amber-600">{confirmItem.costCoins}</span>
-                                    <span className="font-bold text-amber-500 text-sm">coins will be deducted</span>
+                                    <span className="font-bold text-amber-500 text-sm">{t('shop.coinsDeducted', { amount: '' })}</span>
                                 </div>
                                 <div className="flex gap-3 w-full pt-2">
                                     <button
                                         onClick={() => setConfirmItem(null)}
                                         className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black hover:bg-slate-200 transition-colors active:scale-95"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         onClick={() => handlePurchase(confirmItem)}
                                         disabled={purchasingId === confirmItem.id}
                                         className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95 disabled:grayscale"
                                     >
-                                        {purchasingId === confirmItem.id ? 'Buying...' : 'Confirm!'}
+                                        {purchasingId === confirmItem.id ? t('shop.buying') : t('shop.confirmButton')}
                                     </button>
                                 </div>
                             </div>
@@ -326,14 +326,14 @@ export default function ShopPage() {
                             className="w-full max-w-md max-h-[90dvh] bg-white rounded-[40px] shadow-2xl flex flex-col border border-amber-100 overflow-hidden"
                         >
                             <div className="p-6 border-b border-amber-100 flex justify-between items-center bg-amber-50">
-                                <h3 className="text-xl font-black flex items-center gap-2 text-amber-800"><Sparkles className="w-5 h-5 text-amber-500" /> Make a Wish</h3>
+                                <h3 className="text-xl font-black flex items-center gap-2 text-amber-800"><Sparkles className="w-5 h-5 text-amber-500" /> {t('shop.makeWish')}</h3>
                                 <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-800"><X className="w-5 h-5" /></button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-6 sm:p-8 pt-4 custom-scrollbar">
                                 <form onSubmit={handleAddItem} className="flex flex-col gap-6">
                                     <div className="flex flex-row items-center gap-4">
                                         <div className="flex flex-col gap-1.5 shrink-0">
-                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">Icon</label>
+                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">{t('shop.form.icon')}</label>
                                             <div className="relative">
                                                 <button
                                                     type="button"
@@ -362,25 +362,25 @@ export default function ShopPage() {
                                         </div>
 
                                         <div className="flex-1 flex flex-col gap-1.5">
-                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">Wish Name</label>
+                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">{t('shop.form.wishName')}</label>
                                             <input
                                                 type="text"
                                                 value={newName}
                                                 onChange={e => setNewName(e.target.value)}
                                                 className="w-full bg-amber-50/50 border-2 border-amber-100 rounded-[20px] p-4 focus:border-amber-400 outline-none font-black text-xl transition-all h-16 sm:h-20 placeholder:text-amber-200"
-                                                placeholder="e.g. New Toy"
+                                                placeholder={t('shop.form.wishPlaceholder')}
                                                 required
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">Description (Optional)</label>
+                                        <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">{t('shop.form.descOptional')}</label>
                                         <textarea
                                             value={newDesc}
                                             onChange={e => setNewDesc(e.target.value)}
                                             className="w-full bg-amber-50/50 border-2 border-amber-100 rounded-[20px] p-4 sm:p-5 focus:border-amber-400 outline-none font-bold transition-all min-h-[100px] placeholder:text-amber-200 resize-none"
-                                            placeholder="Tell us more about it..."
+                                            placeholder={t('shop.form.descPlaceholder')}
                                         />
                                     </div>
 
@@ -388,7 +388,7 @@ export default function ShopPage() {
                                         type="submit"
                                         className="w-full py-5 rounded-[24px] bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-lg shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95 border-b-4 border-orange-700 mt-2"
                                     >
-                                        Submit Wish
+                                        {t('shop.form.submitWish')}
                                     </button>
                                 </form>
                             </div>

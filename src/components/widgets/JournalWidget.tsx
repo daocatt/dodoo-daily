@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Heart, Sparkles, ChevronRight, PenLine, Book } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface Journal {
     id: string
@@ -16,6 +17,7 @@ export default function JournalWidget({ size = 'ICON', cellSize = 100 }: { size?
     const [entries, setEntries] = useState<Journal[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
+    const { t } = useI18n()
 
     useEffect(() => {
         if (size === 'ICON') return
@@ -51,7 +53,7 @@ export default function JournalWidget({ size = 'ICON', cellSize = 100 }: { size?
                             className="font-black text-indigo-800 tracking-tight uppercase opacity-60"
                             style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                         >
-                            Journal
+                            {t('widget.journal.title')}
                         </span>
                     )}
                 </div>
@@ -88,7 +90,7 @@ export default function JournalWidget({ size = 'ICON', cellSize = 100 }: { size?
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center text-blue-300 opacity-50 italic text-[10px] space-y-2">
                         <Sparkles className="w-6 h-6 opacity-20" />
-                        <span>No entries today</span>
+                        <span>{t('widget.journal.empty')}</span>
                     </div>
                 )}
             </div>

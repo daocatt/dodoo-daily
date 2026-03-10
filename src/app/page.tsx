@@ -483,12 +483,12 @@ export default function Home() {
     // ICON Mode: Large Icon on Solid Brand Background
     if (w.size === 'ICON') {
       const config = {
-        TASKS: { Icon: CheckCircle2, color: 'bg-blue-500', shadow: 'shadow-blue-500/20', label: 'Tasks' },
-        NOTES: { Icon: StickyNote, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: 'Notes' },
-        JOURNAL: { Icon: Heart, color: 'bg-rose-500', shadow: 'shadow-rose-500/20', label: 'Journal' },
-        PHOTOS: { Icon: Images, color: 'bg-purple-500', shadow: 'shadow-purple-500/20', label: 'Photos' },
-        SHOP: { Icon: ShoppingBag, color: 'bg-amber-400', shadow: 'shadow-amber-500/20', label: 'Shop' },
-        MILESTONE: { Icon: Trophy, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: 'Milestones' },
+        TASKS: { Icon: CheckCircle2, color: 'bg-blue-500', shadow: 'shadow-blue-500/20', label: t('menu.tasks') },
+        NOTES: { Icon: StickyNote, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: t('pinned') || 'Pinned' },
+        JOURNAL: { Icon: Heart, color: 'bg-rose-500', shadow: 'shadow-rose-500/20', label: t('menu.journal') },
+        PHOTOS: { Icon: Images, color: 'bg-purple-500', shadow: 'shadow-purple-500/20', label: t('menu.gallery') },
+        SHOP: { Icon: ShoppingBag, color: 'bg-amber-400', shadow: 'shadow-amber-500/20', label: t('menu.shop') },
+        MILESTONE: { Icon: Trophy, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: t('parent.milestone') },
       }[w.type] || { Icon: ListTodo, color: 'bg-slate-500', shadow: 'shadow-slate-500/10', label: w.type }
 
       const { Icon, color, shadow, label } = config
@@ -534,7 +534,7 @@ export default function Home() {
                 className="font-black text-amber-900 uppercase tracking-[0.3em] bg-white/30 px-6 py-1.5 rounded-full backdrop-blur-sm border border-white/40 shadow-sm"
                 style={{ fontSize: Math.max(8, cellSize * 0.09) }}
               >
-                Shop
+                {t('menu.shop')}
               </span>
               <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/30 via-transparent to-black/5 pointer-events-none" />
             </div>
@@ -584,10 +584,10 @@ export default function Home() {
             />
             <div>
               <p className="font-black text-[15px] tracking-tight text-[#1c1917] leading-none uppercase">
-                {sysSettings?.systemName || 'DoDoo Family'}
+                {sysSettings?.systemName || t('site.title')}
               </p>
               <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-[#4a3728]/40 mt-0.5">
-                Dashboard
+                {t('login.dashboard')}
               </p>
             </div>
           </div>
@@ -597,7 +597,7 @@ export default function Home() {
               whileTap={{ scale: 0.9 }}
               onClick={() => setIsEditing(true)}
               className="p-2 rounded-xl bg-white border-2 border-slate-100 text-slate-500 shadow-sm flex items-center justify-center transition-all hover:border-indigo-200 hover:text-indigo-600"
-              title="Edit Layout"
+              title={t('parent.editLayout')}
             >
               <Layout className="w-5 h-5" />
             </motion.button>
@@ -605,7 +605,7 @@ export default function Home() {
               whileTap={{ scale: 0.9 }}
               onClick={() => router.push('/settings')}
               className="p-2 rounded-xl bg-white border-2 border-slate-100 text-slate-500 shadow-sm flex items-center justify-center transition-all hover:border-indigo-200 hover:text-indigo-600"
-              title="Settings"
+              title={t('button.settings')}
             >
               <Settings className="w-5 h-5" />
             </motion.button>
@@ -636,7 +636,7 @@ export default function Home() {
             <div className="flex items-center gap-3 sm:gap-6 flex-1 overflow-hidden pr-2">
               <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500 rounded-full shadow-lg shadow-indigo-500/30 shrink-0">
                 <Sparkles className="w-3 h-3" />
-                <span className="text-[9px] font-black uppercase tracking-widest hidden xs:inline">Edit</span>
+                <span className="text-[9px] font-black uppercase tracking-widest hidden xs:inline">{t('button.manage')}</span>
               </div>
 
               <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
@@ -652,7 +652,7 @@ export default function Home() {
                       currentPage === i ? "bg-white text-black" : "text-white/40 hover:text-white"
                     )}
                   >
-                    Page {i + 1}
+                    {t('parent.page', { count: (i + 1).toString() })}
                   </button>
                 ))}
               </div>
@@ -690,7 +690,7 @@ export default function Home() {
             <div className="flex items-center gap-3 shrink-0">
               <button
                 onClick={async () => {
-                  if (!confirm('Reset layout to defaults?')) return
+                  if (!confirm(t('parent.resetConfirm'))) return
                   await Promise.all(widgets.map(w =>
                     fetch(`/api/home-widgets?id=${w.id}`, { method: 'DELETE' })
                   ))
@@ -699,7 +699,7 @@ export default function Home() {
                 className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#ffffff20] hover:text-rose-400/60 transition-colors"
                 title="Wipe everything"
               >
-                Reset
+                {t('parent.reset')}
               </button>
               <div className="h-4 w-[1px] bg-white/10" />
               <button
@@ -707,7 +707,7 @@ export default function Home() {
                 className="px-6 h-10 text-[10px] font-black uppercase tracking-widest rounded-full bg-white text-black hover:bg-gray-100 transition-all flex items-center gap-2"
               >
                 <Check className="w-4 h-4" />
-                Done
+                {t('parent.done')}
               </button>
             </div>
           </motion.div>
@@ -987,7 +987,7 @@ export default function Home() {
               })
             ) : (
               <div className="flex items-center justify-center h-[400px] text-slate-400 font-medium w-full">
-                {loading ? "Initializing..." : "No widgets. Click Reset to fix."}
+                {loading ? t('common.loading') : t('parent.reset')}
               </div>
             )}
           </motion.div>

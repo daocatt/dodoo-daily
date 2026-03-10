@@ -6,8 +6,10 @@ import NatureBackground from '@/components/NatureBackground'
 import { motion } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/contexts/I18nContext'
 
 export default function NotesPage() {
+    const { t } = useI18n()
     const router = useRouter()
 
     return (
@@ -22,8 +24,8 @@ export default function NotesPage() {
                     <ArrowLeft className="w-6 h-6 text-[#4a3728]" />
                 </button>
                 <div className="ml-6">
-                    <h1 className="text-2xl font-black text-[#2c2416] leading-none">Family Board</h1>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4a3728]/40 mt-1">Chat & Notes</p>
+                    <h1 className="text-2xl font-black text-[#2c2416] leading-none">{t('board.title')}</h1>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4a3728]/40 mt-1">{t('board.chatAndNotes')}</p>
                 </div>
             </header>
 

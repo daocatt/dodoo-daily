@@ -5,6 +5,7 @@ import { motion, AnimatePresence, type PanInfo } from 'motion/react'
 import { Images, Camera } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface PhotoEntry {
     id: string
@@ -17,6 +18,7 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const [loading, setLoading] = useState(size !== 'ICON')
     const [currentIndex, setCurrentIndex] = useState(0)
     const router = useRouter()
+    const { t } = useI18n()
 
     useEffect(() => {
         if (size === 'ICON') return
@@ -91,7 +93,7 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                                     className="font-black text-white/60 uppercase tracking-widest mb-1"
                                     style={{ fontSize: Math.max(7, cellSize * 0.08) }}
                                 >
-                                    Latest Artwork
+                                    {t('widget.photo.latest')}
                                 </span>
                                 <p
                                     className="font-bold text-white truncate max-w-[200px] drop-shadow-md"
@@ -105,7 +107,7 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 ) : (
                     <div className="absolute inset-0 bg-purple-50 flex flex-col items-center justify-center text-purple-300 gap-3">
                         <Camera className="w-10 h-10 opacity-20" />
-                        <span className="text-xs font-bold italic opacity-40">Your gallery is empty</span>
+                        <span className="text-xs font-bold italic opacity-40">{t('widget.photo.empty')}</span>
                     </div>
                 )}
             </AnimatePresence>

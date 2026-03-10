@@ -150,7 +150,7 @@ export default function JournalPage() {
                 <div className="p-3 md:p-4 space-y-3">
                     {/* Text Snippet */}
                     <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
-                        {entry.text || 'A Precious Moment'}
+                        {entry.text || t('journal.entry.preciousMoment')}
                     </p>
 
                     {/* Author Row */}
@@ -204,7 +204,7 @@ export default function JournalPage() {
                     className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-orange-500 hover:bg-orange-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95"
                 >
                     <PlusCircle className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="hidden md:inline">New Post</span>
+                    <span className="hidden md:inline">{t('journal.newPost')}</span>
                 </Link>
             </header>
 
@@ -255,10 +255,10 @@ export default function JournalPage() {
                                             {loadingMore ? (
                                                 <>
                                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                                    {t('common.loading')}
+                                                     {t('common.loading')}
                                                 </>
                                             ) : (
-                                                'Explore More'
+                                                t('journal.exploreMore')
                                             )}
                                         </button>
                                     )}

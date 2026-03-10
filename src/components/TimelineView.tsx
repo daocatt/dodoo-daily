@@ -52,7 +52,7 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
         return (
             <div className="text-center py-20 px-10 bg-white/40 rounded-xl border-2 border-dashed border-white flex flex-col items-center gap-6 max-w-lg mx-auto">
                 <Star className="w-16 h-16 text-slate-200" />
-                <p className="text-slate-400 font-bold">No milestones recorded yet.</p>
+                <p className="text-slate-400 font-bold">{t('milestones.empty')}</p>
             </div>
         )
     }
@@ -127,7 +127,7 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                                                     </div>
 
                                                     <h4 className="text-base font-black text-slate-800 line-clamp-2 group-hover:text-orange-600 transition-colors leading-snug">
-                                                        {entry.text || 'A Precious Moment'}
+                                                        {entry.text || t('journal.entry.preciousMoment')}
                                                     </h4>
 
                                                     {entry.text && entry.text.length > 50 && (

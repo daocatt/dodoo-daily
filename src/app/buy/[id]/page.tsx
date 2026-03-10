@@ -4,7 +4,8 @@ import { artwork } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
-import Link from 'next/link'
+import ArtPurchaseControls from '@/components/ArtPurchaseControls'
+import ArtBuyInfo from '@/components/ArtBuyInfo'
 
 // Page component
 export default async function BuyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,22 +29,10 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 <h1 className="text-3xl font-black text-center mb-2">{art.title}</h1>
-                <p className="text-center text-[#a89880] mb-8 text-sm max-w-sm">Support our little creator by collecting this artwork! Your purchase translates to real rewards for them.</p>
+                
+                <ArtBuyInfo priceRMB={art.priceRMB} />
 
-                <div className="flex justify-between items-center w-full mb-8 bg-[#f5f0e8] p-4 rounded-xl border border-[#e8dfce]">
-                    <span className="font-bold text-[#6b5c45]">Collection Price</span>
-                    <span className="text-3xl font-black text-purple-600">¥ {art.priceRMB}</span>
-                </div>
-
-                {art.isSold ? (
-                    <div className="w-full py-4 bg-gray-300 text-gray-600 font-bold rounded-2xl text-center uppercase tracking-wider">
-                        Already Collected (已售出)
-                    </div>
-                ) : (
-                    <Link href={`/buy/${art.id}/checkout`} className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-2 text-lg">
-                        Buy Now (即刻购买)
-                    </Link>
-                )}
+                <ArtPurchaseControls isSold={art.isSold} artId={art.id} />
             </main>
         </div>
     )

@@ -122,8 +122,8 @@ export default function FamilyNoteBoard() {
                         <MessageSquareHeart className="w-6 h-6" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-slate-800 tracking-tight">Family Board</h2>
-                        <p className="text-sm text-slate-500 font-medium">Leave a message for the family!</p>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('board.title')}</h2>
+                        <p className="text-sm text-slate-500 font-medium">{t('board.subtitle')}</p>
                     </div>
                 </div>
 
@@ -190,7 +190,7 @@ export default function FamilyNoteBoard() {
             {/* Empty State */}
             {notes.length === 0 && !isAdding && (
                 <div className="py-20 text-center bg-slate-50/50 rounded-[3rem] border-2 border-dashed border-slate-200">
-                    <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No notes yet. Be the first to say hi!</p>
+                    <p className="text-slate-400 font-black uppercase tracking-widest text-xs">{t('board.empty')}</p>
                 </div>
             )}
 
@@ -217,8 +217,8 @@ export default function FamilyNoteBoard() {
                             </button>
 
                             <div className="p-8 md:p-12">
-                                <h3 className="text-2xl font-black text-slate-900 mb-2">Leave a Note</h3>
-                                <p className="text-slate-500 text-sm mb-8">What&apos;s on your mind today?</p>
+                                <h3 className="text-2xl font-black text-slate-900 mb-2">{t('board.leaveNote')}</h3>
+                                <p className="text-slate-500 text-sm mb-8">{t('board.prompt')}</p>
 
                                 <form onSubmit={handleAddNote} className="space-y-8">
                                     <div
@@ -229,7 +229,7 @@ export default function FamilyNoteBoard() {
                                             autoFocus
                                             value={newText}
                                             onChange={(e) => setNewText(e.target.value)}
-                                            placeholder="Write your message..."
+                                            placeholder={t('board.placeholder')}
                                             className="w-full h-40 bg-transparent border-none outline-none resize-none font-bold text-slate-800 placeholder:text-slate-400 text-lg leading-relaxed"
                                             maxLength={200}
                                         />
@@ -240,7 +240,7 @@ export default function FamilyNoteBoard() {
 
                                     <div className="flex flex-col gap-6">
                                         <div className="space-y-3">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Choose Color</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">{t('board.chooseColor')}</p>
                                             <div className="flex gap-3">
                                                 {COLORS.map((c) => (
                                                     <button
@@ -259,10 +259,10 @@ export default function FamilyNoteBoard() {
                                             disabled={!newText.trim() || isSubmitting}
                                             className="w-full bg-slate-900 text-white rounded-[1.5rem] py-5 font-black flex items-center justify-center gap-3 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-slate-900/20 active:scale-95 transition-all"
                                         >
-                                            {isSubmitting ? 'Posting...' : (
+                                            {isSubmitting ? t('board.posting') : (
                                                 <>
                                                     <Send className="w-5 h-5" />
-                                                    POST NOTE
+                                                    {t('board.postBtn')}
                                                 </>
                                             )}
                                         </button>

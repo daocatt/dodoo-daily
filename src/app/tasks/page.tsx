@@ -274,8 +274,8 @@ function TasksPageContent() {
                             }}
                             className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-sm md:text-base font-bold text-white shadow-md shadow-emerald-500/20 active:scale-95 border-2 border-emerald-400"
                         >
-                            <Users className="w-4 h-4 md:w-5 md:h-5" />
-                            <span className="hidden md:inline">{t('parent.assignTask') || 'Assign Task'}</span>
+                            <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                            <span className="hidden md:inline">{t('parent.assignTask')}</span>
                         </button>
                     )}
                 </div>
@@ -290,19 +290,19 @@ function TasksPageContent() {
                             onClick={() => setActiveTab('today')}
                             className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'today' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Sun className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Today</span>
+                            <Sun className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.today')}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('tomorrow')}
                             className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'tomorrow' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Sunrise className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Tomorrow</span>
+                            <Sunrise className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.tomorrow')}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('week')}
                             className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'week' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Calendar className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">This Week</span>
+                            <Calendar className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.thisWeek')}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('daily')}
@@ -332,7 +332,7 @@ function TasksPageContent() {
                                     onClick={() => setActiveTab('assigns')}
                                     className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                                 >
-                                    <CheckSquare className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">Assigns</span>
+                                    <CheckSquare className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
                                 </button>
                                 {activeTab === 'assigns' && children.length > 1 && (
                                     <div className="flex md:flex-col gap-1 md:pl-8 mt-1 w-full">
@@ -340,7 +340,7 @@ function TasksPageContent() {
                                             onClick={() => setAssignedChildId('ALL')}
                                             className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-xs transition-colors shrink-0 ${assignedChildId === 'ALL' ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
                                         >
-                                            All Children
+                                            {t('tasks.allChildren')}
                                         </button>
                                         {children.map(child => (
                                             <button
@@ -472,14 +472,14 @@ function TasksPageContent() {
                                                     )}
                                                     {task.completed && (
                                                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1.5 ${hasApproval ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                                                            {task.completedByNickname || 'User'} 标记任务已完成
-                                                            {task.isAssigned && task.confirmationStatus === 'PENDING' && '，待确认'}
+                                                            {t('tasks.status.completedBy', { name: task.completedByNickname || 'User' })}
+                                                            {task.isAssigned && task.confirmationStatus === 'PENDING' && ` (${t('tasks.status.pendingApproval')})`}
                                                             {hasApproval && <CheckCheck className="w-3 h-3" />}
                                                         </span>
                                                     )}
                                                     {!task.completed && isAssignIReceived && (
                                                         <span className="text-[10px] uppercase tracking-wider bg-emerald-100/50 text-emerald-700 font-black px-2 py-0.5 rounded-lg">
-                                                            Assigned by Parent
+                                                            {t('tasks.assignedByParent')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -502,18 +502,18 @@ function TasksPageContent() {
 
                                             <div className="flex items-center gap-2">
                                                 {isAssignIGave && task.completed && task.confirmationStatus === 'PENDING' && (
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); resetTask(task); }}
                                                             className="h-10 px-3 flex items-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors font-bold text-xs"
                                                         >
-                                                            <RotateCcw className="w-4 h-4" /> 重启
+                                                            <RotateCcw className="w-4 h-4" /> {t('tasks.button.restart')}
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); confirmReward(task); }}
                                                             className="h-10 px-3 flex items-center gap-1.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 transition-all font-bold text-xs"
                                                         >
-                                                            <CheckCheck className="w-4 h-4" /> 确认奖励
+                                                            <CheckCheck className="w-4 h-4" /> {t('tasks.button.confirmReward')}
                                                         </button>
                                                     </div>
                                                 )}
@@ -564,7 +564,7 @@ function TasksPageContent() {
                             <div className={`p-4 md:p-5 border-b flex justify-between items-center ${assignTo.length === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
                                 <h3 className="text-lg md:text-xl font-black flex items-center gap-2 text-slate-800">
                                     {editingTask ? <Edit2 className="w-5 h-5 text-blue-500" /> : (assignTo.length === 0 ? <Plus className="w-5 h-5 text-blue-500" /> : <Users className="w-5 h-5 text-emerald-500" />)}
-                                    {editingTask ? 'Edit Task' : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.newTask') : t('parent.assignTask') || 'Assign Task')}
+                                    {editingTask ? t('tasks.editTask') : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.newTask') : t('parent.assignTask'))}
                                 </h3>
                             </div>
                             <div className="overflow-y-auto hide-scrollbar">
@@ -586,7 +586,7 @@ function TasksPageContent() {
                                         {isParent && children.length > 0 && !editingTask && (
                                             <div className="md:col-span-2 space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Assign To</label>
+                                                    <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.assignTo')}</label>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
@@ -595,7 +595,7 @@ function TasksPageContent() {
                                                         }}
                                                         className="text-[10px] font-black uppercase tracking-widest text-[#43aa8b] hover:opacity-80 transition-colors"
                                                     >
-                                                        {assignTo.length === children.length ? 'Deselect All' : 'Select All'}
+                                                        {assignTo.length === children.length ? t('tasks.form.deselectAll') : t('tasks.form.selectAll')}
                                                     </button>
                                                 </div>
                                                 <div className="flex flex-wrap gap-3">
@@ -645,7 +645,7 @@ function TasksPageContent() {
                                                 </div>
 
                                                 <div className="flex items-center justify-between bg-amber-50/50 p-3 md:p-4 rounded-xl border border-amber-100/50">
-                                                    <label className="text-xs md:text-sm font-bold text-[#6b5c45]">Bonus Coins</label>
+                                                    <label className="text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.bonusCoins')}</label>
                                                     <div className="flex items-center gap-2">
                                                         <button type="button" onClick={() => setRewardCoins(Math.max(0, rewardCoins - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-[#6b5c45] shadow-sm hover:shadow-md transition-shadow">-</button>
                                                         <div className="flex items-center gap-1 justify-center w-12 text-center">
@@ -658,14 +658,14 @@ function TasksPageContent() {
                                         )}
 
                                         <div className="space-y-1.5">
-                                            <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">Planned Date</label>
+                                            <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.plannedDate')}</label>
                                             <DatePicker
                                                 selected={plannedDate}
                                                 onChange={(date: Date | null) => setPlannedDate(date)}
                                                 dateFormat="yyyy-MM-dd"
                                                 className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
                                                 required
-                                                placeholderText="Select date"
+                                                placeholderText={t('tasks.form.selectDate')}
                                             />
                                         </div>
 
@@ -705,7 +705,7 @@ function TasksPageContent() {
                                             disabled={isSubmitting}
                                             className={`w-full py-3.5 md:py-4 rounded-2xl text-white font-black tracking-wide shadow-lg transition-all text-base md:text-lg ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : (assignTo.length === 0 ? 'bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-500/20 hover:opacity-90' : 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-500/20 hover:opacity-90')}`}
                                         >
-                                            {isSubmitting ? (editingTask ? 'Saving...' : 'Creating...') : (editingTask ? t('common.save') : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.createGoal') : t('common.confirm')))}
+                                            {isSubmitting ? (editingTask ? t('tasks.form.saving') : t('tasks.form.creating')) : (editingTask ? t('common.save') : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.createGoal') : t('common.confirm')))}
                                         </button>
                                         <button type="button" onClick={() => setShowNewTaskModal(false)} className="w-full py-2 text-sm md:text-base text-[#a89880] font-bold hover:text-[#2c2416] transition-colors">
                                             {t('common.cancel')}
@@ -722,8 +722,9 @@ function TasksPageContent() {
 }
 
 export default function TasksPage() {
+    const { t } = useI18n()
     return (
-        <Suspense fallback={<div className="min-h-dvh flex items-center justify-center bg-[#e0f2fe]">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-dvh flex items-center justify-center bg-[#e0f2fe]">{t('common.loading')}</div>}>
             <TasksPageContent />
         </Suspense>
     )

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { StickyNote, ChevronRight, Pin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface Note {
     id: string
@@ -17,6 +18,7 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const [notes, setNotes] = useState<Note[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
+    const { t } = useI18n()
 
     const displayCount = size === 'ICON' ? 0 : size === 'SQUARE' ? 2 : 4
 
@@ -54,7 +56,7 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                             className="font-black text-slate-800 tracking-tight uppercase opacity-60"
                             style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                         >
-                            Pined
+                            {t('widget.notes.pinned')}
                         </span>
                     )}
                 </div>
@@ -98,7 +100,7 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                         ))
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-amber-300 opacity-40 italic text-[9px]">
-                            <span>Waiting...</span>
+                            <span>{t('widget.notes.waiting')}</span>
                         </div>
                     )}
                 </AnimatePresence>

@@ -95,10 +95,10 @@ export default function GrowthStatsPage() {
                 const data = await res.json()
                 setChildren(data)
             } else {
-                setError('Failed to load statistics')
+                setError(t('stats.error.load'))
             }
         } catch (err) {
-            setError('Network error')
+            setError(t('settings.errorNetwork'))
         } finally {
             setLoading(false)
         }
@@ -161,7 +161,7 @@ export default function GrowthStatsPage() {
     }
 
     const deleteRecord = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this record?')) return
+        if (!confirm(t('stats.deleteConfirm'))) return
         try {
             const res = await fetch(`/api/growth/${id}`, { method: 'DELETE' })
             if (res.ok) fetchData()
@@ -179,9 +179,9 @@ export default function GrowthStatsPage() {
     if (error || !children || children.length === 0) return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
             <Activity className="w-16 h-16 text-slate-300 mb-4" />
-            <h1 className="text-2xl font-black text-slate-800">No Child Data Found</h1>
-            <p className="text-slate-500 mt-2">Make sure you have added children to your family first.</p>
-            <button onClick={() => window.history.back()} className="mt-8 px-8 py-3 bg-white border border-slate-200 rounded-2xl font-black text-slate-700 shadow-sm hover:bg-slate-50">Go Back</button>
+            <h1 className="text-2xl font-black text-slate-800">{t('stats.noData')}</h1>
+            <p className="text-slate-500 mt-2">{t('stats.noDataDesc')}</p>
+            <button onClick={() => window.history.back()} className="mt-8 px-8 py-3 bg-white border border-slate-200 rounded-2xl font-black text-slate-700 shadow-sm hover:bg-slate-50">{t('stats.goBack')}</button>
         </div>
     )
 
@@ -192,7 +192,7 @@ export default function GrowthStatsPage() {
         const data = [...currentChild.growthData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(-7)
         if (data.length === 0) return (
             <div className="h-48 bg-slate-50 rounded-2xl flex items-center justify-center border border-dashed border-slate-200">
-                <span className="text-slate-400 text-sm font-bold">No {type} records yet</span>
+                <span className="text-slate-400 text-sm font-bold">{t('stats.noRecords', { type: type === 'height' ? t('stats.height') : t('stats.weight') })}</span>
             </div>
         )
 
@@ -236,8 +236,8 @@ export default function GrowthStatsPage() {
                         <ChevronLeft className="w-5 h-5 text-slate-500" />
                     </button>
                     <div>
-                        <h1 className="text-xl font-black text-slate-900 leading-tight">Growth & Stats</h1>
-                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Family Statistics</p>
+                        <h1 className="text-xl font-black text-slate-900 leading-tight">{t('stats.title')}</h1>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">{t('stats.subtitle')}</p>
                     </div>
                 </div>
 
@@ -300,7 +300,7 @@ export default function GrowthStatsPage() {
                         }}
                         className="relative z-10 bg-slate-900 text-white px-8 py-4 rounded-3xl font-black shadow-xl shadow-slate-200 hover:scale-105 hover:bg-slate-800 transition-all flex items-center gap-2"
                     >
-                        <Plus className="w-5 h-5" /> RECORD
+                        <Plus className="w-5 h-5" /> {t('stats.recordBtn')}
                     </button>
                 </div>
 
@@ -308,7 +308,7 @@ export default function GrowthStatsPage() {
                     {/* Activity Comparison */}
                     <div className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="font-black text-xl text-slate-900">Weekly Progress</h3>
+                            <h3 className="font-black text-xl text-slate-900">{t('stats.weeklyProgress')}</h3>
                             <Activity className="w-5 h-5 text-purple-500" />
                         </div>
 
@@ -316,7 +316,7 @@ export default function GrowthStatsPage() {
                             {/* Coins Comparison */}
                             <div>
                                 <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2">
-                                    <span>Earnings</span>
+                                    <span>{t('stats.earnings')}</span>
                                     <span>{currentChild.thisWeekStats.currency} vs {currentChild.lastWeekStats.currency}</span>
                                 </div>
                                 <div className="h-4 bg-slate-100 rounded-full overflow-hidden flex">
@@ -330,7 +330,7 @@ export default function GrowthStatsPage() {
                             {/* Stars Comparison */}
                             <div>
                                 <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 mb-2">
-                                    <span>Stars Earned</span>
+                                    <span>{t('stats.starsEarned')}</span>
                                     <span>{currentChild.thisWeekStats.goldStars} vs {currentChild.lastWeekStats.goldStars}</span>
                                 </div>
                                 <div className="h-4 bg-slate-100 rounded-full overflow-hidden flex">
@@ -343,7 +343,7 @@ export default function GrowthStatsPage() {
 
                             {/* Task Count Comparison */}
                             <div className="pt-4 mt-4 border-t border-slate-50 flex items-center justify-between">
-                                <div className="text-sm font-bold text-slate-500">Tasks Completed (Last Week)</div>
+                                <div className="text-sm font-bold text-slate-500">{t('stats.tasksCompleted')}</div>
                                 <div className="text-2xl font-black text-slate-900">{currentChild.lastWeekTaskCount}</div>
                             </div>
                         </div>
@@ -352,17 +352,17 @@ export default function GrowthStatsPage() {
                     {/* Weight & Height Growth */}
                     <div className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-black text-xl text-slate-900">Recent Growth</h3>
+                            <h3 className="font-black text-xl text-slate-900">{t('stats.recentGrowth')}</h3>
                             <TrendingUp className="w-5 h-5 text-emerald-500" />
                         </div>
 
                         <div className="flex-1 grid grid-cols-2 gap-4">
                             <div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Height (cm)</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">{t('stats.height')}</span>
                                 {renderGrowthChart('height')}
                             </div>
                             <div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Weight (kg)</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">{t('stats.weight')}</span>
                                 {renderGrowthChart('weight')}
                             </div>
                         </div>
@@ -371,10 +371,10 @@ export default function GrowthStatsPage() {
 
                 {/* History List */}
                 <div className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-                    <h3 className="font-black text-xl text-slate-900 mb-6">Growth History</h3>
+                    <h3 className="font-black text-xl text-slate-900 mb-6">{t('stats.growthHistory')}</h3>
                     <div className="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar">
                         {currentChild.growthData.length === 0 ? (
-                            <div className="text-center py-12 text-slate-400 font-bold">No history available</div>
+                            <div className="text-center py-12 text-slate-400 font-bold">{t('stats.noHistory')}</div>
                         ) : (
                             currentChild.growthData.map(record => (
                                 <div key={record.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors group">
@@ -432,12 +432,12 @@ export default function GrowthStatsPage() {
                                 <X className="w-6 h-6" />
                             </button>
 
-                            <h2 className="text-2xl font-black text-slate-900 mb-1">New Record</h2>
-                            <p className="text-slate-400 text-sm mb-8">Logging for {currentChild.nickname || currentChild.name}</p>
+                            <h2 className="text-2xl font-black text-slate-900 mb-1">{t('stats.newRecord')}</h2>
+                            <p className="text-slate-400 text-sm mb-8">{t('stats.loggingFor', { name: currentChild.nickname || currentChild.name })}</p>
 
                             <form onSubmit={handleRecord} className="space-y-6">
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">Height (cm)</label>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('stats.height')}</label>
                                     <input
                                         type="number"
                                         step="0.1"
@@ -449,7 +449,7 @@ export default function GrowthStatsPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">Weight (kg)</label>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('stats.weight')}</label>
                                     <input
                                         type="number"
                                         step="0.1"
@@ -461,7 +461,7 @@ export default function GrowthStatsPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">Date</label>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('common.date') || 'Date'}</label>
                                     <input
                                         type="date"
                                         value={recordDate}
@@ -474,7 +474,7 @@ export default function GrowthStatsPage() {
                                     type="submit"
                                     className="w-full bg-purple-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-purple-200 hover:scale-[1.02] hover:bg-purple-700 transition-all mt-4"
                                 >
-                                    SAVE RECORD
+                                    {t('stats.saveRecord')}
                                 </button>
                             </form>
                         </motion.div>
@@ -507,10 +507,10 @@ export default function GrowthStatsPage() {
                                 </button>
                                 <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
                                     <History className="w-6 h-6 text-purple-600" />
-                                    {historyType === 'CURRENCY' ? 'Coins History' :
-                                        historyType === 'GOLD_STAR' ? 'Stars History' : 'Purple Stars History'}
+                                    {historyType === 'CURRENCY' ? t('stats.history.coins') :
+                                        historyType === 'GOLD_STAR' ? t('stats.history.stars') : t('stats.history.purple')}
                                 </h2>
-                                <p className="text-slate-400 text-sm mt-1">Transaction logs for {currentChild.nickname || currentChild.name}</p>
+                                <p className="text-slate-400 text-sm mt-1">{t('stats.history.desc', { name: currentChild.nickname || currentChild.name })}</p>
 
                                 {/* Mini Tabs inside Modal */}
                                 <div className="flex gap-2 mt-6">
@@ -529,7 +529,7 @@ export default function GrowthStatsPage() {
                                             className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all ${historyType === tab.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                                         >
                                             <tab.icon className={`w-3 h-3 ${tab.color}`} />
-                                            {tab.label}
+                                            {tab.id === 'CURRENCY' ? t('hud.coins') : tab.id === 'GOLD_STAR' ? t('hud.goldStars') : t('hud.purpleStars')}
                                         </button>
                                     ))}
                                 </div>
@@ -544,7 +544,7 @@ export default function GrowthStatsPage() {
                                 ) : historyLogs.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-64 text-slate-300">
                                         <History className="w-12 h-12 mb-2" />
-                                        <p className="font-black">No transaction logs yet</p>
+                                        <p className="font-black">{t('stats.history.empty')}</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
@@ -571,7 +571,7 @@ export default function GrowthStatsPage() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">Balance</div>
+                                                    <div className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">{t('stats.history.balance')}</div>
                                                     <div className="text-sm font-black text-slate-700">{log.balance}</div>
                                                 </div>
                                             </div>
@@ -591,7 +591,7 @@ export default function GrowthStatsPage() {
                                         <ChevronLeft className="w-5 h-5" />
                                     </button>
                                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                                        Page {historyPage} of {Math.ceil(historyTotal / 10)}
+                                        {t('stats.history.page', { page: historyPage.toString(), total: Math.ceil(historyTotal / 10).toString() })}
                                     </span>
                                     <button
                                         disabled={historyPage >= Math.ceil(historyTotal / 10) || historyLoading}

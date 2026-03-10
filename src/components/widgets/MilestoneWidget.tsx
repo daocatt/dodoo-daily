@@ -5,6 +5,7 @@ import { motion } from 'motion/react'
 import { Trophy, ChevronRight, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clsx, type ClassValue } from 'clsx'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface Milestone {
     id: string
@@ -16,6 +17,7 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
     const [milestones, setMilestones] = useState<Milestone[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
+    const { t } = useI18n()
 
     useEffect(() => {
         if (size === 'ICON') return
@@ -59,7 +61,7 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
                         className="font-black text-orange-900/40 tracking-tight uppercase"
                         style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                     >
-                        Milestones
+                        {t('widget.milestones.title')}
                     </span>
                 </div>
                 <ChevronRight style={{ width: cellSize * 0.15, height: cellSize * 0.15 }} className="text-orange-300 group-hover:translate-x-1 transition-transform" />
@@ -127,7 +129,7 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
                 ) : (
                     <div className="flex flex-col items-center justify-center text-indigo-300 opacity-50 italic text-[10px] space-y-2">
                         <Calendar className="w-6 h-6 mb-1 opacity-20" />
-                        <span>No milestones yet</span>
+                        <span>{t('widget.milestones.empty')}</span>
                     </div>
                 )}
             </div>

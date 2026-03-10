@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { CheckCircle2, Circle, Star, Coins, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface Task {
     id: string
@@ -21,6 +22,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
+    const { t } = useI18n()
 
     const isIcon = size === 'ICON'
     const themeColor = isIcon ? 'emerald' : 'blue'
@@ -29,7 +31,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
         if (!dateStr) return ''
         const d = new Date(dateStr)
         const today = new Date()
-        if (d.toDateString() === today.toDateString()) return 'Today'
+        if (d.toDateString() === today.toDateString()) return t('widget.tasks.today')
         return d.toLocaleDateString([], { month: '2-digit', day: '2-digit' })
     }
 
@@ -91,7 +93,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                             className="font-black text-slate-800 tracking-tight uppercase opacity-60"
                             style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                         >
-                            Tasks
+                            {t('widget.tasks.title')}
                         </span>
                     )}
                 </div>
@@ -170,7 +172,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                     ) : (
                         size !== 'ICON' && (
                             <div className={`h-full flex flex-col items-center justify-center text-${themeColor}-300 opacity-40 italic text-[9px]`}>
-                                <span>Clear!</span>
+                                <span>{t('widget.tasks.clear')}</span>
                             </div>
                         )
                     )}

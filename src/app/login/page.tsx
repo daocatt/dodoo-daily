@@ -58,7 +58,7 @@ export default function LoginPage() {
     const handleFirstLaunchSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!firstLaunchName.trim()) {
-            setError('Please enter your name.')
+            setError(t('login.error.enterName'))
             return
         }
         setLoading(true)
@@ -80,7 +80,7 @@ export default function LoginPage() {
             if (res.ok && data.success) {
                 window.location.href = '/setup'
             } else {
-                setError(data.error || 'Failed to initialize')
+                setError(data.error || t('login.error.failedInit'))
                 setLoading(false)
             }
         } catch (err) {
@@ -187,7 +187,7 @@ export default function LoginPage() {
                                         disabled={loading || !firstLaunchName.trim()}
                                         className="w-full py-4 mt-2 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-xl font-bold text-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 flex items-center justify-center"
                                     >
-                                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : "进入系统"}
+                                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('login.enterSystem')}
                                     </button>
                                 </form>
                             ) : (
@@ -238,7 +238,7 @@ export default function LoginPage() {
                                                 setSelectedUser(found);
                                                 setError('');
                                             } else {
-                                                setError(t('login.error.userNotFound') || 'User not found');
+                                                setError(t('login.error.userNotFound'))
                                             }
                                         }}
                                         className="flex flex-col items-center gap-8 w-full max-w-sm bg-white/40 backdrop-blur-2xl p-10 rounded-3xl border border-white/50 shadow-2xl"
@@ -258,7 +258,7 @@ export default function LoginPage() {
                                                     required
                                                     value={nickname}
                                                     onChange={e => setNickname(e.target.value)}
-                                                    placeholder={t('login.nicknamePlaceholder') || "Enter Nickname"}
+                                                    placeholder={t('login.enterNickname')}
                                                     className="w-full pl-14 pr-6 py-5 bg-white/90 rounded-2xl border-2 border-transparent focus:border-[#43aa8b] outline-none transition-all font-black text-xl text-[#4a3728] shadow-sm italic"
                                                 />
                                             </div>
@@ -269,7 +269,7 @@ export default function LoginPage() {
                                                 type="submit"
                                                 className="w-full py-5 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-2xl font-black text-xl shadow-lg transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
                                             >
-                                                {t('button.next') || "Next Step"}
+                                                {t('login.nextStep')}
                                             </button>
                                         </div>
                                     </form>

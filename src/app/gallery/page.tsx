@@ -189,7 +189,7 @@ export default function GalleryPage() {
                     <button
                         onClick={() => router.push('/gallery/archive')}
                         className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
-                        title="Archives"
+                        title={t('gallery.archives')}
                     >
                         <Archive className="w-5 h-5" />
                     </button>
@@ -241,7 +241,7 @@ export default function GalleryPage() {
                                                 {art.isPublic && (
                                                     <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-indigo-500/90 text-white text-[8px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">
                                                         <Sparkles className="w-2.5 h-2.5 text-amber-300 fill-amber-300" />
-                                                        POSTER
+                                                        {t('gallery.isPoster')}
                                                     </div>
                                                 )}
                                             </motion.div>
@@ -302,7 +302,7 @@ export default function GalleryPage() {
                                         className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
                                         required
                                     >
-                                        <option value="" disabled>{t('gallery.form.selectAlbum') || 'Select an album'}</option>
+                                        <option value="" disabled>{t('gallery.form.selectAlbumFallback')}</option>
                                         {albums.map(a => (
                                             <option key={a.id} value={a.id}>{a.title}</option>
                                         ))}
@@ -313,7 +313,7 @@ export default function GalleryPage() {
                                     <div className="flex flex-wrap gap-4">
                                         <label className="w-24 h-24 bg-[#f5f0e8] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#eadecc] transition-colors border-2 border-dashed border-[#eadecc] group">
                                             <Camera className="w-8 h-8 text-[#a89880] group-hover:scale-110 transition-transform" />
-                                            <span className="text-[10px] font-black text-[#a89880] mt-2 uppercase">Photo</span>
+                                            <span className="text-[10px] font-black text-[#a89880] mt-2 uppercase">{t('gallery.photoLabel')}</span>
                                             <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                                         </label>
 
@@ -341,7 +341,7 @@ export default function GalleryPage() {
                                     </div>
                                     {uploadFiles.length === 0 && (
                                         <p className="mt-2 text-xs text-red-500 font-bold opacity-0 h-0 overflow-hidden group-invalid:opacity-100 group-invalid:h-auto group-invalid:mt-2">
-                                            Please select at least one image.
+                                            {t('gallery.error.selectImage')}
                                         </p>
                                     )}
                                 </div>

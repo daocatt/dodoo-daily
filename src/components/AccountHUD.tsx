@@ -258,7 +258,7 @@ export default function AccountHUD() {
                         <button
                             onClick={() => setShowGrowthModal(true)}
                             className="flex items-center text-emerald-600 hover:text-emerald-700 transition-colors p-1"
-                            title="Growth Record"
+                            title={t('parent.growth')}
                         >
                             <Ruler className="w-4 h-4" />
                         </button>
@@ -293,7 +293,7 @@ export default function AccountHUD() {
                             className="relative w-full max-w-md bg-white rounded-2xl p-8 shadow-2xl my-auto"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800 tracking-tight">Growth Record</h3>
+                                <h3 className="text-xl font-black text-slate-800 tracking-tight">{t('parent.growth')}</h3>
                                 <button onClick={() => setShowGrowthModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                                     <X className="w-5 h-5 text-slate-400" />
                                 </button>
@@ -302,7 +302,7 @@ export default function AccountHUD() {
                             <form onSubmit={handleSaveGrowth} className="space-y-5">
                                 {stats.isParent && (
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Child</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.selectChild')}</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             {children.map(child => (
                                                 <button
@@ -324,7 +324,7 @@ export default function AccountHUD() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Height (cm)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.height')}</label>
                                         <input
                                             type="number"
                                             step="0.1"
@@ -336,7 +336,7 @@ export default function AccountHUD() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Weight (kg)</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.weight')}</label>
                                         <input
                                             type="number"
                                             step="0.1"
@@ -353,7 +353,7 @@ export default function AccountHUD() {
                                     disabled={isSaving}
                                     className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all disabled:opacity-50"
                                 >
-                                    {isSaving ? "Saving..." : "Save Growth Data"}
+                                    {isSaving ? t('parent.processing') : t('parent.saveGrowth')}
                                 </button>
                             </form>
                         </motion.div>
@@ -379,7 +379,7 @@ export default function AccountHUD() {
                             className="relative w-full max-w-md bg-white rounded-2xl p-8 shadow-2xl my-auto"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800 tracking-tight">Parent Bank</h3>
+                                <h3 className="text-xl font-black text-slate-800 tracking-tight">{t('parent.bank')}</h3>
                                 <button onClick={() => setShowRechargeModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                                     <X className="w-5 h-5 text-slate-400" />
                                 </button>
@@ -387,7 +387,7 @@ export default function AccountHUD() {
 
                             <form onSubmit={handleRecharge} className="space-y-6">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Type</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.assetType')}</label>
                                     <div className="flex gap-3">
                                         <button
                                             type="button"
@@ -398,7 +398,7 @@ export default function AccountHUD() {
                                             )}
                                         >
                                             <Coins className="w-4 h-4 text-amber-500" />
-                                            <span className="text-xs font-black text-slate-700">Coins</span>
+                                            <span className="text-xs font-black text-slate-700">{t('hud.coins')}</span>
                                         </button>
                                         <button
                                             type="button"
@@ -409,13 +409,13 @@ export default function AccountHUD() {
                                             )}
                                         >
                                             <Star className="w-4 h-4 text-indigo-500 fill-indigo-500" />
-                                            <span className="text-xs font-black text-slate-700">Stars</span>
+                                            <span className="text-xs font-black text-slate-700">{t('hud.goldStars')}</span>
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Amount</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.amount')}</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {['50', '100', '200', '500', '1000', '5000'].map(amt => (
                                             <button
@@ -437,7 +437,7 @@ export default function AccountHUD() {
                                     disabled={isSaving}
                                     className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all disabled:opacity-50"
                                 >
-                                    {isSaving ? "Processing..." : `Recharge ${rechargeAmt} ${rechargeType === 'CURRENCY' ? 'Coins' : 'Stars'}`}
+                                    {isSaving ? t('parent.processing') : t('parent.rechargeAmount', { amount: rechargeAmt, type: rechargeType === 'CURRENCY' ? t('hud.coins') : t('hud.goldStars') })}
                                 </button>
                             </form>
                         </motion.div>

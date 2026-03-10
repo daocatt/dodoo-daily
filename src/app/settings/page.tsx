@@ -46,7 +46,7 @@ export default function SettingsPage() {
 
     const handlePinUpdate = async () => {
         if (pin.length < 4) {
-            setPinError('PIN must be at least 4 chars')
+            setPinError(t('settings.pinLengthError'))
             return
         }
         try {
@@ -56,13 +56,13 @@ export default function SettingsPage() {
                 body: JSON.stringify({ pin })
             })
             if (res.ok) {
-                setPinMessage('PIN updated')
+                setPinMessage(t('settings.pinUpdateSuccess'))
                 setPin('')
                 setPinError('')
             } else {
-                setPinError('Failed to update')
+                setPinError(t('settings.updateFailed'))
             }
-        } catch (e) { setPinError('Error updating') }
+        } catch (e) { setPinError(t('settings.errorNetwork')) }
     }
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +103,7 @@ export default function SettingsPage() {
                 <button onClick={() => router.back()} className="p-3 bg-white/40 backdrop-blur-md rounded-full shadow-sm hover:bg-white/60 transition-colors">
                     <ArrowLeft className="w-6 h-6" />
                 </button>
-                <h1 className="text-2xl font-bold font-display tracking-tight text-[#2c2416] drop-shadow-sm">Settings & Profile</h1>
+                <h1 className="text-2xl font-bold font-display tracking-tight text-[#2c2416] drop-shadow-sm">{t('settings.title')}</h1>
             </header>
 
             <main className="relative z-10 flex-1 max-w-2xl mx-auto w-full p-6 space-y-8 pb-32">
@@ -137,16 +137,16 @@ export default function SettingsPage() {
 
                     <div className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <label className="text-xs font-black text-indigo-500 uppercase tracking-widest ml-1">Nickname</label>
+                            <label className="text-xs font-black text-indigo-500 uppercase tracking-widest ml-1">{t('settings.nickname')}</label>
                             <input
                                 type="text"
                                 className="w-full px-6 py-4 bg-white/40 border border-indigo-100 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-lg text-indigo-700"
                                 value={nickname}
                                 onChange={e => setNickname(e.target.value)}
-                                placeholder="Your short nickname"
+                                placeholder={t('settings.nicknamePlaceholder')}
                             />
                             <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
-                                💡 Used for login when &quot;Display All Avatars&quot; is disabled (Case Insensitive)
+                                💡 {t('settings.nicknameHint')}
                             </p>
                         </div>
 
@@ -162,18 +162,18 @@ export default function SettingsPage() {
                                         body: JSON.stringify({ nickname })
                                     })
                                     const data = await res.json()
-                                    if (res.ok) {
+                                     if (res.ok) {
                                         if (user) setUser({ ...user, nickname: data.nickname })
-                                        setMessage('Nickname updated!')
+                                        setMessage(t('settings.nicknameSuccess'))
                                         setError('')
                                     } else {
-                                        setError(data.error || 'Update failed')
+                                        setError(data.error || t('settings.updateFailed'))
                                     }
-                                } catch (e) { setError('Network error') }
+                                } catch (e) { setError(t('settings.errorNetwork')) }
                             }}
                             className="w-full py-4 bg-indigo-600 text-white font-extrabold rounded-2xl shadow-lg hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center"
                         >
-                            Save Nickname Changes
+                            {t('settings.saveNickname')}
                         </button>
                     </div>
 
@@ -184,8 +184,8 @@ export default function SettingsPage() {
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
                                 <div className="text-left">
-                                    <p className="font-extrabold text-lg">Parent Console</p>
-                                    <p className="text-xs font-medium opacity-70">Manage family, rewards, and shop.</p>
+                                    <p className="font-extrabold text-lg">{t('settings.parentConsole')}</p>
+                                    <p className="text-xs font-medium opacity-70">{t('settings.parentConsoleDesc')}</p>
                                 </div>
                             </div>
                             <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -199,15 +199,15 @@ export default function SettingsPage() {
                         <div className="p-3 bg-indigo-500 rounded-xl text-white">
                             <Lock className="w-5 h-5" />
                         </div>
-                        <h3 className="text-xl font-bold tracking-tight text-[#2c2416]">Security PIN</h3>
+                        <h3 className="text-xl font-bold tracking-tight text-[#2c2416]">{t('settings.securityPin')}</h3>
                     </div>
 
-                    <div className="space-y-4">
+                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <p className="text-sm font-medium text-slate-500 px-1">Your personal PIN for role switching and privacy.</p>
+                            <p className="text-sm font-medium text-slate-500 px-1">{t('settings.securityPinDesc')}</p>
                             <input
                                 type="password"
-                                placeholder="Enter new PIN"
+                                placeholder={t('settings.enterNewPin')}
                                 className="w-full px-6 py-4 bg-white/50 border border-[#4a3728]/10 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-200 transition-all font-bold tracking-[0.5em] text-xl"
                                 value={pin}
                                 onChange={e => { setPin(e.target.value); setPinError(''); setPinMessage(''); }}
@@ -217,22 +217,22 @@ export default function SettingsPage() {
                         {pinError && <p className="text-sm text-red-500 px-1">⚠️ {pinError}</p>}
                         {pinMessage && <p className="text-sm text-green-600 px-1">✅ {pinMessage}</p>}
 
-                        <button
+                         <button
                             onClick={handlePinUpdate}
                             className="w-full bg-[#2c2416] text-white font-extrabold py-4 rounded-2xl shadow-xl hover:bg-black transition-all"
                         >
-                            Update PIN
+                            {t('settings.updatePin')}
                         </button>
                     </div>
                 </section>
 
                 {/* Logout Button */}
-                <button
+                 <button
                     onClick={handleLogout}
                     className="w-full p-6 bg-red-50 hover:bg-red-100/80 rounded-xl border border-red-100 text-red-600 font-extrabold flex items-center justify-center gap-3 transition-colors shadow-sm"
                 >
                     <LogOut className="w-6 h-6" />
-                    Logout
+                    {t('common.logout')}
                 </button>
 
             </main>
