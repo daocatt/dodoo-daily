@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart } from 'lucide-react'
+import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart, Eye } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -21,6 +21,8 @@ type UserProfile = {
         purpleStars: number
         currency: number
     } | null
+    totalLikes: number
+    totalViews: number
 }
 
 type PublicArtwork = {
@@ -31,6 +33,8 @@ type PublicArtwork = {
     priceCoins: number
     isSold: boolean
     createdAt: number
+    likes: number
+    views: number
 }
 
 export default function PublicProfileHome() {
@@ -112,6 +116,23 @@ export default function PublicProfileHome() {
                             <Sparkles className="w-3 h-3" />
                             {user.role === 'CHILD' ? 'Little Artist' : 'Creator'}
                         </div>
+
+                        {user.avatarUrl && (
+                            <motion.div
+                                initial={{ scale: 0, rotate: -20 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-white p-1.5 shadow-2xl shadow-indigo-100/50 border-4 border-white mb-10 mx-auto md:mx-0 overflow-hidden ring-1 ring-slate-100"
+                            >
+                                <Image 
+                                    src={user.avatarUrl} 
+                                    width={128} 
+                                    height={128} 
+                                    className="w-full h-full object-cover rounded-[2rem]" 
+                                    alt="Avatar" 
+                                />
+                            </motion.div>
+                        )}
+
                         <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-none mb-6">
                             {t('public.title', { name: displayName })}
                         </h1>
@@ -124,19 +145,30 @@ export default function PublicProfileHome() {
                                 <div className="p-2 bg-purple-100 rounded-xl text-purple-600">
                                     <Palette className="w-5 h-5" />
                                 </div>
-                                <div>
+                                 <div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('public.stats.pieces')}</p>
                                     <p className="text-xl font-black text-slate-800 leading-tight">{artworks.length}</p>
                                 </div>
                             </div>
                             <div className="px-6 py-4 bg-white rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
-                                <div className="p-2 bg-amber-100 rounded-xl text-amber-600">
-                                    <Star className="w-5 h-5" />
+                                <div className="p-2 bg-rose-100 rounded-xl text-rose-600">
+                                    <Heart className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('public.stats.stars')}</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">LIKES</p>
                                     <p className="text-xl font-black text-slate-800 leading-tight">
-                                        {user.stats?.purpleStars || 0}
+                                        {user.totalLikes || 0}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="px-6 py-4 bg-white rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                                    <Eye className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">VIEWS</p>
+                                    <p className="text-xl font-black text-slate-800 leading-tight">
+                                        {user.totalViews || 0}
                                     </p>
                                 </div>
                             </div>
@@ -151,7 +183,11 @@ export default function PublicProfileHome() {
                                 <ArrowRight className="w-5 h-5" />
                             </Link>
                             <div className="bg-slate-900 rounded-3xl p-1 shadow-lg shadow-slate-200">
-                                <ShareButton title={`${displayName}'s Art Exhibition`} />
+                                <ShareButton 
+                                    title={`${displayName}'s Art Exhibition`} 
+                                    displayName={displayName}
+                                    avatarUrl={user.avatarUrl || undefined}
+                                />
                             </div>
                         </div>
                     </motion.div>
@@ -188,16 +224,6 @@ export default function PublicProfileHome() {
                             )}
                         </div>
                         
-                        {/* Floating elements */}
-                        {user.avatarUrl && (
-                            <motion.div 
-                                animate={{ y: [0, -10, 0] }}
-                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                                className="absolute -top-6 -right-6 w-24 h-24 rounded-3xl bg-white p-2 shadow-xl border-4 border-indigo-50"
-                            >
-                                <Image src={user.avatarUrl} width={96} height={96} className="w-full h-full object-cover rounded-2xl" alt="Avatar" />
-                            </motion.div>
-                        )}
                     </motion.div>
                 </div>
             </div>
@@ -234,8 +260,16 @@ export default function PublicProfileHome() {
                                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-8">
-                                        <div className="flex items-center gap-3 text-white mb-2">
-                                            <span className="text-xs font-black bg-indigo-500 px-3 py-1 rounded-full uppercase truncate">
+                                        <div className="flex items-center gap-4 text-white">
+                                            <div className="flex items-center gap-1">
+                                                <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
+                                                <span className="text-xs font-black">{art.likes}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Eye className="w-4 h-4 text-blue-400" />
+                                                <span className="text-xs font-black">{art.views}</span>
+                                            </div>
+                                            <span className="ml-auto text-[10px] font-black bg-indigo-500 px-3 py-1 rounded-full uppercase">
                                                 {art.priceCoins} Coins
                                             </span>
                                         </div>

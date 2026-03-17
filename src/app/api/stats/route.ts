@@ -56,6 +56,7 @@ export async function GET() {
             name: userRecord.name,
             nickname: userRecord.nickname,
             avatar: userRecord.avatarUrl,
+            slug: userRecord.slug,
             coins: statsRecord.currency,
             timezone: settings?.timezone || 'Asia/Shanghai'
         }

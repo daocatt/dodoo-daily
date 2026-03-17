@@ -5,10 +5,10 @@ import { eq, and, desc } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
-        const { slug } = params
+        const { slug } = await params
 
         // 1. Find user by slug
         const results = await db.select({ id: users.id })

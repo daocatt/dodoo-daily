@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
             if (!chineseZodiac) chineseZodiac = getChineseZodiac(new Date(birthDate));
         }
         
-        const { slugify } = await import('@/lib/utils');
-        let finalSlug = slug || slugify(nickname || name);
+        const { slugify, generateNumericSlug } = await import('@/lib/utils');
+        let finalSlug = slug || generateNumericSlug(8);
 
         // Check uniqueness
         const conditions = [eq(users.name, name)];

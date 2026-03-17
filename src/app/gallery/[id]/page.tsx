@@ -70,15 +70,18 @@ export default function AlbumDetailPage() {
         fetch('/api/stats')
             .then(res => res.json())
             .then(data => {
+                const searchParams = new URLSearchParams(window.location.search)
+                const targetId = searchParams.get('userId')
+                
                 if (data.isParent) {
                     setIsParent(true)
-                    const searchParams = new URLSearchParams(window.location.search)
-                    const targetId = searchParams.get('userId')
                     if (targetId) setSelectedChildId(targetId)
-
-                    const albumsUrl = targetId ? `/api/albums?userId=${targetId}` : '/api/albums'
-                    fetch(albumsUrl).then(r => r.json()).then(albums => setAvailableAlbums(albums))
                 }
+
+                const albumsUrl = targetId && data.isParent ? `/api/albums?userId=${targetId}` : '/api/albums'
+                fetch(albumsUrl).then(r => r.json()).then(albums => {
+                    if (Array.isArray(albums)) setAvailableAlbums(albums)
+                })
             })
     }, [params])
 
@@ -374,22 +377,6 @@ export default function AlbumDetailPage() {
                                         required
                                     />
                                 </div>
-                                {editIsPublic && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        className="overflow-hidden"
-                                    >
-                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
-                                        <input
-                                            type="number"
-                                            value={editPriceCoins}
-                                            onChange={e => setEditPriceCoins(e.target.value)}
-                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
-                                            placeholder="0"
-                                        />
-                                    </motion.div>
-                                )}
                                 <div>
                                     <label className="block text-sm font-bold text-[#6b5c45] mb-1">Album</label>
                                     <select
@@ -423,6 +410,23 @@ export default function AlbumDetailPage() {
                                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${editIsPublic ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
+
+                                {editIsPublic && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="overflow-hidden"
+                                    >
+                                        <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
+                                        <input
+                                            type="number"
+                                            value={editPriceCoins}
+                                            onChange={e => setEditPriceCoins(e.target.value)}
+                                            className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
+                                            placeholder="0"
+                                        />
+                                    </motion.div>
+                                )}
                                 <div className="flex gap-3 mt-2">
                                     <button
                                         type="button"

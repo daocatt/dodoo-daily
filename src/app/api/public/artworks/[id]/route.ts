@@ -5,10 +5,10 @@ import { eq, and } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params
+        const { id } = await params
 
         const results = await db.select({
             id: artwork.id,
@@ -21,6 +21,8 @@ export async function GET(
             userId: artwork.userId,
             albumId: artwork.albumId,
             isPublic: artwork.isPublic,
+            likes: artwork.likes,
+            views: artwork.views,
             user: {
                 name: users.name,
                 nickname: users.nickname,
@@ -43,7 +45,15 @@ export async function GET(
             return NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
         }
 
-        return NextResponse.json(results[0])
+        const data = results[0]
+
+        // Increment views in background (or just await it)
+        const { sql } = await import('drizzle-orm')
+        await db.update(artwork)
+            .set({ views: sql`${artwork.views} + 1` })
+            .where(eq(artwork.id, id))
+
+        return NextResponse.json({ ...data, views: data.views + 1 })
     } catch (e) {
         console.error('Public artwork detail fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

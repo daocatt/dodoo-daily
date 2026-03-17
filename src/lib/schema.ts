@@ -146,6 +146,8 @@ export const artwork = sqliteTable("Artwork", {
     buyerId: text("buyerId").references(() => guest.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
+    likes: integer("likes").default(0).notNull(),
+    views: integer("views").default(0).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 

@@ -102,3 +102,9 @@ export const slugify = (text: string): string => {
         .replace(/[^\w-]+/g, '')
         .replace(/--+/g, '-');
 };
+
+export const generateNumericSlug = (length: number = 8): string => {
+    const min = Math.pow(10, length - 1);
+    const max = Math.pow(10, length) - 1;
+    return Math.floor(min + Math.random() * (max - min + 1)).toString();
+};

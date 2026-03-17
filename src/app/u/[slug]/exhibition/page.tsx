@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Grid, LayoutList, CheckCircle } from 'lucide-react'
+import { Palette, ArrowLeft, Grid, LayoutList, CheckCircle, Heart, Eye, Coins } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -18,6 +18,8 @@ type PublicArtwork = {
     isSold: boolean
     createdAt: number
     albumId: string | null
+    likes: number
+    views: number
 }
 
 type PublicAlbum = {
@@ -27,12 +29,20 @@ type PublicAlbum = {
     isPublic: boolean
 }
 
+type UserProfile = {
+    id: string
+    name: string
+    nickname: string | null
+    avatarUrl: string | null
+}
+
 export default function ExhibitionPage() {
     const params = useParams()
     const router = useRouter()
     const { t } = useI18n()
     const [artworks, setArtworks] = useState<PublicArtwork[]>([])
     const [albums, setAlbums] = useState<PublicAlbum[]>([])
+    const [user, setUser] = useState<UserProfile | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null)
     const [viewMode, setViewMode] = useState<'grid' | 'masonry'>('grid')
@@ -44,14 +54,16 @@ export default function ExhibitionPage() {
         
         const fetchData = async () => {
             try {
-                const [artRes, albRes] = await Promise.all([
+                const [artRes, albRes, userRes] = await Promise.all([
                     fetch(`/api/public/users/${slug}/artworks`),
-                    fetch(`/api/public/users/${slug}/albums`)
+                    fetch(`/api/public/users/${slug}/albums`),
+                    fetch(`/api/public/users/${slug}`)
                 ])
 
-                if (artRes.ok && albRes.ok) {
+                if (artRes.ok && albRes.ok && userRes.ok) {
                     setArtworks(await artRes.json())
                     setAlbums(await albRes.json())
+                    setUser(await userRes.json())
                 }
             } catch (err) {
                 console.error(err)
@@ -84,8 +96,25 @@ export default function ExhibitionPage() {
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         {t('public.visitHome')}
                     </Link>
-                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">{t('public.artworks')}</h1>
-                    <p className="text-slate-500 font-medium mt-2">Exploring world through colors and shapes.</p>
+                    <div className="flex items-center gap-6">
+                        {user?.avatarUrl && (
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white p-1 shadow-lg border-2 border-white overflow-hidden shrink-0">
+                                <Image 
+                                    src={user.avatarUrl} 
+                                    width={80} 
+                                    height={80} 
+                                    className="w-full h-full object-cover rounded-xl" 
+                                    alt="Avatar" 
+                                />
+                            </div>
+                        )}
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">{t('public.artworks')}</h1>
+                            <p className="text-slate-500 font-medium mt-1">
+                                {user?.nickname || user?.name}&apos;s world of colors and shapes.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* View Controls & Filters */}
@@ -106,7 +135,11 @@ export default function ExhibitionPage() {
                     </div>
                     
                     <div className="bg-slate-900 rounded-2xl p-0.5 shadow-lg shadow-slate-200">
-                        <ShareButton title="Art Exhibition" />
+                        <ShareButton 
+                            title={`${user?.nickname || user?.name}'s Art Exhibition`} 
+                            displayName={user?.nickname || user?.name}
+                            avatarUrl={user?.avatarUrl || undefined}
+                        />
                     </div>
                 </div>
             </div>
@@ -154,10 +187,18 @@ export default function ExhibitionPage() {
                                         fill
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
+                                    
+                                    {!art.isSold && (
+                                        <div className="absolute bottom-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-xl shadow-lg font-black text-[10px] uppercase tracking-widest z-10 transition-transform group-hover:scale-110 origin-left">
+                                            <Coins className="w-3 h-3" />
+                                            {art.priceCoins} Coins
+                                        </div>
+                                    )}
+
                                     {art.isSold && (
-                                        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="px-5 py-2 bg-indigo-500 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
-                                                <CheckCircle className="w-4 h-4" />
+                                        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center transition-opacity flex-col gap-2">
+                                            <div className="px-5 py-2 bg-rose-500 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-2">
+                                                <Heart className="w-4 h-4 fill-white" />
                                                 COLLECTED
                                             </div>
                                         </div>
@@ -168,9 +209,16 @@ export default function ExhibitionPage() {
                                     <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
                                         {new Date(art.createdAt).toLocaleDateString()}
                                     </span>
-                                    {!art.isSold && (
-                                        <span className="text-indigo-600 font-black text-sm">{art.priceCoins} Coins</span>
-                                    )}
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-1 text-slate-400">
+                                            <Heart className="w-3.5 h-3.5" />
+                                            <span className="text-[10px] font-bold">{art.likes}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-slate-400">
+                                            <Eye className="w-3.5 h-3.5" />
+                                            <span className="text-[10px] font-bold">{art.views}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))

@@ -36,6 +36,13 @@
       "when": 1773765199418,
       "tag": "0004_shocking_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1773771520841,
+      "tag": "0005_small_terror",
+      "breakpoints": true
     }
   ]
 }

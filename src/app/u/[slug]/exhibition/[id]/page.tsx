@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Heart, Calendar, Coins, User, Phone, CheckCircle, Download } from 'lucide-react'
+import { Palette, ArrowLeft, Heart, Calendar, Coins, User, Phone, CheckCircle, Download, Eye } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -25,6 +25,8 @@ type ArtworkDetail = {
         slug: string
         avatarUrl: string | null
     }
+    likes: number
+    views: number
 }
 
 export default function ArtworkDetailPage() {
@@ -37,6 +39,8 @@ export default function ArtworkDetailPage() {
     const [guestPhone, setGuestPhone] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [isLiking, setIsLiking] = useState(false)
+    const [hasLiked, setHasLiked] = useState(false)
 
     const id = params?.id as string
     const slug = params?.slug as string
@@ -60,6 +64,24 @@ export default function ArtworkDetailPage() {
         fetchData()
     }, [id])
 
+    const handleLike = async () => {
+        if (isLiking || hasLiked) return
+        setIsLiking(true)
+
+        try {
+            const res = await fetch(`/api/public/artworks/${id}/like`, { method: 'POST' })
+            if (res.ok) {
+                const data = await res.json()
+                setArtwork(prev => prev ? { ...prev, likes: data.likes } : null)
+                setHasLiked(true)
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setIsLiking(false)
+        }
+    }
+
     const handleCollect = async (e: React.FormEvent) => {
         e.preventDefault()
         setSubmitting(true)
@@ -77,7 +99,6 @@ export default function ArtworkDetailPage() {
 
             if (res.ok) {
                 setSuccess(true)
-                // In a real app, maybe artist is notified
             }
         } catch (err) {
             console.error(err)
@@ -136,7 +157,11 @@ export default function ArtworkDetailPage() {
                             </div>
                         )}
                         <div className="absolute bottom-6 right-6 flex gap-2">
-                             <ShareButton title={artwork.title} />
+                             <ShareButton 
+                                title={artwork.title} 
+                                displayName={artistDisplayName}
+                                avatarUrl={artwork.user.avatarUrl || undefined}
+                             />
                              <a 
                                 href={artwork.imageUrl} 
                                 download={artwork.title}
@@ -171,18 +196,26 @@ export default function ArtworkDetailPage() {
                         {artwork.title}
                     </h1>
 
-                    <div className="flex items-center gap-6 mb-12 border-b border-slate-100 pb-8">
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-slate-300" />
-                            <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">
-                                {new Date(artwork.createdAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                            </span>
+                        <div className="flex items-center gap-6 mb-12 border-b border-slate-100 pb-8">
+                            <div className="flex items-center gap-2 group cursor-pointer" onClick={handleLike}>
+                                <Heart className={`w-4 h-4 transition-all ${hasLiked ? 'text-rose-500 fill-rose-500 scale-125' : 'text-slate-300 group-hover:text-rose-400'}`} />
+                                <span className={`text-sm font-black uppercase tracking-widest ${hasLiked ? 'text-rose-600' : 'text-slate-500'}`}>
+                                    {artwork.likes} Likes
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Eye className="w-4 h-4 text-blue-300" />
+                                <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                                    {artwork.views} Views
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 ml-auto">
+                                <Calendar className="w-4 h-4 text-slate-300" />
+                                <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">
+                                    {new Date(artwork.createdAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Heart className="w-4 h-4 text-rose-300" />
-                            <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">Unique Piece</span>
-                        </div>
-                    </div>
 
                     <div className="mb-12">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Acquisition Price</p>

@@ -5,10 +5,10 @@ import { eq, and } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
-        const { slug } = params
+        const { slug } = await params
 
         const results = await db.select({
             id: users.id,
@@ -37,9 +37,23 @@ export async function GET(
         // Fetch public stats - e.g. how many purple stars (art stars)
         const stats = await db.select().from(accountStats).where(eq(accountStats.userId, user.id))
         
+        // Fetch artwork aggregate stats
+        const { artwork } = await import('@/lib/schema')
+        const { sum } = await import('drizzle-orm')
+        const artStatsResults = await db.select({
+            totalLikes: sum(artwork.likes),
+            totalViews: sum(artwork.views)
+        })
+        .from(artwork)
+        .where(and(eq(artwork.userId, user.id), eq(artwork.isPublic, true)))
+
+        const artStats = artStatsResults[0] || { totalLikes: 0, totalViews: 0 }
+        
         return NextResponse.json({
             ...user,
-            stats: stats[0] || null
+            stats: stats[0] || null,
+            totalLikes: Number(artStats.totalLikes || 0),
+            totalViews: Number(artStats.totalViews || 0)
         })
     } catch (e) {
         console.error('Public profile fetch error:', e)

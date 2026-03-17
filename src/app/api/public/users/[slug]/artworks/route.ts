@@ -5,10 +5,10 @@ import { eq, and, desc } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
-        const { slug } = params
+        const { slug } = await params
 
         // 1. Find user by slug
         const results = await db.select({ id: users.id })
@@ -33,7 +33,9 @@ export async function GET(
             createdAt: artwork.createdAt,
             albumId: artwork.albumId,
             userId: artwork.userId,
-            isPublic: artwork.isPublic
+            isPublic: artwork.isPublic,
+            likes: artwork.likes,
+            views: artwork.views
         })
         .from(artwork)
         .where(

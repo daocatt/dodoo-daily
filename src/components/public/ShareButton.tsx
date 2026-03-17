@@ -2,10 +2,21 @@
 
 import React, { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Share2, Copy, Check, X, QrCode } from 'lucide-react'
+import { Share2, Copy, Check, X, QrCode, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
+import Image from 'next/image'
 
-export default function ShareButton({ url, title }: { url?: string; title?: string }) {
+export default function ShareButton({ 
+    url, 
+    title, 
+    avatarUrl, 
+    displayName 
+}: { 
+    url?: string; 
+    title?: string;
+    avatarUrl?: string;
+    displayName?: string;
+}) {
     const [open, setOpen] = useState(false)
     const [copied, setCopied] = useState(false)
 
@@ -36,7 +47,7 @@ export default function ShareButton({ url, title }: { url?: string; title?: stri
         <>
             <button 
                 onClick={handleNativeShare}
-                className="p-3 bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-white/40 transition-colors shadow-lg"
+                className="p-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-white hover:bg-white/30 transition-all shadow-lg active:scale-90"
             >
                 <Share2 className="w-6 h-6" />
             </button>
@@ -47,49 +58,82 @@ export default function ShareButton({ url, title }: { url?: string; title?: stri
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-md"
                         onClick={() => setOpen(false)}
                     >
                         <motion.div 
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-sm bg-white rounded-[40px] p-10 md:p-12 shadow-2xl relative overflow-hidden text-center"
+                            initial={{ scale: 0.9, y: 40, rotateX: 20 }}
+                            animate={{ scale: 1, y: 0, rotateX: 0 }}
+                            exit={{ scale: 0.9, y: 40 }}
+                            className="w-full max-w-[340px] relative"
                             onClick={e => e.stopPropagation()}
                         >
-                            <button 
-                                onClick={() => setOpen(false)}
-                                className="absolute top-6 right-6 p-2 bg-slate-50 rounded-xl text-slate-400 hover:bg-slate-100 transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            {/* Postcard Container */}
+                            <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col items-center p-8 pb-10 border-[12px] border-white relative ring-1 ring-slate-200">
+                                {/* Close Button */}
+                                <button 
+                                    onClick={() => setOpen(false)}
+                                    className="absolute top-2 right-2 p-2 text-slate-300 hover:text-slate-500 transition-colors z-20"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
 
-                            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <QrCode className="w-8 h-8" />
+                                {/* Decorative Header */}
+                                <div className="w-full text-center mb-8 border-b-2 border-dashed border-slate-100 pb-6 relative">
+                                    <div className="absolute top-0 right-0 p-1 bg-indigo-50 rounded-lg text-indigo-400 rotate-12">
+                                        <Sparkles className="w-4 h-4" />
+                                    </div>
+                                    <div className="w-16 h-16 rounded-2xl bg-indigo-600 p-1.5 shadow-xl mb-4 mx-auto rotate-[-4deg]">
+                                        {avatarUrl ? (
+                                            <Image src={avatarUrl} alt="Avatar" width={64} height={64} className="w-full h-full object-cover rounded-xl" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-indigo-500 rounded-xl">
+                                                <QrCode className="w-8 h-8 text-white" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
+                                        {displayName ? `${displayName}'s Art World` : 'Art Exhibition'}
+                                    </h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2">DODOO DAILY COLLECTOR</p>
+                                </div>
+
+                                {/* QR Code Area */}
+                                <div className="bg-slate-50 p-6 rounded-[2rem] shadow-inner mb-8 w-full group transition-all duration-500 hover:bg-white border-2 border-transparent hover:border-indigo-100">
+                                    <div className="bg-white p-4 rounded-3xl shadow-sm flex items-center justify-center">
+                                        <QRCodeSVG 
+                                            value={finalUrl} 
+                                            size={160}
+                                            level="Q"
+                                            includeMargin={false}
+                                            fgColor="#312e81"
+                                        />
+                                    </div>
+                                    <p className="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-4">Scan to visit exhibition</p>
+                                </div>
+
+                                {/* Copy Link Section */}
+                                <div className="w-full space-y-4">
+                                    <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3 border border-slate-100 group">
+                                        <div className="flex-1 truncate text-xs font-medium text-slate-400">
+                                            {finalUrl}
+                                        </div>
+                                    </div>
+                                    
+                                    <button 
+                                        onClick={handleCopy}
+                                        className={`w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-[10px] shadow-lg active:scale-95 ${copied ? 'bg-emerald-500 text-white shadow-emerald-100/50' : 'bg-slate-900 text-white hover:bg-black shadow-slate-200/50'}`}
+                                    >
+                                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                        {copied ? 'Copied Successfully!' : 'Copy Invitation Link'}
+                                    </button>
+                                </div>
                             </div>
 
-                            <h3 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Share this Gallery</h3>
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-8 leading-relaxed">
-                                Scan the code below or copy the link to share with friends and family.
-                            </p>
-
-                            <div className="bg-white p-6 rounded-[32px] border-4 border-slate-50 flex items-center justify-center mb-8 shadow-inner">
-                                <QRCodeSVG 
-                                    value={finalUrl} 
-                                    size={200}
-                                    level="H"
-                                    includeMargin={false}
-                                    fgColor="#0f172a"
-                                />
+                            {/* Decorative Floating Element */}
+                            <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center shadow-lg -rotate-12 z-20 border-4 border-white">
+                                <Sparkles className="w-6 h-6 text-white" />
                             </div>
-
-                            <button 
-                                onClick={handleCopy}
-                                className={`w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 uppercase tracking-widest text-xs ${copied ? 'bg-emerald-500 text-white shadow-emerald-100' : 'bg-slate-900 text-white shadow-xl shadow-slate-200'}`}
-                            >
-                                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                {copied ? 'Link Copied!' : 'Copy Gallery Link'}
-                            </button>
                         </motion.div>
                     </motion.div>
                 )}

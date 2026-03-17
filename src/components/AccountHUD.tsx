@@ -19,7 +19,8 @@ import {
     X,
     CreditCard,
     Ruler,
-    Power
+    Power,
+    Palette
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
@@ -27,9 +28,11 @@ import { clsx } from 'clsx'
 interface Stats {
     userId: string
     name: string
+    nickname?: string
     avatar?: string
     isParent: boolean
     coins: number
+    slug?: string
     goldStars: number
     todayTasks: number
     completedTasks: number
@@ -42,6 +45,7 @@ interface Child {
     avatar?: string
     coins: number
     goldStars: number
+    slug?: string
 }
 
 export default function AccountHUD() {
@@ -107,7 +111,7 @@ export default function AccountHUD() {
 
     if (!mounted) return null
 
-    const hideOn = ['/buy', '/login', '/setup', '/tasks', '/gallery', '/emotions', '/journal', '/shop', '/parent', '/notes']
+    const hideOn = ['/buy', '/login', '/setup', '/tasks', '/emotions', '/journal', '/shop', '/parent', '/notes', '/u/']
     if (!pathname || hideOn.some(prefix => pathname.startsWith(prefix)) || !stats) return null
 
     const handleRecharge = async (e: React.FormEvent) => {
@@ -208,7 +212,7 @@ export default function AccountHUD() {
                             </div>
                         </motion.div>
                         <div className="flex flex-col">
-                            <span className="text-[11px] font-black text-slate-800 leading-none">{stats.name}</span>
+                            <span className="text-[11px] font-black text-slate-800 leading-none">{stats.nickname || stats.name}</span>
                         </div>
                     </div>
 
@@ -252,6 +256,20 @@ export default function AccountHUD() {
                                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                                 <span className="text-[13px] font-medium text-slate-600">{stats.goldStars ?? 0}</span>
                             </div>
+                        )}
+
+                        {/* Exhibition Link */}
+                        {(stats.slug || (stats.isParent && children.some(c => c.slug))) && (
+                            <button
+                                onClick={() => {
+                                    const slug = stats.slug || children.find(c => c.id === targetChildId)?.slug || children.find(c => c.slug)?.slug;
+                                    if (slug) window.open(`/u/${slug}`, '_blank')
+                                }}
+                                className="flex items-center text-indigo-500 hover:text-indigo-600 transition-colors p-1"
+                                title={t('parent.viewPublicProfile')}
+                            >
+                                <Palette className="w-4 h-4" />
+                            </button>
                         )}
 
                         {/* Growth Record */}
