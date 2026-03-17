@@ -237,6 +237,7 @@ const dictionaries: Dictionary = {
         'settings.pushBlocked': 'Notifications Blocked',
 
         // Shop
+        'shop.title': 'Reward Shop',
         'shop.buyNow': 'Buy Now',
         'shop.buying': 'Buying...',
         'shop.coinsDeducted': '{amount} coins will be deducted',
@@ -581,6 +582,7 @@ const dictionaries: Dictionary = {
         'settings.pushBlocked': '通知已被禁用',
 
         // Shop
+        'shop.title': '积分商店',
         'shop.buyNow': '立即购买',
         'shop.buying': '购买中...',
         'shop.coinsDeducted': '将扣除 {amount} 金币',
