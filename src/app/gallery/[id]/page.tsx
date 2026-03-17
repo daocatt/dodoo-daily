@@ -72,11 +72,12 @@ export default function AlbumDetailPage() {
             .then(data => {
                 if (data.isParent) {
                     setIsParent(true)
-                    fetch('/api/albums').then(r => r.json()).then(albums => setAvailableAlbums(albums))
-                    
                     const searchParams = new URLSearchParams(window.location.search)
                     const targetId = searchParams.get('userId')
                     if (targetId) setSelectedChildId(targetId)
+
+                    const albumsUrl = targetId ? `/api/albums?userId=${targetId}` : '/api/albums'
+                    fetch(albumsUrl).then(r => r.json()).then(albums => setAvailableAlbums(albums))
                 }
             })
     }, [params])
@@ -114,7 +115,7 @@ export default function AlbumDetailPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     title: editTitle,
-                    priceCoins: editPriceCoins,
+                    priceCoins: editIsPublic ? (editPriceCoins || '0') : '0',
                     albumId: editAlbumId === 'archive' ? null : editAlbumId,
                     isArchived: editAlbumId === 'archive',
                     isPublic: editIsPublic
@@ -373,17 +374,22 @@ export default function AlbumDetailPage() {
                                         required
                                     />
                                 </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div>
+                                {editIsPublic && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        className="overflow-hidden"
+                                    >
                                         <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
                                         <input
                                             type="number"
                                             value={editPriceCoins}
                                             onChange={e => setEditPriceCoins(e.target.value)}
                                             className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
+                                            placeholder="0"
                                         />
-                                    </div>
-                                </div>
+                                    </motion.div>
+                                )}
                                 <div>
                                     <label className="block text-sm font-bold text-[#6b5c45] mb-1">Album</label>
                                     <select

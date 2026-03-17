@@ -30,10 +30,11 @@ export async function GET(req: NextRequest) {
             .orderBy(desc(artwork.createdAt))
 
         const albumsWithArtworks = albums.map(a => {
-            const artworksForAlbum = allArtworks.filter(art => art.albumId === a.id).slice(0, 3)
+            const artworksInAlbum = allArtworks.filter(art => art.albumId === a.id)
             return {
                 ...a,
-                artworks: artworksForAlbum
+                artworks: artworksInAlbum.slice(0, 3),
+                totalArtworks: artworksInAlbum.length
             }
         })
 

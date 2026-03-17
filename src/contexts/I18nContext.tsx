@@ -112,6 +112,11 @@ const dictionaries: Dictionary = {
         'gallery.noAlbums': 'No albums yet',
         'gallery.noAlbumsSub': 'Create an album to organize your art',
         'gallery.upload': 'Upload New Work',
+        'gallery.title': 'Art Gallery',
+        'gallery.archives': 'Archives',
+        'gallery.isPoster': 'Exhibition',
+        'gallery.detail.collected': 'Collected',
+        'gallery.photoLabel': 'Photo',
 
         // Hud
         'hud.coins': 'Coins',
@@ -451,6 +456,11 @@ const dictionaries: Dictionary = {
         'gallery.noAlbums': '暂无画册',
         'gallery.noAlbumsSub': '创建一个画册来整理你的作品',
         'gallery.upload': '上传新作品',
+        'gallery.title': '艺术画廊',
+        'gallery.archives': '存档画馆',
+        'gallery.isPoster': '展览作品',
+        'gallery.detail.collected': '已售出',
+        'gallery.photoLabel': '作品图片',
 
         // Hud
         'hud.coins': '金币',
