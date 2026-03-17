@@ -22,6 +22,13 @@
       "when": 1773132054447,
       "tag": "0002_freezing_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1773757810162,
+      "tag": "0003_high_terror",
+      "breakpoints": true
     }
   ]
 }

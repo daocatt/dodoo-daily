@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { shopItem, purchase, accountStats } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
+import { notifyParents } from '@/lib/push'
 
 export async function POST(req: NextRequest) {
     try {
@@ -62,7 +63,17 @@ export async function POST(req: NextRequest) {
                 .where(eq(shopItem.id, item.id))
         }
 
-        return NextResponse.json({ success: true, purchase: newPurchase[0] })
+        
+        const result = newPurchase[0]
+
+        // Async Notify Parents
+        notifyParents({
+            title: 'New Store Order! 🛍️',
+            body: `Order: ${item.name}`,
+            data: { url: '/parent/shop' }
+        }).catch(e => console.error('Order push failed:', e))
+
+        return NextResponse.json({ success: true, purchase: result })
     } catch (error) {
         console.error('Purchase failed:', error)
         return NextResponse.json({ error: 'Purchase processing failed' }, { status: 500 })

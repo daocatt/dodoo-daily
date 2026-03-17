@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import NatureBackground from '@/components/NatureBackground'
+import PushSubscriptionManager from '@/components/PushSubscriptionManager'
 
 interface User {
     id: string
@@ -217,12 +218,22 @@ export default function SettingsPage() {
                         {pinError && <p className="text-sm text-red-500 px-1">⚠️ {pinError}</p>}
                         {pinMessage && <p className="text-sm text-green-600 px-1">✅ {pinMessage}</p>}
 
-                         <button
+                        <button
                             onClick={handlePinUpdate}
                             className="w-full bg-[#2c2416] text-white font-extrabold py-4 rounded-2xl shadow-xl hover:bg-black transition-all"
                         >
                             {t('settings.updatePin')}
                         </button>
+
+                        <div className="pt-4 border-t border-[#4a3728]/5 mt-4">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <h4 className="text-sm font-bold">{t('settings.pushNotifications')}</h4>
+                                    <p className="text-[10px] text-slate-500 font-medium">{t('settings.pushNotificationsDesc')}</p>
+                                </div>
+                                <PushSubscriptionManager />
+                            </div>
+                        </div>
                     </div>
                 </section>
 

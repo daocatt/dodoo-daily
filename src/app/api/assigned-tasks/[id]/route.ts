@@ -4,6 +4,7 @@ import { task } from '@/lib/schema'
 import { eq, and, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
+import { notifyParents, sendPushNotification } from '@/lib/push'
 
 export async function PUT(
     req: NextRequest,
@@ -76,7 +77,31 @@ export async function PUT(
         if (Object.keys(updateData).length === 0) return NextResponse.json(currentTask)
 
         const updated = await db.update(task).set(updateData).where(eq(task.id, id)).returning()
-        return NextResponse.json(updated[0])
+        const result = updated[0]
+
+        // Async Push Notifications
+        try {
+            // Case 1: Child marks task as complete -> Notify Parent
+            if (completed === true && role === 'CHILD' && currentTask.assignerId) {
+                notifyParents({
+                    title: 'Task Completed! ✅',
+                    body: `Completed: ${currentTask.title}`,
+                    data: { url: '/parent/tasks' }
+                }).catch(e => console.error('Push failed:', e))
+            }
+            // Case 2: Parent approves task -> Notify Child
+            if ((action === 'CONFIRM_REWARD' || (role === 'PARENT' && completed === true)) && currentTask.assigneeId) {
+                sendPushNotification(currentTask.assigneeId, {
+                    title: 'Reward Confirmed! ✨',
+                    body: `Gained stars for: ${currentTask.title}`,
+                    data: { url: '/tasks' }
+                }).catch(e => console.error('Push failed:', e))
+            }
+        } catch (e) {
+            console.error('Trigger notification error:', e)
+        }
+
+        return NextResponse.json(result)
     } catch (error) {
         console.error('Failed to update assigned task:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

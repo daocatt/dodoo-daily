@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { wish } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { notifyParents } from '@/lib/push'
 
 export async function GET(req: NextRequest) {
     try {
@@ -40,7 +41,16 @@ export async function POST(req: NextRequest) {
             status: 'PENDING'
         }).returning()
 
-        return NextResponse.json(newWish[0])
+        const result = newWish[0]
+
+        // Async Notify Parents
+        notifyParents({
+            title: 'New Wish! 🎁',
+            body: `I want: ${name}`,
+            data: { url: '/parent/wishes' }
+        }).catch(e => console.error('Wish push failed:', e))
+
+        return NextResponse.json(result)
     } catch (error) {
         console.error('Failed to create wish:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

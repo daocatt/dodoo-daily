@@ -4,6 +4,7 @@ import { journal, users, journalMedia } from '@/lib/schema'
 import { desc, eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { count } from 'drizzle-orm'
+import { notifyParents } from '@/lib/push'
 
 export async function GET(req: NextRequest) {
     try {
@@ -133,6 +134,15 @@ export async function POST(req: NextRequest) {
 
             return newEntry
         })
+
+        // Notify parents if it's a milestone and posted by child
+        if (isMilestone && currentUserRole === 'CHILD') {
+            notifyParents({
+                title: 'New Milestone! ✨',
+                body: `Children posted a new milestone: ${text?.substring(0, 50) || 'View entry'}`,
+                data: { url: `/journal/${result.id}` }
+            }).catch(e => console.error('Milestone notification failed:', e))
+        }
 
         return NextResponse.json(result)
     } catch (error) {

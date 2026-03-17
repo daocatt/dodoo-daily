@@ -284,6 +284,21 @@ export const growthRecord = sqliteTable("GrowthRecord", {
     date: integer("date", { mode: "timestamp_ms" }).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
+
+// -----------------------------------------------------------------------------
+// PWA & PUSH NOTIFICATION SYSTEM
+// -----------------------------------------------------------------------------
+
+export const pushSubscription = sqliteTable("PushSubscription", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    deviceType: text("deviceType"), // 'mobile' | 'desktop'
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
 // -----------------------------------------------------------------------------
 // FAMILY INTERACTION (Notes / Message Board)
 // -----------------------------------------------------------------------------

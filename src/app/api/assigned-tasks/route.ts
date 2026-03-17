@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { task } from '@/lib/schema'
 import { desc, eq, and, sql, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
+import { sendPushNotification } from '@/lib/push'
 
 export async function GET(req: NextRequest) {
     try {
@@ -82,6 +83,17 @@ export async function POST(req: NextRequest) {
             isMonthlyRepeating: isMonthlyRepeating || false,
             completed: false
         }).returning()
+
+        // Send Push Notification to child asynchronously
+        try {
+            sendPushNotification(assignedTo, {
+                title: 'New Task! 🌟',
+                body: `You have a new task: ${title}`,
+                data: { url: '/tasks' }
+            }).catch(e => console.error('Delayed push failed:', e))
+        } catch (e) {
+            console.error('Notification trigger error:', e)
+        }
 
         return NextResponse.json(newTask)
     } catch (error) {

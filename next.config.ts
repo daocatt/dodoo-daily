@@ -5,7 +5,10 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  // custom service worker source
+  buildExcludes: [/middleware-manifest\.json$/],
 });
+
 
 const nextConfig: NextConfig = {
   output: 'standalone',

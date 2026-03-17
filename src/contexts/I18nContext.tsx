@@ -214,6 +214,11 @@ const dictionaries: Dictionary = {
         'settings.saveNickname': 'Save Nickname',
         'settings.pinLengthError': 'PIN must be at least 4 digits',
         'settings.pinUpdateSuccess': 'PIN updated',
+        'settings.pushNotifications': 'Push Notifications',
+        'settings.pushNotificationsDesc': 'Receive updates about tasks and milestones when the app is closed.',
+        'settings.pushSubscribed': 'Subscribed',
+        'settings.pushUnsubscribed': 'Enable Notifications',
+        'settings.pushBlocked': 'Notifications Blocked',
 
         // Shop
         'shop.buyNow': 'Buy Now',
@@ -525,6 +530,11 @@ const dictionaries: Dictionary = {
         'settings.saveNickname': '保存昵称修改',
         'settings.pinLengthError': '密码长度至少为 4 位',
         'settings.pinUpdateSuccess': '密码已更新',
+        'settings.pushNotifications': '推送通知',
+        'settings.pushNotificationsDesc': '关闭应用时也能收到关于任务和大事记的更新。',
+        'settings.pushSubscribed': '已开启',
+        'settings.pushUnsubscribed': '开启推送通知',
+        'settings.pushBlocked': '通知已被禁用',
 
         // Shop
         'shop.buyNow': '立即购买',

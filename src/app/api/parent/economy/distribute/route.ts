@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { users } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth'
 import { addBalance, TransactionType } from '@/lib/economy'
+import { sendPushNotification } from '@/lib/push'
 
 export async function POST(req: NextRequest) {
     try {
@@ -23,6 +20,16 @@ export async function POST(req: NextRequest) {
         if (!res || !res.success) {
             return NextResponse.json({ error: res?.error || 'Transaction failed' }, { status: 400 })
         }
+
+        // Async Notify Target User
+        const typeLabel = type === 'CURRENCY' ? 'Coins 💰' : (type === 'GOLD_STAR' ? 'Gold Stars ⭐' : 'Purple Stars 🌟')
+        const actionLabel = amount >= 0 ? 'Received' : 'Adjusted'
+        
+        sendPushNotification(targetUserId, {
+            title: `Balance Updated! ${typeLabel}`,
+            body: `${actionLabel} ${Math.abs(amount)} ${typeLabel}: ${reason || 'Family shared reward'}`,
+            data: { url: '/' }
+        }).catch(e => console.error('Distribute push failed:', e))
 
         return NextResponse.json({ success: true, balance: res.balance })
     } catch (e) {

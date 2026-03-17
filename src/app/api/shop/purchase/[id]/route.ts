@@ -4,6 +4,7 @@ import { purchase, shopItem, accountStats } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
+import { sendPushNotification } from '@/lib/push'
 
 async function checkAuth() {
     const cookieStore = await cookies()
@@ -53,7 +54,18 @@ export async function PATCH(
             .where(eq(purchase.id, id))
             .returning()
 
-        return NextResponse.json(updated[0])
+        const result = updated[0]
+
+        // Async Notify Child if SHIPPED
+        if (status === 'SHIPPED' && result.userId) {
+            sendPushNotification(result.userId, {
+                title: 'Item Shipped! 🎁',
+                body: `Your reward "${result.itemName}" is ready!`,
+                data: { url: '/order' }
+            }).catch(e => console.error('Ship push failed:', e))
+        }
+
+        return NextResponse.json(result)
     } catch (e) {
         console.error('Update purchase failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
