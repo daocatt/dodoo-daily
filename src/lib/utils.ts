@@ -91,3 +91,14 @@ export const getTodayStringInTimezone = (timezone: string = 'Asia/Shanghai'): st
     const da = String(d.getDate()).padStart(2, '0');
     return `${yr}-${mo}-${da}`;
 };
+
+export const slugify = (text: string): string => {
+    return text
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]+/g, '')
+        .replace(/--+/g, '-');
+};

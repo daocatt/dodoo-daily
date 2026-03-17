@@ -22,6 +22,7 @@ export async function GET() {
             zodiac: users.zodiac,
             chineseZodiac: users.chineseZodiac,
             avatarUrl: users.avatarUrl,
+            slug: users.slug,
             role: users.role,
             isArchived: users.isArchived,
             isDeleted: users.isDeleted,
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json()
-        const { name, nickname, gender, birthDate, pin, avatarUrl, role } = body
+        const { name, nickname, gender, birthDate, pin, avatarUrl, role, slug } = body
         let { zodiac, chineseZodiac } = body
         if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
 
@@ -73,22 +74,33 @@ export async function POST(req: NextRequest) {
             if (!zodiac) zodiac = getZodiac(new Date(birthDate));
             if (!chineseZodiac) chineseZodiac = getChineseZodiac(new Date(birthDate));
         }
+        
+        const { slugify } = await import('@/lib/utils');
+        let finalSlug = slug || slugify(nickname || name);
 
         // Check uniqueness
         const conditions = [eq(users.name, name)];
         if (nickname) conditions.push(eq(users.nickname, nickname));
+        conditions.push(eq(users.slug, finalSlug));
 
         const existing = await db.select().from(users).where(or(...conditions)).all();
         if (existing.length > 0) {
             const hasSameName = existing.some(u => u.name === name);
             const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
+            const hasSameSlug = existing.some(u => u.slug === finalSlug);
+
             if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
             if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+            if (hasSameSlug) {
+                if (!slug) finalSlug = `${finalSlug}-${Math.random().toString(36).substring(2, 5)}`;
+                else return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+            }
         }
 
         const [newUser] = await db.insert(users).values({
             name,
             nickname: nickname || null,
+            slug: finalSlug,
             gender: gender || 'OTHER',
             birthDate: birthDate ? new Date(birthDate) : null,
             zodiac: zodiac || null,
@@ -118,7 +130,7 @@ export async function PATCH(req: NextRequest) {
 
     try {
         const body = await req.json()
-        const { id, name, nickname, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted } = body
+        const { id, name, nickname, slug, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted } = body
         let { zodiac, chineseZodiac } = body
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
@@ -128,26 +140,27 @@ export async function PATCH(req: NextRequest) {
             if (!chineseZodiac) chineseZodiac = birthDate ? getChineseZodiac(new Date(birthDate)) : null;
         }
 
-        // Check uniqueness
-        if (name || nickname) {
-            const conditions = [];
-            if (name) conditions.push(eq(users.name, name));
-            if (nickname) conditions.push(eq(users.nickname, nickname));
+        const conditions = [];
+        if (name) conditions.push(eq(users.name, name));
+        if (nickname) conditions.push(eq(users.nickname, nickname));
+        if (slug) conditions.push(eq(users.slug, slug));
 
-            if (conditions.length > 0) {
-                const existing = await db.select().from(users).where(
-                    and(
-                        not(eq(users.id, id)),
-                        or(...conditions)
-                    )
-                ).all();
+        if (conditions.length > 0) {
+            const existing = await db.select().from(users).where(
+                and(
+                    not(eq(users.id, id)),
+                    or(...conditions)
+                )
+            ).all();
 
-                if (existing.length > 0) {
-                    const hasSameName = name && existing.some(u => u.name === name);
-                    const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
-                    if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
-                    if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
-                }
+            if (existing.length > 0) {
+                const hasSameName = name && existing.some(u => u.name === name);
+                const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
+                const hasSameSlug = slug && existing.some(u => u.slug === slug);
+
+                if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
+                if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+                if (hasSameSlug) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
             }
         }
 
@@ -163,6 +176,11 @@ export async function PATCH(req: NextRequest) {
         if (role !== undefined) updateData.role = role
         if (isArchived !== undefined) updateData.isArchived = isArchived
         if (isDeleted !== undefined) updateData.isDeleted = isDeleted
+        if (slug !== undefined) updateData.slug = slug
+        else if (nickname !== undefined || name !== undefined) {
+             // Optionally auto-update slug if name changes and it wasn't specified? 
+             // Better only if it doesn't already have one.
+        }
 
         const [updatedUser] = await db.update(users)
             .set(updateData)

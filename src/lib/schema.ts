@@ -13,6 +13,7 @@ export const users = sqliteTable("Users", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull().unique(),
     nickname: text("nickname").unique(),
+    slug: text("slug").unique(), // For public personal homepage URL
     pin: text("pin"),
     role: text("role", { enum: ["PARENT", "CHILD", "GRANDPARENT", "OTHER"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
@@ -128,6 +129,7 @@ export const album = sqliteTable("Album", {
     userId: text("userId").references(() => users.id),
     title: text("title").notNull(),
     coverUrls: text("coverUrls"),
+    isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });

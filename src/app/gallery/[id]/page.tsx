@@ -3,10 +3,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles } from 'lucide-react'
+import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles, Camera } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
+import UploadModal from '@/components/gallery/UploadModal'
 import { useI18n } from '@/contexts/I18nContext'
 
 type Artwork = {
@@ -39,6 +40,8 @@ export default function AlbumDetailPage() {
     const [loading, setLoading] = useState(true)
     const [posterArtwork, setPosterArtwork] = useState<Artwork | null>(null)
     const [isParent, setIsParent] = useState(false)
+    const [showUploadModal, setShowUploadModal] = useState(false)
+    const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
 
     // Edit State
     const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null)
@@ -70,6 +73,10 @@ export default function AlbumDetailPage() {
                 if (data.isParent) {
                     setIsParent(true)
                     fetch('/api/albums').then(r => r.json()).then(albums => setAvailableAlbums(albums))
+                    
+                    const searchParams = new URLSearchParams(window.location.search)
+                    const targetId = searchParams.get('userId')
+                    if (targetId) setSelectedChildId(targetId)
                 }
             })
     }, [params])
@@ -256,6 +263,15 @@ export default function AlbumDetailPage() {
                         )}
                     </span>
                 </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="flex items-center justify-center p-2 rounded-2xl bg-purple-500/80 hover:bg-purple-500 backdrop-blur-md transition-colors text-white shadow-sm border border-purple-400 aspect-square"
+                        title={t('gallery.upload')}
+                    >
+                        <Camera className="w-5 h-5" />
+                    </button>
+                </div>
             </header>
 
             <main className="relative z-10 flex-1 overflow-y-auto p-6 md:p-12 pb-24 hide-scrollbar">
@@ -298,15 +314,17 @@ export default function AlbumDetailPage() {
                                             <div className="flex justify-between items-center mt-2">
                                                 <span className="text-amber-400 text-sm font-bold">{art.priceCoins ?? 0} {t('hud.coins')}</span>
                                             </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setPosterArtwork(art)
-                                                }}
-                                                className="mt-4 w-full py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg backdrop-blur font-semibold transition-colors"
-                                            >
-                                                {t('gallery.detail.genPoster')}
-                                            </button>
+                                            {art.isPublic && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setPosterArtwork(art)
+                                                    }}
+                                                    className="mt-4 w-full py-2 bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-700 rounded-lg backdrop-blur font-bold transition-colors border border-indigo-200/50"
+                                                >
+                                                    {t('gallery.detail.genPoster')}
+                                                </button>
+                                            )}
                                         </>
                                     )}
 
@@ -515,6 +533,16 @@ export default function AlbumDetailPage() {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Upload Modal */}
+            <UploadModal
+                isOpen={showUploadModal}
+                onClose={() => setShowUploadModal(false)}
+                onSuccess={() => fetchAlbumDetail(params!.id as string)}
+                albums={availableAlbums}
+                defaultAlbumId={params!.id as string}
+                selectedChildId={selectedChildId}
+            />
         </div>
     )
 }

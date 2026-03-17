@@ -22,12 +22,20 @@ export async function POST(req: NextRequest) {
         }
 
         // Async Notify Target User
-        const typeLabel = type === 'CURRENCY' ? 'Coins 💰' : (type === 'GOLD_STAR' ? 'Gold Stars ⭐' : 'Purple Stars 🌟')
+        const typeLabels: Record<string, string> = {
+            'CURRENCY': 'Coins 💰',
+            'GOLD_STAR': 'Gold Stars ⭐',
+            'PURPLE_STAR': 'Purple Stars 🌟',
+            'ANGER_PENALTY': 'Anger Penalty 💢'
+        }
+        
+        const typeLabel = typeLabels[type] || type
         const actionLabel = amount >= 0 ? 'Received' : 'Adjusted'
+        const actionLabelZh = amount >= 0 ? '获得了' : '调整了'
         
         sendPushNotification(targetUserId, {
-            title: `Balance Updated! ${typeLabel}`,
-            body: `${actionLabel} ${Math.abs(amount)} ${typeLabel}: ${reason || 'Family shared reward'}`,
+            title: `Balance Updated / 余额变动: ${typeLabel}`,
+            body: `${amount >= 0 ? '+' : '-'}${Math.abs(amount)} ${typeLabel}. ${reason || 'Family update'}\n${actionLabelZh} ${Math.abs(amount)} ${typeLabel}: ${reason || '家庭动态'}`,
             data: { url: '/' }
         }).catch(e => console.error('Distribute push failed:', e))
 

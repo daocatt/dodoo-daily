@@ -98,7 +98,7 @@ const dictionaries: Dictionary = {
         'gallery.empty': 'Gallery is still empty',
         'gallery.form.albumLabel': 'Album',
         'gallery.form.fileLabel': 'Upload Artwork',
-        'gallery.form.isPublicLabel': 'Public Distribution',
+        'gallery.form.isPublicLabel': 'Publish to Exhibition',
         'gallery.form.noAlbumOption': 'No Album',
         'gallery.form.priceCoinsLabel': 'Price (Coins)',
         'gallery.form.priceRmbLabel': 'Price (RMB - Optional)',
@@ -180,12 +180,23 @@ const dictionaries: Dictionary = {
         'order.status.pending': 'Pending',
         'order.status.refunded': 'Refunded',
 
+        // Orders Management
+        'parent.orders.gallery': 'Exhibition Orders',
+        'parent.orders.shop': 'Shop Rewards',
+        'parent.orders.buyer': 'Buyer',
+        'parent.orders.artwork': 'Artwork',
+        'parent.orders.noGalleryOrders': 'No exhibition orders yet.',
+        'parent.orders.contact': 'Contact Phone',
+
         // Parent
         'parent.adjustStats': 'Reward/Penalty',
         'parent.archived': 'Archived',
         'parent.assignTask': 'Assign Task',
         'parent.previewChanges': 'Preview Changes',
         'parent.result': 'Result',
+        'parent.slugLabel': 'Public ID (URL Slug)',
+        'parent.slugHint': 'User identifier for personal homepage, e.g., "lily-art"',
+        'parent.viewPublicProfile': 'Visit Exhibition',
 
         // Poster
         'poster.description': 'Work Description',
@@ -259,6 +270,18 @@ const dictionaries: Dictionary = {
         'shop.wishes.pending': 'Pending',
         'shop.wishes.rejected': 'Rejected',
         'shop.wishes.title': 'Children\'s Wish List',
+
+        // Public Profile
+        'public.albums': 'Curated Albums',
+        'public.artworks': 'Masterpieces',
+        'public.collect': 'Collect This Piece',
+        'public.hero.subtitle': 'Welcome to my creative collection',
+        'public.title': '{name}\'s Art World',
+        'public.viewExhibition': 'Enter Exhibition',
+        'public.visitHome': 'Visit Homepage',
+        'public.noArt': 'No public artworks yet.',
+        'public.stats.pieces': 'Artworks',
+        'public.stats.stars': 'Purple Stars',
 
         // Site
         'site.title': 'DoDoo Daily',
@@ -414,7 +437,7 @@ const dictionaries: Dictionary = {
         'gallery.empty': '画廊还是空的',
         'gallery.form.albumLabel': '所属画册',
         'gallery.form.fileLabel': '上传画作',
-        'gallery.form.isPublicLabel': '是否公开分发',
+        'gallery.form.isPublicLabel': '发布到展览',
         'gallery.form.noAlbumOption': '不属于任何画册',
         'gallery.form.priceCoinsLabel': '金币价格',
         'gallery.form.priceRmbLabel': '人民币价格 (可选)',
@@ -496,12 +519,23 @@ const dictionaries: Dictionary = {
         'order.status.pending': '待处理',
         'order.status.refunded': '已退款',
 
+        // 订单管理
+        'parent.orders.gallery': '展览订单',
+        'parent.orders.shop': '商店兑换',
+        'parent.orders.buyer': '购买者',
+        'parent.orders.artwork': '画作',
+        'parent.orders.noGalleryOrders': '暂无展览订单。',
+        'parent.orders.contact': '联系电话',
+
         // Parent
         'parent.adjustStats': '奖惩调整',
         'parent.archived': '已归档',
         'parent.assignTask': '分配任务',
         'parent.previewChanges': '预览变更',
         'parent.result': '结果',
+        'parent.slugLabel': '公开ID (URL 别名)',
+        'parent.slugHint': '个人主页的唯一标识符，例如 "lily-art"',
+        'parent.viewPublicProfile': '访问个人展厅',
 
         // Poster
         'poster.description': '作品描述',
@@ -575,6 +609,18 @@ const dictionaries: Dictionary = {
         'shop.wishes.pending': '待处理',
         'shop.wishes.rejected': '已拒绝',
         'shop.wishes.title': '孩子的愿望申请',
+
+        // Public Profile
+        'public.albums': '精选画册',
+        'public.artworks': '所有杰作',
+        'public.collect': '收藏这件作品',
+        'public.hero.subtitle': '欢迎来到我的创意世界',
+        'public.title': '{name} 的艺术中心',
+        'public.viewExhibition': '进入展厅',
+        'public.visitHome': '访问个人主页',
+        'public.noArt': '暂无公开作品',
+        'public.stats.pieces': '总作品数',
+        'public.stats.stars': '艺术紫星',
 
         // Site
         'site.title': 'DoDoo Daily',

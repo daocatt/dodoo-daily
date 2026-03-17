@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Plus, Trash2, Archive, History, Camera, X, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, Coins, UserCheck } from 'lucide-react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { getZodiac, getChineseZodiac } from '@/lib/utils'
@@ -19,6 +20,7 @@ interface Child {
     chineseZodiac?: string
     avatarUrl: string | null
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
+    slug?: string
     isArchived: boolean
     isDeleted: boolean
     pin?: string
@@ -45,7 +47,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     const [loading, setLoading] = useState(true)
     const [showAdd, setShowAdd] = useState(false)
     const [editingChild, setEditingChild] = useState<Partial<Child> | null>(null)
-    const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', gender: 'OTHER', role: 'CHILD' })
+    const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', slug: '', gender: 'OTHER', role: 'CHILD' })
     const [showLogs, setShowLogs] = useState<string | null>(null)
     const [logs, setLogs] = useState<BalanceLog[]>([])
     const [adjusting, setAdjusting] = useState<string | null>(null)
@@ -313,6 +315,16 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         </div>
                     </div>
                 </div>
+                <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.slugLabel')}</label>
+                    <input
+                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all font-mono text-sm"
+                        placeholder="e.g. lily-art"
+                        value={member.slug || ''}
+                        onChange={e => onChange({ ...member, slug: e.target.value })}
+                    />
+                    <p className="text-[10px] text-slate-400 font-medium ml-1">{t('parent.slugHint')}</p>
+                </div>
             </div>
         )
     }
@@ -334,7 +346,13 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     <div className="flex items-start gap-4">
                         <div className="relative group overflow-hidden rounded-2xl w-16 h-16 bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200">
                             {child.avatarUrl ? (
-                                <img src={`${child.avatarUrl}?v=4`} alt={child.name} className="w-full h-full object-cover" />
+                                <Image 
+                                    src={`${child.avatarUrl}?v=4`} 
+                                    alt={child.name} 
+                                    width={64} 
+                                    height={64} 
+                                    className="w-full h-full object-cover" 
+                                />
                             ) : (
                                 <div className="w-full h-full bg-blue-50 flex items-center justify-center">
                                     <span className="text-2xl font-bold text-blue-300 capitalize">{child.nickname?.[0] || child.name[0]}</span>
@@ -442,6 +460,15 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         <Star className="w-4 h-4" />
                         Reward
                     </button>
+                    {child.slug && (
+                        <button
+                            onClick={() => window.open(`/u/${child.slug}`, '_blank')}
+                            className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors flex items-center gap-2"
+                        >
+                            <UserCheck className="w-4 h-4" />
+                            {t('parent.viewPublicProfile')}
+                        </button>
+                    )}
                     <button
                         onClick={() => handleMasquerade(child.id)}
                         disabled={processing}
