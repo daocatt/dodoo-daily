@@ -1,12 +1,12 @@
 'use client'
 
 import React from 'react'
-import { Bell, BellOff, Loader2 } from 'lucide-react'
+import { Bell, BellOff, Loader2, WifiOff } from 'lucide-react'
 import { usePushNotification } from '@/hooks/usePushNotification'
 import { useI18n } from '@/contexts/I18nContext'
 
 export default function PushSubscriptionManager() {
-    const { permission, isSubscribed, loading, subscribe, unsubscribe } = usePushNotification()
+    const { permission, isSubscribed, loading, swAvailable, subscribe, unsubscribe } = usePushNotification()
     const { t } = useI18n()
 
     if (loading) {
@@ -14,6 +14,16 @@ export default function PushSubscriptionManager() {
             <div className="flex items-center gap-2 text-slate-400 p-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-xs font-bold uppercase tracking-widest">{t('common.loading')}</span>
+            </div>
+        )
+    }
+
+    // Browser doesn't support push or no service worker registered
+    if (!swAvailable) {
+        return (
+            <div className="flex items-center gap-2 text-slate-300 p-2" title="Push notifications not available in this environment">
+                <WifiOff className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-widest">N/A</span>
             </div>
         )
     }
@@ -52,4 +62,3 @@ export default function PushSubscriptionManager() {
         </button>
     )
 }
-

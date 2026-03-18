@@ -4,56 +4,70 @@ import { useState, useEffect } from 'react'
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
+/** Wrap navigator.serviceWorker.ready with a timeout so it never hangs forever */
+function swReady(ms = 4000): Promise<ServiceWorkerRegistration | null> {
+    return Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), ms))
+    ])
+}
+
 export function usePushNotification() {
     const [permission, setPermission] = useState<NotificationPermission>('default')
     const [isSubscribed, setIsSubscribed] = useState(false)
     const [subscription, setSubscription] = useState<PushSubscription | null>(null)
     const [loading, setLoading] = useState(true)
+    const [swAvailable, setSwAvailable] = useState(false)
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator) {
+        const init = async () => {
+            if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator)) {
+                setLoading(false)
+                return
+            }
             setPermission(Notification.permission)
-            checkSubscription()
-        } else {
-            setLoading(false)
+            try {
+                const registration = await swReady()
+                if (!registration) {
+                    // No active service worker — push is not available
+                    setLoading(false)
+                    return
+                }
+                setSwAvailable(true)
+                const sub = await registration.pushManager.getSubscription()
+                setIsSubscribed(!!sub)
+                setSubscription(sub)
+            } catch (error) {
+                console.error('Error checking push subscription:', error)
+            } finally {
+                setLoading(false)
+            }
         }
+        init()
     }, [])
-
-    const checkSubscription = async () => {
-        try {
-            const registration = await navigator.serviceWorker.ready
-            const sub = await registration.pushManager.getSubscription()
-            setIsSubscribed(!!sub)
-            setSubscription(sub)
-        } catch (error) {
-            console.error('Error checking subscription:', error)
-        } finally {
-            setLoading(false)
-        }
-    }
 
     const subscribe = async () => {
         if (!VAPID_PUBLIC_KEY) {
-            console.error('VAPID public key not found')
+            console.error('VAPID public key not configured')
             return false
         }
-
         try {
             setLoading(true)
             const result = await Notification.requestPermission()
             setPermission(result)
+            if (result !== 'granted') return false
 
-            if (result !== 'granted') {
+            const registration = await swReady()
+            if (!registration) {
+                console.error('No active service worker — cannot subscribe to push')
                 return false
             }
 
-            const registration = await navigator.serviceWorker.ready
             const sub = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
             })
 
-            // Send subscription to server
             const res = await fetch('/api/push/subscribe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -82,8 +96,6 @@ export function usePushNotification() {
             setLoading(true)
             if (subscription) {
                 await subscription.unsubscribe()
-                
-                // Notify server
                 await fetch('/api/push/subscribe', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
@@ -105,6 +117,7 @@ export function usePushNotification() {
         permission,
         isSubscribed,
         loading,
+        swAvailable,
         subscribe,
         unsubscribe
     }
