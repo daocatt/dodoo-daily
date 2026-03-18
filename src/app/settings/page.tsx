@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft, Camera, Lock, ShieldCheck, LogOut, ChevronRight, Loader2 } from 'lucide-react'
+import { Camera, Lock, LogOut, Loader2, Save, Check, X, Shield, Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import NatureBackground from '@/components/NatureBackground'
 import PushSubscriptionManager from '@/components/PushSubscriptionManager'
+import { motion } from 'framer-motion'
 
 interface User {
     id: string
@@ -22,13 +22,21 @@ export default function SettingsPage() {
     const router = useRouter()
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
+
+    // Nickname
+    const [nickname, setNickname] = useState('')
+    const [nickSaving, setNickSaving] = useState(false)
+    const [nickMessage, setNickMessage] = useState('')
+    const [nickError, setNickError] = useState('')
+
+    // PIN
     const [pin, setPin] = useState('')
+    const [pinSaving, setPinSaving] = useState(false)
     const [pinMessage, setPinMessage] = useState('')
     const [pinError, setPinError] = useState('')
-    const [nickname, setNickname] = useState('')
+
+    // Avatar
     const [uploading, setUploading] = useState(false)
-    const [message, setMessage] = useState('')
-    const [error, setError] = useState('')
 
     useEffect(() => {
         fetch('/api/stats')
@@ -45,27 +53,6 @@ export default function SettingsPage() {
             .catch(() => router.push('/login'))
     }, [router])
 
-    const handlePinUpdate = async () => {
-        if (pin.length < 4) {
-            setPinError(t('settings.pinLengthError'))
-            return
-        }
-        try {
-            const res = await fetch('/api/user/pin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pin })
-            })
-            if (res.ok) {
-                setPinMessage(t('settings.pinUpdateSuccess'))
-                setPin('')
-                setPinError('')
-            } else {
-                setPinError(t('settings.updateFailed'))
-            }
-        } catch (e) { setPinError(t('settings.errorNetwork')) }
-    }
-
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
@@ -73,16 +60,45 @@ export default function SettingsPage() {
         const formData = new FormData()
         formData.append('file', file)
         try {
-            const res = await fetch('/api/upload/avatar', {
-                method: 'POST',
-                body: formData
+            const res = await fetch('/api/upload/avatar', { method: 'POST', body: formData })
+            const data = await res.json()
+            if (res.ok && user) setUser({ ...user, avatarUrl: data.avatarUrl })
+        } catch (e) { console.error(e) }
+        finally { setUploading(false) }
+    }
+
+    const handleNicknameSave = async () => {
+        setNickSaving(true); setNickError(''); setNickMessage('')
+        try {
+            const res = await fetch('/api/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname })
             })
             const data = await res.json()
             if (res.ok) {
-                if (user) setUser({ ...user, avatarUrl: data.avatarUrl })
+                if (user) setUser({ ...user, nickname: data.nickname })
+                setNickMessage(t('settings.nicknameSuccess') || 'Nickname updated!')
+            } else {
+                setNickError(data.error || t('settings.updateFailed') || 'Failed')
             }
-        } catch (e) { console.error(e) }
-        finally { setUploading(false) }
+        } catch (e) { setNickError(t('settings.errorNetwork') || 'Network error') }
+        finally { setNickSaving(false) }
+    }
+
+    const handlePinUpdate = async () => {
+        if (pin.length < 4) { setPinError(t('settings.pinLengthError') || 'Minimum 4 digits'); return }
+        setPinSaving(true); setPinError(''); setPinMessage('')
+        try {
+            const res = await fetch('/api/user/pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin })
+            })
+            if (res.ok) { setPinMessage(t('settings.pinUpdateSuccess') || 'PIN updated!'); setPin('') }
+            else { setPinError(t('settings.updateFailed') || 'Failed') }
+        } catch (e) { setPinError(t('settings.errorNetwork') || 'Network error') }
+        finally { setPinSaving(false) }
     }
 
     const handleLogout = async () => {
@@ -96,157 +112,184 @@ export default function SettingsPage() {
         </div>
     )
 
+    const avatarSrc = user?.avatarUrl || '/dog.svg'
+    const displayName = user?.nickname || user?.name || ''
+
     return (
-        <div className="min-h-dvh flex flex-col relative overflow-hidden text-[#4a3728]">
+        <div className="min-h-dvh flex flex-col relative overflow-hidden">
             <NatureBackground />
 
-            <header className="relative z-10 p-6 flex items-center gap-4">
-                <button onClick={() => router.back()} className="p-3 bg-white/40 backdrop-blur-md rounded-full shadow-sm hover:bg-white/60 transition-colors">
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
-                <h1 className="text-2xl font-bold font-display tracking-tight text-[#2c2416] drop-shadow-sm">{t('settings.title')}</h1>
-            </header>
+            <div className="relative z-10 flex flex-col min-h-dvh">
+                {/* ── Header ─────────────────────────────────────────────── */}
+                <header className="px-6 py-5 flex items-center gap-4">
+                    <button
+                        onClick={() => router.back()}
+                        className="w-10 h-10 bg-white/50 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-sm hover:bg-white/70 transition-all active:scale-90 border border-white/60"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#4a3728]">
+                            <path d="M19 12H5M5 12l7 7M5 12l7-7" />
+                        </svg>
+                    </button>
+                    <h1 className="text-xl font-black text-[#2c2416] tracking-tight">{t('settings.title')}</h1>
+                </header>
 
-            <main className="relative z-10 flex-1 max-w-2xl mx-auto w-full p-6 space-y-8 pb-32">
+                {/* ── Content ─────────────────────────────────────────────── */}
+                <main className="flex-1 px-5 pb-10 max-w-lg mx-auto w-full space-y-4">
 
-                {/* Profile Section */}
-                <section className="bg-white/60 backdrop-blur-xl rounded-xl border border-white/80 shadow-xl p-8 space-y-6">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="relative group">
-                            <div className="w-32 h-32 rounded-xl bg-white shadow-inner overflow-hidden border-4 border-white/50 flex items-center justify-center">
-                                {uploading ? (
-                                    <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-                                ) : (
-                                    <img
-                                        src={`${user?.avatarUrl || "/dog.svg"}?v=4`}
-                                        alt="Avatar"
-                                        className={`w-full h-full object-cover ${!user?.avatarUrl ? 'p-6' : ''}`}
-                                        onError={(e) => { e.currentTarget.src = "/dog.svg"; e.currentTarget.className = "w-full h-full object-contain p-6"; }}
-                                    />
-                                )}
-                            </div>
-                            <label className="absolute -bottom-2 -right-2 p-3 bg-purple-500 text-white rounded-2xl shadow-lg cursor-pointer hover:bg-purple-600 transition-colors">
-                                <Camera className="w-5 h-5" />
-                                <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
-                            </label>
-                        </div>
-                        <div className="text-center w-full">
-                            <h2 className="text-2xl font-extrabold tracking-tight">{user?.nickname || user?.name}</h2>
-                            <span className="inline-block px-3 py-1 bg-slate-200/50 rounded-full text-xs font-bold uppercase tracking-widest mt-2">{user?.role}</span>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-indigo-500 uppercase tracking-widest ml-1">{t('settings.nickname')}</label>
-                            <input
-                                type="text"
-                                className="w-full px-6 py-4 bg-white/40 border border-indigo-100 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-100 transition-all font-bold text-lg text-indigo-700"
-                                value={nickname}
-                                onChange={e => setNickname(e.target.value)}
-                                placeholder={t('settings.nicknamePlaceholder')}
-                            />
-                            <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
-                                💡 {t('settings.nicknameHint')}
-                            </p>
+                    {/* Profile Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white/70 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-xl overflow-hidden"
+                    >
+                        {/* Colorful top band */}
+                        <div className="h-20 bg-gradient-to-br from-orange-400 via-amber-400 to-yellow-300 relative">
+                            <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle, white 1.5px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
                         </div>
 
-                        {error && <p className="text-sm text-rose-500 font-bold px-1">{error}</p>}
-                        {message && <p className="text-sm text-green-600 font-bold px-1">{message}</p>}
-
-                        <button
-                            onClick={async () => {
-                                try {
-                                    const res = await fetch('/api/profile', {
-                                        method: 'PATCH',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ nickname })
-                                    })
-                                    const data = await res.json()
-                                     if (res.ok) {
-                                        if (user) setUser({ ...user, nickname: data.nickname })
-                                        setMessage(t('settings.nicknameSuccess'))
-                                        setError('')
-                                    } else {
-                                        setError(data.error || t('settings.updateFailed'))
-                                    }
-                                } catch (e) { setError(t('settings.errorNetwork')) }
-                            }}
-                            className="w-full py-4 bg-indigo-600 text-white font-extrabold rounded-2xl shadow-lg hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center"
-                        >
-                            {t('settings.saveNickname')}
-                        </button>
-                    </div>
-
-                    {user?.isParent && (
-                        <Link href="/parent" className="flex items-center justify-between p-5 bg-purple-600/10 hover:bg-purple-600/20 rounded-lg border border-purple-600/20 text-purple-700 transition-all group">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-purple-600 rounded-xl text-white shadow-lg shadow-purple-200">
-                                    <ShieldCheck className="w-6 h-6" />
+                        <div className="px-6 pb-6 -mt-10">
+                            {/* Avatar */}
+                            <div className="relative inline-block mb-4">
+                                <div className="w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
+                                    {uploading ? (
+                                        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                                    ) : (
+                                        <img
+                                            src={`${avatarSrc}?v=5`}
+                                            alt="Avatar"
+                                            className={`w-full h-full object-cover ${!user?.avatarUrl ? 'p-4' : ''}`}
+                                            onError={(e) => { e.currentTarget.src = '/dog.svg'; e.currentTarget.className = 'w-full h-full object-contain p-4' }}
+                                        />
+                                    )}
                                 </div>
-                                <div className="text-left">
-                                    <p className="font-extrabold text-lg">{t('settings.parentConsole')}</p>
-                                    <p className="text-xs font-medium opacity-70">{t('settings.parentConsoleDesc')}</p>
-                                </div>
+                                <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center text-white cursor-pointer hover:bg-orange-600 shadow-md shadow-orange-200 transition-all active:scale-90">
+                                    <Camera className="w-3.5 h-3.5" />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                                </label>
                             </div>
-                            <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    )}
-                </section>
 
-                {/* Password Section */}
-                <section className="bg-white/60 backdrop-blur-xl rounded-xl border border-white/80 shadow-xl p-8 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-indigo-500 rounded-xl text-white">
-                            <Lock className="w-5 h-5" />
+                            {/* Name display */}
+                            <div className="mb-5">
+                                <p className="text-xl font-black text-slate-800">{displayName}</p>
+                                <span className="inline-block mt-1 px-2.5 py-0.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">{user?.role}</span>
+                            </div>
+
+                            {/* Nickname field */}
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{t('settings.nickname') || 'Nickname'}</label>
+                                <input
+                                    type="text"
+                                    value={nickname}
+                                    onChange={e => { setNickname(e.target.value); setNickError(''); setNickMessage('') }}
+                                    placeholder={t('settings.nicknamePlaceholder') || 'Your nickname'}
+                                    className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
+                                />
+                                <p className="text-[10px] text-indigo-400 font-bold px-1">💡 {t('settings.nicknameHint') || 'Used for login and display'}</p>
+                            </div>
+
+                            {nickError && (
+                                <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-rose-50 rounded-2xl border border-rose-100">
+                                    <X className="w-3.5 h-3.5 text-rose-500 shrink-0" /><span className="text-xs font-bold text-rose-600">{nickError}</span>
+                                </div>
+                            )}
+                            {nickMessage && (
+                                <div className="mt-3 flex items-center gap-2 px-4 py-2.5 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span className="text-xs font-bold text-emerald-600">{nickMessage}</span>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleNicknameSave}
+                                disabled={nickSaving}
+                                className="mt-4 w-full py-4 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black rounded-2xl shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-[1.01] disabled:opacity-60 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
+                            >
+                                {nickSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                {nickSaving ? (t('common.loading') || 'Saving…') : (t('settings.saveNickname') || 'Save')}
+                            </button>
                         </div>
-                        <h3 className="text-xl font-bold tracking-tight text-[#2c2416]">{t('settings.securityPin')}</h3>
-                    </div>
+                    </motion.div>
 
-                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium text-slate-500 px-1">{t('settings.securityPinDesc')}</p>
-                            <input
-                                type="password"
-                                placeholder={t('settings.enterNewPin')}
-                                className="w-full px-6 py-4 bg-white/50 border border-[#4a3728]/10 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-200 transition-all font-bold tracking-[0.5em] text-xl"
-                                value={pin}
-                                onChange={e => { setPin(e.target.value); setPinError(''); setPinMessage(''); }}
-                            />
+                    {/* Security PIN Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="bg-white/70 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-xl p-6 space-y-4"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
+                                <Lock className="w-4 h-4 text-indigo-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-slate-800 text-sm">{t('settings.securityPin') || 'Security PIN'}</h3>
+                                <p className="text-[10px] text-slate-400 font-bold">{t('settings.securityPinDesc') || 'Update your login PIN'}</p>
+                            </div>
                         </div>
 
-                        {pinError && <p className="text-sm text-red-500 px-1">⚠️ {pinError}</p>}
-                        {pinMessage && <p className="text-sm text-green-600 px-1">✅ {pinMessage}</p>}
+                        <input
+                            type="password"
+                            maxLength={6}
+                            value={pin}
+                            onChange={e => { setPin(e.target.value); setPinError(''); setPinMessage('') }}
+                            placeholder="••••"
+                            className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none text-2xl font-black tracking-[0.5em] text-center text-slate-700 hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
+                        />
+
+                        {pinError && (
+                            <div className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 rounded-2xl border border-rose-100">
+                                <X className="w-3.5 h-3.5 text-rose-500 shrink-0" /><span className="text-xs font-bold text-rose-600">{pinError}</span>
+                            </div>
+                        )}
+                        {pinMessage && (
+                            <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span className="text-xs font-bold text-emerald-600">{pinMessage}</span>
+                            </div>
+                        )}
 
                         <button
                             onClick={handlePinUpdate}
-                            className="w-full bg-[#2c2416] text-white font-extrabold py-4 rounded-2xl shadow-xl hover:bg-black transition-all"
+                            disabled={pinSaving}
+                            className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-60 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
                         >
-                            {t('settings.updatePin')}
+                            {pinSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                            {pinSaving ? (t('common.loading') || 'Updating…') : (t('settings.updatePin') || 'Update PIN')}
                         </button>
+                    </motion.div>
 
-                        <div className="pt-4 border-t border-[#4a3728]/5 mt-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <h4 className="text-sm font-bold">{t('settings.pushNotifications')}</h4>
-                                    <p className="text-[10px] text-slate-500 font-medium">{t('settings.pushNotificationsDesc')}</p>
+                    {/* Push Notifications Card */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-white/70 backdrop-blur-2xl rounded-3xl border border-white/80 shadow-xl px-6 py-5"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
+                                    <Bell className="w-4 h-4 text-amber-500" />
                                 </div>
-                                <PushSubscriptionManager />
+                                <div>
+                                    <h4 className="text-sm font-black text-slate-800">{t('settings.pushNotifications') || 'Notifications'}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold">{t('settings.pushNotificationsDesc') || 'Real-time alerts'}</p>
+                                </div>
                             </div>
+                            <PushSubscriptionManager />
                         </div>
-                    </div>
-                </section>
+                    </motion.div>
 
-                {/* Logout Button */}
-                 <button
-                    onClick={handleLogout}
-                    className="w-full p-6 bg-red-50 hover:bg-red-100/80 rounded-xl border border-red-100 text-red-600 font-extrabold flex items-center justify-center gap-3 transition-colors shadow-sm"
-                >
-                    <LogOut className="w-6 h-6" />
-                    {t('common.logout')}
-                </button>
-
-            </main>
+                    {/* Logout */}
+                    <motion.button
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        onClick={handleLogout}
+                        className="w-full py-4 bg-white/70 backdrop-blur-2xl border border-rose-100 rounded-3xl text-rose-500 font-black flex items-center justify-center gap-2.5 shadow-xl hover:bg-rose-50 transition-all active:scale-[0.98] text-sm"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        {t('common.logout') || 'Log Out'}
+                    </motion.button>
+                </main>
+            </div>
         </div>
     )
 }

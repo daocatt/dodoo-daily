@@ -1,11 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import { User, Camera, Check, X, Loader2, Save, Lock, ShieldCheck } from 'lucide-react'
+import { Camera, Check, X, Loader2, Save, Lock, Shield } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { motion } from 'framer-motion'
+import PushSubscriptionManager from '@/components/PushSubscriptionManager'
 
-type User = {
+type UserProp = {
     id: string
     name: string
     nickname: string | null
@@ -13,17 +14,18 @@ type User = {
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
 }
 
-export default function ProfileManagement({ user }: { user: User }) {
+export default function ProfileManagement({ user }: { user: UserProp }) {
     const { t } = useI18n()
     const [name, setName] = useState(user?.name || '')
     const [nickname, setNickname] = useState(user?.nickname || '')
     const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '')
     const [uploading, setUploading] = useState(false)
+    const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState('')
     const [error, setError] = useState('')
 
-    // PIN state
     const [pin, setPin] = useState('')
+    const [pinSaving, setPinSaving] = useState(false)
     const [pinMessage, setPinMessage] = useState('')
     const [pinError, setPinError] = useState('')
 
@@ -31,29 +33,29 @@ export default function ProfileManagement({ user }: { user: User }) {
         const file = e.target.files?.[0]
         if (!file) return
         setUploading(true)
+        setError(''); setMessage('')
         const formData = new FormData()
         formData.append('file', file)
         try {
-            const res = await fetch('/api/upload/avatar', {
-                method: 'POST',
-                body: formData
-            })
+            const res = await fetch('/api/upload/avatar', { method: 'POST', body: formData })
             const data = await res.json()
             if (res.ok) {
                 setAvatarUrl(data.avatarUrl)
-                setMessage('Avatar updated locally. Click save to permanent update name.')
-                // Also update the parent profile in DB
                 await fetch('/api/parent/profile', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatarUrl: data.avatarUrl })
                 })
+                setMessage(t('settings.avatarSuccess') || 'Avatar updated!')
+            } else {
+                setError(t('settings.updateFailed') || 'Upload failed')
             }
-        } catch (e) { setError('Failed to upload avatar') }
+        } catch (e) { setError(t('settings.errorNetwork') || 'Network error') }
         finally { setUploading(false) }
     }
 
     const handleSave = async () => {
+        setSaving(true); setError(''); setMessage('')
         try {
             const res = await fetch('/api/parent/profile', {
                 method: 'PATCH',
@@ -61,145 +63,176 @@ export default function ProfileManagement({ user }: { user: User }) {
                 body: JSON.stringify({ name, nickname, avatarUrl })
             })
             if (res.ok) {
-                setMessage(t('parent.profileUpdateSuccess') || 'Profile updated successfully!')
+                setMessage(t('parent.profileUpdateSuccess') || 'Profile updated!')
             } else {
-                setError('Failed to update profile')
+                const data = await res.json()
+                setError(data.error || t('settings.updateFailed') || 'Failed')
             }
-        } catch (e) { setError('Error saving profile') }
+        } catch (e) { setError(t('settings.errorNetwork') || 'Network error') }
+        finally { setSaving(false) }
     }
 
     const handlePinUpdate = async () => {
-        if (pin.length < 4) {
-            setPinError('PIN must be 4 digits')
-            return
-        }
+        if (pin.length < 4) { setPinError(t('settings.pinLengthError') || 'PIN must be at least 4 digits'); return }
+        setPinSaving(true); setPinError(''); setPinMessage('')
         try {
             const res = await fetch('/api/user/pin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pin })
             })
-            if (res.ok) {
-                setPinMessage('Access PIN updated successfully!')
-                setPin('')
-                setPinError('')
-            } else {
-                setPinError('Failed to update PIN')
-            }
-        } catch (e) { setPinError('Error updating PIN') }
+            if (res.ok) { setPinMessage(t('settings.pinUpdateSuccess') || 'PIN updated!'); setPin('') }
+            else { setPinError(t('settings.updateFailed') || 'Failed') }
+        } catch (e) { setPinError(t('settings.errorNetwork') || 'Network error') }
+        finally { setPinSaving(false) }
     }
 
     return (
-        <div className="flex flex-col items-center justify-center w-full min-h-[60vh] py-12">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-2xl space-y-12"
-            >
-                {/* Profile Section */}
-                <div className="bg-white p-8 md:p-12 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="relative">
-                            <div className="w-48 h-48 rounded-xl bg-slate-50 border-8 border-white shadow-2xl overflow-hidden flex items-center justify-center">
-                                {uploading ? (
-                                    <Loader2 className="w-12 h-12 animate-spin text-purple-400" />
-                                ) : (
-                                    <img
-                                        src={`${avatarUrl || "/dog.svg"}?v=4`}
-                                        alt="Profile"
-                                        className={`w-full h-full object-cover ${!avatarUrl ? 'p-10' : ''}`}
-                                    />
-                                )}
-                            </div>
-                            <label className="absolute -bottom-4 -right-4 p-5 bg-purple-600 text-white rounded-lg shadow-xl cursor-pointer hover:bg-purple-700 transition-all hover:scale-110 active:scale-95 border-4 border-white">
-                                <Camera className="w-7 h-7" />
-                                <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
-                            </label>
+        <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-2xl mx-auto pb-12 space-y-6"
+        >
+            {/* ── Avatar + Identity ───────────────────────────────────────── */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/80 overflow-hidden">
+                {/* Header band */}
+                <div className="h-24 bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 relative">
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                </div>
+
+                <div className="px-8 pb-8 -mt-14">
+                    {/* Avatar */}
+                    <div className="relative inline-block mb-5">
+                        <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-2xl overflow-hidden flex items-center justify-center">
+                            {uploading ? (
+                                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                            ) : (
+                                <img
+                                    src={`${avatarUrl || '/dog.svg'}?v=5`}
+                                    alt="Avatar"
+                                    className={`w-full h-full object-cover ${!avatarUrl ? 'p-5' : ''}`}
+                                    onError={(e) => { e.currentTarget.src = '/dog.svg'; e.currentTarget.className = 'w-full h-full object-contain p-5' }}
+                                />
+                            )}
                         </div>
-                        <div className="text-center">
-                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">{t('parent.profile')}</h2>
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-1">{t('parent.profileDesc')}</p>
-                        </div>
+                        <label className="absolute -bottom-2 -right-2 w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white cursor-pointer hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-90">
+                            <Camera className="w-4 h-4" />
+                            <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                        </label>
                     </div>
 
-                    <div className="space-y-6 pt-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Real Name</label>
-                            <input
-                                type="text"
-                                className="w-full px-8 py-5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-purple-100 transition-all outline-none text-xl font-bold text-slate-700"
-                                placeholder="Your Real Name"
-                                value={name}
-                                onChange={e => { setName(e.target.value); setError(''); setMessage(''); }}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-indigo-400 uppercase tracking-widest ml-1 flex items-center gap-1">
-                                Nickname
+                    <div className="space-y-5">
+                        {/* Real Name */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                {t('settings.realName') || 'Real Name'}
                             </label>
                             <input
                                 type="text"
-                                className="w-full px-8 py-5 bg-indigo-50/30 border border-indigo-100 rounded-xl focus:ring-4 focus:ring-indigo-100 transition-all outline-none text-xl font-bold text-indigo-700"
-                                placeholder="Your Short Nickname"
-                                value={nickname}
-                                onChange={e => { setNickname(e.target.value); setError(''); setMessage(''); }}
+                                value={name}
+                                onChange={e => { setName(e.target.value); setError(''); setMessage('') }}
+                                placeholder="Your real name"
+                                className="w-full px-5 py-3.5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none font-bold text-slate-800 hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
                             />
-                            <p className="text-[10px] text-indigo-400 font-bold px-1 italic">
-                                💡 Used for login when &quot;Display All Avatars&quot; is disabled (Case Insensitive)
+                        </div>
+
+                        {/* Nickname */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                                {t('settings.nickname') || 'Nickname'}
+                            </label>
+                            <input
+                                type="text"
+                                value={nickname}
+                                onChange={e => { setNickname(e.target.value); setError(''); setMessage('') }}
+                                placeholder="Display nickname"
+                                className="w-full px-5 py-3.5 bg-indigo-50/30 border-2 border-indigo-50 rounded-2xl outline-none font-bold text-indigo-700 hover:border-indigo-100 hover:bg-indigo-50/50 focus:bg-white focus:border-indigo-200 transition-all"
+                            />
+                            <p className="text-[10px] text-indigo-400 font-bold px-1">
+                                💡 {t('settings.nicknameHint') || 'Used for login and display'}
                             </p>
                         </div>
 
-                        {error && <p className="text-sm text-rose-500 font-bold flex items-center justify-center gap-1"><X className="w-4 h-4" /> {error}</p>}
-                        {message && <p className="text-sm text-green-500 font-bold flex items-center justify-center gap-1"><Check className="w-4 h-4" /> {message}</p>}
+                        {/* Feedback */}
+                        {error && (
+                            <div className="flex items-center gap-2 px-4 py-3 bg-rose-50 rounded-2xl border border-rose-100">
+                                <X className="w-4 h-4 text-rose-500 shrink-0" />
+                                <span className="text-sm font-bold text-rose-600">{error}</span>
+                            </div>
+                        )}
+                        {message && (
+                            <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                                <span className="text-sm font-bold text-emerald-600">{message}</span>
+                            </div>
+                        )}
 
                         <button
                             onClick={handleSave}
-                            className="w-full bg-slate-900 hover:bg-black text-white font-black py-5 rounded-xl transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98] text-lg"
+                            disabled={saving}
+                            className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.01] disabled:opacity-60 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
                         >
-                            <Save className="w-6 h-6" />
-                            {t('button.save')} Account Changes
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {saving ? (t('common.loading') || 'Saving…') : (t('button.save') || 'Save Changes')}
                         </button>
                     </div>
                 </div>
+            </div>
 
-                {/* PIN Section */}
-                <div className="bg-white p-8 md:p-12 rounded-2xl border border-slate-100 shadow-xl shadow-slate-200/50 space-y-8">
-                    <div className="flex items-center gap-4 border-b border-slate-50 pb-6">
-                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                            <Lock className="w-7 h-7 text-indigo-500" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-black text-slate-800">{t('parent.settings')}</h3>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Update Access Code</p>
-                        </div>
+            {/* ── Security PIN ─────────────────────────────────────────────── */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/80 p-8 space-y-6">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
+                        <Lock className="w-5 h-5 text-indigo-500" />
                     </div>
-
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">New 4-Digit PIN</label>
-                            <input
-                                type="password"
-                                maxLength={4}
-                                className="w-full px-8 py-6 bg-slate-50 border border-slate-100 rounded-xl focus:ring-4 focus:ring-indigo-100 transition-all outline-none text-4xl font-black tracking-[1em] text-center"
-                                placeholder="••••"
-                                value={pin}
-                                onChange={e => { setPin(e.target.value); setPinError(''); setPinMessage(''); }}
-                            />
-                        </div>
-
-                        {pinError && <p className="text-sm text-rose-500 font-bold flex items-center justify-center gap-1"><X className="w-4 h-4" /> {pinError}</p>}
-                        {pinMessage && <p className="text-sm text-green-500 font-bold flex items-center justify-center gap-1"><Check className="w-4 h-4" /> {pinMessage}</p>}
-
-                        <button
-                            onClick={handlePinUpdate}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 rounded-xl transition-all shadow-xl active:scale-[0.98] text-lg"
-                        >
-                            Update Security PIN
-                        </button>
+                    <div>
+                        <h3 className="font-black text-slate-800">{t('settings.securityPin') || 'Security PIN'}</h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{t('settings.securityPinDesc') || 'Update your access code'}</p>
                     </div>
                 </div>
-            </motion.div>
-        </div>
+
+                <input
+                    type="password"
+                    maxLength={6}
+                    value={pin}
+                    onChange={e => { setPin(e.target.value); setPinError(''); setPinMessage('') }}
+                    placeholder="••••"
+                    className="w-full px-6 py-5 bg-slate-50 border-2 border-slate-50 rounded-2xl outline-none text-3xl font-black tracking-[0.6em] text-center text-slate-700 hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
+                />
+
+                {pinError && (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-rose-50 rounded-2xl border border-rose-100">
+                        <X className="w-4 h-4 text-rose-500 shrink-0" />
+                        <span className="text-sm font-bold text-rose-600">{pinError}</span>
+                    </div>
+                )}
+                {pinMessage && (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span className="text-sm font-bold text-emerald-600">{pinMessage}</span>
+                    </div>
+                )}
+
+                <button
+                    onClick={handlePinUpdate}
+                    disabled={pinSaving}
+                    className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-60 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
+                >
+                    {pinSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                    {pinSaving ? (t('common.loading') || 'Updating…') : (t('settings.updatePin') || 'Update PIN')}
+                </button>
+            </div>
+
+            {/* ── Push Notifications ───────────────────────────────────────── */}
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/80 px-8 py-6">
+                <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                        <h4 className="text-sm font-black text-slate-800">{t('settings.pushNotifications') || 'Push Notifications'}</h4>
+                        <p className="text-[10px] text-slate-400 font-bold">{t('settings.pushNotificationsDesc') || 'Get real-time alerts'}</p>
+                    </div>
+                    <PushSubscriptionManager />
+                </div>
+            </div>
+        </motion.div>
     )
 }
