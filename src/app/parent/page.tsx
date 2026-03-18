@@ -111,7 +111,7 @@ export default function ParentDashboard() {
                         </div>
                         <div>
                             <h2 className="text-xl font-black text-slate-800">{t('parent.orders')}</h2>
-                            <p className="text-slate-500 text-sm mt-1">Process wishes and shipments.</p>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.ordersDesc')}</p>
                         </div>
                         <div className="mt-auto pt-4 text-orange-600 font-bold flex items-center gap-1">
                             {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
@@ -213,8 +213,8 @@ export default function ParentDashboard() {
                             <Power className="w-7 h-7 text-rose-500" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-slate-800">System Control</h2>
-                            <p className="text-slate-500 text-sm mt-1">Manage system status and exit.</p>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.systemControl')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.systemControlDesc')}</p>
                         </div>
                         <div className="mt-auto pt-4 text-rose-600 font-bold flex items-center gap-1">
                             {t('button.settings')} <ArrowLeft className="w-4 h-4 rotate-180" />
@@ -244,13 +244,13 @@ export default function ParentDashboard() {
                             {view === 'HOME' ? t('parent.title') :
                                 view === 'PROFILE' ? t('parent.profile') :
                                     view === 'FAMILY' ? t('parent.family') :
-                                        view === 'SYSTEM' ? 'System Settings' :
+                                        view === 'SYSTEM' ? t('parent.settings') :
                                             view === 'MEDIA' ? t('parent.media') :
                                                 view === 'EXHIBITION' ? t('parent.exhibition') :
                                                     view === 'GUESTS' ? t('parent.guests') :
                                                         view}
                         </h1>
-                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Control Panel</p>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">{t('parent.controlPanel')}</p>
                     </div>
                 </div>
 

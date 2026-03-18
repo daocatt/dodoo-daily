@@ -124,7 +124,7 @@ export default function ExhibitionManagement() {
         return (
             <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Exhibition...</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('parent.exhibition.loading')}</p>
             </div>
         )
     }
@@ -145,7 +145,7 @@ export default function ExhibitionManagement() {
                                 onClick={() => setStatusFilter(filter)}
                                 className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${statusFilter === filter ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-400 hover:text-slate-600'}`}
                             >
-                                {filter === 'ALL' ? '全部' : filter === 'PENDING' ? '待审核' : '已发布'}
+                                {filter === 'ALL' ? t('parent.exhibition.tabAll') : filter === 'PENDING' ? t('parent.exhibition.tabPending') : t('parent.exhibition.tabApproved')}
                             </button>
                         ))}
                     </div>
@@ -153,7 +153,7 @@ export default function ExhibitionManagement() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input 
                             type="text"
-                            placeholder="搜索作品..."
+                            placeholder={t('parent.exhibition.searchPlaceholder')}
                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -195,7 +195,7 @@ export default function ExhibitionManagement() {
                                     {!art.isApproved && (
                                         <div className="absolute top-4 right-4 animate-pulse">
                                             <span className="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg leading-none">
-                                                待审核
+                                                {t('parent.exhibition.tabPending')}
                                             </span>
                                         </div>
                                     )}
@@ -208,7 +208,7 @@ export default function ExhibitionManagement() {
                                                 className="w-32 py-2.5 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
                                             >
                                                 {processingId === art.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <div className="p-0.5 bg-white rounded-full"><CheckCircle className="w-2.5 h-2.5 text-emerald-500" /></div>}
-                                                审核通过
+                                                {t('parent.exhibition.approve')}
                                             </button>
                                         ) : null}
                                         <button 
@@ -217,7 +217,7 @@ export default function ExhibitionManagement() {
                                             className="w-32 py-2.5 bg-white text-rose-600 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"
                                         >
                                             {processingId === art.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
-                                            下架作品
+                                            {t('parent.exhibition.takeDown')}
                                         </button>
                                     </div>
                                 </div>
@@ -242,7 +242,7 @@ export default function ExhibitionManagement() {
                                                         onClick={() => setEditingDescriptionId(null)}
                                                         className="px-3 py-1 bg-white text-slate-400 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-100"
                                                     >
-                                                        取消
+                                                        {t('common.cancel')}
                                                     </button>
                                                     <button 
                                                         onClick={() => handleSaveDescription(art.id)}
@@ -250,14 +250,14 @@ export default function ExhibitionManagement() {
                                                         className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm flex items-center gap-1"
                                                     >
                                                         {processingId === art.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Save className="w-2.5 h-2.5" />}
-                                                        保存
+                                                        {t('common.save')}
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="flex items-start justify-between gap-3">
                                                 <p className="text-[11px] text-slate-500 font-medium leading-relaxed italic">
-                                                    {art.exhibitionDescription || "暂无作品描述..."}
+                                                    {art.exhibitionDescription || t('parent.exhibition.noDescription')}
                                                 </p>
                                                 <button 
                                                     onClick={() => {
@@ -290,7 +290,7 @@ export default function ExhibitionManagement() {
                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
                                 <Palette className="w-8 h-8 text-slate-200" />
                             </div>
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">展厅中没有找到公开展示的作品。</p>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('parent.exhibition.empty')}</p>
                         </div>
                     )}
                 </AnimatePresence>
