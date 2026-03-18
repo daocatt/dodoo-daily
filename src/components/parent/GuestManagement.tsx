@@ -53,6 +53,7 @@ export default function GuestManagement() {
     const [adjustAmount, setAdjustAmount] = useState(0)
     const [adjustReason, setAdjustReason] = useState('')
     const [showAdjustModal, setShowAdjustModal] = useState<string | null>(null)
+    const [showOrdersModal, setShowOrdersModal] = useState<string | null>(null)
     const [guestOrders, setGuestOrders] = useState<GuestOrder[]>([])
     const [ordersLoading, setOrdersLoading] = useState(false)
 
