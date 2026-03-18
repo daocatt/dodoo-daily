@@ -20,12 +20,13 @@ import {
     CreditCard,
     Ruler,
     Power,
-    Palette
+    Palette,
+    CalendarDays,
+    AlertCircle
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import SmartDatePicker from '@/components/SmartDatePicker'
 import { format } from 'date-fns'
 
 interface Stats {
@@ -46,9 +47,11 @@ interface Child {
     id: string
     name: string
     avatar?: string
+    avatarUrl?: string
     coins: number
     goldStars: number
     slug?: string
+    birthDate?: string | null
 }
 
 export default function AccountHUD() {
@@ -66,7 +69,7 @@ export default function AccountHUD() {
     const [mounted, setMounted] = useState(false)
 
     const pathname = usePathname()
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     const [isMobile, setIsMobile] = useState(false)
 
     useEffect(() => {
@@ -299,31 +302,34 @@ export default function AccountHUD() {
 
             {/* Growth Modal */}
             <AnimatePresence>
-                {showGrowthModal && (
-                    <div className="fixed inset-0 z-[1100] flex flex-col items-center justify-start p-4 pointer-events-auto overflow-y-auto">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-                            onClick={() => setShowGrowthModal(false)}
-                        />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="relative w-full max-w-md bg-white rounded-2xl p-8 shadow-2xl my-auto"
-                        >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800 tracking-tight">{t('parent.growth')}</h3>
-                                <button onClick={() => setShowGrowthModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-slate-400" />
-                                </button>
-                            </div>
+                {showGrowthModal && (() => {
+                    const targetChild = children.find(c => c.id === targetChildId)
+                    const childBirthDate = targetChild?.birthDate
+                    return (
+                        <div className="fixed inset-0 z-[1100] flex flex-col items-center justify-start p-4 pointer-events-auto overflow-y-auto">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                                onClick={() => setShowGrowthModal(false)}
+                            />
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                className="relative w-full max-w-md bg-white rounded-2xl p-8 shadow-2xl my-auto"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-black text-slate-800 tracking-tight">{t('parent.growth')}</h3>
+                                    <button onClick={() => setShowGrowthModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                        <X className="w-5 h-5 text-slate-400" />
+                                    </button>
+                                </div>
 
-                            <form onSubmit={handleSaveGrowth} className="space-y-5">
+                                {/* Child selector (parent only) */}
                                 {stats.isParent && (
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 mb-6">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.selectChild')}</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             {children.map(child => (
@@ -336,7 +342,9 @@ export default function AccountHUD() {
                                                         targetChildId === child.id ? "border-emerald-500 bg-emerald-50" : "border-slate-100 bg-slate-50 opacity-60"
                                                     )}
                                                 >
-                                                    <div className="w-6 h-6 rounded-full bg-emerald-200" />
+                                                    <div className="w-6 h-6 rounded-full bg-emerald-200 overflow-hidden">
+                                                        {child.avatarUrl && <img src={child.avatarUrl} alt={child.name} className="w-full h-full object-cover" />}
+                                                    </div>
                                                     <span className="text-xs font-black text-slate-700">{child.name}</span>
                                                 </button>
                                             ))}
@@ -344,54 +352,73 @@ export default function AccountHUD() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.height')}</label>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={height}
-                                            onChange={e => setHeight(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
-                                            placeholder="140"
-                                            required
-                                        />
+                                {/* No birth date warning */}
+                                {stats.isParent && !childBirthDate ? (
+                                    <div className="flex flex-col items-center gap-4 py-6 text-center">
+                                        <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center">
+                                            <AlertCircle className="w-7 h-7 text-amber-400" />
+                                        </div>
+                                        <p className="font-black text-slate-700">{locale === 'zh-CN' ? '请先设置出生日期' : 'Birth Date Required'}</p>
+                                        <p className="text-sm text-slate-400">{locale === 'zh-CN' ? '需要先为该孩子补充出生日期，才能添加成长记录。' : 'Please set a birth date for this child before adding growth records.'}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setShowGrowthModal(false); window.location.href = '/parent' }}
+                                            className="mt-1 px-8 py-3 bg-amber-400 text-white rounded-2xl font-black shadow-lg shadow-amber-200 hover:bg-amber-500 transition-all active:scale-95"
+                                        >
+                                            {locale === 'zh-CN' ? '前往设置' : 'Go to Settings'}
+                                        </button>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.weight')}</label>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={weight}
-                                            onChange={e => setWeight(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
-                                            placeholder="35"
-                                            required
-                                        />
-                                    </div>
-                                </div>
+                                ) : (
+                                    <form onSubmit={handleSaveGrowth} className="space-y-5">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.height')}</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={height}
+                                                    onChange={e => setHeight(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
+                                                    placeholder="140"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.weight')}</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.1"
+                                                    value={weight}
+                                                    onChange={e => setWeight(e.target.value)}
+                                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
+                                                    placeholder="35"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.date') || 'Date'}</label>
-                                    <DatePicker
-                                        selected={recordDate}
-                                        onChange={(date: Date | null) => date && setRecordDate(date)}
-                                        dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date()}
-                                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
-                                    />
-                                </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.date') || 'Date'}</label>
+                                            <SmartDatePicker
+                                                selected={recordDate || undefined}
+                                                onSelect={(date) => date && setRecordDate(date)}
+                                                minDate={childBirthDate ? new Date(childBirthDate) : undefined}
+                                                maxDate={new Date()}
+                                                triggerClassName="bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 font-black text-slate-700"
+                                            />
+                                        </div>
 
-                                <button
-                                    disabled={isSaving}
-                                    className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all disabled:opacity-50"
-                                >
-                                    {isSaving ? t('parent.processing') : t('parent.saveGrowth')}
-                                </button>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
+                                        <button
+                                            type="submit"
+                                            disabled={isSaving}
+                                            className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all disabled:opacity-50 active:scale-95"
+                                        >
+                                            {isSaving ? t('parent.processing') : t('parent.saveGrowth')}
+                                        </button>
+                                    </form>
+                                )}
+                            </motion.div>
+                        </div>
+                    )
+                })()}
             </AnimatePresence>
 
             {/* Recharge Modal */}

@@ -22,8 +22,7 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import SmartDatePicker from '@/components/SmartDatePicker'
 
 interface GrowthRecord {
     id: string
@@ -38,6 +37,7 @@ interface ChildStats {
     name: string
     nickname: string | null
     avatarUrl: string | null
+    birthDate: string | null
     stats: {
         currency: number
         goldStars: number
@@ -412,7 +412,7 @@ export default function GrowthStatsPage() {
                 </div>
             </main>
 
-            {/* Modal */}
+            {/* Record Modal */}
             <AnimatePresence>
                 {showRecordModal && (
                     <motion.div
@@ -437,49 +437,65 @@ export default function GrowthStatsPage() {
                             <h2 className="text-2xl font-black text-slate-900 mb-1">{t('stats.newRecord')}</h2>
                             <p className="text-slate-400 text-sm mb-8">{t('stats.loggingFor', { name: currentChild.nickname || currentChild.name })}</p>
 
-                            <form onSubmit={handleRecord} className="space-y-6">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('stats.height')}</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={height}
-                                        onChange={e => setHeight(e.target.value)}
-                                        placeholder="e.g. 120.5"
-                                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white focus:border-purple-200 outline-none transition-all placeholder:text-slate-300"
-                                    />
+                            {/* No birth date warning */}
+                            {!currentChild.birthDate ? (
+                                <div className="flex flex-col items-center gap-4 py-8 text-center">
+                                    <CalendarDays className="w-12 h-12 text-amber-400" />
+                                    <p className="font-black text-slate-700 text-lg">{locale === 'zh-CN' ? '请先设置出生日期' : 'Birth Date Required'}</p>
+                                    <p className="text-sm text-slate-400">{locale === 'zh-CN' ? '需要先为该孩子补充出生日期，才能添加成长记录。' : 'Please set a birth date for this child before adding growth records.'}</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowRecordModal(false); window.location.href = '/parent' }}
+                                        className="mt-2 px-8 py-3 bg-amber-400 text-white rounded-2xl font-black shadow-lg shadow-amber-200 hover:bg-amber-500 transition-all"
+                                    >
+                                        {locale === 'zh-CN' ? '前往设置' : 'Go to Settings'}
+                                    </button>
                                 </div>
+                            ) : (
+                                <form onSubmit={handleRecord} className="space-y-6">
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('stats.height')}</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={height}
+                                            onChange={e => setHeight(e.target.value)}
+                                            placeholder="e.g. 120.5"
+                                            className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white focus:border-purple-200 outline-none transition-all placeholder:text-slate-300"
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('stats.weight')}</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        value={weight}
-                                        onChange={e => setWeight(e.target.value)}
-                                        placeholder="e.g. 25.4"
-                                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white focus:border-purple-200 outline-none transition-all placeholder:text-slate-300"
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('stats.weight')}</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={weight}
+                                            onChange={e => setWeight(e.target.value)}
+                                            placeholder="e.g. 25.4"
+                                            className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white focus:border-purple-200 outline-none transition-all placeholder:text-slate-300"
+                                        />
+                                    </div>
 
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('common.date') || 'Date'}</label>
-                                    <DatePicker
-                                        selected={recordDate}
-                                        onChange={(date: Date | null) => date && setRecordDate(date)}
-                                        dateFormat="yyyy-MM-dd"
-                                        maxDate={new Date()}
-                                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white focus:border-purple-200 outline-none transition-all"
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('common.date') || 'Date'}</label>
+                                        <SmartDatePicker
+                                            selected={recordDate || undefined}
+                                            onSelect={(date) => date && setRecordDate(date)}
+                                            minDate={new Date(currentChild.birthDate)}
+                                            maxDate={new Date()}
+                                            triggerClassName="bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800"
+                                        />
+                                    </div>
 
-                                <button
-                                    type="submit"
-                                    className="w-full bg-purple-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-purple-200 hover:scale-[1.02] hover:bg-purple-700 transition-all mt-4"
-                                >
-                                    {t('stats.saveRecord')}
-                                </button>
-                            </form>
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-purple-600 text-white py-5 rounded-[24px] font-black text-lg shadow-xl shadow-purple-200 hover:scale-[1.02] hover:bg-purple-700 transition-all mt-4"
+                                    >
+                                        {t('stats.saveRecord')}
+                                    </button>
+                                </form>
+                            )}
                         </motion.div>
                     </motion.div>
                 )}

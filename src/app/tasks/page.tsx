@@ -8,8 +8,8 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
+import SmartDatePicker from '@/components/SmartDatePicker'
 
 type Task = {
     id: string
@@ -659,13 +659,12 @@ function TasksPageContent() {
 
                                         <div className="space-y-1.5">
                                             <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.plannedDate')}</label>
-                                            <DatePicker
-                                                selected={plannedDate}
-                                                onChange={(date: Date | null) => setPlannedDate(date)}
-                                                dateFormat="yyyy-MM-dd"
-                                                className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
-                                                required
-                                                placeholderText={t('tasks.form.selectDate')}
+                                            <SmartDatePicker
+                                                selected={plannedDate || undefined}
+                                                onSelect={(date) => setPlannedDate(date)}
+                                                minDate={new Date()}
+                                                placeholder={t('tasks.form.selectDate')}
+                                                triggerClassName="bg-[#f5f0e8] border-none rounded-xl p-3 md:p-3.5 focus:ring-4 focus:ring-blue-400 outline-none font-bold text-base"
                                             />
                                         </div>
 

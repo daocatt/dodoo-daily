@@ -10,8 +10,7 @@ import {
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import Lightbox from '@/components/Lightbox'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import SmartDatePicker from '@/components/SmartDatePicker'
 
 type JournalEntry = {
     id: string
@@ -415,23 +414,16 @@ export default function JournalDetailPage() {
 
                                 <div className="flex-1 flex items-center gap-2 px-4 py-3 bg-white rounded-2xl border border-orange-100 shadow-sm transition-colors focus-within:border-orange-300">
                                     <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
-                                    <DatePicker
+                                    <SmartDatePicker
                                         selected={new Date(editMilestoneDate)}
-                                        onChange={(date: Date | null) => {
-                                            if (date) {
-                                                const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-                                                const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
-                                                setEditMilestoneDate(localISOTime);
-                                            }
+                                        onSelect={(date) => {
+                                            const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+                                            const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
+                                            setEditMilestoneDate(localISOTime);
                                         }}
-                                        showTimeSelect
-                                        showMonthDropdown
-                                        showYearDropdown
-                                        dropdownMode="select"
-                                        timeFormat="HH:mm"
-                                        timeIntervals={15}
-                                        dateFormat="yyyy-MM-dd HH:mm"
-                                        className="w-full bg-transparent text-slate-600 font-bold text-sm outline-none cursor-pointer"
+                                        showTime
+                                        triggerClassName="bg-white border-none p-0 !px-0"
+                                        placeholder="Journal Date"
                                     />
                                 </div>
                             </div>

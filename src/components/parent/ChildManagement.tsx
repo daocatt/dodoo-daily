@@ -6,8 +6,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { getZodiac, getChineseZodiac } from '@/lib/utils'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import SmartDatePicker from '@/components/SmartDatePicker'
 
 interface Child {
     id: string
@@ -282,22 +281,19 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
-                        <DatePicker
-                            selected={member.birthDate ? new Date(member.birthDate) : null}
-                            onChange={(date: Date | null) => {
+                        <SmartDatePicker
+                            selected={member.birthDate ? new Date(member.birthDate) : undefined}
+                            onSelect={(date) => {
                                 onChange({
                                     ...member,
-                                    birthDate: date || undefined,
-                                    zodiac: date ? getZodiac(date) : undefined,
-                                    chineseZodiac: date ? getChineseZodiac(date) : undefined
+                                    birthDate: date,
+                                    zodiac: getZodiac(date),
+                                    chineseZodiac: getChineseZodiac(date)
                                 })
                             }}
-                            dateFormat="yyyy-MM-dd"
-                            showMonthDropdown
-                            showYearDropdown
-                            dropdownMode="select"
-                            placeholderText={t('parent.birthDate')}
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            maxDate={new Date()}
+                            placeholder={t('parent.birthDate')}
+                            triggerClassName="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                         />
                     </div>
                 </div>

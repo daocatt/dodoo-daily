@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
             name: users.name,
             nickname: users.nickname,
             avatarUrl: users.avatarUrl,
+            birthDate: users.birthDate,
             stats: {
                 currency: accountStats.currency,
                 goldStars: accountStats.goldStars,
