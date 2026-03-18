@@ -168,7 +168,7 @@ export default function GuestManagement() {
         return (
             <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Management...</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('guests.loading')}</p>
             </div>
         )
     }
@@ -180,9 +180,9 @@ export default function GuestManagement() {
                 <div>
                     <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
                         <Users className="w-8 h-8 text-indigo-500" />
-                        访客管理
+                        {t('guests.title')}
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">管理展厅访客、充值码及访问限制。</p>
+                    <p className="text-sm text-slate-500 mt-1">{t('guests.subtitle')}</p>
                 </div>
 
                 <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto min-w-full md:min-w-0">
@@ -192,7 +192,7 @@ export default function GuestManagement() {
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            {tab === 'VISITORS' ? '访客列表' : tab === 'CODES' ? '充值码管理' : 'IP 黑名单'}
+                            {tab === 'VISITORS' ? t('guests.tabs.visitors') : tab === 'CODES' ? t('guests.tabs.codes') : t('guests.tabs.ip')}
                         </button>
                     ))}
                 </div>
@@ -205,7 +205,7 @@ export default function GuestManagement() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input 
                             type="text"
-                            placeholder="搜索访客..."
+                            placeholder={t('guests.searchPlaceholder')}
                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-4 focus:ring-indigo-100 outline-none shadow-sm"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -234,7 +234,7 @@ export default function GuestManagement() {
                                                         guest.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' : 
                                                         guest.status === 'PENDING' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'
                                                     }`}>
-                                                        {guest.status === 'APPROVED' ? '已核准' : guest.status === 'PENDING' ? '待审核' : '已封禁'}
+                                                        {guest.status === 'APPROVED' ? t('guests.status.approved') : guest.status === 'PENDING' ? t('guests.status.pending') : t('guests.status.banned')}
                                                     </span>
                                                     <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                                                         <Clock className="w-3 h-3" />
@@ -273,7 +273,7 @@ export default function GuestManagement() {
                                                     onClick={() => handleGuestAction(guest.id, 'APPROVE')}
                                                     disabled={!!processingId}
                                                     className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
-                                                    title="准许访问"
+                                                    title={t('guests.action.approve')}
                                                 >
                                                     <UserCheck className="w-5 h-5" />
                                                 </button>
@@ -283,7 +283,7 @@ export default function GuestManagement() {
                                                     onClick={() => handleGuestAction(guest.id, 'BAN')}
                                                     disabled={!!processingId}
                                                     className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
-                                                    title="封禁"
+                                                    title={t('guests.action.ban')}
                                                 >
                                                     <UserX className="w-5 h-5" />
                                                 </button>
@@ -293,7 +293,7 @@ export default function GuestManagement() {
                                             <button 
                                                 onClick={() => handleViewOrders(guest.id)}
                                                 className="p-2 bg-slate-50 text-indigo-500 rounded-xl hover:bg-white hover:shadow-md transition-all border border-slate-100"
-                                                title="查看订单"
+                                                title={t('guests.action.viewOrders')}
                                             >
                                                 <ShoppingBag className="w-5 h-5" />
                                             </button>
@@ -301,7 +301,7 @@ export default function GuestManagement() {
                                                 onClick={() => setShowAdjustModal(guest.id)}
                                                 className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                                             >
-                                                调整点数
+                                                {t('guests.action.adjustCoins')}
                                             </button>
                                             <button 
                                                 onClick={() => handleGuestAction(guest.id, 'DELETE')}
@@ -314,6 +314,11 @@ export default function GuestManagement() {
                                     </div>
                                 </motion.div>
                             ))}
+                        {filteredGuests.length === 0 && (
+                            <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs bg-white rounded-3xl border-2 border-dashed border-slate-100 col-span-full">
+                                {t('guests.noRecords')}
+                            </div>
+                        )}
                         </AnimatePresence>
                     </div>
                 </div>
@@ -325,11 +330,11 @@ export default function GuestManagement() {
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8 max-w-xl">
                         <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                             <Ticket className="w-6 h-6 text-indigo-500" />
-                            生成充值码
+                            {t('guests.codes.generateTitle')}
                         </h3>
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">点数金额</label>
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">{t('guests.codes.amountLabel')}</label>
                                 <div className="flex items-center gap-4">
                                     <input 
                                         type="number"
@@ -342,7 +347,7 @@ export default function GuestManagement() {
                                         disabled={!!processingId}
                                         className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:grayscale"
                                     >
-                                        {processingId === 'generating' ? <Loader2 className="w-6 h-6 animate-spin" /> : '生成新码'}
+                                        {processingId === 'generating' ? <Loader2 className="w-6 h-6 animate-spin" /> : t('guests.codes.generateBtn')}
                                     </button>
                                 </div>
                             </div>
@@ -353,10 +358,10 @@ export default function GuestManagement() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/50">
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">充值码</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">金额 (Coins)</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">状态</th>
-                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">生成日期</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('guests.codes.tableCode')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">{t('guests.codes.tableAmount')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">{t('guests.codes.tableStatus')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">{t('guests.codes.tableDate')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -368,7 +373,7 @@ export default function GuestManagement() {
                                         </td>
                                         <td className="px-8 py-5 text-center">
                                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${code.isUsed ? 'bg-slate-100 text-slate-400' : 'bg-emerald-100 text-emerald-600'}`}>
-                                                {code.isUsed ? '已使用' : '未使用'}
+                                                {code.isUsed ? t('guests.codes.statusUsed') : t('guests.codes.statusUnused')}
                                             </span>
                                         </td>
                                         <td className="px-8 py-5 text-right text-xs text-slate-400 font-bold uppercase">
@@ -378,7 +383,7 @@ export default function GuestManagement() {
                                 ))}
                                 {rechargeCodes.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">暂无充值码记录</td>
+                                        <td colSpan={4} className="px-8 py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('guests.noRecords')}</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -393,13 +398,13 @@ export default function GuestManagement() {
                     <div className="bg-white p-8 rounded-3xl border border-rose-100 shadow-sm shadow-rose-50 max-w-xl">
                         <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
                             <ShieldAlert className="w-6 h-6 text-rose-500" />
-                            IP 限制管理
+                            {t('guests.ip.title')}
                         </h3>
                         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-                            处于黑名单中的 IP 地址将无法访问任何公开页面或进行注册。
+                            {t('guests.ip.description')}
                         </p>
                         {/* More IP tools can be added here */}
-                        <div className="text-[10px] text-rose-400 font-black uppercase tracking-[0.2em] mb-2 px-1">当前黑名单记录 ({ipBlacklist.length})</div>
+                        <div className="text-[10px] text-rose-400 font-black uppercase tracking-[0.2em] mb-2 px-1">{t('guests.ip.countLabel', { count: ipBlacklist.length.toString() })}</div>
                         <div className="space-y-2">
                             {ipBlacklist.map(item => (
                                 <div key={item.id} className="flex items-center justify-between p-4 bg-rose-50/50 rounded-2xl border border-rose-50 group">
@@ -418,7 +423,7 @@ export default function GuestManagement() {
                             ))}
                             {ipBlacklist.length === 0 && (
                                 <div className="p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-xs bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
-                                    暂无黑名单 IP
+                                    {t('guests.ip.empty')}
                                 </div>
                             )}
                         </div>
@@ -442,12 +447,12 @@ export default function GuestManagement() {
 
                             <button onClick={() => setShowAdjustModal(null)} className="absolute top-6 right-6 text-slate-300 hover:text-slate-600 text-2xl font-black">&times;</button>
                             
-                            <h3 className="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">调整访客点数</h3>
-                            <p className="text-slate-500 font-medium mb-8">手动增加或扣除访客的帐户点数 (Coins)。</p>
+                            <h3 className="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">{t('guests.modal.adjustTitle')}</h3>
+                            <p className="text-slate-500 font-medium mb-8">{t('guests.modal.adjustSubtitle')}</p>
 
                             <div className="space-y-6 relative z-10">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">调整金额 (正数增加，负数扣除)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('guests.modal.adjustAmount')}</label>
                                     <div className="relative">
                                         <input 
                                             type="number"
@@ -462,13 +467,13 @@ export default function GuestManagement() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">备注原因</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('guests.modal.adjustReason')}</label>
                                     <input 
                                         type="text"
                                         className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-100 outline-none"
                                         value={adjustReason}
                                         onChange={e => setAdjustReason(e.target.value)}
-                                        placeholder="例如：私下交易充值 50 元"
+                                        placeholder={t('guests.modal.adjustPlaceholder')}
                                     />
                                 </div>
 
@@ -478,7 +483,7 @@ export default function GuestManagement() {
                                         disabled={adjustAmount === 0 || !!processingId}
                                         className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:grayscale"
                                     >
-                                        {processingId === showAdjustModal ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : '确认更新'}
+                                        {processingId === showAdjustModal ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : t('common.confirm')}
                                     </button>
                                 </div>
                             </div>
@@ -499,8 +504,8 @@ export default function GuestManagement() {
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">访客收藏记录</h3>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">展示访客已收藏的作品列表</p>
+                                    <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t('guests.modal.ordersTitle')}</h3>
+                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{t('guests.modal.ordersSubtitle')}</p>
                                 </div>
                                 <button onClick={() => setShowOrdersModal(null)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
                                     <X className="w-6 h-6" />
@@ -521,14 +526,14 @@ export default function GuestManagement() {
                                             </div>
                                             <div className="flex items-center gap-1 px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg">
                                                 <Check className="w-3 h-3" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest">已完成</span>
+                                                <span className="text-[9px] font-black uppercase tracking-widest">{t('guests.order.completed')}</span>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
                                     <div className="py-20 text-center">
                                         <ShoppingBag className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                                        <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">暂无收藏记录</p>
+                                        <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">{t('guests.order.noHistory')}</p>
                                     </div>
                                 )}
                             </div>

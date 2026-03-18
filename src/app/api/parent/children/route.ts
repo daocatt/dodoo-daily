@@ -46,6 +46,7 @@ export async function GET() {
             return {
                 ...child,
                 avatar: child.avatarUrl,
+                avatarUrl: child.avatarUrl,
                 // The primary 'name' used by the whole system will now be the nickname if available
                 displayName: child.nickname || child.name,
                 realName: child.name,

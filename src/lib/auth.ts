@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { SignJWT, jwtVerify } from 'jose'
+import { SignJWT, jwtVerify } from 'jose' // trigger refresh
 
 const JWT_SECRET = new TextEncoder().encode(
     process.env.JWT_SECRET || 'dodoo-daily-default-secret-change-me-in-production'

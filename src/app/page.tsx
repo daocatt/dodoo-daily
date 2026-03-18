@@ -199,6 +199,21 @@ export default function Home() {
         fetch('/api/system/settings'),
         fetch('/api/home-widgets'),
       ])
+      
+      console.log(`Home: Response status - settings: ${settingsRes.status}, widgets: ${widgetsRes.status}`)
+      
+      if (!settingsRes.ok) {
+        const text = await settingsRes.text()
+        console.error("Home: Settings fetch failed with status", settingsRes.status, text.substring(0, 100))
+        throw new Error(`Settings fetch failed: ${settingsRes.status}`)
+      }
+      
+      if (!widgetsRes.ok) {
+        const text = await widgetsRes.text()
+        console.error("Home: Widgets fetch failed with status", widgetsRes.status, text.substring(0, 100))
+        throw new Error(`Widgets fetch failed: ${widgetsRes.status}`)
+      }
+
       const settings = await settingsRes.json()
       const widgetsData = await widgetsRes.json()
       console.log("Home: Data received:", { settings, widgetsData })
@@ -210,11 +225,16 @@ export default function Home() {
         setWidgets([])
       }
     } catch (e) {
-      console.error("Home: Fetch failed", e)
+      console.error("Home: Fetching process failed", e)
+      // Redirect to login if unauthorized
+      const errorMsg = e instanceof Error ? e.message : String(e)
+      if (errorMsg.includes('401')) {
+        router.push('/login')
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     fetchData()
@@ -485,7 +505,7 @@ export default function Home() {
       const config = {
         TASKS: { Icon: CheckCircle2, color: 'bg-blue-500', shadow: 'shadow-blue-500/20', label: t('menu.tasks') },
         NOTES: { Icon: StickyNote, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: t('pinned') || 'Pinned' },
-        JOURNAL: { Icon: Heart, color: 'bg-rose-500', shadow: 'shadow-rose-500/20', label: t('menu.journal') },
+        JOURNAL: { Icon: Heart, color: 'bg-[#f54900]', shadow: 'shadow-[#f54900]/20', label: t('menu.journal') },
         PHOTOS: { Icon: Images, color: 'bg-purple-500', shadow: 'shadow-purple-500/20', label: t('menu.gallery') },
         SHOP: { Icon: ShoppingBag, color: 'bg-amber-400', shadow: 'shadow-amber-500/20', label: t('menu.shop') },
         MILESTONE: { Icon: Trophy, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: t('parent.milestone') },

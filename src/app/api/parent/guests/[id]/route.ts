@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { guest } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { getSession } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth'
 
 export async function PATCH(
     req: NextRequest,
@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
     try {
         const { id } = await params
-        const session = await getSession()
+        const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

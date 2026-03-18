@@ -196,8 +196,8 @@ export default function ParentDashboard() {
                             <Users className="w-7 h-7 text-emerald-500" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-slate-800">访客管理</h2>
-                            <p className="text-slate-500 text-sm mt-1">核准访客、管理充值码与 IP 限制。</p>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.guests')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.guestsDesc')}</p>
                         </div>
                         <div className="mt-auto pt-4 text-emerald-600 font-bold flex items-center gap-1">
                             {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
@@ -247,7 +247,7 @@ export default function ParentDashboard() {
                                         view === 'SYSTEM' ? 'System Settings' :
                                             view === 'MEDIA' ? t('parent.media') :
                                                 view === 'EXHIBITION' ? t('parent.exhibition') :
-                                                    view === 'GUESTS' ? '访客管理' :
+                                                    view === 'GUESTS' ? t('parent.guests') :
                                                         view}
                         </h1>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Control Panel</p>

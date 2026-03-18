@@ -53,9 +53,11 @@ export async function GET() {
         const responseData = {
             ...statsRecord,
             isParent: currentUserRole === 'PARENT',
+            role: userRecord.role,
             name: userRecord.name,
             nickname: userRecord.nickname,
             avatar: userRecord.avatarUrl,
+            avatarUrl: userRecord.avatarUrl,
             slug: userRecord.slug,
             coins: statsRecord.currency,
             timezone: settings?.timezone || 'Asia/Shanghai'
