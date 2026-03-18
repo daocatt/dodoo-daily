@@ -56,6 +56,8 @@ export default function GuestManagement() {
     const [showOrdersModal, setShowOrdersModal] = useState<string | null>(null)
     const [guestOrders, setGuestOrders] = useState<GuestOrder[]>([])
     const [ordersLoading, setOrdersLoading] = useState(false)
+    const [newIp, setNewIp] = useState('')
+    const [newIpReason, setNewIpReason] = useState('')
 
     const fetchData = async () => {
         setLoading(true)
@@ -125,7 +127,7 @@ export default function GuestManagement() {
             const res = await fetch(`/api/parent/guests/${showAdjustModal}/adjust-coins`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: adjustAmount, reason: adjustReason || 'Manual adjustment' })
+                body: JSON.stringify({ amount: adjustAmount, reason: adjustReason || t('guests.modal.adjustDefaultReason') })
             })
             if (res.ok) {
                 setGuests(prev => prev.map(g => g.id === showAdjustModal ? { ...g, currency: g.currency + adjustAmount } : g))
@@ -146,6 +148,26 @@ export default function GuestManagement() {
             if (res.ok) setGuestOrders(await res.json())
         } finally {
             setOrdersLoading(false)
+        }
+    }
+
+    const handleAddIp = async () => {
+        if (!newIp) return
+        setProcessingId('adding-ip')
+        try {
+            const res = await fetch('/api/parent/ip-blacklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip: newIp, reason: newIpReason })
+            })
+            if (res.ok) {
+                const newItem = await res.json()
+                setIpBlacklist(prev => [newItem, ...prev])
+                setNewIp('')
+                setNewIpReason('')
+            }
+        } finally {
+            setProcessingId(null)
         }
     }
 
@@ -404,14 +426,44 @@ export default function GuestManagement() {
                         <p className="text-sm text-slate-500 mb-6 leading-relaxed">
                             {t('guests.ip.description')}
                         </p>
-                        {/* More IP tools can be added here */}
+                        
+                        <div className="space-y-4 mb-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                                <Plus className="w-3.5 h-3.5" />
+                                {t('guests.ip.addTitle')}
+                            </h4>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <input 
+                                    type="text"
+                                    placeholder={t('guests.ip.placeholder')}
+                                    className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm"
+                                    value={newIp}
+                                    onChange={e => setNewIp(e.target.value)}
+                                />
+                                <input 
+                                    type="text"
+                                    placeholder={t('guests.ip.reasonPlaceholder')}
+                                    className="flex-[1.5] px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm"
+                                    value={newIpReason}
+                                    onChange={e => setNewIpReason(e.target.value)}
+                                />
+                                <button 
+                                    onClick={handleAddIp}
+                                    disabled={!newIp || processingId === 'adding-ip'}
+                                    className="px-6 py-2 bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 disabled:grayscale"
+                                >
+                                    {processingId === 'adding-ip' ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : t('guests.ip.addBtn')}
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="text-[10px] text-rose-400 font-black uppercase tracking-[0.2em] mb-2 px-1">{t('guests.ip.countLabel', { count: ipBlacklist.length.toString() })}</div>
                         <div className="space-y-2">
                             {ipBlacklist.map(item => (
                                 <div key={item.id} className="flex items-center justify-between p-4 bg-rose-50/50 rounded-2xl border border-rose-50 group">
                                     <div className="flex items-center gap-4">
                                         <code>{item.ip}</code>
-                                        <span className="text-xs text-rose-400 font-medium italic">{item.reason || 'No reason'}</span>
+                                        <span className="text-xs text-rose-400 font-medium italic">{item.reason || t('guests.ip.noReason')}</span>
                                     </div>
                                     <button 
                                         onClick={() => handleRemoveIp(item.id)}
