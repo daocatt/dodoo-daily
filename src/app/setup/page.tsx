@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import { User, ChevronRight, SkipForward, Check, Upload, Sparkles, Baby, Calendar } from 'lucide-react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import SmartDatePicker from '@/components/SmartDatePicker'
 
 type Gender = 'MALE' | 'FEMALE' | 'OTHER'
 
@@ -236,15 +235,12 @@ export default function SetupPage() {
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
                                 <Calendar className="w-3.5 h-3.5" /> {t('setup.birthDate')}
                             </label>
-                            <DatePicker
-                                selected={birthDate}
-                                onChange={(date: Date | null) => setBirthDate(date)}
-                                dateFormat="yyyy-MM-dd"
-                                showMonthDropdown
-                                showYearDropdown
-                                dropdownMode="select"
-                                placeholderText={t('setup.birthDate')}
-                                className="w-full px-4 py-2.5 md:py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-800 focus:ring-4 focus:ring-[#43aa8b]/20 focus:border-[#43aa8b] outline-none transition-all"
+                            <SmartDatePicker
+                                selected={birthDate || undefined}
+                                onSelect={(date) => setBirthDate(date)}
+                                maxDate={new Date()}
+                                placeholder={t('setup.birthDate')}
+                                triggerClassName="px-4 py-2.5 md:py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-800"
                             />
                         </div>
 

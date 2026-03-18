@@ -91,7 +91,7 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                             }
 
                             const date = new Date(entry.milestoneDate || entry.createdAt)
-                            const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+                            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
                             const isChild = entry.authorRole === 'CHILD'
 
                             return (
