@@ -14,7 +14,7 @@ CREATE TABLE `__new_Order` (
 	FOREIGN KEY (`guestId`) REFERENCES `Guest`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-INSERT INTO `__new_Order`("id", "artworkId", "guestId", "amountRMB", "amountCoins", "paymentType", "status", "qrCodeUrl", "createdAt", "updatedAt") SELECT "id", "artworkId", "guestId", "amountRMB", "amountCoins", "paymentType", "status", "qrCodeUrl", "createdAt", "updatedAt" FROM `Order`;--> statement-breakpoint
+INSERT INTO `__new_Order`("id", "artworkId", "guestId", "amountRMB", "status", "qrCodeUrl", "createdAt", "updatedAt") SELECT "id", "artworkId", "guestId", "amountRMB", "status", "qrCodeUrl", "createdAt", "updatedAt" FROM `Order`;--> statement-breakpoint
 DROP TABLE `Order`;--> statement-breakpoint
 ALTER TABLE `__new_Order` RENAME TO `Order`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;
