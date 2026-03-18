@@ -20,6 +20,8 @@ type Artwork = {
     albumId?: string | null
     isArchived?: boolean
     isPublic?: boolean
+    creatorNickname?: string | null
+    creatorName?: string | null
 }
 
 type AlbumDetail = {

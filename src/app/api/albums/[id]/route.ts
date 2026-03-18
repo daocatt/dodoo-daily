@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { album, artwork } from '@/lib/schema'
+import { album, artwork, users } from '@/lib/schema'
 import { desc, eq, and } from 'drizzle-orm'
 
 export async function GET(
@@ -20,12 +20,28 @@ export async function GET(
 
         const albumData = albums[0]
 
-        const artworks = await db.select()
+        const artworkRows = await db
+            .select({
+                id: artwork.id,
+                title: artwork.title,
+                imageUrl: artwork.imageUrl,
+                priceRMB: artwork.priceRMB,
+                priceCoins: artwork.priceCoins,
+                albumId: artwork.albumId,
+                isSold: artwork.isSold,
+                isArchived: artwork.isArchived,
+                isPublic: artwork.isPublic,
+                isApproved: artwork.isApproved,
+                createdAt: artwork.createdAt,
+                creatorNickname: users.nickname,
+                creatorName: users.name,
+            })
             .from(artwork)
+            .leftJoin(users, eq(artwork.userId, users.id))
             .where(and(eq(artwork.albumId, id), eq(artwork.isArchived, false)))
             .orderBy(desc(artwork.createdAt))
 
-        return NextResponse.json({ ...albumData, artworks })
+        return NextResponse.json({ ...albumData, artworks: artworkRows })
     } catch (error) {
         console.error('Failed to fetch album details:', error)
         return NextResponse.json({ error: 'Failed to fetch album details' }, { status: 500 })

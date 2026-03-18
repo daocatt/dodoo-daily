@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react'
 import * as htmlToImage from 'html-to-image'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion, AnimatePresence } from 'motion/react'
-import { X, Download, Share2 } from 'lucide-react'
+import { X, Download, Image as ImageIcon, Sparkles, RefreshCw } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 
 type PosterProps = {
@@ -13,6 +13,9 @@ type PosterProps = {
         title: string
         imageUrl: string
         priceRMB: number
+        priceCoins: number
+        creatorNickname?: string | null
+        creatorName?: string | null
     }
     onClose: () => void
 }
@@ -21,23 +24,29 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
     const posterRef = useRef<HTMLDivElement>(null)
     const [generating, setGenerating] = useState(false)
     const [posterImageUrl, setPosterImageUrl] = useState<string | null>(null)
+    const [imgLoaded, setImgLoaded] = useState(false)
     const { t } = useI18n()
 
-    // Using window.location.origin to build the purchase link
     const purchaseUrl = typeof window !== 'undefined'
         ? `${window.location.origin}/buy/${artwork.id}`
         : `https://dodoo.daily/buy/${artwork.id}`
 
+    const creatorLabel = artwork.creatorNickname || artwork.creatorName || 'DoDoo Daily'
+    const proxiedImageUrl = `/api/proxy-image?url=${encodeURIComponent(artwork.imageUrl)}`
+
     const handleGenerate = async () => {
-        if (!posterRef.current) return
+        if (!posterRef.current || !imgLoaded) return
         setGenerating(true)
         try {
-            // Need to wait slightly for images to load if they haven't
             await new Promise(r => setTimeout(r, 500))
-            const dataUrl = await htmlToImage.toPng(posterRef.current, { quality: 0.95, pixelRatio: 2 })
+            const dataUrl = await htmlToImage.toPng(posterRef.current, {
+                quality: 1,
+                pixelRatio: 2,
+                cacheBust: true,
+            })
             setPosterImageUrl(dataUrl)
         } catch (error) {
-            console.error('Oops, something went wrong!', error)
+            console.error('Poster generation failed:', error)
         } finally {
             setGenerating(false)
         }
@@ -52,100 +61,142 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg bg-white rounded-xl overflow-hidden shadow-2xl relative">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white backdrop-blur transition-colors"
-                >
-                    <X className="w-5 h-5" />
-                </button>
-
-                <div className="p-6 md:p-8 bg-[#faf7f0] max-h-[85vh] overflow-y-auto hide-scrollbar">
-
-                    {/* Real Poster Node (Hidden technically, or visible but un-interactive) */}
-                    <div className={posterImageUrl ? "hidden" : "block"}>
-                        <div
-                            ref={posterRef}
-                            className="bg-white rounded-2xl p-6 shadow-sm border border-[#e8dfce] flex flex-col gap-6"
-                            style={{ width: '100%', minHeight: '600px', background: 'linear-gradient(to bottom right, #ffffff, #fdfbf7)' }}
-                        >
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-black text-[#2c2416] tracking-tight">DoDoo Daily</h2>
-                                <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">{t('poster.exhibition')}</span>
-                            </div>
-
-                            <div className="w-full aspect-square rounded-xl overflow-hidden bg-[#f5f0e8] shadow-inner border-4 border-white">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={artwork.imageUrl} alt={artwork.title} className="w-full h-full object-cover" crossOrigin="anonymous" />
-                            </div>
-
-                            <div>
-                                <h1 className="text-3xl font-black text-[#2c2416] mb-2">{artwork.title}</h1>
-                                <p className="text-[#a89880] text-sm">{t('poster.description')}</p>
-                            </div>
-
-                            <div className="mt-auto flex items-end justify-between bg-[#f5f0e8] p-4 rounded-xl">
-                                <div>
-                                    <p className="text-xs font-bold text-[#a89880] uppercase tracking-wider mb-1">{t('poster.priceLabel')}</p>
-                                    <p className="text-3xl font-black text-purple-600">¥ {artwork.priceRMB}</p>
-                                </div>
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-[#e8dfce]">
-                                    <QRCodeSVG value={purchaseUrl} size={80} level={"H"} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleGenerate}
-                            disabled={generating}
-                            className="w-full mt-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {generating ? (
-                                <span className="animate-pulse">{t('poster.generating')}</span>
-                            ) : (
-                                <>
-                                    <Share2 className="w-5 h-5" />
-                                    {t('poster.preview')}
-                                </>
-                            )}
-                        </button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+                className="w-full max-w-sm bg-[#faf7f0] rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+                style={{ maxHeight: 'calc(100dvh - 2rem)' }}
+            >
+                {/* ── Header ── */}
+                <div className="flex items-center justify-between px-5 py-3.5 bg-white/80 backdrop-blur border-b border-[#ede8df] shrink-0">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-500 fill-purple-200" />
+                        <span className="font-black text-[#2c2416] text-sm">{t('gallery.detail.genPoster')}</span>
                     </div>
+                    <button
+                        onClick={onClose}
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-black/5 hover:bg-black/10 text-slate-500 transition-colors"
+                    >
+                        <X className="w-3.5 h-3.5" />
+                    </button>
+                </div>
 
-                    {/* Preview Image Result */}
-                    {posterImageUrl && (
-                        <AnimatePresence>
+                {/* ── Body (no scroll) ── */}
+                <div className="p-4 flex flex-col gap-3 flex-1 min-h-0">
+                    <AnimatePresence mode="wait">
+                        {!posterImageUrl ? (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="flex flex-col gap-6 items-center"
+                                key="template"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="flex flex-col gap-3 flex-1 min-h-0"
                             >
-                                <h3 className="text-xl font-bold text-center text-[#2c2416]">{t('poster.ready')}</h3>
+                                {/* Poster template — compact, no scroll */}
+                                <div
+                                    ref={posterRef}
+                                    className="rounded-2xl overflow-hidden border border-[#e8dfce] bg-white shrink-0"
+                                >
+                                    {/* Top bar */}
+                                    <div className="flex items-center justify-between px-4 py-3">
+                                        <div>
+                                            <p className="text-[9px] font-black text-purple-400 uppercase tracking-widest">{t('poster.exhibition')}</p>
+                                            <p className="text-xs font-black text-[#2c2416] mt-0.5 truncate max-w-[140px]">{creatorLabel}</p>
+                                        </div>
+                                        <p className="text-[10px] font-bold text-[#a89880]">DoDoo Daily</p>
+                                    </div>
 
-                                <div className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white bg-white">
+                                    {/* Image */}
+                                    <div className="mx-4 rounded-xl overflow-hidden bg-[#f5f0e8] aspect-square">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={proxiedImageUrl}
+                                            alt={artwork.title}
+                                            className="w-full h-full object-cover"
+                                            crossOrigin="anonymous"
+                                            onLoad={() => setImgLoaded(true)}
+                                            onError={() => setImgLoaded(true)}
+                                        />
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="px-4 pt-3 pb-1">
+                                        <h1 className="text-base font-black text-[#2c2416] truncate">{artwork.title}</h1>
+                                    </div>
+
+                                    {/* Bottom: price + QR */}
+                                    <div className="mx-4 mb-4 mt-2 flex items-center justify-between bg-[#f5f0e8] px-4 py-3 rounded-xl">
+                                        <div>
+                                            <p className="text-[9px] font-black text-[#a89880] uppercase tracking-wider mb-0.5">{t('poster.priceLabel')}</p>
+                                            <p className="text-lg font-black text-purple-600">
+                                                {artwork.priceCoins} <span className="text-xs font-bold">{t('hud.coins')}</span>
+                                            </p>
+                                            {artwork.priceRMB > 0 && (
+                                                <p className="text-[10px] text-[#a89880] font-bold">¥ {artwork.priceRMB}</p>
+                                            )}
+                                        </div>
+                                        <div className="bg-white p-1.5 rounded-xl shadow-sm border border-[#e8dfce]">
+                                            <QRCodeSVG value={purchaseUrl} size={56} level="H" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Generate button */}
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={generating || !imgLoaded}
+                                    className="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 shrink-0"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #7c3aed, #a855f7, #ec4899)',
+                                        color: 'white',
+                                        boxShadow: '0 6px 20px -4px rgba(124,58,237,0.45)'
+                                    }}
+                                >
+                                    {generating ? (
+                                        <><RefreshCw className="w-4 h-4 animate-spin" />{t('poster.generating')}</>
+                                    ) : (
+                                        <><ImageIcon className="w-4 h-4" />{t('poster.preview')}</>
+                                    )}
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="result"
+                                initial={{ opacity: 0, scale: 0.96 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col gap-3 flex-1 min-h-0"
+                            >
+                                <p className="text-center font-black text-[#2c2416] text-sm shrink-0">{t('poster.ready')} 🎉</p>
+
+                                {/* Generated image — fills available space without scroll */}
+                                <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-xl border-2 border-white">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={posterImageUrl} alt="Generated Poster" className="w-full h-auto" />
+                                    <img src={posterImageUrl} alt="Generated Poster" className="w-full h-full object-contain" />
                                 </div>
 
                                 <button
                                     onClick={handleDownload}
-                                    className="w-full py-4 bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold rounded-2xl shadow-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 text-sm active:scale-[0.97] transition-all shrink-0"
                                 >
-                                    <Download className="w-5 h-5" />
+                                    <Download className="w-4 h-4" />
                                     {t('poster.save')}
                                 </button>
 
                                 <button
                                     onClick={() => setPosterImageUrl(null)}
-                                    className="text-sm font-bold text-[#a89880] hover:text-[#2c2416] transition-colors"
+                                    className="w-full py-2 text-xs font-bold text-[#a89880] hover:text-[#2c2416] transition-colors flex items-center justify-center gap-1.5 shrink-0"
                                 >
+                                    <RefreshCw className="w-3 h-3" />
                                     {t('poster.regen')}
                                 </button>
                             </motion.div>
-                        </AnimatePresence>
-                    )}
+                        )}
+                    </AnimatePresence>
                 </div>
-            </div>
+            </motion.div>
         </div>
     )
 }
