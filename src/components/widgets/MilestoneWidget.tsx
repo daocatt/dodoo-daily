@@ -98,7 +98,7 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
                                                 className="font-black text-orange-500 uppercase tracking-tight mb-0.5 bg-orange-50 px-1.5 py-0.5 rounded-md"
                                                 style={{ fontSize: Math.max(6, cellSize * 0.05) }}
                                             >
-                                                {d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                {d.toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit' })}
                                             </span>
                                             <p
                                                 className="font-bold text-slate-700 line-clamp-2 leading-tight"
