@@ -24,6 +24,9 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import { format } from 'date-fns'
 
 interface Stats {
     userId: string
@@ -59,6 +62,7 @@ export default function AccountHUD() {
     const [showRechargeModal, setShowRechargeModal] = useState(false)
     const [rechargeAmt, setRechargeAmt] = useState('100')
     const [rechargeType, setRechargeType] = useState<'CURRENCY' | 'GOLD_STAR'>('CURRENCY')
+    const [recordDate, setRecordDate] = useState<Date>(new Date())
     const [mounted, setMounted] = useState(false)
 
     const pathname = usePathname()
@@ -144,7 +148,7 @@ export default function AccountHUD() {
                     targetUserId: stats?.isParent ? targetChildId : stats?.userId,
                     height: parseFloat(height),
                     weight: parseFloat(weight),
-                    date: new Date().toISOString()
+                    date: recordDate.toISOString()
                 })
             })
             if (res.ok) {
@@ -365,6 +369,17 @@ export default function AccountHUD() {
                                             required
                                         />
                                     </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.date') || 'Date'}</label>
+                                    <DatePicker
+                                        selected={recordDate}
+                                        onChange={(date: Date | null) => date && setRecordDate(date)}
+                                        dateFormat="yyyy-MM-dd"
+                                        maxDate={new Date()}
+                                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
+                                    />
                                 </div>
 
                                 <button

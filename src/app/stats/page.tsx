@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 interface GrowthRecord {
     id: string
@@ -85,7 +87,7 @@ export default function GrowthStatsPage() {
     const [recordingChildId, setRecordingChildId] = useState<string | null>(null)
     const [height, setHeight] = useState('')
     const [weight, setWeight] = useState('')
-    const [recordDate, setRecordDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+    const [recordDate, setRecordDate] = useState<Date>(new Date())
 
     const fetchData = async () => {
         try {
@@ -146,7 +148,7 @@ export default function GrowthStatsPage() {
                     targetUserId: recordingChildId,
                     height,
                     weight,
-                    date: recordDate
+                    date: recordDate.toISOString()
                 })
             })
             if (res.ok) {
@@ -462,10 +464,11 @@ export default function GrowthStatsPage() {
 
                                 <div>
                                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 pl-2">{t('common.date') || 'Date'}</label>
-                                    <input
-                                        type="date"
-                                        value={recordDate}
-                                        onChange={e => setRecordDate(e.target.value)}
+                                    <DatePicker
+                                        selected={recordDate}
+                                        onChange={(date: Date | null) => date && setRecordDate(date)}
+                                        dateFormat="yyyy-MM-dd"
+                                        maxDate={new Date()}
                                         className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-bold text-slate-800 focus:bg-white focus:border-purple-200 outline-none transition-all"
                                     />
                                 </div>

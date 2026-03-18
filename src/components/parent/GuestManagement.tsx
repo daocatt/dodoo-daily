@@ -322,7 +322,7 @@ export default function GuestManagement() {
                                             </button>
                                             <button 
                                                 onClick={() => setShowAdjustModal(guest.id)}
-                                                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm whitespace-nowrap"
                                             >
                                                 {t('guests.action.adjustCoins')}
                                             </button>
@@ -358,26 +358,26 @@ export default function GuestManagement() {
                         <div className="space-y-4">
                             <div>
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 block">{t('guests.codes.amountLabel')}</label>
-                                <div className="flex items-center gap-4">
+                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                                     <input 
                                         type="number"
-                                        className="flex-1 px-5 py-4 bg-slate-50 border-none rounded-2xl font-black text-indigo-600 focus:ring-4 focus:ring-indigo-100 outline-none text-xl"
+                                        className="flex-1 px-5 py-4 bg-slate-50 border-none rounded-2xl font-black text-indigo-600 focus:ring-4 focus:ring-indigo-100 outline-none text-xl min-w-0"
                                         value={codeAmount}
                                         onChange={e => setCodeAmount(parseInt(e.target.value))}
                                     />
                                     <button 
                                         onClick={handleGenerateCode}
                                         disabled={!!processingId}
-                                        className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:grayscale"
+                                        className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:grayscale whitespace-nowrap shrink-0"
                                     >
-                                        {processingId === 'generating' ? <Loader2 className="w-6 h-6 animate-spin" /> : t('guests.codes.generateBtn')}
+                                        {processingId === 'generating' ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : t('guests.codes.generateBtn')}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-x-auto scrollbar-hide">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/50">
@@ -394,12 +394,12 @@ export default function GuestManagement() {
                                         <td className="px-8 py-5 text-right">
                                             <span className="font-black text-slate-700 text-lg">+{code.amount}</span>
                                         </td>
-                                        <td className="px-8 py-5 text-center">
+                                        <td className="px-8 py-5 text-center whitespace-nowrap">
                                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${code.isUsed ? 'bg-slate-100 text-slate-400' : 'bg-emerald-100 text-emerald-600'}`}>
                                                 {code.isUsed ? t('guests.codes.statusUsed') : t('guests.codes.statusUnused')}
                                             </span>
                                         </td>
-                                        <td className="px-8 py-5 text-right text-xs text-slate-400 font-bold uppercase">
+                                        <td className="px-8 py-5 text-right text-xs text-slate-400 font-bold uppercase whitespace-nowrap">
                                             {new Date(code.createdAt).toLocaleDateString()}
                                         </td>
                                     </tr>
@@ -418,8 +418,8 @@ export default function GuestManagement() {
             {/* TAB: IP BLACKLIST */}
             {activeTab === 'IP' && (
                 <div className="space-y-6">
-                    <div className="bg-white p-8 rounded-3xl border border-rose-100 shadow-sm shadow-rose-50 max-w-xl">
-                        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-rose-100 shadow-sm shadow-rose-50 max-w-2xl">
+                        <h3 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
                             <ShieldAlert className="w-6 h-6 text-rose-500" />
                             {t('guests.ip.title')}
                         </h3>
@@ -427,32 +427,32 @@ export default function GuestManagement() {
                             {t('guests.ip.description')}
                         </p>
                         
-                        <div className="space-y-4 mb-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="space-y-4 mb-8 p-4 sm:p-6 bg-slate-50 rounded-2xl border border-slate-100">
                             <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
                                 <Plus className="w-3.5 h-3.5" />
                                 {t('guests.ip.addTitle')}
                             </h4>
-                            <div className="flex flex-col sm:flex-row gap-3">
+                             <div className="flex flex-col lg:flex-row gap-3">
                                 <input 
                                     type="text"
                                     placeholder={t('guests.ip.placeholder')}
-                                    className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm"
+                                    className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm min-w-0"
                                     value={newIp}
                                     onChange={e => setNewIp(e.target.value)}
                                 />
                                 <input 
                                     type="text"
                                     placeholder={t('guests.ip.reasonPlaceholder')}
-                                    className="flex-[1.5] px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm"
+                                    className="flex-[1.5] px-4 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-4 focus:ring-indigo-100 outline-none transition-all shadow-sm min-w-0"
                                     value={newIpReason}
                                     onChange={e => setNewIpReason(e.target.value)}
                                 />
                                 <button 
                                     onClick={handleAddIp}
                                     disabled={!newIp || processingId === 'adding-ip'}
-                                    className="px-6 py-2 bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 disabled:grayscale"
+                                    className="px-6 py-3 bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-rose-100 hover:bg-rose-700 transition-all active:scale-95 disabled:grayscale whitespace-nowrap shrink-0"
                                 >
-                                    {processingId === 'adding-ip' ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : t('guests.ip.addBtn')}
+                                    {processingId === 'adding-ip' ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t('guests.ip.addBtn')}
                                 </button>
                             </div>
                         </div>
@@ -460,15 +460,15 @@ export default function GuestManagement() {
                         <div className="text-[10px] text-rose-400 font-black uppercase tracking-[0.2em] mb-2 px-1">{t('guests.ip.countLabel', { count: ipBlacklist.length.toString() })}</div>
                         <div className="space-y-2">
                             {ipBlacklist.map(item => (
-                                <div key={item.id} className="flex items-center justify-between p-4 bg-rose-50/50 rounded-2xl border border-rose-50 group">
-                                    <div className="flex items-center gap-4">
-                                        <code>{item.ip}</code>
-                                        <span className="text-xs text-rose-400 font-medium italic">{item.reason || t('guests.ip.noReason')}</span>
+                                <div key={item.id} className="flex items-center justify-between p-4 bg-rose-50/50 rounded-2xl border border-rose-50 group gap-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 min-w-0">
+                                        <code className="text-xs font-bold text-slate-700 bg-white px-2 py-0.5 rounded border border-rose-100 shrink-0">{item.ip}</code>
+                                        <span className="text-xs text-rose-400 font-medium italic truncate">{item.reason || t('guests.ip.noReason')}</span>
                                     </div>
                                     <button 
                                         onClick={() => handleRemoveIp(item.id)}
                                         disabled={!!processingId}
-                                        className="p-2 text-rose-300 hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                        className="p-2 text-rose-300 hover:text-rose-600 transition-colors shrink-0 sm:opacity-0 group-hover:opacity-100 disabled:opacity-50"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
