@@ -12,7 +12,13 @@ export default function SystemSettings() {
     const router = useRouter()
     const [showConfirm, setShowConfirm] = useState(false)
     const [systemName, setSystemName] = useState('DoDoo Family')
+    const [systemSubtitle, setSystemSubtitle] = useState('')
     const [showAllAvatars, setShowAllAvatars] = useState(true)
+    const [requireGuestApproval, setRequireGuestApproval] = useState(true)
+    const [requireInvitationCode, setRequireInvitationCode] = useState(false)
+    const [guestInvitationCode, setGuestInvitationCode] = useState('')
+    const [disableVisitorLogin, setDisableVisitorLogin] = useState(false)
+    const [disableVisitorRegistration, setDisableVisitorRegistration] = useState(false)
     const [homepageImages, setHomepageImages] = useState<string[]>([])
     const [uploading, setUploading] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -35,7 +41,13 @@ export default function SystemSettings() {
                 setCoinsToRmbRatio(data.coinsToRmbRatio || 1.0)
                 setTimezone(data.timezone || 'Asia/Shanghai')
                 setSystemName(data.systemName || 'DoDoo Family')
+                setSystemSubtitle(data.systemSubtitle || '')
                 setShowAllAvatars(data.showAllAvatars ?? true)
+                setRequireGuestApproval(data.requireGuestApproval ?? true)
+                setRequireInvitationCode(data.requireInvitationCode ?? false)
+                setGuestInvitationCode(data.guestInvitationCode || '')
+                setDisableVisitorLogin(data.disableVisitorLogin ?? false)
+                setDisableVisitorRegistration(data.disableVisitorRegistration ?? false)
                 try {
                     setHomepageImages(data.homepageImages ? JSON.parse(data.homepageImages) : [])
                 } catch (e) { setHomepageImages([]) }
@@ -61,9 +73,15 @@ export default function SystemSettings() {
                 if (updates.isClosed !== undefined) setIsClosed(updates.isClosed)
                 if (updates.starsToCoinsRatio !== undefined) setStarsToCoinsRatio(updates.starsToCoinsRatio)
                 if (updates.coinsToRmbRatio !== undefined) setCoinsToRmbRatio(updates.coinsToRmbRatio)
-                if (updates.timezone !== undefined) setTimezone(updates.timezone)
-                if (updates.systemName !== undefined) setSystemName(updates.systemName)
-                if (updates.showAllAvatars !== undefined) setShowAllAvatars(updates.showAllAvatars)
+                if (updates.timezone !== undefined) setTimezone(updates.timezone as string)
+                if (updates.systemName !== undefined) setSystemName(updates.systemName as string)
+                if (updates.systemSubtitle !== undefined) setSystemSubtitle(updates.systemSubtitle as string)
+                if (updates.showAllAvatars !== undefined) setShowAllAvatars(updates.showAllAvatars as boolean)
+                if (updates.requireGuestApproval !== undefined) setRequireGuestApproval(updates.requireGuestApproval as boolean)
+                if (updates.requireInvitationCode !== undefined) setRequireInvitationCode(updates.requireInvitationCode as boolean)
+                if (updates.guestInvitationCode !== undefined) setGuestInvitationCode(updates.guestInvitationCode as string)
+                if (updates.disableVisitorLogin !== undefined) setDisableVisitorLogin(updates.disableVisitorLogin as boolean)
+                if (updates.disableVisitorRegistration !== undefined) setDisableVisitorRegistration(updates.disableVisitorRegistration as boolean)
                 if (updates.homepageImages !== undefined) {
                     try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (e) { }
                 }
@@ -114,25 +132,35 @@ export default function SystemSettings() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400">System Name</label>
-                                <div className="flex items-center gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">System Name</label>
                                     <input
                                         type="text"
                                         value={systemName}
                                         onChange={(e) => setSystemName(e.target.value)}
-                                        className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                         placeholder="DoDoo Family"
                                     />
-                                    <button
-                                        onClick={() => handleUpdateSettings({ systemName })}
-                                        disabled={isSaving}
-                                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all"
-                                    >
-                                        Set
-                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">System Subtitle</label>
+                                    <input
+                                        type="text"
+                                        value={systemSubtitle}
+                                        onChange={(e) => setSystemSubtitle(e.target.value)}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                        placeholder="Modern Family Companion"
+                                    />
                                 </div>
                             </div>
+                            <button
+                                onClick={() => handleUpdateSettings({ systemName, systemSubtitle })}
+                                disabled={isSaving}
+                                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg active:scale-95"
+                            >
+                                Save Identity Settings
+                            </button>
 
                             <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
                                 <div>
@@ -272,7 +300,92 @@ export default function SystemSettings() {
                     </div>
                 </div>
 
-                {/* Master Switch - Repositioned after Reward Economy */}
+                {/* Guest Management Settings */}
+                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8">
+                    <div className="space-y-2">
+                        <h3 className="text-2xl font-black text-slate-800">Guest Control</h3>
+                        <p className="text-slate-500 text-sm font-medium">Manage how visitors access your exhibition.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div>
+                                <h4 className="font-black text-slate-800 text-sm">Require Approval</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Guests must be approved by you</p>
+                            </div>
+                            <button
+                                onClick={() => handleUpdateSettings({ requireGuestApproval: !requireGuestApproval })}
+                                className={`w-12 h-6 rounded-full transition-all relative ${requireGuestApproval ? 'bg-indigo-500' : 'bg-slate-300'}`}
+                            >
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${requireGuestApproval ? 'right-0.5' : 'left-0.5'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div>
+                                <h4 className="font-black text-slate-800 text-sm">Use Invitation Code</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Only visitors with a code can join</p>
+                            </div>
+                            <button
+                                onClick={() => handleUpdateSettings({ requireInvitationCode: !requireInvitationCode })}
+                                className={`w-12 h-6 rounded-full transition-all relative ${requireInvitationCode ? 'bg-indigo-500' : 'bg-slate-300'}`}
+                            >
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${requireInvitationCode ? 'right-0.5' : 'left-0.5'}`} />
+                            </button>
+                        </div>
+
+                        {requireInvitationCode && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                className="space-y-2 pt-2"
+                            >
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Invitation Code</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={guestInvitationCode}
+                                        onChange={(e) => setGuestInvitationCode(e.target.value)}
+                                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm"
+                                        placeholder="Enter code..."
+                                    />
+                                    <button
+                                        onClick={() => handleUpdateSettings({ guestInvitationCode })}
+                                        className="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-black transition-all"
+                                    >
+                                        Update Code
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div>
+                                <h4 className="font-black text-slate-800 text-sm">Disable Visitor Login</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Existing guests cannot log in</p>
+                            </div>
+                            <button
+                                onClick={() => handleUpdateSettings({ disableVisitorLogin: !disableVisitorLogin })}
+                                className={`w-12 h-6 rounded-full transition-all relative ${disableVisitorLogin ? 'bg-rose-500' : 'bg-slate-300'}`}
+                            >
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${disableVisitorLogin ? 'right-0.5' : 'left-0.5'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div>
+                                <h4 className="font-black text-slate-800 text-sm">Disable New Registration</h4>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Prevent new visitors from signing up</p>
+                            </div>
+                            <button
+                                onClick={() => handleUpdateSettings({ disableVisitorRegistration: !disableVisitorRegistration })}
+                                className={`w-12 h-6 rounded-full transition-all relative ${disableVisitorRegistration ? 'bg-rose-500' : 'bg-slate-300'}`}
+                            >
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${disableVisitorRegistration ? 'right-0.5' : 'left-0.5'}`} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 flex flex-col justify-between">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">

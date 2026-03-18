@@ -227,7 +227,10 @@ const dictionaries: Dictionary = {
         'parent.reset': 'Reset Layout',
         'parent.resetConfirm': 'Clear all widgets and reset layout?',
         'parent.done': 'Done',
+        'parent.page': 'Page {count}',
         'parent.editLayout': 'Edit Layout',
+        'parent.exhibition': 'Exhibition Management',
+        'parent.exhibitionSub': 'Manage public artworks and exhibits.',
 
         // Gender
         'gender.male': 'Male',
@@ -603,7 +606,10 @@ const dictionaries: Dictionary = {
         'parent.reset': '重置布局',
         'parent.resetConfirm': '清除所有小组件并重置布局吗？',
         'parent.done': '完成',
+        'parent.page': '第 {count} 页',
         'parent.editLayout': '编辑布局',
+        'parent.exhibition': '展厅管理',
+        'parent.exhibitionSub': '管理所有正在公开展示的作品。',
 
         // Gender
         'gender.male': '男',

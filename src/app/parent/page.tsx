@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, Users, Loader2, ShoppingBag as BagIcon, UserCircle, Power, Image as ImageIcon, Coins } from 'lucide-react'
+import { ArrowLeft, Star, Users, Loader2, ShoppingBag as BagIcon, UserCircle, Power, Image as ImageIcon, Coins, Palette } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
 
@@ -12,6 +12,8 @@ import OrderManagement from '@/components/parent/OrderManagement'
 import ProfileManagement from '@/components/parent/SettingsManagement'
 import SystemSettings from '@/components/parent/SystemSettings'
 import MediaManagement from '@/components/parent/MediaManagement'
+import ExhibitionManagement from '@/components/parent/ExhibitionManagement'
+import GuestManagement from '@/components/parent/GuestManagement'
 
 interface ParentUser {
     id: string
@@ -27,7 +29,7 @@ export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'GUESTS'>('HOME')
     const [user, setUser] = useState<ParentUser | null>(null)
 
     useEffect(() => {
@@ -77,6 +79,8 @@ export default function ParentDashboard() {
             case 'PROFILE': return user ? <ProfileManagement user={user} /> : null
             case 'SYSTEM': return <SystemSettings />
             case 'MEDIA': return <MediaManagement />
+            case 'EXHIBITION': return <ExhibitionManagement />
+            case 'GUESTS': return <GuestManagement />
             default: return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
 
@@ -166,6 +170,40 @@ export default function ParentDashboard() {
                         </div>
                     </button>
 
+                    {/* Exhibition Management */}
+                    <button
+                        onClick={() => setView('EXHIBITION')}
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-indigo-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Palette className="w-7 h-7 text-indigo-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.exhibition')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.exhibitionSub')}</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-indigo-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
+                    {/* Guest Management */}
+                    <button
+                        onClick={() => setView('GUESTS')}
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Users className="w-7 h-7 text-emerald-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">访客管理</h2>
+                            <p className="text-slate-500 text-sm mt-1">核准访客、管理充值码与 IP 限制。</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-emerald-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
                     {/* System Control */}
                     <button
                         onClick={() => setView('SYSTEM')}
@@ -208,7 +246,9 @@ export default function ParentDashboard() {
                                     view === 'FAMILY' ? t('parent.family') :
                                         view === 'SYSTEM' ? 'System Settings' :
                                             view === 'MEDIA' ? t('parent.media') :
-                                                view}
+                                                view === 'EXHIBITION' ? t('parent.exhibition') :
+                                                    view === 'GUESTS' ? '访客管理' :
+                                                        view}
                         </h1>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">Control Panel</p>
                     </div>

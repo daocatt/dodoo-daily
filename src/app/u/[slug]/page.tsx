@@ -35,6 +35,8 @@ type PublicArtwork = {
     createdAt: number
     likes: number
     views: number
+    albumId: string | null
+    albumTitle?: string | null
 }
 
 export default function PublicProfileHome() {
@@ -281,8 +283,13 @@ export default function PublicProfileHome() {
                                         </div>
                                     )}
                                 </div>
-                                <h3 className="text-xl font-black text-slate-800 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{art.title}</h3>
-                                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                <h3 className="text-xl font-black text-slate-800 group-hover:text-indigo-600 transition-colors uppercase tracking-tight leading-tight">{art.title}</h3>
+                                {art.albumTitle && (
+                                    <div className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-500 text-[9px] font-black rounded-full uppercase tracking-widest mt-1 mb-1">
+                                        {art.albumTitle}
+                                    </div>
+                                )}
+                                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">
                                     {new Date(art.createdAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long' })}
                                 </p>
                             </motion.div>

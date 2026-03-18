@@ -22,7 +22,7 @@ export async function GET(
 
         const userId = results[0].id
 
-        // 2. Fetch public artworks
+        // 2. Fetch public artworks with album info
         const publicArtworks = await db.select({
             id: artwork.id,
             title: artwork.title,
@@ -32,16 +32,19 @@ export async function GET(
             isSold: artwork.isSold,
             createdAt: artwork.createdAt,
             albumId: artwork.albumId,
+            albumTitle: album.title,
             userId: artwork.userId,
             isPublic: artwork.isPublic,
             likes: artwork.likes,
             views: artwork.views
         })
         .from(artwork)
+        .leftJoin(album, eq(artwork.albumId, album.id))
         .where(
             and(
                 eq(artwork.userId, userId),
                 eq(artwork.isPublic, true),
+                eq(artwork.isApproved, true),
                 eq(artwork.isArchived, false)
             )
         )

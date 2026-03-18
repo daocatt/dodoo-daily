@@ -1,0 +1,2 @@
+ALTER TABLE `SystemSettings` ADD `disableVisitorLogin` integer DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE `SystemSettings` ADD `disableVisitorRegistration` integer DEFAULT false NOT NULL;

@@ -53,7 +53,13 @@ export async function PATCH(req: NextRequest) {
         if (body.coinsToRmbRatio !== undefined) updates.coinsToRmbRatio = parseFloat(body.coinsToRmbRatio)
         if (body.timezone !== undefined) updates.timezone = body.timezone
         if (body.systemName !== undefined) updates.systemName = body.systemName
+        if (body.systemSubtitle !== undefined) updates.systemSubtitle = body.systemSubtitle
         if (typeof body.showAllAvatars === 'boolean') updates.showAllAvatars = body.showAllAvatars
+        if (typeof body.requireGuestApproval === 'boolean') updates.requireGuestApproval = body.requireGuestApproval
+        if (typeof body.requireInvitationCode === 'boolean') updates.requireInvitationCode = body.requireInvitationCode
+        if (body.guestInvitationCode !== undefined) updates.guestInvitationCode = body.guestInvitationCode
+        if (typeof body.disableVisitorLogin === 'boolean') updates.disableVisitorLogin = body.disableVisitorLogin
+        if (typeof body.disableVisitorRegistration === 'boolean') updates.disableVisitorRegistration = body.disableVisitorRegistration
         if (body.homepageImages !== undefined) updates.homepageImages = body.homepageImages
 
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()

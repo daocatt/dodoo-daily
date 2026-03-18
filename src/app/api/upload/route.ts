@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
         const albumId = formData.get('albumId') as string
         const targetUserId = formData.get('targetUserId') as string
         const isPublic = formData.get('isPublic') === 'true'
+        const exhibitionDescription = formData.get('exhibitionDescription') as string || null
 
         if (!files || files.length === 0) {
             return NextResponse.json({ error: 'Files are required' }, { status: 400 })
@@ -39,6 +40,8 @@ export async function POST(req: NextRequest) {
             const mediaItem = await uploadMedia(file, 'GALLERY', ownerId);
             const artworkTitle = files.length > 1 ? `${title} ${index + 1}` : title;
 
+            const isApproved = role === 'PARENT' || !isPublic; // Parents are auto-approved, or if not public
+
             const insertResult = await db.insert(artwork).values({
                 userId: ownerId,
                 title: artworkTitle,
@@ -47,6 +50,8 @@ export async function POST(req: NextRequest) {
                 priceCoins,
                 albumId: albumId || null,
                 isPublic,
+                isApproved,
+                exhibitionDescription,
             }).returning()
 
             results.push(insertResult[0])

@@ -80,7 +80,37 @@ export const purpleStarLog = sqliteTable("PurpleStarLog", {
 export const guest = sqliteTable("Guest", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
+    email: text("email"),
     phone: text("phone"),
+    status: text("status", { enum: ["PENDING", "APPROVED", "BANNED"] }).default("PENDING").notNull(),
+    currency: integer("currency").default(0).notNull(),
+    lastIp: text("lastIp"),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
+export const rechargeCode = sqliteTable("RechargeCode", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    code: text("code").notNull().unique(),
+    amount: integer("amount").notNull(),
+    isUsed: integer("isUsed", { mode: "boolean" }).default(false).notNull(),
+    usedByGuestId: text("usedByGuestId").references(() => guest.id),
+    usedAt: integer("usedAt", { mode: "timestamp_ms" }),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
+export const guestCurrencyLog = sqliteTable("GuestCurrencyLog", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    guestId: text("guestId").notNull().references(() => guest.id),
+    amount: integer("amount").notNull(),
+    balance: integer("balance").notNull(),
+    reason: text("reason").notNull(), // 'RECHARGE', 'PURCHASE', 'MANUAL_ADJUST'
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
+export const ipBlacklist = sqliteTable("IpBlacklist", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    ip: text("ip").notNull().unique(),
+    reason: text("reason"),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
@@ -146,6 +176,8 @@ export const artwork = sqliteTable("Artwork", {
     buyerId: text("buyerId").references(() => guest.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
+    isApproved: integer("isApproved", { mode: "boolean" }).default(false).notNull(),
+    exhibitionDescription: text("exhibitionDescription"),
     likes: integer("likes").default(0).notNull(),
     views: integer("views").default(0).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
@@ -155,7 +187,9 @@ export const order = sqliteTable("Order", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     artworkId: text("artworkId").notNull().references(() => artwork.id),
     guestId: text("guestId").notNull().references(() => guest.id),
-    amountRMB: real("amountRMB").notNull(),
+    amountRMB: real("amountRMB").default(0).notNull(),
+    amountCoins: integer("amountCoins").default(0).notNull(),
+    paymentType: text("paymentType", { enum: ["COINS", "RMB"] }).default("COINS").notNull(),
     status: text("status").default("PENDING").notNull(),
     qrCodeUrl: text("qrCodeUrl"),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
@@ -251,7 +285,13 @@ export const systemSettings = sqliteTable("SystemSettings", {
     coinsToRmbRatio: real("coinsToRmbRatio").default(1.0).notNull(),
     timezone: text("timezone").default("Asia/Shanghai").notNull(),
     systemName: text("systemName").default("DoDoo Family").notNull(),
+    systemSubtitle: text("systemSubtitle"),
     showAllAvatars: integer("showAllAvatars", { mode: "boolean" }).default(true).notNull(),
+    requireGuestApproval: integer("requireGuestApproval", { mode: "boolean" }).default(true).notNull(),
+    requireInvitationCode: integer("requireInvitationCode", { mode: "boolean" }).default(false).notNull(),
+    guestInvitationCode: text("guestInvitationCode"),
+    disableVisitorLogin: integer("disableVisitorLogin", { mode: "boolean" }).default(false).notNull(),
+    disableVisitorRegistration: integer("disableVisitorRegistration", { mode: "boolean" }).default(false).notNull(),
     homepageImages: text("homepageImages"), // stringified JSON array
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });

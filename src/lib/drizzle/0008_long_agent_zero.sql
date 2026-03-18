@@ -1,0 +1,1 @@
+ALTER TABLE `Artwork` ADD `exhibitionDescription` text;

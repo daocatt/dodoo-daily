@@ -25,6 +25,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
     const [uploadPriceCoins, setUploadPriceCoins] = useState('')
     const [uploadAlbumId, setUploadAlbumId] = useState(defaultAlbumId || '')
     const [uploadIsPublic, setUploadIsPublic] = useState(false)
+    const [uploadExhibitionDescription, setUploadExhibitionDescription] = useState('')
     const [uploadFiles, setUploadFiles] = useState<File[]>([])
     const [uploadPreviews, setUploadPreviews] = useState<string[]>([])
     const [uploading, setUploading] = useState(false)
@@ -60,6 +61,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
         const coins = uploadIsPublic ? (uploadPriceCoins || '0') : '0'
         formData.append('priceCoins', coins)
         formData.append('isPublic', uploadIsPublic.toString())
+        formData.append('exhibitionDescription', uploadExhibitionDescription)
 
         if (selectedChildId) {
             formData.append('targetUserId', selectedChildId)
@@ -181,16 +183,27 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
                             <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
-                                className="overflow-hidden"
+                                className="overflow-hidden space-y-4"
                             >
-                                <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
-                                <input
-                                    type="number"
-                                    value={uploadPriceCoins}
-                                    onChange={e => setUploadPriceCoins(e.target.value)}
-                                    className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
-                                    placeholder="0"
-                                />
+                                <div>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">{t('gallery.form.priceCoinsLabel')}</label>
+                                    <input
+                                        type="number"
+                                        value={uploadPriceCoins}
+                                        onChange={e => setUploadPriceCoins(e.target.value)}
+                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none"
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-[#6b5c45] mb-1">展厅描述</label>
+                                    <textarea
+                                        value={uploadExhibitionDescription}
+                                        onChange={e => setUploadExhibitionDescription(e.target.value)}
+                                        className="w-full bg-[#f5f0e8] border-none rounded-xl p-3 focus:ring-2 focus:ring-purple-400 outline-none resize-none h-24 text-sm"
+                                        placeholder="写一点关于这件作品的小故事吧..."
+                                    />
+                                </div>
                             </motion.div>
                         )}
 

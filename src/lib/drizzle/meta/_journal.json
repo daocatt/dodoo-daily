@@ -43,6 +43,41 @@
       "when": 1773771520841,
       "tag": "0005_small_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1773775571796,
+      "tag": "0006_light_unicorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1773775740015,
+      "tag": "0007_noisy_blue_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1773775824571,
+      "tag": "0008_long_agent_zero",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1773776330501,
+      "tag": "0009_cool_flatman",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1773776665806,
+      "tag": "0010_typical_colleen_wing",
+      "breakpoints": true
     }
   ]
 }

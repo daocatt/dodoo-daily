@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { artwork, guest, order } from '@/lib/schema'
+import { artwork, guest, order, guestCurrencyLog } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { artworkId, guestName, guestPhone } = body
+        const { artworkId, guestId, guestName, guestPhone, paymentType } = body
 
         if (!artworkId || !guestName || !guestPhone) {
             return NextResponse.json({ error: 'Incomplete information' }, { status: 400 })
@@ -25,26 +25,61 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Artwork not available' }, { status: 404 })
         }
 
-        // 2. Create/Find Guest
-        const [newGuest] = await db.insert(guest).values({
-            name: guestName,
-            phone: guestPhone
-        }).returning()
+        let currentGuestId = guestId
+        let newBalance = undefined
 
-        // 3. Create Order
-        const [newOrder] = await db.insert(order).values({
-            artworkId: art.id,
-            guestId: newGuest.id,
+        const result = await db.transaction(async (tx) => {
+            // Find or Create Guest
+            if (!currentGuestId) {
+                const [newG] = await tx.insert(guest).values({
+                    name: guestName,
+                    phone: guestPhone,
+                    status: 'APPROVED' // Default approved for one-off collectors
+                }).returning()
+                currentGuestId = newG.id
+            }
+
+            // If using COINS, verify and deduct
+            if (paymentType === 'COINS') {
+                const currentGuest = await tx.select().from(guest).where(eq(guest.id, currentGuestId)).get()
+                if (!currentGuest) throw new Error('Guest not found')
+                
+                if (currentGuest.currency < art.priceCoins) {
+                    throw new Error('Insufficient coins balance')
+                }
+
+                newBalance = currentGuest.currency - art.priceCoins
+                await tx.update(guest).set({ currency: newBalance }).where(eq(guest.id, currentGuestId))
+                
+                // Log Currency Change
+                await tx.insert(guestCurrencyLog).values({
+                    guestId: currentGuestId,
+                    amount: -art.priceCoins,
+                    balance: newBalance,
+                    reason: 'PURCHASE'
+                })
+            }
+
+            // Create Order
+            const [newOrder] = await tx.insert(order).values({
+                artworkId: art.id,
+                guestId: currentGuestId,
                 amountRMB: art.priceRMB || 0,
-            status: 'PENDING'
-        }).returning()
+                amountCoins: art.priceCoins || 0,
+                paymentType: paymentType || 'RMB',
+                status: paymentType === 'COINS' ? 'SUCCESS' : 'PENDING'
+            }).returning()
 
-        // Note: In a real app, I'd send a notification to the parent here.
-        // I can trigger a push notification to all parents.
+            // Update Artwork Status
+            await tx.update(artwork).set({ isSold: true, buyerId: currentGuestId }).where(eq(artwork.id, art.id))
 
-        return NextResponse.json({ success: true, orderId: newOrder.id })
-    } catch (e) {
+            return { orderId: newOrder.id, newBalance }
+        })
+
+        return NextResponse.json({ success: true, ...result })
+    } catch (e: unknown) {
         console.error('Public collect error:', e)
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        const message = e instanceof Error ? e.message : 'Collection failed'
+        return NextResponse.json({ error: message }, { status: 500 })
     }
 }

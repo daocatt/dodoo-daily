@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Heart, Calendar, Coins, User, Phone, CheckCircle, Download, Eye } from 'lucide-react'
+import { Palette, ArrowLeft, Heart, Calendar, Coins, User, Phone, CheckCircle, Download, Eye, Quote, ChevronRight, ShieldAlert } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
+import GuestAuth from '@/components/public/GuestAuth'
+import VisitorCenter from '@/components/public/VisitorCenter'
 
 type ArtworkDetail = {
     id: string
@@ -17,7 +19,8 @@ type ArtworkDetail = {
     priceCoins: number
     isSold: boolean
     createdAt: number
-    userId: string
+    albumId: string | null
+    albumTitle: string | null
     isPublic: boolean
     user: {
         name: string
@@ -27,6 +30,7 @@ type ArtworkDetail = {
     }
     likes: number
     views: number
+    exhibitionDescription: string | null
 }
 
 export default function ArtworkDetailPage() {
@@ -41,9 +45,26 @@ export default function ArtworkDetailPage() {
     const [success, setSuccess] = useState(false)
     const [isLiking, setIsLiking] = useState(false)
     const [hasLiked, setHasLiked] = useState(false)
+    const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number; phone?: string } | null>(null)
+    const [showVisitorPanel, setShowVisitorPanel] = useState(false)
+    const [systemStatus, setSystemStatus] = useState({ disableVisitorLogin: false, disableVisitorRegistration: false })
 
     const id = params?.id as string
     const slug = params?.slug as string
+
+    useEffect(() => {
+        const stored = localStorage.getItem('visitor_data')
+        if (stored) {
+            try { setVisitor(JSON.parse(stored)) } catch (e) {}
+        }
+
+        fetch('/api/system/settings')
+            .then(res => res.json())
+            .then(data => setSystemStatus({
+                disableVisitorLogin: data.disableVisitorLogin ?? false,
+                disableVisitorRegistration: data.disableVisitorRegistration ?? false
+            }))
+    }, [])
 
     useEffect(() => {
         if (!id) return
@@ -84,6 +105,8 @@ export default function ArtworkDetailPage() {
 
     const handleCollect = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (visitor && visitor.currency < artwork!.priceCoins) return
+        
         setSubmitting(true)
 
         try {
@@ -92,13 +115,25 @@ export default function ArtworkDetailPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     artworkId: id,
-                    guestName: guestName.trim(),
-                    guestPhone: guestPhone.trim()
+                    guestId: visitor?.id,
+                    guestName: visitor?.name || guestName.trim(),
+                    guestPhone: visitor?.phone || guestPhone.trim(),
+                    paymentType: visitor ? 'COINS' : 'RMB'
                 })
             })
 
             if (res.ok) {
+                const data = await res.json()
+                if (visitor && data.newBalance !== undefined) {
+                    const updated = { ...visitor, currency: data.newBalance }
+                    setVisitor(updated)
+                    localStorage.setItem('visitor_data', JSON.stringify(updated))
+                }
                 setSuccess(true)
+                setArtwork(prev => prev ? { ...prev, isSold: true } : null)
+            } else {
+                const errData = await res.json()
+                alert(errData.error || 'Collection failed')
             }
         } catch (err) {
             console.error(err)
@@ -196,6 +231,13 @@ export default function ArtworkDetailPage() {
                         {artwork.title}
                     </h1>
 
+                    {artwork.albumTitle && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                            <Palette className="w-3 h-3" />
+                            {artwork.albumTitle}
+                        </div>
+                    )}
+
                         <div className="flex items-center gap-6 mb-12 border-b border-slate-100 pb-8">
                             <div className="flex items-center gap-2 group cursor-pointer" onClick={handleLike}>
                                 <Heart className={`w-4 h-4 transition-all ${hasLiked ? 'text-rose-500 fill-rose-500 scale-125' : 'text-slate-300 group-hover:text-rose-400'}`} />
@@ -216,6 +258,17 @@ export default function ArtworkDetailPage() {
                                 </span>
                             </div>
                         </div>
+
+                    {artwork.exhibitionDescription && (
+                        <div className="mb-12 relative">
+                            <Quote className="absolute -top-4 -left-4 w-12 h-12 text-indigo-50/50 -z-10" />
+                            <div className="bg-indigo-50/30 p-8 rounded-[32px] border border-indigo-50/50">
+                                <p className="text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic font-serif">
+                                    &ldquo;{artwork.exhibitionDescription}&rdquo;
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mb-12">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Acquisition Price</p>
@@ -246,6 +299,52 @@ export default function ArtworkDetailPage() {
                             <p className="text-slate-500 font-medium">It has found its way to a private collection. You can still admire it here.</p>
                         </div>
                     )}
+
+                    {/* Visitor Portal Trigger */}
+                    <div className="mt-8 pt-8 border-t border-slate-50">
+                        {systemStatus.disableVisitorLogin ? (
+                            <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                <ShieldAlert className="w-6 h-6 text-rose-400 mx-auto mb-2" />
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">访客系统暂时不对外开放</p>
+                            </div>
+                        ) : visitor ? (
+                            <button 
+                                onClick={() => {
+                                    setShowVisitorPanel(true)
+                                    setShowCollectModal(true)
+                                }}
+                                className="flex items-center gap-3 w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-xl hover:border-indigo-100 transition-all"
+                            >
+                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm">
+                                    {visitor.name[0].toUpperCase()}
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Logged in Visitor</p>
+                                    <h4 className="font-black text-slate-800 uppercase tracking-tight">{visitor.name}</h4>
+                                </div>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <Coins className="w-4 h-4 text-amber-500" />
+                                    <span className="font-black text-indigo-600 text-sm">{visitor.currency}</span>
+                                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </button>
+                        ) : (
+                            <div className="text-center">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
+                                    {systemStatus.disableVisitorRegistration ? '仅限老访客登录' : '想要收藏作品或充值点数？'}
+                                </p>
+                                <button 
+                                    onClick={() => {
+                                        setShowVisitorPanel(false)
+                                        setShowCollectModal(true)
+                                    }}
+                                    className="px-8 py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                                >
+                                    访客登录 {systemStatus.disableVisitorRegistration ? '' : '/ 注册'}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </motion.div>
             </div>
 
@@ -268,56 +367,81 @@ export default function ArtworkDetailPage() {
                         >
                             <AnimatePresence mode="wait">
                                 {!success ? (
-                                    <motion.form 
-                                        key="form"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        onSubmit={handleCollect}
-                                    >
-                                        <h2 className="text-3xl font-black text-slate-900 mb-2">Nearly Yours</h2>
-                                        <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b border-slate-100 pb-6 mb-8">
-                                            Please provide your details for the collection process
-                                        </p>
+                                    <>
+                                        {showVisitorPanel && visitor ? (
+                                            <VisitorCenter 
+                                                guest={visitor} 
+                                                onLogout={() => {
+                                                    setVisitor(null)
+                                                    localStorage.removeItem('visitor_data')
+                                                    setShowVisitorPanel(false)
+                                                }}
+                                                onUpdateCurrency={(val) => {
+                                                    const updated = { ...visitor, currency: val }
+                                                    setVisitor(updated)
+                                                    localStorage.setItem('visitor_data', JSON.stringify(updated))
+                                                }}
+                                            />
+                                        ) : !visitor ? (
+                                            <GuestAuth 
+                                                disableRegistration={systemStatus.disableVisitorRegistration}
+                                                onSuccess={(data) => {
+                                                    setVisitor(data)
+                                                    localStorage.setItem('visitor_data', JSON.stringify(data))
+                                                    setShowVisitorPanel(true)
+                                                }}
+                                            />
+                                        ) : (
+                                            <form 
+                                                key="form"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                onSubmit={handleCollect}
+                                            >
+                                                <h2 className="text-3xl font-black text-slate-900 mb-2">Nearly Yours</h2>
+                                                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b border-slate-100 pb-6 mb-8">
+                                                    Confirm your collection of this masterpiece
+                                                </p>
 
-                                        <div className="space-y-6 mb-10">
-                                            <div>
-                                                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">Full Name</label>
-                                                <div className="relative">
-                                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                                    <input 
-                                                        required
-                                                        type="text" 
-                                                        value={guestName}
-                                                        onChange={e => setGuestName(e.target.value)}
-                                                        className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                                        placeholder="John Doe"
-                                                    />
+                                                <div className="space-y-6 mb-10">
+                                                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                                                        <div className="flex justify-between items-center mb-4">
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Balance</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <Coins className="w-3.5 h-3.5 text-amber-500" />
+                                                                <span className="font-black text-slate-900">{visitor.currency}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center border-t border-slate-200 pt-4">
+                                                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Required Coins</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <Coins className="w-3.5 h-3.5 text-indigo-600" />
+                                                                <span className="font-black text-slate-900">{artwork.priceCoins}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 block">Phone Number</label>
-                                                <div className="relative">
-                                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                                    <input 
-                                                        required
-                                                        type="tel" 
-                                                        value={guestPhone}
-                                                        onChange={e => setGuestPhone(e.target.value)}
-                                                        className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                                        placeholder="+123456789"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <button 
-                                            disabled={submitting}
-                                            className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
-                                        >
-                                            {submitting ? 'Processing...' : 'Complete Collection'}
-                                        </button>
-                                    </motion.form>
+                                                <button 
+                                                    disabled={submitting || visitor.currency < artwork.priceCoins}
+                                                    className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:grayscale"
+                                                >
+                                                    {submitting ? 'Processing...' : visitor.currency < artwork.priceCoins ? 'Insufficient Coins' : 'Confirm & Collect'}
+                                                </button>
+                                                
+                                                <div className="text-center mt-6">
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setShowVisitorPanel(true)}
+                                                        className="text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-indigo-600"
+                                                    >
+                                                        Manage Coins & View Profile
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        )}
+                                    </>
                                 ) : (
                                     <motion.div 
                                         key="success"

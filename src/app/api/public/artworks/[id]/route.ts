@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { artwork, users } from '@/lib/schema'
+import { artwork, users, album } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
 
 export async function GET(
@@ -20,9 +20,11 @@ export async function GET(
             createdAt: artwork.createdAt,
             userId: artwork.userId,
             albumId: artwork.albumId,
+            albumTitle: album.title,
             isPublic: artwork.isPublic,
             likes: artwork.likes,
             views: artwork.views,
+            exhibitionDescription: artwork.exhibitionDescription,
             user: {
                 name: users.name,
                 nickname: users.nickname,
@@ -32,10 +34,12 @@ export async function GET(
         })
         .from(artwork)
         .leftJoin(users, eq(artwork.userId, users.id))
+        .leftJoin(album, eq(artwork.albumId, album.id))
         .where(
             and(
                 eq(artwork.id, id),
                 eq(artwork.isPublic, true),
+                eq(artwork.isApproved, true),
                 eq(artwork.isArchived, false)
             )
         )

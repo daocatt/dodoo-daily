@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users, album, artwork } from '@/lib/schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, sql } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
@@ -22,7 +22,7 @@ export async function GET(
 
         const userId = results[0].id
 
-        // 2. Fetch public albums
+        // 2. Fetch albums that have at least one public artwork
         const publicAlbums = await db.select({
             id: album.id,
             title: album.title,
@@ -35,12 +35,19 @@ export async function GET(
         .where(
             and(
                 eq(album.userId, userId),
-                eq(album.isPublic, true)
+                // Either the album is explicitly public, OR it has public artworks
+                sql`EXISTS (
+                    SELECT 1 FROM Artwork 
+                    WHERE Artwork.albumId = Album.id 
+                    AND Artwork.isPublic = 1 
+                    AND Artwork.isApproved = 1
+                    AND Artwork.isArchived = 0
+                )`
             )
         )
         .orderBy(desc(album.updatedAt))
 
-        // Optional: for each album, get a preview of artworks
+        // Populate with artworks count or previews if needed
         const albumsWithArt = await Promise.all(publicAlbums.map(async (a) => {
             const artworks = await db.select({
                 id: artwork.id,
@@ -52,6 +59,7 @@ export async function GET(
                 and(
                     eq(artwork.albumId, a.id),
                     eq(artwork.isPublic, true),
+                    eq(artwork.isApproved, true),
                     eq(artwork.isArchived, false)
                 )
             )
