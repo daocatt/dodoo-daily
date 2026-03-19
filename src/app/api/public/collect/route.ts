@@ -28,20 +28,20 @@ export async function POST(req: NextRequest) {
         let currentGuestId = guestId
         let newBalance = undefined
 
-        const result = await db.transaction(async (tx) => {
+        const result = db.transaction((tx) => {
             // Find or Create Guest
             if (!currentGuestId) {
-                const [newG] = await tx.insert(guest).values({
+                const newG = tx.insert(guest).values({
                     name: guestName,
                     phone: guestPhone,
-                    status: 'APPROVED' // Default approved for one-off collectors
-                }).returning()
+                    status: 'APPROVED'
+                }).returning().get()
                 currentGuestId = newG.id
             }
 
             // If using COINS, verify and deduct
             if (paymentType === 'COINS') {
-                const currentGuest = await tx.select().from(guest).where(eq(guest.id, currentGuestId)).get()
+                const currentGuest = tx.select().from(guest).where(eq(guest.id, currentGuestId)).get()
                 if (!currentGuest) throw new Error('Guest not found')
                 
                 if (currentGuest.currency < art.priceCoins) {
@@ -49,29 +49,29 @@ export async function POST(req: NextRequest) {
                 }
 
                 newBalance = currentGuest.currency - art.priceCoins
-                await tx.update(guest).set({ currency: newBalance }).where(eq(guest.id, currentGuestId))
+                tx.update(guest).set({ currency: newBalance }).where(eq(guest.id, currentGuestId)).run()
                 
                 // Log Currency Change
-                await tx.insert(guestCurrencyLog).values({
+                tx.insert(guestCurrencyLog).values({
                     guestId: currentGuestId,
                     amount: -art.priceCoins,
                     balance: newBalance,
                     reason: 'PURCHASE'
-                })
+                }).run()
             }
 
             // Create Order
-            const [newOrder] = await tx.insert(order).values({
+            const newOrder = tx.insert(order).values({
                 artworkId: art.id,
-                guestId: currentGuestId,
+                guestId: currentGuestId!,
                 amountRMB: art.priceRMB || 0,
                 amountCoins: art.priceCoins || 0,
                 paymentType: paymentType || 'RMB',
                 status: paymentType === 'COINS' ? 'SUCCESS' : 'PENDING'
-            }).returning()
+            }).returning().get()
 
             // Update Artwork Status
-            await tx.update(artwork).set({ isSold: true, buyerId: currentGuestId }).where(eq(artwork.id, art.id))
+            tx.update(artwork).set({ isSold: true, buyerId: currentGuestId! }).where(eq(artwork.id, art.id)).run()
 
             return { orderId: newOrder.id, newBalance }
         })

@@ -6,8 +6,9 @@ import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
     try {
-        const { userId: id } = await getSessionUser()
-        if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId: id } = session
 
         // Fetch personal tasks only (assignerId is null)
         const personalTasks = await db.select({
@@ -39,8 +40,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId: id } = await getSessionUser()
-        if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId: id } = session
 
         const body = await req.json()
         const { title, description, isRepeating, isMonthlyRepeating, plannedTime } = body

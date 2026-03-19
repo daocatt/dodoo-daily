@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
 
         if (!guestId || !code) return NextResponse.json({ error: 'Missing data' }, { status: 400 })
 
-        const result = await db.transaction(async (tx) => {
-            const codeRecord = await tx.select().from(rechargeCode).where(
+        const result = db.transaction((tx) => {
+            const codeRecord = tx.select().from(rechargeCode).where(
                 and(
                     eq(rechargeCode.code, code.toUpperCase()),
                     eq(rechargeCode.isUsed, false)
@@ -20,25 +20,27 @@ export async function POST(req: NextRequest) {
 
             if (!codeRecord) throw new Error('Invalid or used code')
 
-            const currentGuest = await tx.select().from(guest).where(eq(guest.id, guestId)).get()
+            const currentGuest = tx.select().from(guest).where(eq(guest.id, guestId)).get()
             if (!currentGuest) throw new Error('Guest not found')
 
             const newBalance = currentGuest.currency + codeRecord.amount
 
-            await tx.update(rechargeCode)
+            tx.update(rechargeCode)
                 .set({ isUsed: true, usedByGuestId: guestId, usedAt: new Date() })
                 .where(eq(rechargeCode.id, codeRecord.id))
+                .run()
 
-            await tx.update(guest)
+            tx.update(guest)
                 .set({ currency: newBalance })
                 .where(eq(guest.id, guestId))
+                .run()
 
-            await tx.insert(guestCurrencyLog).values({
+            tx.insert(guestCurrencyLog).values({
                 guestId,
                 amount: codeRecord.amount,
                 balance: newBalance,
                 reason: 'RECHARGE'
-            })
+            }).run()
 
             return { amount: codeRecord.amount, balance: newBalance }
         })

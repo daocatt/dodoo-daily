@@ -1,5 +1,5 @@
 import { db } from './db'
-import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog, ledgerRecord, ledgerCategory } from './schema'
+import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog, ledgerRecord, ledgerCategory, bankTransaction } from './schema'
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
 
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
@@ -149,14 +149,15 @@ export async function addFiatBalance(
 
     // Using transaction block
     try {
-        await db.transaction(async (tx) => {
+        db.transaction((tx) => {
             // 1. Update stats
-            await tx.update(accountStats)
+            tx.update(accountStats)
                 .set({ fiatBalance: newBalance, updatedAt: new Date() })
                 .where(eq(accountStats.userId, userId))
+                .run()
 
             // 2. Insert ledger record
-            await tx.insert(ledgerRecord).values({
+            tx.insert(ledgerRecord).values({
                 userId,
                 categoryId,
                 type,
@@ -164,7 +165,7 @@ export async function addFiatBalance(
                 date: new Date(),
                 description,
                 relatedUserId
-            })
+            }).run()
         })
         return { success: true, balance: newBalance }
     } catch (e: unknown) {
@@ -216,4 +217,94 @@ export async function convertCoinsToFiat(userId: string, coinsToExchange: number
         `由 ${coinsToExchange} 个金币兑换得到`
     )
     return addRes
+}
+
+// ==========================================
+// VIRTUAL BANK (SAVINGS) SYSTEM
+// ==========================================
+
+export async function transferToBank(userId: string, amount: number, description: string = '存入银行') {
+    if (amount <= 0) return { success: false, error: '无效金额' }
+
+    try {
+        const stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
+        if (!stats) return { success: false, error: '用户统计数据不存在' }
+
+        const currentFiat = stats.fiatBalance || 0
+        if (currentFiat < amount) return { success: false, error: '余额不足' }
+
+        const newFiat = Number((currentFiat - amount).toFixed(2))
+        const newBank = Number(((stats.bankBalance || 0) + amount).toFixed(2))
+
+        db.transaction((tx) => {
+            tx.update(accountStats)
+                .set({ fiatBalance: newFiat, bankBalance: newBank, updatedAt: new Date() })
+                .where(eq(accountStats.userId, userId))
+                .run()
+
+            tx.insert(ledgerRecord).values({
+                userId,
+                categoryId: 'system_bank', 
+                type: 'EXPENSE',
+                amount: amount,
+                date: new Date(),
+                description: `[银行] ${description}`
+            }).run()
+
+            tx.insert(bankTransaction).values({
+                userId,
+                type: 'DEPOSIT',
+                amount: amount,
+                description,
+                status: 'COMPLETED'
+            }).run()
+        })
+
+        return { success: true, fiatBalance: newFiat, bankBalance: newBank }
+    } catch (e: unknown) {
+        return { success: false, error: (e as Error).message }
+    }
+}
+
+export async function withdrawFromBank(userId: string, amount: number, description: string = '从银行取出') {
+    if (amount <= 0) return { success: false, error: '无效金额' }
+
+    try {
+        const stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
+        if (!stats) return { success: false, error: '用户统计数据不存在' }
+
+        const currentBank = stats.bankBalance || 0
+        if (currentBank < amount) return { success: false, error: '银行余额不足' }
+
+        const newBank = Number((currentBank - amount).toFixed(2))
+        const newFiat = Number(((stats.fiatBalance || 0) + amount).toFixed(2))
+
+        db.transaction((tx) => {
+            tx.update(accountStats)
+                .set({ fiatBalance: newFiat, bankBalance: newBank, updatedAt: new Date() })
+                .where(eq(accountStats.userId, userId))
+                .run()
+
+            tx.insert(ledgerRecord).values({
+                userId,
+                categoryId: 'system_bank',
+                type: 'INCOME',
+                amount: amount,
+                date: new Date(),
+                description: `[银行] ${description}`
+            }).run()
+
+            tx.insert(bankTransaction).values({
+                userId,
+                type: 'WITHDRAWAL',
+                amount: amount,
+                description,
+                status: 'COMPLETED'
+            }).run()
+        })
+
+        return { success: true, fiatBalance: newFiat, bankBalance: newBank }
+    } catch (e: unknown) {
+        return { success: false, error: (e as Error).message }
+    }
 }

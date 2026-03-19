@@ -6,8 +6,9 @@ import { getSessionUser } from '@/lib/auth'
 
 export async function GET() {
     try {
-        const { userId } = await getSessionUser()
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId } = session
 
         const notes = await db.select({
             id: familyNote.id,

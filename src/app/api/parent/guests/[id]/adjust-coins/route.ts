@@ -27,17 +27,18 @@ export async function POST(
 
         const newBalance = currentGuest.currency + amount
 
-        await db.transaction(async (tx) => {
-            await tx.update(guest)
+        db.transaction((tx) => {
+            tx.update(guest)
                 .set({ currency: newBalance })
                 .where(eq(guest.id, id))
+                .run()
 
-            await tx.insert(guestCurrencyLog).values({
+            tx.insert(guestCurrencyLog).values({
                 guestId: id,
                 amount,
                 balance: newBalance,
                 reason: reason || 'MANUAL_ADJUST'
-            })
+            }).run()
         })
 
         return NextResponse.json({ success: true, balance: newBalance })

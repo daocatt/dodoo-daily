@@ -6,11 +6,10 @@ import { eq, and } from 'drizzle-orm'
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await getSessionUser()
-        if (!userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId } = session
+        
         const body = await req.json()
         const { subscription, deviceType } = body
 
@@ -67,11 +66,10 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
      try {
-        const { userId } = await getSessionUser()
-        if (!userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId } = session
+        
         const body = await req.json()
         const { endpoint } = body
 

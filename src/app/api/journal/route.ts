@@ -8,8 +8,9 @@ import { notifyParents } from '@/lib/push'
 
 export async function GET(req: NextRequest) {
     try {
-        const { userId } = await getSessionUser()
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId } = session
 
         const { searchParams } = new URL(req.url)
         const page = parseInt(searchParams.get('page') || '1')
@@ -69,12 +70,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId: currentUserId, role: currentUserRoleRaw } = await getSessionUser()
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId: currentUserId, role: currentUserRoleRaw } = session
         const currentUserRole = (currentUserRoleRaw as 'CHILD' | 'PARENT') || 'CHILD'
-
-        if (!currentUserId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
 
         const body = await req.json()
         const { text, imageUrl, imageUrls, voiceUrl, isMilestone, milestoneDate } = body
