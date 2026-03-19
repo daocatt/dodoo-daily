@@ -94,13 +94,10 @@ export async function GET(req: NextRequest) {
 
             const totalCompletedCount = (personalTasksCount?.count || 0) + (assignedTasksCount?.count || 0)
 
-            // 4. Growth data (last 14 days for charts)
+            // 4. Growth data (Fetch all for history)
             const growthData = await db.select()
                 .from(growthRecord)
-                .where(and(
-                    eq(growthRecord.userId, child.id),
-                    gte(growthRecord.date, lastWeekStart)
-                ))
+                .where(eq(growthRecord.userId, child.id))
                 .orderBy(desc(growthRecord.date))
                 .all()
 

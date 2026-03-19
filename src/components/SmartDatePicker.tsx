@@ -6,7 +6,7 @@ import {
     format, addMonths, subMonths, startOfMonth, endOfMonth,
     startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth,
     isSameDay, isToday, setYear, setMonth, getYear, getMonth,
-    setHours, setMinutes, getHours, getMinutes, isAfter, isBefore
+    setHours, setMinutes, getHours, getMinutes, isAfter, isBefore, startOfDay
 } from 'date-fns'
 import { zhCN, enUS } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Clock } from 'lucide-react'
@@ -117,8 +117,8 @@ export default function SmartDatePicker({
         : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
     const handleSelectDay = (date: Date) => {
-        if (minDate && isBefore(date, minDate)) return
-        if (maxDate && isAfter(date, maxDate)) return
+        if (minDate && isBefore(startOfDay(date), startOfDay(minDate))) return
+        if (maxDate && isAfter(startOfDay(date), startOfDay(maxDate))) return
         let newDate = date
         if (selected) {
             newDate = setHours(newDate, getHours(selected))
@@ -200,7 +200,7 @@ export default function SmartDatePicker({
                     const isCurrentMonth = isSameMonth(day, month)
                     const isSelected = selected ? isSameDay(day, selected) : false
                     const isTodayDate = isToday(day)
-                    const isDisabled = (minDate && isBefore(day, minDate)) || (maxDate && isAfter(day, maxDate))
+                    const isDisabled = (minDate && isBefore(startOfDay(day), startOfDay(minDate))) || (maxDate && isAfter(startOfDay(day), startOfDay(maxDate)))
 
                     return (
                         <div key={idx} className="flex items-center justify-center p-0.5 h-10">
