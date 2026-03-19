@@ -58,6 +58,7 @@ export default function SmartDatePicker({
     const [openUpward, setOpenUpward] = useState(true)
     const containerRef = useRef<HTMLDivElement>(null)
     const triggerRef = useRef<HTMLDivElement>(null)
+    const popoverRef = useRef<HTMLDivElement>(null)
     const [mounted] = useState(() => typeof window !== 'undefined')
 
     const dateLocale = locale === 'zh-CN' ? zhCN : enUS
@@ -66,7 +67,11 @@ export default function SmartDatePicker({
     useEffect(() => {
         if (mode !== 'popover') return
         const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+            const target = event.target as Node
+            const isInsideTrigger = triggerRef.current?.contains(target)
+            const isInsidePopover = popoverRef.current?.contains(target)
+            
+            if (!isInsideTrigger && !isInsidePopover) {
                 setIsOpen(false)
             }
         }
@@ -381,6 +386,7 @@ export default function SmartDatePicker({
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
+                            ref={popoverRef}
                             initial={{ opacity: 0, y: openUpward ? 8 : -8, scale: 0.97 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: openUpward ? 8 : -8, scale: 0.97 }}

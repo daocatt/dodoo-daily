@@ -1,5 +1,5 @@
 import { db } from './db'
-import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog, ledgerRecord, ledgerCategory, bankTransaction } from './schema'
+import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog, ledgerRecord, ledgerCategory } from './schema'
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
 
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
@@ -220,90 +220,78 @@ export async function convertCoinsToFiat(userId: string, coinsToExchange: number
 }
 
 // ==========================================
-// VIRTUAL BANK (SAVINGS) SYSTEM
+// TRANSFER SYSTEM (User to User)
 // ==========================================
 
-export async function transferToBank(userId: string, amount: number, description: string = '存入银行') {
+export async function transferFiat(senderId: string, receiverId: string, amount: number, description: string) {
     if (amount <= 0) return { success: false, error: '无效金额' }
+    if (senderId === receiverId) return { success: false, error: '无法给自己转账' }
 
     try {
-        const stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
-        if (!stats) return { success: false, error: '用户统计数据不存在' }
+        const senderStats = await db.select().from(accountStats).where(eq(accountStats.userId, senderId)).get()
+        const receiverStats = await db.select().from(accountStats).where(eq(accountStats.userId, receiverId)).get()
 
-        const currentFiat = stats.fiatBalance || 0
-        if (currentFiat < amount) return { success: false, error: '余额不足' }
+        if (!senderStats) return { success: false, error: '发送方数据不存在' }
+        if (!receiverStats) return { success: false, error: '接收方数据不存在' }
 
-        const newFiat = Number((currentFiat - amount).toFixed(2))
-        const newBank = Number(((stats.bankBalance || 0) + amount).toFixed(2))
+        const currentSenderBalance = senderStats.fiatBalance || 0
+        if (currentSenderBalance < amount) return { success: false, error: '余额不足' }
+
+        const newSenderBalance = Number((currentSenderBalance - amount).toFixed(2))
+        const newReceiverBalance = Number(((receiverStats.fiatBalance || 0) + amount).toFixed(2))
+
+        // Get or create "Transfer" category
+        let category = await db.select().from(ledgerCategory)
+            .where(and(eq(ledgerCategory.isSystem, true), eq(ledgerCategory.name, '转账')))
+            .get()
+        
+        if (!category) {
+            const [newCat] = await db.insert(ledgerCategory).values({
+                name: '转账',
+                emoji: '💸',
+                type: 'EXPENSE',
+                isSystem: true
+            }).returning()
+            category = newCat
+        }
 
         db.transaction((tx) => {
+            // 1. Update sender
             tx.update(accountStats)
-                .set({ fiatBalance: newFiat, bankBalance: newBank, updatedAt: new Date() })
-                .where(eq(accountStats.userId, userId))
+                .set({ fiatBalance: newSenderBalance, updatedAt: new Date() })
+                .where(eq(accountStats.userId, senderId))
+                .run()
+            
+            // 2. Update receiver
+            tx.update(accountStats)
+                .set({ fiatBalance: newReceiverBalance, updatedAt: new Date() })
+                .where(eq(accountStats.userId, receiverId))
                 .run()
 
+            // 3. Sender's record (EXPENSE)
             tx.insert(ledgerRecord).values({
-                userId,
-                categoryId: 'system_bank', 
+                userId: senderId,
+                categoryId: category!.id,
                 type: 'EXPENSE',
                 amount: amount,
                 date: new Date(),
-                description: `[银行] ${description}`
+                description: `转账给 ${receiverStats.userId}: ${description}`,
+                relatedUserId: receiverId
             }).run()
 
-            tx.insert(bankTransaction).values({
-                userId,
-                type: 'DEPOSIT',
-                amount: amount,
-                description,
-                status: 'COMPLETED'
-            }).run()
-        })
-
-        return { success: true, fiatBalance: newFiat, bankBalance: newBank }
-    } catch (e: unknown) {
-        return { success: false, error: (e as Error).message }
-    }
-}
-
-export async function withdrawFromBank(userId: string, amount: number, description: string = '从银行取出') {
-    if (amount <= 0) return { success: false, error: '无效金额' }
-
-    try {
-        const stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
-        if (!stats) return { success: false, error: '用户统计数据不存在' }
-
-        const currentBank = stats.bankBalance || 0
-        if (currentBank < amount) return { success: false, error: '银行余额不足' }
-
-        const newBank = Number((currentBank - amount).toFixed(2))
-        const newFiat = Number(((stats.fiatBalance || 0) + amount).toFixed(2))
-
-        db.transaction((tx) => {
-            tx.update(accountStats)
-                .set({ fiatBalance: newFiat, bankBalance: newBank, updatedAt: new Date() })
-                .where(eq(accountStats.userId, userId))
-                .run()
-
+            // 4. Receiver's record (INCOME)
             tx.insert(ledgerRecord).values({
-                userId,
-                categoryId: 'system_bank',
+                userId: receiverId,
+                categoryId: category!.id,
                 type: 'INCOME',
                 amount: amount,
                 date: new Date(),
-                description: `[银行] ${description}`
-            }).run()
-
-            tx.insert(bankTransaction).values({
-                userId,
-                type: 'WITHDRAWAL',
-                amount: amount,
-                description,
-                status: 'COMPLETED'
+                description: `来自 ${senderStats.userId} 的转账: ${description}`,
+                relatedUserId: senderId
             }).run()
         })
 
-        return { success: true, fiatBalance: newFiat, bankBalance: newBank }
+        return { success: true, senderBalance: newSenderBalance, receiverBalance: newReceiverBalance }
     } catch (e: unknown) {
         return { success: false, error: (e as Error).message }
     }

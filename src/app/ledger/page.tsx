@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wallet, Landmark, Plus, X, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings } from 'lucide-react'
+import { Wallet, Landmark, Plus, X, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check } from 'lucide-react'
 import { format, subMonths, addMonths, startOfMonth } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
-interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; }
+interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; relatedUser?: { id: string; name: string; avatarUrl: string; }; }
 interface Category { id: string; type: string; name: string; emoji: string; }
 interface ChartData { fullDate: string; day: string; income: number; expense: number; }
 interface CategoryStat { id: string; name: string; emoji: string; total: number | string; type: string; }
@@ -16,9 +16,10 @@ export default function LedgerPage() {
     const { t, locale } = useI18n()
     const [loading, setLoading] = useState(true)
     const [balance, setBalance] = useState(0)
-    const [bankBalance, setBankBalance] = useState(0)
     const [records, setRecords] = useState<LedgerRecord[]>([])
     const [categories, setCategories] = useState<Category[]>([])
+    const [members, setMembers] = useState<{id:string, name:string, nickname:string, avatarUrl:string, role:string}[]>([])
+    const [currentUserId, setCurrentUserId] = useState('')
     
     // Stats State
     const [activeTab, setActiveTab] = useState<'RECORDS' | 'STATS'>('RECORDS')
@@ -35,37 +36,43 @@ export default function LedgerPage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState('')
     const [submitting, setSubmitting] = useState(false)
     
-    // Bank State
-    const [showBankModal, setShowBankModal] = useState(false)
-    const [bankTxType, setBankTxType] = useState<'DEPOSIT' | 'WITHDRAWAL'>('DEPOSIT')
-    const [bankAmount, setBankAmount] = useState('')
+    // Transfer State
+    const [showTransferModal, setShowTransferModal] = useState(false)
+    const [targetUserId, setTargetUserId] = useState('')
+    const [transferAmount, setTransferAmount] = useState('')
+    const [transferDesc, setTransferDesc] = useState('')
 
 
 
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [ledgerRes, catRes, statsRes] = await Promise.all([
+            const [ledgerRes, catRes, statsRes, membersRes] = await Promise.all([
                 fetch('/api/ledger'),
                 fetch('/api/ledger/categories'),
-                fetch('/api/stats')
+                fetch('/api/stats'),
+                fetch('/api/family/members')
             ])
             const ledgerData = await ledgerRes.json()
             const catData = await catRes.json()
             const statsData = await statsRes.json()
+            const membersData = await membersRes.json()
             
             setIsParent(statsData.isParent || false)
+            setCurrentUserId(statsData.userId)
 
             if (ledgerData.records) {
                 setRecords(ledgerData.records)
                 setBalance(ledgerData.balance)
-                setBankBalance(ledgerData.bankBalance)
             }
             if (Array.isArray(catData)) {
                 setCategories(catData)
                 // Set default selected category
                 const expCats = catData.filter((c: Category) => c.type === 'EXPENSE')
                 if (expCats.length > 0) setSelectedCategoryId(expCats[0].id)
+            }
+            if (Array.isArray(membersData)) {
+                setMembers(membersData)
             }
         } catch (e) {
             console.error('Failed to fetch ledger data', e)
@@ -129,28 +136,29 @@ export default function LedgerPage() {
         setSubmitting(false)
     }
 
-    const handleBankTransfer = async (e: React.FormEvent) => {
+    const handleTransferSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!bankAmount) return
+        if (!targetUserId || !transferAmount) return
         
         setSubmitting(true)
         try {
-            const res = await fetch('/api/ledger/bank/transfer', {
+            const res = await fetch('/api/ledger/transfer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amount: parseFloat(bankAmount),
-                    type: bankTxType,
-                    description: bankTxType === 'DEPOSIT' ? '存入储蓄' : '提取现金'
+                    targetUserId,
+                    amount: parseFloat(transferAmount),
+                    description: transferDesc || '转账'
                 })
             })
             const data = await res.json()
             if (data.success) {
-                setShowBankModal(false)
-                setBankAmount('')
-                fetchData() // Refresh balances
+                setShowTransferModal(false)
+                setTransferAmount('')
+                setTransferDesc('')
+                fetchData() // Refresh
             } else {
-                alert(data.error || '操作失败')
+                alert(data.error || '转账失败')
             }
         } catch (error) {
             console.error(error)
@@ -229,35 +237,33 @@ export default function LedgerPage() {
                                 exit={{ opacity: 0, x: -10 }}
                                 className="flex flex-col gap-6"
                             >
-                    
-                    {/* Balance Cards */}
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Fiat Wallet */}
-                        <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-3xl p-5 shadow-xl shadow-indigo-200/50 text-white relative overflow-hidden group">
-                            <Wallet className="w-24 h-24 absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-500" />
-                            <div className="flex items-center gap-2 mb-4 opacity-90">
-                                <Wallet className="w-5 h-5" />
-                                <span className="font-medium text-sm">{t('ledger.balance.available')}</span>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-xl">¥</span>
-                                <span className="text-4xl font-black font-number tracking-tight">{balance.toFixed(2)}</span>
+                             {/* Balance Display */}
+                    <div className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col items-center gap-4 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full translate-x-32 -translate-y-32 transition-transform duration-700 group-hover:scale-110" />
+                        <div className="relative z-10 flex flex-col items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('ledger.balance.available')}</span>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-black text-slate-300">¥</span>
+                                <span className="text-6xl font-black text-slate-900 font-number tracking-tighter">{balance.toFixed(2)}</span>
                             </div>
                         </div>
-
-                        {/* Virtual Bank */}
-                        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl p-5 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group cursor-pointer" onClick={() => setShowBankModal(true)}>
-                            <Landmark className="w-24 h-24 absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-500" />
-                            <div className="flex items-center gap-2 mb-4 opacity-90">
-                                <Landmark className="w-5 h-5" />
-                                <span className="font-medium text-sm">{t('ledger.balance.bank')}</span>
-                            </div>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-xl">¥</span>
-                                <span className="text-4xl font-black font-number tracking-tight">{bankBalance.toFixed(2)}</span>
-                            </div>
+                        
+                        <div className="relative z-10 flex gap-4 mt-2">
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <Plus className="w-5 h-5" /> {t('ledger.add.title')}
+                            </button>
+                            <button
+                                onClick={() => setShowTransferModal(true)}
+                                className="px-8 py-3 bg-white text-slate-700 border-2 border-slate-100 rounded-2xl font-black hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <ReceiptText className="w-5 h-5 text-emerald-500" /> {t('ledger.transfer')}
+                            </button>
                         </div>
                     </div>
+       
 
                     {/* Timeline / Records */}
                     <div className="flex flex-col gap-3">
@@ -280,10 +286,19 @@ export default function LedgerPage() {
                                                     <span className="text-xs text-slate-400 font-medium">{new Date(record.date).toLocaleDateString()}</span>
                                                 </div>
                                             </div>
-                                            <div className={`flex items-baseline gap-1 font-black font-number text-lg ${isExpense ? 'text-slate-700' : 'text-emerald-500'}`}>
+                                            <div className="flex items-baseline gap-1 font-black font-number text-lg ${isExpense ? 'text-slate-700' : 'text-emerald-500'}">
                                                 <span>{isExpense ? '-' : '+'}</span>
                                                 <span>{record.amount.toFixed(2)}</span>
                                             </div>
+                                            {record.relatedUser && (
+                                                <div className="flex -space-x-2 absolute -right-2 top-0">
+                                                    <img 
+                                                        src={record.relatedUser.avatarUrl || "/dog.svg"} 
+                                                        className="w-5 h-5 rounded-full border border-white shadow-sm"
+                                                        title={record.relatedUser.name}
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })}
@@ -589,118 +604,100 @@ export default function LedgerPage() {
                 )}
             </AnimatePresence>
 
-            {/* Bank Modal */}
+            {/* Transfer Modal */}
             <AnimatePresence>
-                {showBankModal && (
+                {showTransferModal && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex flex-col justify-end"
-                        onClick={() => setShowBankModal(false)}
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex flex-col justify-end"
+                        onClick={() => setShowTransferModal(false)}
                     >
                         <motion.div
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="bg-white rounded-t-[40px] h-[85vh] w-full p-8 flex flex-col gap-8 shadow-2xl"
+                            className="bg-white rounded-t-3xl min-h-[85vh] w-full p-8 flex flex-col gap-8 shadow-2xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between">
-                                <div className="flex flex-col gap-1">
-                                    <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                                        <Landmark className="w-8 h-8 text-emerald-500" />
-                                        {t('ledger.balance.bank')}
-                                    </h2>
-                                    <p className="text-slate-400 font-bold text-sm tracking-wide">FAMILY VIRTUAL BANKING</p>
-                                </div>
-                                <button onClick={() => setShowBankModal(false)} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition-all">
+                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('ledger.transfer.title')}</h2>
+                                <button onClick={() => setShowTransferModal(false)} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
 
-                            {/* Bank Balance Display */}
-                            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-8 rounded-[32px] text-white shadow-xl shadow-emerald-200/50 flex flex-col items-center gap-2 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
-                                <span className="font-bold text-sm uppercase tracking-widest opacity-80">{t('ledger.activeBalance')}</span>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-2xl font-black opacity-60">¥</span>
-                                    <span className="text-5xl font-black font-number">{bankBalance.toFixed(2)}</span>
-                                </div>
-                                <div className="mt-4 px-4 py-1.5 bg-white/20 rounded-full text-[10px] font-black tracking-widest">EST. APR: 4.8%</div>
-                            </div>
-
-                            <form onSubmit={handleBankTransfer} className="flex-1 flex flex-col gap-8">
-                                {/* Action Type Toggle */}
-                                <div className="flex p-1.5 bg-slate-100/80 rounded-[24px]">
-                                    <button
-                                        type="button"
-                                        onClick={() => setBankTxType('DEPOSIT')}
-                                        className={`flex-1 py-4 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all ${bankTxType === 'DEPOSIT' ? 'bg-white shadow-md text-emerald-600' : 'text-slate-400 hover:text-slate-500'}`}
-                                    >
-                                        <TrendingDown className="w-4 h-4" />
-                                        {t('ledger.deposit')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setBankTxType('WITHDRAWAL')}
-                                        className={`flex-1 py-4 rounded-2xl text-sm font-black flex items-center justify-center gap-2 transition-all ${bankTxType === 'WITHDRAWAL' ? 'bg-white shadow-md text-indigo-600' : 'text-slate-400 hover:text-slate-500'}`}
-                                    >
-                                        <TrendingUp className="w-4 h-4" />
-                                        {t('ledger.withdraw')}
-                                    </button>
+                            <form onSubmit={handleTransferSubmit} className="flex-1 flex flex-col gap-8">
+                                {/* Target User Toggle */}
+                                <div className="flex flex-col gap-4">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">{t('ledger.transfer.target')}</label>
+                                    <div className="flex flex-wrap gap-3">
+                                        {members.filter(m => m.id !== currentUserId).map(member => (
+                                            <button
+                                                key={member.id}
+                                                type="button"
+                                                onClick={() => setTargetUserId(member.id)}
+                                                className={`flex items-center gap-3 p-1.5 pr-5 rounded-full border-2 transition-all ${targetUserId === member.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-200 scale-105' : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-white hover:border-slate-200'}`}
+                                            >
+                                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-200">
+                                                    {member.avatarUrl ? (
+                                                        <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-500 font-bold text-xs uppercase">
+                                                            {(member.nickname || member.name)[0]}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="text-sm font-black">{member.nickname || member.name}</span>
+                                                {targetUserId === member.id && <Check className="w-4 h-4" />}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
-                                {/* Amount Input */}
+                                {/* Transfer Amount */}
                                 <div className="flex flex-col gap-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pl-1">{t('ledger.add.amount')}</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">{t('ledger.transfer.amount')}</label>
                                     <div className="relative flex items-center">
-                                        <span className="absolute left-0 text-3xl font-black text-slate-300">¥</span>
+                                        <span className="absolute left-0 text-3xl font-black text-slate-200">¥</span>
                                         <input
                                             type="number"
                                             step="0.01"
-                                            value={bankAmount}
-                                            onChange={(e) => setBankAmount(e.target.value)}
+                                            value={transferAmount}
+                                            onChange={(e) => setTransferAmount(e.target.value)}
                                             placeholder="0.00"
-                                            className="w-full text-6xl font-black font-number bg-transparent border-b-4 border-slate-100 focus:border-emerald-500 pl-8 pb-4 outline-none transition-all placeholder:text-slate-100"
+                                            className="w-full text-6xl font-black font-number bg-transparent border-b-4 border-slate-100 focus:border-indigo-500 pl-8 pb-4 outline-none transition-all placeholder:text-slate-50"
                                             required
                                         />
                                     </div>
-                                    <div className="flex justify-between px-1">
-                                        <span className="text-xs font-bold text-slate-400">
-                                            {bankTxType === 'DEPOSIT' ? `${t('ledger.balance.available')}: ¥${balance.toFixed(2)}` : `${t('ledger.balance.bank')}: ¥${bankBalance.toFixed(2)}`}
-                                        </span>
-                                        <button 
-                                            type="button"
-                                            onClick={() => setBankAmount((bankTxType === 'DEPOSIT' ? balance : bankBalance).toString())}
-                                            className="text-xs font-black text-emerald-500 uppercase tracking-widest hover:text-emerald-600"
-                                        >
-                                            {t('common.all')}
-                                        </button>
-                                    </div>
+                                    <span className="px-1 text-xs font-bold text-slate-400">
+                                        {t('ledger.balance.available')}: ¥{balance.toFixed(2)}
+                                    </span>
                                 </div>
 
-                                {/* Dynamic Advice/Stat */}
-                                <div className="bg-amber-50 rounded-3xl p-5 border border-amber-100 flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-2xl bg-amber-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-amber-200">
-                                        <TrendingUp className="w-5 h-5" />
-                                    </div>
-                                    <div className="flex flex-col gap-1">
-                                        <span className="font-black text-amber-800 text-sm">{t('ledger.bankAdvice.title') || '理财小贴士'}</span>
-                                        <span className="text-amber-700/70 text-xs font-bold leading-relaxed">{t('ledger.bankAdvice.desc') || '储蓄可以复利增长，存款金额越高，未来的奖励就越多哦！'}</span>
-                                    </div>
+                                {/* Transfer Description */}
+                                <div className="flex flex-col gap-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">{t('ledger.transfer.desc')}</label>
+                                    <input
+                                        type="text"
+                                        value={transferDesc}
+                                        onChange={(e) => setTransferDesc(e.target.value)}
+                                        placeholder={t('ledger.transfer.desc')}
+                                        className="w-full bg-slate-50 text-slate-700 font-bold p-5 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-200"
+                                    />
                                 </div>
 
-                                {/* Submit */}
-                                <div className="mt-auto pb-[env(safe-area-inset-bottom,1.5rem)]">
+                                {/* Submit Transfer */}
+                                <div className="mt-auto pb-[env(safe-area-inset-bottom,2rem)]">
                                     <button
                                         type="submit"
-                                        disabled={submitting || !bankAmount}
-                                        className="w-full bg-emerald-500 text-white font-black text-xl py-6 rounded-[28px] shadow-2xl shadow-emerald-200 disabled:opacity-50 disabled:grayscale disabled:shadow-none flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
+                                        disabled={submitting || !targetUserId || !transferAmount}
+                                        className="w-full bg-slate-900 text-white font-black text-xl py-6 rounded-[32px] shadow-2xl shadow-indigo-200 disabled:opacity-30 flex items-center justify-center gap-3 active:scale-[0.98] transition-all hover:bg-indigo-600"
                                     >
                                         {submitting && <Loader2 className="w-6 h-6 animate-spin" />}
-                                        {t('common.confirm')}
+                                        {t('ledger.transfer')}
                                     </button>
                                 </div>
                             </form>

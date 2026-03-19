@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays, Users, Edit2, User, Coins, Check, CheckCheck, RotateCcw, Trash2 } from 'lucide-react'
+import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays, Users, Edit2, User, Coins, Check, CheckCheck, RotateCcw, Trash2, X } from 'lucide-react'
 import { getStartOfDayInTimezone, getTodayStringInTimezone } from '@/lib/utils'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -69,6 +69,7 @@ function TasksPageContent() {
     const [isMonthlyRepeating, setIsMonthlyRepeating] = useState(false)
     const [plannedDate, setPlannedDate] = useState<Date | null>(() => new Date())
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [modalMode, setModalMode] = useState<'PERSONAL' | 'ASSIGN'>('PERSONAL')
 
     useEffect(() => {
         fetchTasks()
@@ -114,7 +115,13 @@ function TasksPageContent() {
             const personal = (Array.isArray(pData) ? pData : []).map((t: Task) => ({ ...t, isAssigned: false }));
             const assigned = (Array.isArray(aData) ? aData : []).map((t: Task) => ({ ...t, isAssigned: true }));
 
-            setTasks([...personal, ...assigned])
+            const merged = [...personal, ...assigned].sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0).getTime();
+                const dateB = new Date(b.createdAt || 0).getTime();
+                return dateB - dateA; // Latest first
+            });
+
+            setTasks(merged)
         } catch (err) {
             console.error(err)
             setTasks([])
@@ -249,9 +256,9 @@ function TasksPageContent() {
                             setRewardStars(1)
                             setRewardCoins(0)
                             setIsRepeating(false)
-                            setIsMonthlyRepeating(false)
                             setPlannedDate(new Date())
                             setAssignTo([])
+                            setModalMode('PERSONAL')
                             setShowNewTaskModal(true)
                         }}
                         className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95 border-2 border-blue-400"
@@ -269,7 +276,13 @@ function TasksPageContent() {
                                 setIsRepeating(false)
                                 setIsMonthlyRepeating(false)
                                 setPlannedDate(new Date())
-                                setAssignTo(assignToParam ? [assignToParam] : [children[0].id])
+                                // Default to currently filtered child, or first child
+                                if (assignedChildId !== 'ALL') {
+                                    setAssignTo([assignedChildId])
+                                } else {
+                                    setAssignTo(assignToParam ? [assignToParam] : [children[0]?.id].filter(Boolean))
+                                }
+                                setModalMode('ASSIGN')
                                 setShowNewTaskModal(true)
                             }}
                             className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-sm md:text-base font-bold text-white shadow-md shadow-emerald-500/20 active:scale-95 border-2 border-emerald-400"
@@ -471,6 +484,18 @@ function TasksPageContent() {
                                                             })}
                                                         </span>
                                                     )}
+                                                    {isAssignIGave && task.assigneeNickname && (
+                                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                            {task.assigneeAvatar ? (
+                                                                <img src={task.assigneeAvatar} className="w-4 h-4 rounded-full object-cover" />
+                                                            ) : (
+                                                                <Users className="w-3 h-3" />
+                                                            )}
+                                                            <span className="text-[10px] font-black uppercase tracking-wider">
+                                                                {task.assigneeNickname}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     {task.completed && (
                                                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1.5 ${hasApproval ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                                             {t('tasks.status.completedBy', { name: task.completedByNickname || 'User' })}
@@ -562,11 +587,28 @@ function TasksPageContent() {
                             exit={{ scale: 0.95, y: 10 }}
                             className="w-full max-w-sm md:max-w-2xl bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
                         >
-                            <div className={`p-4 md:p-5 border-b flex justify-between items-center ${assignTo.length === 0 ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
+                            <div className={`p-4 md:p-5 border-b flex justify-between items-center ${modalMode === 'PERSONAL' ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-100' : 'bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-100'}`}>
                                 <h3 className="text-lg md:text-xl font-black flex items-center gap-2 text-slate-800">
-                                    {editingTask ? <Edit2 className="w-5 h-5 text-blue-500" /> : (assignTo.length === 0 ? <Plus className="w-5 h-5 text-blue-500" /> : <Users className="w-5 h-5 text-emerald-500" />)}
-                                    {editingTask ? t('tasks.editTask') : (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId) ? t('tasks.newTask') : t('parent.assignTask'))}
+                                    {editingTask ? (
+                                        <>
+                                            <Edit2 className="w-5 h-5 text-blue-500" />
+                                            {t('tasks.editTask')}
+                                        </>
+                                    ) : modalMode === 'PERSONAL' ? (
+                                        <>
+                                            <Plus className="w-5 h-5 text-blue-500" />
+                                            {t('tasks.newTask')}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Users className="w-5 h-5 text-emerald-500" />
+                                            {t('parent.assignTask')}
+                                        </>
+                                    )}
                                 </h3>
+                                <button type="button" onClick={() => setShowNewTaskModal(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
                             </div>
                             <div className="overflow-y-auto hide-scrollbar">
                                 <form onSubmit={handleCreateTask} className="p-4 md:p-6 bg-white">
@@ -584,7 +626,7 @@ function TasksPageContent() {
                                         </div>
 
                                         {/* Assign To - Multi-select Pill Style */}
-                                        {isParent && children.length > 0 && !editingTask && (
+                                        {isParent && children.length > 0 && !editingTask && modalMode === 'ASSIGN' && (
                                             <div className="md:col-span-2 space-y-3">
                                                 <div className="flex justify-between items-center">
                                                     <label className="block text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.assignTo')}</label>

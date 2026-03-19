@@ -43,9 +43,8 @@ export async function GET(request: Request) {
         // Let's also fetch current balance
         const stats = await db.select().from(accountStats).where(eq(accountStats.userId, targetUserId)).get()
         const balance = stats?.fiatBalance || 0;
-        const bankBalance = stats?.bankBalance || 0;
 
-        return NextResponse.json({ records, balance, bankBalance });
+        return NextResponse.json({ records, balance });
     } catch (e: unknown) {
         return NextResponse.json({ error: (e as Error).message }, { status: 500 });
     }
