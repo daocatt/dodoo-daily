@@ -13,7 +13,14 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-        const response = await fetch(imageUrl, {
+        // Handle relative URLs by making them absolute using the request's origin
+        let finalUrl = imageUrl
+        if (imageUrl.startsWith('/')) {
+            const origin = req.nextUrl.origin
+            finalUrl = `${origin}${imageUrl}`
+        }
+
+        const response = await fetch(finalUrl, {
             headers: {
                 // Mimic a browser request to avoid 403 from some CDNs
                 'User-Agent': 'Mozilla/5.0 (compatible; DoDoo-Daily-Bot/1.0)',

@@ -10,6 +10,7 @@ type UserProp = {
     id: string
     name: string
     nickname: string | null
+    slug: string | null
     avatarUrl: string | null
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
 }
@@ -19,6 +20,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
     const [name, setName] = useState(user?.name || '')
     const [nickname, setNickname] = useState(user?.nickname || '')
     const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '')
+    const [slug, setSlug] = useState(user?.slug || '')
     const [uploading, setUploading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState('')
@@ -60,7 +62,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
             const res = await fetch('/api/parent/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, nickname, avatarUrl })
+                body: JSON.stringify({ name, nickname, avatarUrl, slug })
             })
             if (res.ok) {
                 setMessage(t('parent.profileUpdateSuccess') || 'Profile updated!')
@@ -150,6 +152,26 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                             />
                             <p className="text-[10px] text-indigo-400 font-bold px-1">
                                 💡 {t('settings.nicknameHint') || 'Used for login and display'}
+                            </p>
+                        </div>
+
+                        {/* Slug / Public Link ID */}
+                        <div className="space-y-1.5 pt-4 border-t border-slate-50">
+                            <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1.5">
+                                🔗 {t('settings.linkId') || 'Public Link ID'}
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-400 font-bold whitespace-nowrap">/u/</span>
+                                <input
+                                    type="text"
+                                    value={slug}
+                                    onChange={e => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')); setError(''); setMessage('') }}
+                                    placeholder="your-link-id"
+                                    className="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl outline-none font-mono font-bold text-slate-800 text-sm hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
+                                />
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-bold px-1">
+                                💡 {t('settings.linkIdHint') || 'Your public exhibition page URL.'}
                             </p>
                         </div>
 

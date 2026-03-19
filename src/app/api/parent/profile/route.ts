@@ -10,8 +10,8 @@ export async function PATCH(req: Request) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, nickname, avatarUrl } = await req.json()
-        if (!name && !avatarUrl && !nickname) return NextResponse.json({ error: 'Name, Nickname or AvatarUrl is required' }, { status: 400 })
+        const { name, nickname, avatarUrl, slug } = await req.json()
+        if (!name && !avatarUrl && !nickname && !slug) return NextResponse.json({ error: 'Missing updates' }, { status: 400 })
 
         // Find current user from session
         const currentUser = await db.query.users.findFirst({
@@ -48,10 +48,27 @@ export async function PATCH(req: Request) {
             }
         }
 
+        if (slug) {
+            const formattedSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+            if (!formattedSlug) return NextResponse.json({ error: 'Invalid Link ID' }, { status: 400 })
+
+            const existing = await db.select().from(users).where(
+                and(
+                    not(eq(users.id, session)),
+                    eq(users.slug, formattedSlug)
+                )
+            ).all();
+
+            if (existing.length > 0) {
+                return NextResponse.json({ error: 'Link ID already taken' }, { status: 400 });
+            }
+        }
+
         const updates: Partial<typeof users.$inferInsert> = {}
-        if (name) updates.name = name
-        if (nickname) updates.nickname = nickname
+        if (name) updates.name = name.trim()
+        if (nickname) updates.nickname = nickname.trim()
         if (avatarUrl) updates.avatarUrl = avatarUrl
+        if (slug) updates.slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
 
         await db.update(users)
             .set(updates)

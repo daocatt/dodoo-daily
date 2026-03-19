@@ -299,6 +299,7 @@ const dictionaries: Dictionary = {
         // Settings
         'settings.enterNewPin': 'Enter New PIN',
         'settings.errorNetwork': 'Network Error',
+        'settings.realName': 'Real Name',
         'settings.nickname': 'Nickname',
         'settings.nicknameHint': 'Used for login when "Show All Avatars" is disabled (case insensitive)',
         'settings.nicknamePlaceholder': 'Your short nickname',
@@ -915,6 +916,7 @@ const dictionaries: Dictionary = {
         // Settings
         'settings.enterNewPin': '输入新密码',
         'settings.errorNetwork': '网络错误',
+        'settings.realName': '真实姓名',
         'settings.nickname': '昵称',
         'settings.nicknameHint': '当“显示所有头像”被禁用时用于登录（不区分大小写）',
         'settings.nicknamePlaceholder': '你的简短昵称',
