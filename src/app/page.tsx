@@ -500,37 +500,36 @@ export default function Home() {
       if (routes[w.type]) router.push(routes[w.type])
     }
 
-    // ICON Mode: Large Icon on Solid Brand Background
+    // ICON Mode: Compact icon-only tile that never overflows 1×1 cell
     if (w.size === 'ICON') {
       const config = {
-        TASKS: { Icon: CheckCircle2, color: 'bg-blue-500', shadow: 'shadow-blue-500/20', label: t('menu.tasks') },
-        NOTES: { Icon: StickyNote, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: t('pinned') || 'Pinned' },
-        JOURNAL: { Icon: Heart, color: 'bg-[#f54900]', shadow: 'shadow-[#f54900]/20', label: t('menu.journal') },
-        PHOTOS: { Icon: Images, color: 'bg-purple-500', shadow: 'shadow-purple-500/20', label: t('menu.gallery') },
-        SHOP: { Icon: ShoppingBag, color: 'bg-amber-400', shadow: 'shadow-amber-500/20', label: t('menu.shop') },
-        MILESTONE: { Icon: Trophy, color: 'bg-orange-500', shadow: 'shadow-orange-500/20', label: t('parent.milestone') },
-      }[w.type] || { Icon: ListTodo, color: 'bg-slate-500', shadow: 'shadow-slate-500/10', label: w.type }
+        TASKS:     { Icon: CheckCircle2,  bg: 'bg-blue-500',   glow: 'shadow-blue-500/30' },
+        NOTES:     { Icon: StickyNote,    bg: 'bg-orange-500', glow: 'shadow-orange-500/30' },
+        JOURNAL:   { Icon: Heart,         bg: 'bg-[#f54900]',  glow: 'shadow-[#f54900]/30' },
+        PHOTOS:    { Icon: Images,        bg: 'bg-purple-500', glow: 'shadow-purple-500/30' },
+        SHOP:      { Icon: ShoppingBag,   bg: 'bg-amber-400',  glow: 'shadow-amber-500/30' },
+        MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30' },
+      }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20' }
 
-      const { Icon, color, shadow, label } = config
-      const iconSize = Math.max(20, Math.floor(cellSize * 0.45))
+      const { Icon, bg, glow } = config
+      // Circle takes 65% of cell; icon takes 38% of cell
+      const circleSize = Math.floor(cellSize * 0.65)
+      const iconSize   = Math.floor(cellSize * 0.38)
 
       return (
         <div
           onClick={handleWidgetClick}
           className={clsx(
-            "w-full h-full flex flex-col items-center justify-center p-2 rounded-3xl border-2 border-white/30 transition-all cursor-pointer active:scale-95 hover:scale-[1.02]",
-            color, shadow, "shadow-xl text-white overflow-hidden"
+            'w-full h-full flex items-center justify-center rounded-3xl border-2 border-white/20 cursor-pointer active:scale-95 hover:scale-[1.03] transition-all shadow-xl',
+            bg, glow
           )}
         >
           <div
-            className="rounded-full bg-white/20 flex items-center justify-center mb-1.5 shadow-inner backdrop-blur-md transition-transform group-hover:scale-110"
-            style={{ width: iconSize * 1.8, height: iconSize * 1.8 }}
+            className="rounded-full bg-white/20 flex items-center justify-center shadow-inner backdrop-blur-sm"
+            style={{ width: circleSize, height: circleSize }}
           >
-            <Icon style={{ width: iconSize, height: iconSize }} />
+            <Icon className="text-white drop-shadow" style={{ width: iconSize, height: iconSize }} />
           </div>
-          <span className="font-black uppercase tracking-[0.2em] text-white/90" style={{ fontSize: Math.max(7, cellSize * 0.08) }}>
-            {label}
-          </span>
         </div>
       )
     }
@@ -649,7 +648,7 @@ export default function Home() {
             className={clsx(
               "fixed left-0 right-0 z-[1000] flex items-center justify-between bg-[#1a1c1e] text-white shadow-2xl transition-all font-sans",
               gridCols < 8
-                ? "bottom-0 h-[72px] px-4 pb-safe border-t border-white/10"
+                ? "bottom-0 h-[72px] px-4 border-t border-white/10 pb-[env(safe-area-inset-bottom)]"
                 : "top-0 h-[60px] px-6"
             )}
           >
@@ -1035,9 +1034,8 @@ export default function Home() {
 
 
 
-      <style jsx global>{`
+      <style>{`
         html, body { overflow: hidden; height: 100%; }
-        /* Prevent elastic scroll on mobile so drag works better */
         body { overscroll-behavior-y: none; }
       `}</style>
     </div >

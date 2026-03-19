@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion } from 'motion/react'
 import { CheckCircle2, Circle, Star, Coins, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
@@ -25,7 +25,6 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const { t } = useI18n()
 
     const isIcon = size === 'ICON'
-    const themeColor = isIcon ? 'emerald' : 'blue'
 
     const formatTaskDate = (dateStr: string | number | null) => {
         if (!dateStr) return ''
@@ -78,12 +77,12 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
         <motion.div
             whileHover={{ scale: 1.01 }}
             onClick={() => router.push('/tasks')}
-            className={`w-full h-full bg-${themeColor}-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-${themeColor}-100/50 shadow-xl shadow-${themeColor}-200/20 flex flex-col group overflow-hidden relative cursor-pointer`}
+            className="w-full h-full bg-blue-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-blue-100/50 shadow-xl shadow-blue-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
         >
             <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <div className="flex items-center gap-2">
                     <div
-                        className={`rounded-xl bg-${themeColor}-100 flex items-center justify-center text-${themeColor}-600 shadow-sm transition-transform group-hover:rotate-12 outline-none`}
+                        className="rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
                         style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
                     >
                         <CheckCircle2 style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
@@ -99,7 +98,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 </div>
                 {size !== 'ICON' && tasks.length > 0 && (
                     <div
-                        className={`px-2 py-0.5 bg-${themeColor}-100/80 rounded-full font-black text-${themeColor}-700 uppercase tracking-widest leading-none`}
+                        className="px-2 py-0.5 bg-blue-100/80 rounded-full font-black text-blue-700 uppercase tracking-widest leading-none"
                         style={{ fontSize: Math.max(7, cellSize * 0.07) }}
                     >
                         {completedCount}/{totalCount}
@@ -108,15 +107,12 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
             </div>
 
             <div className="flex-1 space-y-1.5 overflow-hidden">
-                <AnimatePresence mode="popLayout">
+                <div>
                     {tasks.length > 0 ? (
                         tasks.map((task, idx) => (
-                            <motion.div
+                            <div
                                 key={task.id}
-                                initial={{ x: 20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className={`flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-${themeColor}-200 transition-colors shadow-sm min-w-0`}
+                                className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-blue-200 transition-colors shadow-sm min-w-0"
                             >
                                 <div className="flex items-center gap-2 overflow-hidden min-w-0">
                                     {task.completed ? (
@@ -128,7 +124,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                                         </div>
                                     ) : (
                                         <Circle
-                                            className={`text-${themeColor}-300 shrink-0`}
+                                            className="text-blue-300 shrink-0"
                                             style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
                                         />
                                     )}
@@ -167,16 +163,16 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </div>
                         ))
                     ) : (
                         size !== 'ICON' && (
-                            <div className={`h-full flex flex-col items-center justify-center text-${themeColor}-300 opacity-40 italic text-[9px]`}>
+                            <div className="h-full flex flex-col items-center justify-center text-blue-300 opacity-40 italic text-[9px]">
                                 <span>{t('widget.tasks.clear')}</span>
                             </div>
                         )
                     )}
-                </AnimatePresence>
+                </div>
             </div>
         </motion.div>
     )

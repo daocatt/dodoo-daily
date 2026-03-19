@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { StickyNote, ChevronRight, Pin } from 'lucide-react'
+import { motion } from 'motion/react'
+import { StickyNote, Pin } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -71,14 +71,11 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
             </div>
 
             <div className="flex-1 space-y-1.5 overflow-hidden relative">
-                <AnimatePresence mode="popLayout">
+                <div>
                     {notes.length > 0 ? (
                         notes.map((note, idx) => (
-                            <motion.div
+                            <div
                                 key={note.id}
-                                initial={{ x: 20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: idx * 0.05 }}
                                 className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-amber-200 transition-colors shadow-sm"
                             >
                                 <div className="flex items-center gap-2 flex-1 overflow-hidden">
@@ -96,14 +93,14 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                                         style={{ width: cellSize * 0.1, height: cellSize * 0.1 }}
                                     />
                                 )}
-                            </motion.div>
+                            </div>
                         ))
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-amber-300 opacity-40 italic text-[9px]">
                             <span>{t('widget.notes.waiting')}</span>
                         </div>
                     )}
-                </AnimatePresence>
+                </div>
             </div>
 
             {/* Bottom Sweep Highlight */}
