@@ -5,17 +5,13 @@ import { or, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-    const user = await getSessionUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await getSessionUser();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        // Fetch categories that are either system default or created by the user
+        // Fetch all categories (system defaults + any custom ones in this instance)
         let categories = await db.select()
-            .from(ledgerCategory)
-            .where(or(
-                eq(ledgerCategory.isSystem, true),
-                eq(ledgerCategory.creatorId, user.id)
-            ));
+            .from(ledgerCategory);
 
         // Auto-seed default categories if empty
         if (categories.length === 0) {
@@ -32,12 +28,7 @@ export async function GET() {
 
             await db.insert(ledgerCategory).values(defaults);
             
-            categories = await db.select()
-                .from(ledgerCategory)
-                .where(or(
-                    eq(ledgerCategory.isSystem, true),
-                    eq(ledgerCategory.creatorId, user.id)
-                ));
+            categories = await db.select().from(ledgerCategory);
         }
 
         return NextResponse.json(categories);
@@ -47,8 +38,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const user = await getSessionUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await getSessionUser();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    // Check if user is PARENT (admin)
+    if (session.role !== 'PARENT') {
+        return NextResponse.json({ error: "Only admins can manage categories" }, { status: 403 });
+    }
 
     try {
         const body = await request.json();
@@ -62,7 +58,7 @@ export async function POST(request: Request) {
             name,
             emoji,
             type,
-            creatorId: user.id,
+            creatorId: session.userId,
             isSystem: false
         }).returning();
 

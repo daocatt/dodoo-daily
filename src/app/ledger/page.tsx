@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wallet, Landmark, Plus, X, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, CreditCard } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Wallet, Landmark, Plus, X, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings } from 'lucide-react'
 import { format, subMonths, addMonths, startOfMonth } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
-
 interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; }
 interface Category { id: string; type: string; name: string; emoji: string; }
 interface ChartData { fullDate: string; day: string; income: number; expense: number; }
@@ -15,7 +13,6 @@ interface CategoryStat { id: string; name: string; emoji: string; total: number 
 interface StatsData { totals?: { income: number; expense: number; }; chartData?: ChartData[]; categories?: CategoryStat[]; }
 
 export default function LedgerPage() {
-    const router = useRouter()
     const { t, locale } = useI18n()
     const [loading, setLoading] = useState(true)
     const [balance, setBalance] = useState(0)
@@ -28,6 +25,7 @@ export default function LedgerPage() {
     const [statsLoading, setStatsLoading] = useState(false)
     const [statsData, setStatsData] = useState<StatsData | null>(null)
     const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()))
+    const [isParent, setIsParent] = useState(false)
 
     // Modal State
     const [showAddModal, setShowAddModal] = useState(false)
@@ -43,15 +41,20 @@ export default function LedgerPage() {
     const [bankAmount, setBankAmount] = useState('')
 
 
+
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [ledgerRes, catRes] = await Promise.all([
+            const [ledgerRes, catRes, statsRes] = await Promise.all([
                 fetch('/api/ledger'),
-                fetch('/api/ledger/categories')
+                fetch('/api/ledger/categories'),
+                fetch('/api/stats')
             ])
             const ledgerData = await ledgerRes.json()
             const catData = await catRes.json()
+            const statsData = await statsRes.json()
+            
+            setIsParent(statsData.isParent || false)
 
             if (ledgerData.records) {
                 setRecords(ledgerData.records)
@@ -155,6 +158,7 @@ export default function LedgerPage() {
         setSubmitting(false)
     }
 
+
     // Filter categories by selected tab type
     const activeCategories = categories.filter(c => c.type === txType)
 
@@ -179,7 +183,15 @@ export default function LedgerPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
-                   {/* Actions or additional info can go here */}
+                    {isParent && (
+                        <Link
+                            href="/ledger/categories"
+                            className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-500 border border-slate-200"
+                            title={t('ledger.categories.manage')}
+                        >
+                            <Settings className="w-5 h-5 md:w-6 md:h-6" />
+                        </Link>
+                    )}
                 </div>
             </header>
 
@@ -696,6 +708,7 @@ export default function LedgerPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
         </div>
     )
 }
