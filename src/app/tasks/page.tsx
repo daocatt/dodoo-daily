@@ -313,9 +313,8 @@ function TasksPageContent() {
 
                 {/* Left Sidebar (Tabs) */}
                 <aside className="w-full md:w-[180px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
-                    <div className="flex md:flex-col overflow-x-auto p-2 md:p-3 bg-white/40 backdrop-blur-xl rounded-2xl md:rounded-3xl w-full border border-white/50 shadow-xl shadow-blue-500/5 hide-scrollbar relative">
-                        {/* Status Tabs */}
-                        <div className="flex md:flex-col gap-1.5 w-full">
+                    <div className="flex md:flex-col overflow-x-auto p-1.5 md:p-3 bg-white/40 backdrop-blur-xl rounded-2xl md:rounded-3xl w-full border border-white/50 shadow-xl shadow-blue-500/5 hide-scrollbar relative">
+                        {/* Status Tabs + Assign (flat flex, fixes alignment on mobile/pad) */}
                             <button
                                 onClick={() => setActiveTab('today')}
                                 className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'today' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
@@ -344,11 +343,7 @@ function TasksPageContent() {
                                 <CalendarDays className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'planned' ? 'scale-110' : ''}`} />
                                 <span className="hidden md:inline whitespace-nowrap">{t('tasks.planned')}</span>
                             </button>
-                        </div>
-
-                        {/* Assign Section */}
-                        <div className="flex md:flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
-                            {!isParent && (
+                            {!isParent ? (
                                 <button
                                     onClick={() => setActiveTab('assigns')}
                                     className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
@@ -356,18 +351,17 @@ function TasksPageContent() {
                                     <Users className="w-4 h-4 flex-shrink-0" />
                                     <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
                                 </button>
-                            )}
-                            {isParent && (
+                            ) : (
                                 <>
                                     <button
                                         onClick={() => setActiveTab('assigns')}
-                                        className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                                        className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'} md:mt-4 md:pt-4 md:border-t md:border-slate-200/50`}
                                     >
                                         <CheckSquare className="w-4 h-4 flex-shrink-0" />
                                         <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
                                     </button>
                                     {activeTab === 'assigns' && children.length > 1 && (
-                                        <div className="flex md:flex-col gap-1 md:pl-8 mt-2 w-full">
+                                        <div className="flex md:flex-col gap-1 md:pl-8 mt-2 w-full flex-shrink-0">
                                             <button
                                                 onClick={() => setAssignedChildId('ALL')}
                                                 className={`py-2 px-3 rounded-xl text-center md:text-left font-bold text-[11px] transition-all ${assignedChildId === 'ALL' ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
@@ -388,7 +382,6 @@ function TasksPageContent() {
                                     )}
                                 </>
                             )}
-                        </div>
                     </div>
                 </aside>
 
