@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { growthRecord, users } from '@/lib/schema'
-import { eq, and, desc, gte, lte } from 'drizzle-orm'
+import { eq, and, desc, gte, lte, sql } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
@@ -17,13 +17,32 @@ export async function GET(req: NextRequest) {
     }
 
     try {
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '10')
+        const offset = (page - 1) * limit
+
         const records = await db.select()
             .from(growthRecord)
             .where(eq(growthRecord.userId, targetUserId))
             .orderBy(desc(growthRecord.date))
+            .limit(limit)
+            .offset(offset)
             .all()
 
-        return NextResponse.json(records)
+        const [{ count }] = await db.select({ count: sql<number>`count(*)` })
+            .from(growthRecord)
+            .where(eq(growthRecord.userId, targetUserId))
+            .all()
+
+        return NextResponse.json({
+            records,
+            pagination: {
+                total: count,
+                page,
+                limit,
+                totalPages: Math.ceil(count / limit)
+            }
+        })
     } catch (e) {
         return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
     }

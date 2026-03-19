@@ -81,6 +81,12 @@ export default function GrowthStatsPage() {
     const [historyLoading, setHistoryLoading] = useState(false)
     const [historyPage, setHistoryPage] = useState(1)
     const [historyTotal, setHistoryTotal] = useState(0)
+    
+    // For Growth History Pagination
+    const [growthHistory, setGrowthHistory] = useState<GrowthRecord[]>([])
+    const [growthLoading, setGrowthLoading] = useState(false)
+    const [growthPage, setGrowthPage] = useState(1)
+    const [growthTotal, setGrowthTotal] = useState(0)
 
     // For recording modal
     const [showRecordModal, setShowRecordModal] = useState(false)
@@ -107,8 +113,34 @@ export default function GrowthStatsPage() {
     }
 
     useEffect(() => {
-        fetchData()
+        const loadInitialData = async () => {
+            await fetchData()
+        }
+        loadInitialData()
     }, [])
+
+    const fetchGrowthRecords = async (userId: string, page: number = 1) => {
+        try {
+            setGrowthLoading(true)
+            const res = await fetch(`/api/growth?userId=${userId}&page=${page}&limit=10`)
+            if (res.ok) {
+                const data = await res.json()
+                setGrowthHistory(data.records)
+                setGrowthTotal(data.pagination.total)
+                setGrowthPage(data.pagination.page)
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setGrowthLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (children && children[activeChildIdx]) {
+            fetchGrowthRecords(children[activeChildIdx].id, 1)
+        }
+    }, [activeChildIdx, children])
 
     const fetchHistory = async (userId: string, type: string, page: number = 1) => {
         try {
@@ -156,6 +188,7 @@ export default function GrowthStatsPage() {
                 setHeight('')
                 setWeight('')
                 fetchData()
+                fetchGrowthRecords(recordingChildId, 1) // Refresh to page 1
             }
         } catch (err) {
             console.error(err)
@@ -166,7 +199,10 @@ export default function GrowthStatsPage() {
         if (!confirm(t('stats.deleteConfirm'))) return
         try {
             const res = await fetch(`/api/growth/${id}`, { method: 'DELETE' })
-            if (res.ok) fetchData()
+            if (res.ok) {
+                fetchData()
+                if (currentChild) fetchGrowthRecords(currentChild.id, growthPage)
+            }
         } catch (err) {
             console.error(err)
         }
@@ -372,43 +408,73 @@ export default function GrowthStatsPage() {
                 </div>
 
                 {/* History List */}
-                <div className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+                <div className="bg-white rounded-[32px] p-8 shadow-xl shadow-slate-200/50 border border-slate-100 relative">
                     <h3 className="font-black text-xl text-slate-900 mb-6">{t('stats.growthHistory')}</h3>
-                    <div className="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar">
-                        {currentChild.growthData.length === 0 ? (
-                            <div className="text-center py-12 text-slate-400 font-bold">{t('stats.noHistory')}</div>
-                        ) : (
-                            currentChild.growthData.map(record => (
-                                <div key={record.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors group">
-                                    <div className="flex items-center gap-6">
-                                        <div className="text-xs font-black text-slate-400">
-                                            {format(new Date(record.date), 'yyyy/MM/dd')}
+                    
+                    {growthLoading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-8 h-8 border-4 border-slate-100 border-t-indigo-500 rounded-full" />
+                        </div>
+                    ) : (
+                        <div className="space-y-4 pr-4 custom-scrollbar">
+                            {growthHistory.length === 0 ? (
+                                <div className="text-center py-12 text-slate-400 font-bold">{t('stats.noHistory')}</div>
+                            ) : (
+                                growthHistory.map(record => (
+                                    <div key={record.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors group">
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-xs font-black text-slate-400">
+                                                {format(new Date(record.date), 'yyyy/MM/dd')}
+                                            </div>
+                                            <div className="flex gap-4">
+                                                {record.height && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Ruler className="w-3.5 h-3.5 text-sky-500" />
+                                                        <span className="font-black text-slate-700 text-sm">{record.height}cm</span>
+                                                    </div>
+                                                )}
+                                                {record.weight && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Scale className="w-3.5 h-3.5 text-emerald-500" />
+                                                        <span className="font-black text-slate-700 text-sm">{record.weight}kg</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex gap-4">
-                                            {record.height && (
-                                                <div className="flex items-center gap-2">
-                                                    <Ruler className="w-3.5 h-3.5 text-sky-500" />
-                                                    <span className="font-black text-slate-700">{record.height}cm</span>
-                                                </div>
-                                            )}
-                                            {record.weight && (
-                                                <div className="flex items-center gap-2">
-                                                    <Scale className="w-3.5 h-3.5 text-emerald-500" />
-                                                    <span className="font-black text-slate-700">{record.weight}kg</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <button
+                                            onClick={() => deleteRecord(record.id)}
+                                            className="p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => deleteRecord(record.id)}
-                                        className="p-2 text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+
+                    {/* Growth Pagination */}
+                    {growthTotal > 10 && (
+                        <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+                            <button
+                                disabled={growthPage <= 1 || growthLoading}
+                                onClick={() => fetchGrowthRecords(currentChild.id, growthPage - 1)}
+                                className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all border border-transparent hover:border-slate-100"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                                {t('stats.history.page', { page: growthPage.toString(), total: Math.ceil(growthTotal / 10).toString() })}
+                            </span>
+                            <button
+                                disabled={growthPage >= Math.ceil(growthTotal / 10) || growthLoading}
+                                onClick={() => fetchGrowthRecords(currentChild.id, growthPage + 1)}
+                                className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all border border-transparent hover:border-slate-100"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </main>
 
