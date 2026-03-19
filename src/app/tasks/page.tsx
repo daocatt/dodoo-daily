@@ -50,7 +50,7 @@ function TasksPageContent() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
-    const [activeTab, setActiveTab] = useState<'planned' | 'today' | 'week' | 'tomorrow' | 'daily' | 'monthly' | 'assigns'>('today')
+    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'planned' | 'assigns'>('today')
     const [isParent, setIsParent] = useState(false)
     const [children, setChildren] = useState<Child[]>([])
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
@@ -103,6 +103,21 @@ function TasksPageContent() {
                 }
             })
     }, [assignToParam])
+
+    const deleteTask = async (task: Task) => {
+        if (!confirm(t('common.confirmDelete'))) return;
+        try {
+            const baseUrl = task.isAssigned ? '/api/assigned-tasks' : '/api/tasks'
+            const res = await fetch(`${baseUrl}/${task.id}`, { method: 'DELETE' })
+            if (res.ok) {
+                setTasks(tasks.filter(t => t.id !== task.id))
+                setShowNewTaskModal(false)
+                setEditingTask(null)
+            }
+        } catch (error) {
+            console.error('Failed to delete task:', error)
+        }
+    }
 
     const fetchTasks = async () => {
         try {
@@ -297,87 +312,83 @@ function TasksPageContent() {
             <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
 
                 {/* Left Sidebar (Tabs) */}
-                <aside className="w-full md:w-[200px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
-                    <div className="flex md:flex-col overflow-x-auto p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-lg md:rounded-xl w-full shadow-inner border border-white hide-scrollbar">
-                        <button
-                            onClick={() => setActiveTab('planned')}
-                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'planned' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                        >
-                            <CalendarDays className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.planned')}</span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('today')}
-                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'today' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                        >
-                            <Sun className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.today')}</span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('week')}
-                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'week' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                        >
-                            <Calendar className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.thisWeek')}</span>
-                        </button>
+                <aside className="w-full md:w-[180px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
+                    <div className="flex md:flex-col overflow-x-auto p-2 md:p-3 bg-white/40 backdrop-blur-xl rounded-2xl md:rounded-3xl w-full border border-white/50 shadow-xl shadow-blue-500/5 hide-scrollbar relative">
+                        {/* Status Tabs */}
+                        <div className="flex md:flex-col gap-1.5 w-full">
+                            <button
+                                onClick={() => setActiveTab('today')}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'today' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                            >
+                                <Sun className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'today' ? 'scale-110 rotate-12' : ''}`} />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.today')}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('tomorrow')}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'tomorrow' ? 'bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-400/25 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                            >
+                                <Sunrise className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'tomorrow' ? 'scale-110' : ''}`} />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.tomorrow')}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('week')}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'week' ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                            >
+                                <Calendar className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'week' ? 'scale-110 shadow-emerald-200' : ''}`} />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.thisWeek')}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('planned')}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'planned' ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                            >
+                                <CalendarDays className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'planned' ? 'scale-110' : ''}`} />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.planned')}</span>
+                            </button>
+                        </div>
 
-                        <div className="hidden md:block h-px bg-slate-200/50 my-2 mx-4" />
-
-                        <button
-                            onClick={() => setActiveTab('tomorrow')}
-                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'tomorrow' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                        >
-                            <Sunrise className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.tomorrow')}</span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('daily')}
-                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'daily' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                        >
-                            <Repeat className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.dailyLoop')}</span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('monthly')}
-                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'monthly' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                        >
-                            <CalendarDays className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.monthlyLoop')}</span>
-                        </button>
-                        {!isParent && (
-                            <div className="flex flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
+                        {/* Assign Section */}
+                        <div className="flex md:flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
+                            {!isParent && (
                                 <button
                                     onClick={() => setActiveTab('assigns')}
-                                    className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                                    className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
                                 >
-                                    <Users className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
+                                    <Users className="w-4 h-4 flex-shrink-0" />
+                                    <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
                                 </button>
-                            </div>
-                        )}
-                        {isParent && (
-                            <div className="flex flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
-                                <button
-                                    onClick={() => setActiveTab('assigns')}
-                                    className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
-                                >
-                                    <CheckSquare className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
-                                </button>
-                                {activeTab === 'assigns' && children.length > 1 && (
-                                    <div className="flex md:flex-col gap-1 md:pl-8 mt-1 w-full">
-                                        <button
-                                            onClick={() => setAssignedChildId('ALL')}
-                                            className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-[11px] transition-colors shrink-0 ${assignedChildId === 'ALL' ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
-                                        >
-                                            {t('tasks.allChildren')}
-                                        </button>
-                                        {children.map(child => (
+                            )}
+                            {isParent && (
+                                <>
+                                    <button
+                                        onClick={() => setActiveTab('assigns')}
+                                        className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                                    >
+                                        <CheckSquare className="w-4 h-4 flex-shrink-0" />
+                                        <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
+                                    </button>
+                                    {activeTab === 'assigns' && children.length > 1 && (
+                                        <div className="flex md:flex-col gap-1 md:pl-8 mt-2 w-full">
                                             <button
-                                                key={child.id}
-                                                onClick={() => setAssignedChildId(child.id)}
-                                                className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-[11px] transition-colors shrink-0 flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
+                                                onClick={() => setAssignedChildId('ALL')}
+                                                className={`py-2 px-3 rounded-xl text-center md:text-left font-bold text-[11px] transition-all ${assignedChildId === 'ALL' ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
                                             >
-                                                {child.avatarUrl && <img src={child.avatarUrl} className="w-3.5 h-3.5 rounded-full object-cover hidden md:block" />}
-                                                {child.name}
+                                                {t('tasks.allChildren')}
                                             </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                            {children.map(child => (
+                                                <button
+                                                    key={child.id}
+                                                    onClick={() => setAssignedChildId(child.id)}
+                                                    className={`py-1.5 px-3 rounded-xl text-center md:text-left font-bold text-[11px] transition-all flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
+                                                >
+                                                    {child.avatarUrl && <img src={child.avatarUrl} className="w-3.5 h-3.5 rounded-full object-cover hidden md:block" />}
+                                                    {child.nickname || child.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
                 </aside>
 
@@ -505,12 +516,14 @@ function TasksPageContent() {
                                                 </h3>
                                                 <div className="flex flex-wrap gap-2 mt-1.5">
                                                     {task.isRepeating && (
-                                                        <span className="text-[10px] uppercase tracking-wider bg-blue-100/50 text-blue-700 font-black px-2 py-0.5 rounded-lg">
+                                                        <span className="text-[10px] uppercase tracking-wider bg-blue-100/50 text-blue-700 font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                                            <RotateCcw className="w-2.5 h-2.5" />
                                                             {t('tasks.dailyLoop')}
                                                         </span>
                                                     )}
                                                     {task.isMonthlyRepeating && (
-                                                        <span className="text-[10px] uppercase tracking-wider bg-purple-100/50 text-purple-700 font-black px-2 py-0.5 rounded-lg">
+                                                        <span className="text-[10px] uppercase tracking-wider bg-purple-100/50 text-purple-700 font-bold px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                                            <CalendarDays className="w-2.5 h-2.5" />
                                                             {t('tasks.monthlyLoop')}
                                                         </span>
                                                     )}
@@ -583,24 +596,36 @@ function TasksPageContent() {
                                                         </button>
                                                     </div>
                                                 )}
-                                                {task.creatorId === currentUserId && !task.completed && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingTask(task);
-                                                            setTitle(task.title);
-                                                            setRewardStars(task.rewardStars);
-                                                            setRewardCoins(task.rewardCoins || 0);
-                                                            setIsRepeating(task.isRepeating);
-                                                            setIsMonthlyRepeating(task.isMonthlyRepeating);
-                                                            setPlannedDate(task.plannedTime ? new Date(task.plannedTime) : new Date());
-                                                            setAssignTo(task.isAssigned ? (task.assigneeId ? [task.assigneeId] : []) : [currentUserId]);
-                                                            setShowNewTaskModal(true);
-                                                        }}
-                                                        className="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-400 hover:bg-blue-100 hover:text-blue-500 transition-colors shadow-sm"
-                                                    >
-                                                        <Edit2 className="w-4 h-4" />
-                                                    </button>
+                                                {task.creatorId === currentUserId && (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setEditingTask(task);
+                                                                setTitle(task.title);
+                                                                setRewardStars(task.rewardStars);
+                                                                setRewardCoins(task.rewardCoins || 0);
+                                                                setIsRepeating(task.isRepeating);
+                                                                setIsMonthlyRepeating(task.isMonthlyRepeating);
+                                                                setPlannedDate(task.plannedTime ? new Date(task.plannedTime) : new Date());
+                                                                setAssignTo(task.isAssigned ? (task.assigneeId ? [task.assigneeId] : []) : [currentUserId]);
+                                                                setModalMode(task.isAssigned ? 'ASSIGN' : 'PERSONAL');
+                                                                setShowNewTaskModal(true);
+                                                            }}
+                                                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all hover:shadow-lg hover:shadow-blue-500/30"
+                                                        >
+                                                            <Edit2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                deleteTask(task);
+                                                            }}
+                                                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all hover:shadow-lg hover:shadow-rose-500/30"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -646,9 +671,21 @@ function TasksPageContent() {
                                         </>
                                     )}
                                 </h3>
-                                <button type="button" onClick={() => setShowNewTaskModal(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
-                                    <XIcon className="w-5 h-5 text-slate-400" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    {editingTask && (
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteTask(editingTask)}
+                                            className="p-2 hover:bg-rose-50 text-rose-500 rounded-full transition-colors"
+                                            title="Delete Task"
+                                        >
+                                            <Trash2 className="w-4.5 h-4.5" />
+                                        </button>
+                                    )}
+                                    <button type="button" onClick={() => setShowNewTaskModal(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
+                                        <XIcon className="w-5 h-5 text-slate-400" />
+                                    </button>
+                                </div>
                             </div>
                             <div className="overflow-y-auto hide-scrollbar">
                                 <form onSubmit={handleCreateTask} className="p-4 md:p-6 bg-white">
