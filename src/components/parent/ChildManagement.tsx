@@ -198,19 +198,19 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
         };
 
         return (
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Real Name</label>
+            <div className="space-y-3">
+                {/* Row 1: Name + Nickname */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Real Name</label>
                         <input
-                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                             placeholder="Full Name"
                             value={member.name || ''}
                             onChange={e => {
                                 const val = e.target.value;
                                 const isEditing = !!member.id;
                                 const touched = isEditing ? editNicknameTouched : nicknameTouched;
-
                                 if (!touched) {
                                     onChange({ ...member, name: val, nickname: val });
                                 } else {
@@ -220,10 +220,10 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             required
                         />
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')} (Required)</label>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')}</label>
                         <input
-                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                             placeholder="Nickname"
                             value={member.nickname || ''}
                             onChange={e => {
@@ -236,28 +236,29 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.gender')}</label>
-                        <div className="flex gap-2">
+                {/* Row 2: Gender + PIN */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.gender')}</label>
+                        <div className="flex gap-1.5">
                             {(['MALE', 'FEMALE', 'OTHER'] as const).map(g => (
                                 <button
                                     key={g}
                                     type="button"
                                     onClick={() => onChange({ ...member, gender: g })}
-                                    className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border flex items-center justify-center gap-2 ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-lg shadow-blue-100' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    className={`flex-1 py-2.5 rounded-xl font-black text-[10px] transition-all border flex items-center justify-center gap-1 ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
                                 >
-                                    <span className="text-lg">{genderEmojis[g]}</span>
-                                    {t(`gender.${g.toLowerCase()}`)}
+                                    <span>{genderEmojis[g]}</span>
+                                    <span className="hidden sm:inline">{t(`gender.${g.toLowerCase()}`)}</span>
                                 </button>
                             ))}
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.memberPin')}</label>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.memberPin')}</label>
                         <input
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
-                            placeholder="4 Digit PIN"
+                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all tracking-widest"
+                            placeholder="••••"
                             maxLength={4}
                             value={member.pin || ''}
                             onChange={e => onChange({ ...member, pin: e.target.value })}
@@ -265,22 +266,31 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
-                        <select
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all appearance-none"
-                            value={member.role || 'CHILD'}
-                            onChange={e => onChange({ ...member, role: e.target.value as Child['role'] })}
-                        >
-                            <option value="CHILD">Child</option>
-                            <option value="PARENT">Parent</option>
-                            <option value="GRANDPARENT">Grandparent</option>
-                            <option value="OTHER">Other Relative</option>
-                        </select>
+                {/* Row 3: Role + BirthDate */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {([
+                                { value: 'CHILD', label: 'Child', emoji: '🧒' },
+                                { value: 'PARENT', label: 'Parent', emoji: '👨' },
+                                { value: 'GRANDPARENT', label: 'Grand', emoji: '👴' },
+                                { value: 'OTHER', label: 'Other', emoji: '👤' },
+                            ] as const).map(r => (
+                                <button
+                                    key={r.value}
+                                    type="button"
+                                    onClick={() => onChange({ ...member, role: r.value })}
+                                    className={`py-2 rounded-xl font-black text-[10px] transition-all border flex items-center justify-center gap-1 ${(member.role || 'CHILD') === r.value ? 'bg-indigo-500 text-white border-indigo-400 shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                >
+                                    <span>{r.emoji}</span>
+                                    {r.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
                         <SmartDatePicker
                             selected={member.birthDate ? new Date(member.birthDate) : undefined}
                             onSelect={(date) => {
@@ -293,33 +303,51 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             }}
                             maxDate={new Date()}
                             placeholder={t('parent.birthDate')}
-                            triggerClassName="px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            triggerClassName="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                         />
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')}</label>
-                        <div className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner">
-                            {member.chineseZodiac || (member.birthDate ? getChineseZodiac(new Date(member.birthDate)) : '---')}
+
+                {/* Row 4: Zodiac tags + Slug */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.slugLabel')}</label>
+                        <div className="flex gap-1.5">
+                            <input
+                                className="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all font-mono"
+                                placeholder="e.g. lily-art"
+                                value={member.slug || ''}
+                                onChange={e => onChange({ ...member, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                            />
+                            {!member.id && (
+                                <button
+                                    type="button"
+                                    title="Auto-generate"
+                                    onClick={() => {
+                                        const base = (member.nickname || member.name || '')
+                                            .toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+                                        const suffix = Math.random().toString(36).substring(2, 6)
+                                        onChange({ ...member, slug: base ? `${base}-${suffix}` : suffix })
+                                    }}
+                                    className="shrink-0 px-2.5 py-2.5 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-100 transition-all text-xs font-black"
+                                >
+                                    ✨
+                                </button>
+                            )}
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.zodiac')}</label>
-                        <div className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner">
-                            {member.zodiac || (member.birthDate ? getZodiac(new Date(member.birthDate)) : '---')}
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')} / {t('parent.zodiac')}</label>
+                        <div className="flex gap-2 py-2.5 px-3 bg-slate-100 rounded-xl">
+                            <span className="text-sm font-black text-slate-500">
+                                {member.chineseZodiac || (member.birthDate ? getChineseZodiac(new Date(member.birthDate)) : '—')}
+                            </span>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-sm font-black text-slate-500">
+                                {member.zodiac || (member.birthDate ? getZodiac(new Date(member.birthDate)) : '—')}
+                            </span>
                         </div>
                     </div>
-                </div>
-                <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.slugLabel')}</label>
-                    <input
-                        className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all font-mono text-sm"
-                        placeholder="e.g. lily-art"
-                        value={member.slug || ''}
-                        onChange={e => onChange({ ...member, slug: e.target.value })}
-                    />
-                    <p className="text-[10px] text-slate-400 font-medium ml-1">{t('parent.slugHint')}</p>
                 </div>
             </div>
         )
