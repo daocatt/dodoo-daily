@@ -46,6 +46,8 @@ const SIZE_MAP: Record<WidgetSize, { w: number; h: number }> = {
   GIANT: { w: 8, h: 4 },
 }
 
+const ICON_ONLY_WIDGETS = ['SHOP']
+
 const getWidgetSpan = (size: string, currentCols: number = 8) => {
   const legacyMap: Record<string, WidgetSize> = {
     'SMALL': 'ICON',
@@ -441,13 +443,18 @@ export default function Home() {
       }
 
       // Find an empty slot horizontally across pages
+      const isIconOnly = ICON_ONLY_WIDGETS.includes(type);
+      const reqW = isIconOnly ? 1 : 2;
+      const reqH = isIconOnly ? 1 : 2;
+      const initialSize = isIconOnly ? 'ICON' : 'SQUARE';
+
       let foundSlot = false;
       let nx = 0;
       let ny = 0;
       for (let page = 0; page < pageCount && !foundSlot; page++) {
-        for (let ty = 0; ty <= maxRows - 2 && !foundSlot; ty++) {
-          for (let tx = page * gridCols; tx <= page * gridCols + gridCols - 2 && !foundSlot; tx++) {
-            if (!isPosOccupied(tx, ty, 2, 2, widgets)) {
+        for (let ty = 0; ty <= maxRows - reqH && !foundSlot; ty++) {
+          for (let tx = page * gridCols; tx <= page * gridCols + gridCols - reqW && !foundSlot; tx++) {
+            if (!isPosOccupied(tx, ty, reqW, reqH, widgets)) {
               nx = tx; ny = ty; foundSlot = true;
             }
           }
@@ -457,7 +464,7 @@ export default function Home() {
       const res = await fetch('/api/home-widgets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, x: nx, y: ny, size: 'SQUARE' })
+        body: JSON.stringify({ type, x: nx, y: ny, size: initialSize })
       })
 
       if (res.ok) {
@@ -501,26 +508,28 @@ export default function Home() {
     }
 
     // ICON Mode: Compact icon-only tile that never overflows 1×1 cell
-    if (w.size === 'ICON') {
+    // Force icon rendering for whitelisted widgets regardless of size
+    if (w.size === 'ICON' || ICON_ONLY_WIDGETS.includes(w.type)) {
       const config = {
-        TASKS:     { Icon: CheckCircle2,  bg: 'bg-blue-500',   glow: 'shadow-blue-500/30' },
-        NOTES:     { Icon: StickyNote,    bg: 'bg-orange-500', glow: 'shadow-orange-500/30' },
-        JOURNAL:   { Icon: Heart,         bg: 'bg-[#f54900]',  glow: 'shadow-[#f54900]/30' },
-        PHOTOS:    { Icon: Images,        bg: 'bg-purple-500', glow: 'shadow-purple-500/30' },
-        SHOP:      { Icon: ShoppingBag,   bg: 'bg-amber-400',  glow: 'shadow-amber-500/30' },
-        MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30' },
-      }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20' }
+        TASKS:     { Icon: CheckCircle2,  bg: 'bg-blue-500',   glow: 'shadow-blue-500/30', label: t('menu.tasks') },
+        NOTES:     { Icon: StickyNote,    bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('pinned') || 'Pinned' },
+        JOURNAL:   { Icon: Heart,         bg: 'bg-[#f54900]',  glow: 'shadow-[#f54900]/30', label: t('menu.journal') },
+        PHOTOS:    { Icon: Images,        bg: 'bg-purple-500', glow: 'shadow-purple-500/30', label: t('menu.gallery') },
+        SHOP:      { Icon: ShoppingBag,   bg: 'bg-amber-400',  glow: 'shadow-amber-500/30', label: t('menu.shop') },
+        MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('parent.milestone') },
+      }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
-      const { Icon, bg, glow } = config
-      // Circle takes 65% of cell; icon takes 38% of cell
-      const circleSize = Math.floor(cellSize * 0.65)
-      const iconSize   = Math.floor(cellSize * 0.38)
+      const { Icon, bg, glow, label } = config
+      // Circle takes 50% of cell; icon takes 26% of cell; label takes remaining space
+      const circleSize = Math.floor(cellSize * 0.5)
+      const iconSize   = Math.floor(cellSize * 0.26)
+      const fontSize   = Math.max(9, Math.floor(cellSize * 0.12))
 
       return (
         <div
           onClick={handleWidgetClick}
           className={clsx(
-            'w-full h-full flex items-center justify-center rounded-3xl border-2 border-white/20 cursor-pointer active:scale-95 hover:scale-[1.03] transition-all shadow-xl',
+            'w-full h-full flex flex-col items-center justify-center gap-1.5 rounded-3xl border-2 border-white/20 cursor-pointer active:scale-95 hover:scale-[1.03] transition-all shadow-xl',
             bg, glow
           )}
         >
@@ -530,6 +539,12 @@ export default function Home() {
           >
             <Icon className="text-white drop-shadow" style={{ width: iconSize, height: iconSize }} />
           </div>
+          <span
+            className="font-bold text-white/95 leading-none tracking-wide text-center"
+            style={{ fontSize, maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          >
+            {label}
+          </span>
         </div>
       )
     }
@@ -541,23 +556,6 @@ export default function Home() {
         case 'JOURNAL': return <JournalWidget size={w.size} cellSize={cellSize} />
         case 'PHOTOS': return <PhotoWidget size={w.size} cellSize={cellSize} />
         case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
-        case 'SHOP':
-          const baseIconSize = Math.floor(cellSize * 0.5)
-          return (
-            <div className="w-full h-full bg-amber-400 rounded-3xl flex flex-col items-center justify-center gap-4 shadow-xl overflow-hidden relative border-none">
-              <ShoppingBag
-                style={{ width: baseIconSize * 1.5, height: baseIconSize * 1.5 }}
-                className="text-amber-900 transition-all duration-500 group-hover:scale-110 drop-shadow-lg"
-              />
-              <span
-                className="font-black text-amber-900 uppercase tracking-[0.3em] bg-white/30 px-6 py-1.5 rounded-full backdrop-blur-sm border border-white/40 shadow-sm"
-                style={{ fontSize: Math.max(8, cellSize * 0.09) }}
-              >
-                {t('menu.shop')}
-              </span>
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/30 via-transparent to-black/5 pointer-events-none" />
-            </div>
-          )
         default:
           return (
             <div className="w-full h-full bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400" style={{ fontSize: cellSize * 0.1 }}>
@@ -943,49 +941,53 @@ export default function Home() {
                         >
                           <div className="absolute top-2 right-2 flex flex-col gap-1.5" onPointerDown={e => e.stopPropagation()}>
                             <div className="relative">
-                              <button
-                                onClick={() => setSizeMenuId(sizeMenuId === w.id ? null : w.id)}
-                                className={clsx(
-                                  "p-2 rounded-xl bg-white shadow-xl border transition-all",
-                                  sizeMenuId === w.id ? "text-indigo-600 border-indigo-200" : "text-slate-400 border-slate-100 hover:text-indigo-600"
-                                )}
-                                title="Change Size"
-                              >
-                                <Maximize2 className="w-3.5 h-3.5" />
-                              </button>
-
-                              <AnimatePresence>
-                                {sizeMenuId === w.id && (
-                                  <motion.div
-                                    initial={{ opacity: 0, x: 10, scale: 0.9 }}
-                                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                                    exit={{ opacity: 0, x: 10, scale: 0.9 }}
-                                    className="absolute right-full mr-3 top-0 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white p-2 flex gap-1 z-[300] min-w-max"
+                              {!ICON_ONLY_WIDGETS.includes(w.type) && (
+                                <>
+                                  <button
+                                    onClick={() => setSizeMenuId(sizeMenuId === w.id ? null : w.id)}
+                                    className={clsx(
+                                      "p-2 rounded-xl bg-white shadow-xl border transition-all",
+                                      sizeMenuId === w.id ? "text-indigo-600 border-indigo-200" : "text-slate-400 border-slate-100 hover:text-indigo-600"
+                                    )}
+                                    title="Change Size"
                                   >
-                                    {(gridCols === 8 ? ['ICON', 'SQUARE', 'WIDE', 'TALL', 'GIANT'] : ['ICON', 'SQUARE', 'WIDE', 'TALL'])
-                                      .map((s) => {
-                                        const config = SIZE_MAP[s as WidgetSize]
-                                        return (
-                                          <button
-                                            key={s}
-                                            onClick={() => updateWidgetSize(w.id, s as WidgetSize)}
-                                            className={clsx(
-                                              "px-3 py-2 rounded-xl flex flex-col items-center gap-1.5 transition-all",
-                                              w.size === s ? "bg-indigo-50 text-indigo-600" : "hover:bg-slate-50 text-slate-400 hover:text-slate-600"
-                                            )}
-                                          >
-                                            <div className="flex flex-wrap gap-0.5" style={{ width: 14, height: 14 }}>
-                                              {Array.from({ length: config.w * config.h }).slice(0, 4).map((_, i) => (
-                                                <div key={i} className={clsx("w-1.5 h-1.5 rounded-[1px]", w.size === s ? "bg-indigo-400" : "bg-slate-300")} />
-                                              ))}
-                                            </div>
-                                            <span className="text-[8px] font-black">{SIZE_LABELS[s as WidgetSize]}</span>
-                                          </button>
-                                        )
-                                      })}
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                                    <Maximize2 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  <AnimatePresence>
+                                    {sizeMenuId === w.id && (
+                                      <motion.div
+                                        initial={{ opacity: 0, x: 10, scale: 0.9 }}
+                                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                                        exit={{ opacity: 0, x: 10, scale: 0.9 }}
+                                        className="absolute right-full mr-3 top-0 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white p-2 flex gap-1 z-[300] min-w-max"
+                                      >
+                                        {(gridCols === 8 ? ['ICON', 'SQUARE', 'WIDE', 'TALL', 'GIANT'] : ['ICON', 'SQUARE', 'WIDE', 'TALL'])
+                                          .map((s) => {
+                                            const config = SIZE_MAP[s as WidgetSize]
+                                            return (
+                                              <button
+                                                key={s}
+                                                onClick={() => updateWidgetSize(w.id, s as WidgetSize)}
+                                                className={clsx(
+                                                  "px-3 py-2 rounded-xl flex flex-col items-center gap-1.5 transition-all",
+                                                  w.size === s ? "bg-indigo-50 text-indigo-600" : "hover:bg-slate-50 text-slate-400 hover:text-slate-600"
+                                                )}
+                                              >
+                                                <div className="flex flex-wrap gap-0.5" style={{ width: 14, height: 14 }}>
+                                                  {Array.from({ length: config.w * config.h }).slice(0, 4).map((_, i) => (
+                                                    <div key={i} className={clsx("w-1.5 h-1.5 rounded-[1px]", w.size === s ? "bg-indigo-400" : "bg-slate-300")} />
+                                                  ))}
+                                                </div>
+                                                <span className="text-[8px] font-black">{SIZE_LABELS[s as WidgetSize]}</span>
+                                              </button>
+                                            )
+                                          })}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </>
+                              )}
                             </div>
 
                             <button

@@ -70,8 +70,7 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 )}
             </div>
 
-            <div className="flex-1 space-y-1.5 overflow-hidden relative">
-                <div>
+            <div className="flex-1 space-y-2.5 overflow-hidden relative">
                     {notes.length > 0 ? (
                         notes.map((note, idx) => (
                             <div
@@ -100,7 +99,6 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                             <span>{t('widget.notes.waiting')}</span>
                         </div>
                     )}
-                </div>
             </div>
 
             {/* Bottom Sweep Highlight */}

@@ -106,8 +106,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 )}
             </div>
 
-            <div className="flex-1 space-y-1.5 overflow-hidden">
-                <div>
+            <div className="flex-1 space-y-2.5 overflow-hidden">
                     {tasks.length > 0 ? (
                         tasks.map((task, idx) => (
                             <div
@@ -172,7 +171,6 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                             </div>
                         )
                     )}
-                </div>
             </div>
         </motion.div>
     )
