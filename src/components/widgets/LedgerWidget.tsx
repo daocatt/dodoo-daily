@@ -5,9 +5,21 @@ import { motion } from 'motion/react'
 import { Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+interface LedgerRecord {
+    id: string
+    type: 'EXPENSE' | 'INCOME'
+    amount: number
+    description: string
+    date: string
+    category?: {
+        name: string
+        emoji: string
+    }
+}
+
 export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
     const [balance, setBalance] = useState(0)
-    const [records, setRecords] = useState<Record<string, unknown>[]>([])
+    const [records, setRecords] = useState<LedgerRecord[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const router = useRouter()
 

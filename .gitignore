@@ -45,3 +45,4 @@ database/dodoo.db
 /public/upload
 /database
 /dnd-example
+.eslintcache

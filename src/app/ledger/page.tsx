@@ -1,17 +1,33 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft, Wallet, Landmark, Plus, X, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Wallet, Landmark, Plus, X, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, CreditCard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { format, subMonths, addMonths, startOfMonth } from 'date-fns'
+import { useI18n } from '@/contexts/I18nContext'
+import Link from 'next/link'
+
+interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; }
+interface Category { id: string; type: string; name: string; emoji: string; }
+interface ChartData { fullDate: string; day: string; income: number; expense: number; }
+interface CategoryStat { id: string; name: string; emoji: string; total: number | string; type: string; }
+interface StatsData { totals?: { income: number; expense: number; }; chartData?: ChartData[]; categories?: CategoryStat[]; }
 
 export default function LedgerPage() {
     const router = useRouter()
+    const { t, locale } = useI18n()
     const [loading, setLoading] = useState(true)
     const [balance, setBalance] = useState(0)
     const [bankBalance, setBankBalance] = useState(0)
-    const [records, setRecords] = useState<Record<string, unknown>[]>([])
-    const [categories, setCategories] = useState<Record<string, unknown>[]>([])
+    const [records, setRecords] = useState<LedgerRecord[]>([])
+    const [categories, setCategories] = useState<Category[]>([])
+    
+    // Stats State
+    const [activeTab, setActiveTab] = useState<'RECORDS' | 'STATS'>('RECORDS')
+    const [statsLoading, setStatsLoading] = useState(false)
+    const [statsData, setStatsData] = useState<StatsData | null>(null)
+    const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()))
 
     // Modal State
     const [showAddModal, setShowAddModal] = useState(false)
@@ -40,8 +56,8 @@ export default function LedgerPage() {
             if (Array.isArray(catData)) {
                 setCategories(catData)
                 // Set default selected category
-                const expCats = catData.filter((c: Record<string, unknown>) => c.type === 'EXPENSE')
-                if (expCats.length > 0) setSelectedCategoryId(expCats[0].id as string)
+                const expCats = catData.filter((c: Category) => c.type === 'EXPENSE')
+                if (expCats.length > 0) setSelectedCategoryId(expCats[0].id)
             }
         } catch (e) {
             console.error('Failed to fetch ledger data', e)
@@ -49,10 +65,31 @@ export default function LedgerPage() {
         setLoading(false)
     }
 
+    const fetchStats = async (month: Date) => {
+        setStatsLoading(true)
+        try {
+            const monthStr = format(month, 'yyyy-MM')
+            const res = await fetch(`/api/ledger/stats?month=${monthStr}`)
+            const data = await res.json()
+            setStatsData(data)
+        } catch (e) {
+            console.error('Failed to fetch stats', e)
+        }
+        setStatsLoading(false)
+    }
+
     useEffect(() => {
-        // eslint-disable-next-line
+        if (activeTab === 'STATS') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            fetchStats(currentMonth)
+        }
+    }, [activeTab, currentMonth])
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchData()
     }, [])
+
     const handleAddSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!amount || !description || !selectedCategoryId) return
@@ -67,7 +104,6 @@ export default function LedgerPage() {
                     categoryId: selectedCategoryId,
                     type: txType,
                     description,
-                    // relatedUserId: null // Not implementing family list picker in this step to keep it simple
                 })
             })
             const data = await res.json()
@@ -91,24 +127,62 @@ export default function LedgerPage() {
     return (
         <div className="min-h-dvh bg-slate-50 relative flex flex-col">
             {/* Header */}
-            <header className="px-5 pt-[env(safe-area-inset-top,1rem)] pb-4 bg-white/80 backdrop-blur-xl border-b border-slate-100 sticky top-0 z-10 flex items-center justify-between">
-                <button
-                    onClick={() => router.push('/')}
-                    className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors"
-                >
-                    <ArrowLeft className="w-6 h-6" />
-                </button>
-                <h1 className="text-xl font-bold tracking-tight text-slate-800">记账本</h1>
-                <div className="w-10"></div> {/* Spacer for centering */}
+            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-white/30 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/"
+                        className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-800 border border-slate-200"
+                    >
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden md:flex w-10 h-10 bg-indigo-500 rounded-2xl items-center justify-center shadow-md shadow-indigo-500/30 text-white flex-shrink-0">
+                            <Wallet className="w-5 h-5" />
+                        </div>
+                        <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800">
+                            {t('ledger.title')}
+                        </span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 md:gap-3">
+                   {/* Actions or additional info can go here */}
+                </div>
             </header>
 
-            {/* Content Array */}
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
                 </div>
             ) : (
                 <main className="flex-1 px-5 py-6 flex flex-col gap-6 overflow-y-auto pb-[env(safe-area-inset-bottom,2rem)]">
+                    
+                    {/* Tab Switcher */}
+                    <div className="flex p-1 bg-slate-200/50 rounded-2xl w-full max-w-[240px] mx-auto mb-2">
+                        <button
+                            onClick={() => setActiveTab('RECORDS')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'RECORDS' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
+                        >
+                            <ReceiptText className="w-4 h-4" />
+                            {t('ledger.tabs.records')}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('STATS')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black transition-all ${activeTab === 'STATS' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                        >
+                            <BarChart3 className="w-4 h-4" />
+                            {t('ledger.tabs.stats')}
+                        </button>
+                    </div>
+
+                    {activeTab === 'RECORDS' ? (
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key="records-view"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                className="flex flex-col gap-6"
+                            >
                     
                     {/* Balance Cards */}
                     <div className="grid grid-cols-2 gap-4">
@@ -117,7 +191,7 @@ export default function LedgerPage() {
                             <Wallet className="w-24 h-24 absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-500" />
                             <div className="flex items-center gap-2 mb-4 opacity-90">
                                 <Wallet className="w-5 h-5" />
-                                <span className="font-medium text-sm">可用零钱</span>
+                                <span className="font-medium text-sm">{t('ledger.balance.available')}</span>
                             </div>
                             <div className="flex items-baseline gap-1">
                                 <span className="text-xl">¥</span>
@@ -126,11 +200,11 @@ export default function LedgerPage() {
                         </div>
 
                         {/* Virtual Bank */}
-                        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl p-5 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group cursor-pointer" onClick={() => alert('虚拟银行后续开放！')}>
+                        <div className="bg-gradient-to-br from-emerald-500 to-teal-500 rounded-3xl p-5 shadow-xl shadow-emerald-200/50 text-white relative overflow-hidden group cursor-pointer" onClick={() => alert(t('virtualBank.comingSoon') || '虚拟银行后续开放！')}>
                             <Landmark className="w-24 h-24 absolute -right-6 -bottom-6 opacity-10 group-hover:scale-110 transition-transform duration-500" />
                             <div className="flex items-center gap-2 mb-4 opacity-90">
                                 <Landmark className="w-5 h-5" />
-                                <span className="font-medium text-sm">虚拟银行</span>
+                                <span className="font-medium text-sm">{t('ledger.balance.bank')}</span>
                             </div>
                             <div className="flex items-baseline gap-1">
                                 <span className="text-xl">¥</span>
@@ -141,10 +215,10 @@ export default function LedgerPage() {
 
                     {/* Timeline / Records */}
                     <div className="flex flex-col gap-3">
-                        <h2 className="text-lg font-bold text-slate-700 px-1">近期明细</h2>
+                        <h2 className="text-lg font-bold text-slate-700 px-1">{t('ledger.recentHistory')}</h2>
                         
                         {records.length === 0 ? (
-                            <div className="py-12 text-center text-slate-400">暂无记账流水</div>
+                            <div className="py-12 text-center text-slate-400">{t('ledger.noRecords')}</div>
                         ) : (
                             <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 overflow-hidden flex flex-col gap-1">
                                 {records.map(record => {
@@ -153,7 +227,7 @@ export default function LedgerPage() {
                                         <div key={record.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-colors">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner ${isExpense ? 'bg-orange-50' : 'bg-indigo-50'}`}>
-                                                    {record.category?.emoji || '🏷️'}
+                                                    {record.category?.emoji || '💰'}
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className="font-bold text-slate-700">{record.description || record.category?.name}</span>
@@ -170,8 +244,179 @@ export default function LedgerPage() {
                             </div>
                         )}
                     </div>
-                </main>
-            )}
+                </motion.div>
+            </AnimatePresence>
+        ) : (
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key="stats-view"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    className="flex flex-col gap-6"
+                >
+                    {/* Month Picker */}
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-xl font-black text-slate-800">{format(currentMonth, locale === 'zh-CN' ? 'yyyy年MM月' : 'MMMM yyyy')}</h2>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentMonth(prev => subMonths(prev, 1))}
+                                className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 active:scale-95"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                onClick={() => setCurrentMonth(prev => addMonths(prev, 1))}
+                                className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 active:scale-95"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {statsLoading ? (
+                        <div className="py-20 flex items-center justify-center">
+                            <Loader2 className="w-8 h-8 animate-spin text-indigo-200" />
+                        </div>
+                    ) : statsData ? (
+                        <>
+                            {/* Stats Summary Tiles */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 text-emerald-500 mb-2">
+                                        <TrendingUp className="w-4 h-4" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest leading-none">{t('ledger.stats.income')}</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-xs font-bold text-slate-400">¥</span>
+                                        <span className="text-2xl font-black text-slate-800 font-number">{(statsData.totals?.income || 0).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-1">
+                                    <div className="flex items-center gap-2 text-orange-500 mb-2">
+                                        <TrendingDown className="w-4 h-4" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest leading-none">{t('ledger.stats.expense')}</span>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-xs font-bold text-slate-400">¥</span>
+                                        <span className="text-2xl font-black text-slate-800 font-number">{(statsData.totals?.expense || 0).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Spending Trend Chart */}
+                            <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm">
+                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <BarChart3 className="w-4 h-4 text-indigo-500" />
+                                    {t('ledger.stats.trend')}
+                                </h3>
+                                
+                                {statsData.chartData?.length > 0 ? (
+                                    <div className="relative h-48 flex items-end justify-between gap-1 group">
+                                        {/* Max guide lines */}
+                                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pr-2">
+                                            <div className="w-full border-t border-slate-50 relative">
+                                                <span className="absolute -top-3 right-0 text-[8px] font-black text-slate-300">MAX</span>
+                                            </div>
+                                            <div className="w-full border-t border-slate-50" />
+                                        </div>
+                                        
+                                        {statsData.chartData.map((d: ChartData) => {
+                                            const maxAmount = Math.max(...(statsData.chartData || []).map((cd: ChartData) => Math.max(cd.income, cd.expense)), 10)
+                                            const expenseHeight = (d.expense / maxAmount) * 100
+                                            const incomeHeight = (d.income / maxAmount) * 100
+
+                                            return (
+                                                <div key={d.fullDate} className="flex-1 h-full flex flex-col justify-end items-center gap-0.5 group/bar relative">
+                                                    {incomeHeight > 0 && (
+                                                        <motion.div
+                                                            initial={{ height: 0 }}
+                                                            animate={{ height: `${incomeHeight}%` }}
+                                                            className="w-full max-w-[6px] bg-emerald-400 rounded-t-sm"
+                                                        />
+                                                    )}
+                                                    <motion.div
+                                                        initial={{ height: 0 }}
+                                                        animate={{ height: `${expenseHeight}%` }}
+                                                        className="w-full max-w-[6px] bg-indigo-500 rounded-t-sm"
+                                                    />
+                                                    
+                                                    {/* Date label (sparse) */}
+                                                    {(parseInt(d.day) % 5 === 0 || d.day === '01') && (
+                                                        <span className="mt-2 text-[8px] font-black text-slate-300 shrink-0">
+                                                            {d.day}
+                                                        </span>
+                                                    )}
+
+                                                    {/* Tooltip on hover bar */}
+                                                    <div className="absolute bottom-full mb-2 bg-slate-800 text-white text-[8px] font-black px-1.5 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none text-center">
+                                                        {d.fullDate}<br/>
+                                                        {t('ledger.add.expense').substring(0,1)}: {d.expense.toFixed(1)}<br/>
+                                                        {t('ledger.add.income').substring(0,1)}: {d.income.toFixed(1)}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="h-48 flex items-center justify-center italic text-slate-300">{t('ledger.noRecords')}</div>
+                                )}
+                            </div>
+
+                            {/* Category Breakdown */}
+                            <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm flex flex-col gap-6">
+                                <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <PieChart className="w-4 h-4 text-purple-500" />
+                                        {t('ledger.stats.categoryBreakdown')}
+                                    </div>
+                                </h3>
+
+                                <div className="space-y-5">
+                                    {statsData.categories?.filter((c: CategoryStat) => c.type === 'EXPENSE').length > 0 ? (
+                                        statsData.categories
+                                            .filter((c: CategoryStat) => c.type === 'EXPENSE')
+                                            .sort((a: CategoryStat, b: CategoryStat) => Number(b.total) - Number(a.total))
+                                            .map((cat: CategoryStat) => {
+                                                const totalExpense = statsData.totals?.expense || 1
+                                                const percentage = (Number(cat.total) / totalExpense) * 100
+                                                return (
+                                                    <div key={cat.id} className="flex flex-col gap-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-xl leading-none">{cat.emoji}</span>
+                                                                <span className="text-sm font-black text-slate-700">{cat.name}</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-sm font-black text-slate-800">¥{Number(cat.total).toFixed(2)}</div>
+                                                                <div className="text-[10px] font-bold text-slate-400 leading-none">{percentage.toFixed(1)}%</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-slate-50 rounded-full overflow-hidden">
+                                                            <motion.div
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${percentage}%` }}
+                                                                className="h-full bg-indigo-500/80 rounded-full"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })
+                                    ) : (
+                                        <div className="py-8 text-center text-slate-300 italic">{t('ledger.stats.noBreakdown')}</div>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="py-20 text-center text-slate-300">{t('ledger.noData')}</div>
+                    )}
+                </motion.div>
+            </AnimatePresence>
+        )}
+    </main>
+)}
+
 
             {/* FAB */}
             <motion.button
@@ -202,7 +447,7 @@ export default function LedgerPage() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-black text-slate-800">记一笔</h2>
+                                <h2 className="text-2xl font-black text-slate-800">{t('ledger.add.title')}</h2>
                                 <button onClick={() => setShowAddModal(false)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                                     <X className="w-5 h-5" />
                                 </button>
@@ -220,7 +465,7 @@ export default function LedgerPage() {
                                         }}
                                         className={`flex-1 py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1 transition-all ${txType === 'EXPENSE' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
                                     >
-                                        支出
+                                        {t('ledger.add.expense')}
                                     </button>
                                     <button
                                         type="button"
@@ -231,13 +476,13 @@ export default function LedgerPage() {
                                         }}
                                         className={`flex-1 py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1 transition-all ${txType === 'INCOME' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400'}`}
                                     >
-                                        收入
+                                        {t('ledger.add.income')}
                                     </button>
                                 </div>
 
                                 {/* Amount Input */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">金额 (¥)</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">{t('ledger.add.amount')}</label>
                                     <input
                                         type="number"
                                         step="0.01"
@@ -252,7 +497,7 @@ export default function LedgerPage() {
 
                                 {/* Category Selection */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">分类</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">{t('ledger.add.category')}</label>
                                     <div className="grid grid-cols-4 gap-3">
                                         {activeCategories.map(cat => (
                                             <button
@@ -270,12 +515,12 @@ export default function LedgerPage() {
 
                                 {/* Description */}
                                 <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">备注事项</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">{t('ledger.add.desc')}</label>
                                     <input
                                         type="text"
                                         value={description}
                                         onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="写点什么..."
+                                        placeholder={t('ledger.add.desc') + '...'}
                                         className="w-full bg-slate-50 text-slate-700 font-medium p-4 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-transparent focus:border-indigo-200"
                                         required
                                     />
@@ -289,7 +534,7 @@ export default function LedgerPage() {
                                         className="w-full bg-indigo-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
                                     >
                                         {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
-                                        保存
+                                        {t('ledger.add.save')}
                                     </button>
                                 </div>
                             </form>

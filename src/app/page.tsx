@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag, Heart, StickyNote, CheckCircle2, Trophy, Images, Layout, Sparkles } from 'lucide-react'
+import { Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag, Heart, StickyNote, CheckCircle2, Trophy, Images, Layout, Sparkles, Wallet } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
@@ -230,7 +230,8 @@ export default function Home() {
       // Redirect to login if unauthorized
       const errorMsg = e instanceof Error ? e.message : String(e)
       if (errorMsg.includes('401')) {
-        router.push('/login')
+        console.warn("Home: Unauthorized encounter, redirecting to login...")
+        window.location.href = '/login'
       }
     } finally {
       setLoading(false)
@@ -501,7 +502,8 @@ export default function Home() {
       const routes: Record<string, string> = {
         NOTES: '/notes', SHOP: '/shop',
         TASKS: '/tasks', JOURNAL: '/journal', PHOTOS: '/gallery',
-        MILESTONE: '/journal?filter=milestone'
+        MILESTONE: '/journal?filter=milestone',
+        LEDGER: '/ledger'
       }
       if (routes[w.type]) router.push(routes[w.type])
     }

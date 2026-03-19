@@ -5,8 +5,8 @@ import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 async function checkIsParent() {
-    const { role } = await getSessionUser()
-    return role === 'PARENT'
+    const user = await getSessionUser()
+    return user?.role === 'PARENT'
 }
 
 export async function GET() {

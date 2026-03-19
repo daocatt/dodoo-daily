@@ -9,7 +9,7 @@ const JWT_SECRET = new TextEncoder().encode(
  * Clean potential quotes from cookie values (sometimes happens in certain environments)
  */
 function cleanValue(val: string | undefined) {
-    if (!val) return undefined
+    if (!val || val === 'undefined' || val === 'null') return undefined
     return val.replace(/^["']|["']$/g, '').trim()
 }
 
@@ -24,8 +24,13 @@ export async function signSessionJWT(userId: string, role: string) {
         .sign(JWT_SECRET)
 }
 
+import { db } from './db'
+import { users } from './schema'
+import { eq, and } from 'drizzle-orm'
+
 /**
  * Get the current session user from JWT or legacy cookies
+ * Verifies existence in database to prevent ghost sessions
  */
 export async function getSessionUser() {
     const cookieStore = await cookies()
@@ -33,24 +38,48 @@ export async function getSessionUser() {
     const legacyUserId = cleanValue(cookieStore.get('dodoo_user_id')?.value)
     const legacyRole = cleanValue(cookieStore.get('dodoo_role')?.value)
 
+    let currentUserId: string | undefined
+
     // 1. Try JWT first
     if (token) {
         try {
             const { payload } = await jwtVerify(token, JWT_SECRET)
-            return {
-                userId: payload.userId as string,
-                role: payload.role as string
-            }
+            currentUserId = payload.userId as string
         } catch (e) {
             console.error('JWT verification failed:', e)
-            // If JWT fails, we might still have legacy cookies (or and invalid JWT)
         }
     }
 
-    // 2. Fallback to legacy cookies (to prevent logging out all users immediately)
-    // We should migrate them to JWT upon next login
-    return {
-        userId: legacyUserId,
-        role: legacyRole
+    // 2. Fallback to legacy cookies
+    if (!currentUserId && legacyUserId && legacyRole) {
+        currentUserId = legacyUserId
+        currentUserRole = legacyRole
+    }
+
+    if (!currentUserId) return null
+
+    // 3. PHYSICAL VERIFICATION - Ensure user still exists and not deleted/archived
+    // This is crucial after DB resets or user deletions
+    try {
+        const userRecord = await db.select().from(users).where(
+            and(
+                eq(users.id, currentUserId),
+                eq(users.isDeleted, false)
+            )
+        ).get()
+
+        if (!userRecord) {
+            console.warn(`[Auth] Session user ${currentUserId} not found in database or deleted`)
+            return null
+        }
+
+        return {
+            id: userRecord.id,
+            userId: userRecord.id,
+            role: userRecord.role
+        }
+    } catch (dbError) {
+        console.error('[Auth] Database check failed during session validation:', dbError)
+        return null
     }
 }

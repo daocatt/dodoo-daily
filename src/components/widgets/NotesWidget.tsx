@@ -72,7 +72,7 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
 
             <div className="flex-1 space-y-2.5 overflow-hidden relative">
                     {notes.length > 0 ? (
-                        notes.map((note, idx) => (
+                        notes.map((note) => (
                             <div
                                 key={note.id}
                                 className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-amber-200 transition-colors shadow-sm"

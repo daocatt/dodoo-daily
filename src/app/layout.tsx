@@ -28,9 +28,9 @@ export async function generateMetadata(): Promise<Metadata> {
       title: systemName,
     },
     icons: {
-      icon: '/dog.svg',
-      shortcut: '/dog.svg',
-      apple: '/dog.svg',
+      icon: '/fav.png',
+      shortcut: '/fav.png',
+      apple: '/fav.png',
     }
   }
 }

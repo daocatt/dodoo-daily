@@ -8,19 +8,19 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
-        const { userId: currentUserId, role: currentUserRole } = await getSessionUser()
-
-        if (!currentUserId) {
-            console.warn('[API stats] No currentUserId in cookies')
+        const user = await getSessionUser()
+        if (!user) {
+            console.warn('[API stats] No session user found')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
+        const { id: currentUserId, role: currentUserRole } = user
 
         console.log('[API stats] Fetching stats for user:', currentUserId)
 
         const userRecord = await db.select().from(users).where(eq(users.id, currentUserId)).get()
         if (!userRecord) {
             console.error('[API stats] User record not found for id:', currentUserId)
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+            return NextResponse.json({ error: 'User not found' }, { status: 401 })
         }
 
         // Fetch or create stats

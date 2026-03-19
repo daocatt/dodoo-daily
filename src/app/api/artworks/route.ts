@@ -6,8 +6,9 @@ import { and, eq, desc } from 'drizzle-orm'
 
 export async function GET(req: NextRequest) {
     try {
-        const { userId: currentUserId, role: currentUserRole } = await getSessionUser()
-        if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const user = await getSessionUser()
+        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { id: currentUserId, role: currentUserRole } = user
 
         const { searchParams } = new URL(req.url)
         const limit = parseInt(searchParams.get('limit') || '20')

@@ -71,6 +71,15 @@ export default function AccountHUD() {
     const pathname = usePathname()
     const { t, locale } = useI18n()
     const [isMobile, setIsMobile] = useState(false)
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+            window.location.href = '/login'
+        } catch (error) {
+            console.error('Logout failed:', error)
+            window.location.href = '/login'
+        }
+    }
 
     useEffect(() => {
         const checkMobile = () => window.innerWidth < 610
@@ -97,7 +106,8 @@ export default function AccountHUD() {
                 }
             } else if (res.status === 401 || res.status === 404) {
                 if (pathname && !['/login', '/setup'].some(p => pathname.startsWith(p))) {
-                    window.location.href = '/login'
+                    console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
+                    handleLogout()
                 }
             }
         } catch (err) {
@@ -162,16 +172,6 @@ export default function AccountHUD() {
             }
         } finally {
             setIsSaving(false)
-        }
-    }
-    const handleLogout = async () => {
-        try {
-            await fetch('/api/auth/logout', { method: 'POST' })
-            window.location.href = '/login'
-        } catch (error) {
-            console.error('Logout failed:', error)
-            // Fallback: forcefully redirect
-            window.location.href = '/login'
         }
     }
 

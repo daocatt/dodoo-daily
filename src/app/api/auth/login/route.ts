@@ -6,8 +6,15 @@ import { cookies } from 'next/headers'
 
 export async function POST(req: Request) {
     try {
-        const { id, pin, rememberMe } = await req.json()
-        const [user] = await db.select().from(users).where(eq(users.id, id))
+        const { id, nickname, pin, rememberMe } = await req.json()
+        const { or, and } = await import('drizzle-orm')
+        
+        const [user] = await db.select().from(users).where(
+            and(
+                id ? eq(users.id, id) : or(eq(users.name, nickname), eq(users.nickname, nickname)),
+                eq(users.isDeleted, false)
+            )
+        ).all()
 
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 

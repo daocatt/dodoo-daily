@@ -333,11 +333,7 @@ export default function LoginPage() {
                                             />
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="mb-6 text-slate-500 font-medium bg-slate-50 px-6 py-3 rounded-2xl border border-slate-100">
-                                        {t('login.clickToContinue')}
-                                    </div>
-                                )}
+                                ) : null}
 
                                 <label className="flex items-center gap-3 w-full mb-8 cursor-pointer group">
                                     <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${rememberMe ? 'bg-[#4a5a4a] border-[#4a5a4a]' : 'border-[#d1dcd1] bg-white group-hover:border-[#4a5a4a]'}`}>

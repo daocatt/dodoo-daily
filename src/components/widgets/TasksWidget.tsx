@@ -24,7 +24,6 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const router = useRouter()
     const { t } = useI18n()
 
-    const isIcon = size === 'ICON'
 
     const formatTaskDate = (dateStr: string | number | null) => {
         if (!dateStr) return ''
@@ -108,7 +107,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
 
             <div className="flex-1 space-y-2.5 overflow-hidden">
                     {tasks.length > 0 ? (
-                        tasks.map((task, idx) => (
+                        tasks.map((task) => (
                             <div
                                 key={task.id}
                                 className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-blue-200 transition-colors shadow-sm min-w-0"
@@ -117,7 +116,7 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                                     {task.completed ? (
                                         <div className="relative flex items-center justify-center shrink-0">
                                             <CheckCircle2
-                                                className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : `text-${themeColor}-500`}
+                                                className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : "text-blue-500"}
                                                 style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
                                             />
                                         </div>

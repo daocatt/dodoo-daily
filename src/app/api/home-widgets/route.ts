@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { homeWidget } from '@/lib/schema'
+import { homeWidget, users } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
-    const { userId } = await getSessionUser()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId } = user
+    const userRecord = await db.select().from(users).where(eq(users.id, userId)).get()
+    if (!userRecord) {
+        console.warn('[API home-widgets] User record not found for id:', userId)
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     try {
         const widgets = await db.select().from(homeWidget).where(eq(homeWidget.userId, userId)).all()
@@ -39,8 +45,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-    const { userId } = await getSessionUser()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId } = user
 
     try {
         const body = await req.json()
@@ -59,11 +66,12 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const { userId } = await getSessionUser()
-    if (!userId) {
-        console.warn('[API widgets POST] Unauthorized - no userId')
+    const user = await getSessionUser()
+    if (!user) {
+        console.warn('[API widgets POST] Unauthorized - no session user')
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const { id: userId } = user
 
     try {
         const body = await req.json()
@@ -79,8 +87,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-    const { userId } = await getSessionUser()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId } = user
 
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
