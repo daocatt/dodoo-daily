@@ -25,11 +25,20 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
         const { skip, name, nickname, gender, birthDate, avatarUrl } = body
-
         if (!skip) {
             // Validate required fields
             if (!name?.trim()) {
                 return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+            }
+
+            // Auto-generate slug for child
+            const { generateNumericSlug } = await import('@/lib/utils')
+            const baseSlug = name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || generateNumericSlug(8)
+            let candidateSlug = baseSlug
+            for (let i = 1; i <= 10; i++) {
+                const check = await db.select().from(users).where(eq(users.slug, candidateSlug)).all()
+                if (check.length === 0) break
+                candidateSlug = `${baseSlug}-${i}`
             }
 
             // Create the child account
@@ -40,6 +49,7 @@ export async function POST(req: NextRequest) {
                 gender: gender || 'OTHER',
                 birthDate: birthDate ? new Date(birthDate) : null,
                 avatarUrl: avatarUrl || null,
+                slug: candidateSlug,
             }).returning()
 
             // Initialize stats

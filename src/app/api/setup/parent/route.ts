@@ -40,9 +40,25 @@ export async function POST(req: NextRequest) {
             avatarUrl = mediaItem.path;
         }
 
-        // Update the parent's name, nickname, and avatar
+        // Auto-generate slug if parent doesn't have one
+        const { generateNumericSlug } = await import('@/lib/utils')
+        let parentSlug = parentUser.slug
+        if (!parentSlug) {
+            const baseSlug = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || generateNumericSlug(8)
+            // ensure uniqueness
+            let candidate = baseSlug
+            let attempt = 0
+            while (true) {
+                const slugCheck = await db.select().from(users).where(eq(users.slug, candidate)).all()
+                if (slugCheck.length === 0 || slugCheck[0].id === parentUser.id) { parentSlug = candidate; break }
+                attempt++; candidate = `${baseSlug}-${attempt}`
+                if (attempt > 10) { parentSlug = generateNumericSlug(8); break }
+            }
+        }
+
+        // Update the parent's name, nickname, avatar, and slug
         await db.update(users)
-            .set({ name: trimmedName, nickname: trimmedName, avatarUrl })
+            .set({ name: trimmedName, nickname: trimmedName, avatarUrl, slug: parentSlug })
             .where(eq(users.id, parentUser.id))
 
         // Log the parent in automatically by setting session cookies

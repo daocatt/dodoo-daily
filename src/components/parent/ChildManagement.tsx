@@ -198,12 +198,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
         };
 
         return (
-            <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Real Name</label>
                         <input
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                             placeholder="Full Name"
                             value={member.name || ''}
                             onChange={e => {
@@ -223,7 +223,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')} (Required)</label>
                         <input
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
+                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl font-bold outline-none focus:ring-4 focus:ring-blue-100 transition-all"
                             placeholder="Nickname"
                             value={member.nickname || ''}
                             onChange={e => {
@@ -236,7 +236,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.gender')}</label>
                         <div className="flex gap-2">
@@ -265,7 +265,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
                         <select
@@ -297,7 +297,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         />
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')}</label>
                         <div className="w-full px-6 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-black text-slate-400 flex items-center shadow-inner">
@@ -585,57 +585,71 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                 </div>
             </div>
 
-            {(showAdd || editingChild) && (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-md overflow-y-auto"
-                >
-                    <motion.div className="bg-white p-8 md:p-10 rounded-xl border-2 border-blue-50 shadow-2xl w-full max-w-2xl my-auto">
-                        <div className="flex justify-between items-center mb-8">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
-                                    <Users className="w-6 h-6 text-blue-500" />
+            <AnimatePresence>
+                {(showAdd || editingChild) && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm"
+                        onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setEditingChild(null); } }}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                            className="bg-white rounded-2xl border-2 border-blue-50 shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[92dvh]"
+                        >
+                            {/* Header */}
+                            <div className="flex justify-between items-center px-8 py-5 border-b border-slate-100 shrink-0">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                                        <Users className="w-5 h-5 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-black text-slate-800">{editingChild ? 'Edit Member' : 'Add Member'}</h3>
+                                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">Profile Details</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-slate-800">{editingChild ? 'Edit Member' : 'Add Member'}</h3>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Profile Details</p>
-                                </div>
+                                <button onClick={() => { setShowAdd(false); setEditingChild(null); }} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
                             </div>
-                            <button onClick={() => { setShowAdd(false); setEditingChild(null); }} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                                <X className="w-6 h-6 text-slate-400" />
-                            </button>
-                        </div>
 
-                        {renderMemberForm(editingChild || newChild, (val) => {
-                            if (editingChild) setEditingChild(val)
-                            else setNewChild(val)
-                        })}
+                            {/* Scrollable form body */}
+                            <div className="flex-1 overflow-y-auto px-8 py-6">
+                                {renderMemberForm(editingChild || newChild, (val) => {
+                                    if (editingChild) setEditingChild(val)
+                                    else setNewChild(val)
+                                })}
+                            </div>
 
-                        <div className="mt-10 flex gap-4">
-                            <button
-                                onClick={() => handleSave(editingChild || newChild)}
-                                disabled={processing}
-                                className="flex-1 bg-blue-600 text-white rounded-lg font-black py-4 text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
-                            >
-                                <Save className="w-5 h-5" />
-                                {processing ? t('common.loading') : (editingChild ? t('button.save') : t('button.create'))}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setShowAdd(false);
-                                    setEditingChild(null);
-                                    setNicknameTouched(false);
-                                    setEditNicknameTouched(false);
-                                }}
-                                className="px-10 bg-slate-100 text-slate-500 rounded-lg font-bold hover:bg-slate-200 transition-all text-lg"
-                            >
-                                {t('button.cancel')}
-                            </button>
-                        </div>
+                            {/* Footer actions */}
+                            <div className="px-8 py-5 border-t border-slate-100 flex gap-3 shrink-0">
+                                <button
+                                    onClick={() => handleSave(editingChild || newChild)}
+                                    disabled={processing}
+                                    className="flex-1 bg-blue-600 text-white rounded-xl font-black py-3.5 shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+                                >
+                                    <Save className="w-4 h-4" />
+                                    {processing ? t('common.loading') : (editingChild ? t('button.save') : t('button.create'))}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowAdd(false);
+                                        setEditingChild(null);
+                                        setNicknameTouched(false);
+                                        setEditNicknameTouched(false);
+                                    }}
+                                    className="px-8 bg-slate-100 text-slate-500 rounded-xl font-bold hover:bg-slate-200 transition-all text-sm"
+                                >
+                                    {t('button.cancel')}
+                                </button>
+                            </div>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-            )}
+                )}
+            </AnimatePresence>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {activeChildren.length === 0 && !showAdd && (

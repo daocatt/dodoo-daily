@@ -12,6 +12,7 @@ interface User {
     id: string
     name: string
     nickname?: string | null
+    slug?: string | null
     role: string
     avatarUrl: string | null
     isParent?: boolean
@@ -28,6 +29,12 @@ export default function SettingsPage() {
     const [nickSaving, setNickSaving] = useState(false)
     const [nickMessage, setNickMessage] = useState('')
     const [nickError, setNickError] = useState('')
+
+    // Slug
+    const [slug, setSlug] = useState('')
+    const [slugSaving, setSlugSaving] = useState(false)
+    const [slugMessage, setSlugMessage] = useState('')
+    const [slugError, setSlugError] = useState('')
 
     // PIN
     const [pin, setPin] = useState('')
@@ -48,6 +55,7 @@ export default function SettingsPage() {
                 }
                 setUser(data)
                 setNickname(data.nickname || '')
+                setSlug(data.slug || '')
                 setLoading(false)
             })
             .catch(() => router.push('/login'))
@@ -84,6 +92,26 @@ export default function SettingsPage() {
             }
         } catch (e) { setNickError(t('settings.errorNetwork') || 'Network error') }
         finally { setNickSaving(false) }
+    }
+
+    const handleSlugSave = async () => {
+        setSlugSaving(true); setSlugError(''); setSlugMessage('')
+        try {
+            const res = await fetch('/api/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slug })
+            })
+            const data = await res.json()
+            if (res.ok) {
+                if (user) setUser({ ...user, slug: data.slug ?? null })
+                setSlug(data.slug || '')
+                setSlugMessage('Link ID updated!')
+            } else {
+                setSlugError(data.error || 'Failed to update')
+            }
+        } catch (e) { setSlugError('Network error') }
+        finally { setSlugSaving(false) }
     }
 
     const handlePinUpdate = async () => {
@@ -206,6 +234,43 @@ export default function SettingsPage() {
                                 {nickSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 {nickSaving ? (t('common.loading') || 'Saving…') : (t('settings.saveNickname') || 'Save')}
                             </button>
+
+                            {/* Slug / Public Link ID */}
+                            <div className="mt-5 pt-5 border-t border-slate-100 space-y-2">
+                                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1.5">
+                                    🔗 {t('settings.linkId') || 'Public Link ID'}
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-slate-400 font-bold whitespace-nowrap">/u/</span>
+                                    <input
+                                        type="text"
+                                        value={slug}
+                                        onChange={e => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')); setSlugError(''); setSlugMessage('') }}
+                                        placeholder="your-link-id"
+                                        className="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl outline-none font-mono font-bold text-slate-800 text-sm hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
+                                    />
+                                </div>
+                                <p className="text-[10px] text-slate-400 font-bold px-1">💡 {t('settings.linkIdHint') || 'Your public exhibition page URL. Lowercase letters, numbers and hyphens only.'}</p>
+
+                                {slugError && (
+                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-rose-50 rounded-2xl border border-rose-100">
+                                        <X className="w-3.5 h-3.5 text-rose-500 shrink-0" /><span className="text-xs font-bold text-rose-600">{slugError}</span>
+                                    </div>
+                                )}
+                                {slugMessage && (
+                                    <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /><span className="text-xs font-bold text-emerald-600">{slugMessage}</span>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={handleSlugSave}
+                                    disabled={slugSaving}
+                                    className="w-full py-3.5 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-60 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
+                                >
+                                    {slugSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    {slugSaving ? (t('common.loading') || 'Saving…') : (t('settings.saveLinkId') || 'Save Link ID')}
+                                </button>
+                            </div>
                         </div>
                     </motion.div>
 

@@ -9,13 +9,14 @@ export async function PATCH(req: Request) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, nickname, avatarUrl, gender, birthDate } = await req.json()
+        const { name, nickname, avatarUrl, gender, birthDate, slug } = await req.json()
 
         // Uniquness check
-        if (name || nickname) {
+        if (name || nickname || slug) {
             const conditions = [];
             if (name) conditions.push(eq(users.name, name.trim()));
             if (nickname) conditions.push(eq(users.nickname, nickname.trim()));
+            if (slug) conditions.push(eq(users.slug, slug.trim()));
 
             if (conditions.length > 0) {
                 const existing = await db.select().from(users).where(
@@ -28,8 +29,10 @@ export async function PATCH(req: Request) {
                 if (existing.length > 0) {
                     const hasSameName = name && existing.some(u => u.name === name.trim());
                     const hasSameNickname = nickname && existing.some(u => u.nickname === nickname.trim());
+                    const hasSameSlug = slug && existing.some(u => u.slug === slug.trim());
                     if (hasSameName) return NextResponse.json({ error: 'Name already exists' }, { status: 400 });
                     if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+                    if (hasSameSlug) return NextResponse.json({ error: 'This link ID is already taken' }, { status: 400 });
                 }
             }
         }
@@ -40,6 +43,7 @@ export async function PATCH(req: Request) {
         if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl
         if (gender !== undefined) updates.gender = gender
         if (birthDate !== undefined) updates.birthDate = birthDate ? new Date(birthDate) : null
+        if (slug !== undefined) updates.slug = slug ? slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : null
 
         updates.updatedAt = new Date()
 
