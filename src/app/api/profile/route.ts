@@ -9,7 +9,8 @@ export async function PATCH(req: Request) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, nickname, avatarUrl, gender, birthDate, slug } = await req.json()
+        const { name, nickname, avatarUrl, gender, birthDate, slug, exhibitionEnabled } = await req.json()
+        if (name === undefined && avatarUrl === undefined && nickname === undefined && slug === undefined && exhibitionEnabled === undefined) return NextResponse.json({ error: 'Missing updates' }, { status: 400 })
 
         // Uniquness check
         if (name || nickname || slug) {
@@ -44,6 +45,7 @@ export async function PATCH(req: Request) {
         if (gender !== undefined) updates.gender = gender
         if (birthDate !== undefined) updates.birthDate = birthDate ? new Date(birthDate) : null
         if (slug !== undefined) updates.slug = slug ? slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : null
+        if (exhibitionEnabled !== undefined) updates.exhibitionEnabled = exhibitionEnabled
 
         updates.updatedAt = new Date()
 

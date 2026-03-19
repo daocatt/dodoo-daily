@@ -39,8 +39,9 @@ export async function GET(req: NextRequest) {
         }
 
         return NextResponse.json(widgets)
-    } catch (e) {
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    } catch (e: any) {
+        console.error('[API home-widgets GET] Error:', e)
+        return NextResponse.json({ error: 'Failed', detail: e.message }, { status: 500 })
     }
 }
 
@@ -60,8 +61,9 @@ export async function PATCH(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true })
-    } catch (e) {
-        return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
+    } catch (e: any) {
+        console.error('[API home-widgets PATCH] Error:', e)
+        return NextResponse.json({ error: 'Failed to update', detail: e.message }, { status: 500 })
     }
 }
 
@@ -80,9 +82,9 @@ export async function POST(req: NextRequest) {
         const [res] = await db.insert(homeWidget).values({ userId, type, size, x, y }).returning()
         console.log('[API widgets POST] Success:', res)
         return NextResponse.json(res)
-    } catch (e) {
+    } catch (e: any) {
         console.error('[API widgets POST] Error:', e)
-        return NextResponse.json({ error: 'Failed' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed', detail: e.message }, { status: 500 })
     }
 }
 
@@ -98,7 +100,8 @@ export async function DELETE(req: NextRequest) {
     try {
         await db.delete(homeWidget).where(and(eq(homeWidget.id, id), eq(homeWidget.userId, userId)))
         return NextResponse.json({ success: true })
-    } catch (e) {
-        return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
+    } catch (e: any) {
+        console.error('[API home-widgets DELETE] Error:', e)
+        return NextResponse.json({ error: 'Failed to delete', detail: e.message }, { status: 500 })
     }
 }

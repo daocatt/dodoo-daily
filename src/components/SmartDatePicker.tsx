@@ -51,7 +51,9 @@ export default function SmartDatePicker({
     mode = 'popover'
 }: SmartDatePickerProps) {
     const { locale, t } = useI18n()
-    const [month, setMonthState] = useState<Date>(selected || new Date())
+    const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime())
+    const initialMonth = isValidDate(selected) ? (selected as Date) : new Date()
+    const [month, setMonthState] = useState<Date>(initialMonth)
     const [view, setView] = useState<'DAYS' | 'MONTHS' | 'YEARS' | 'TIME'>('DAYS')
     const [isOpen, setIsOpen] = useState(false)
     const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({})
@@ -373,8 +375,8 @@ export default function SmartDatePicker({
                     triggerClassName
                 )}
             >
-                <span className={clsx('text-sm', !selected && 'text-slate-400 font-medium')}>
-                    {selected
+                <span className={clsx('text-sm', (!selected || !isValidDate(selected)) && 'text-slate-400 font-medium')}>
+                    {selected && isValidDate(selected)
                         ? format(selected, showTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd')
                         : (placeholder || t('tasks.form.selectDate'))}
                 </span>

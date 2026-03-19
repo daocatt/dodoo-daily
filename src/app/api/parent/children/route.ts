@@ -5,8 +5,8 @@ import { eq, and, not, or } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 async function checkIsParent() {
-    const { role } = await getSessionUser()
-    return role === 'PARENT'
+    const user = await getSessionUser()
+    return user?.role === 'PARENT'
 }
 
 export async function GET() {
@@ -23,6 +23,7 @@ export async function GET() {
             chineseZodiac: users.chineseZodiac,
             avatarUrl: users.avatarUrl,
             slug: users.slug,
+            exhibitionEnabled: users.exhibitionEnabled,
             role: users.role,
             isArchived: users.isArchived,
             isDeleted: users.isDeleted,
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json()
-        const { name, nickname, gender, birthDate, pin, avatarUrl, role, slug } = body
+        const { name, nickname, gender, birthDate, pin, avatarUrl, role, slug, exhibitionEnabled } = body
         let { zodiac, chineseZodiac } = body
         if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
 
@@ -108,7 +109,8 @@ export async function POST(req: NextRequest) {
             chineseZodiac: chineseZodiac || null,
             pin: pin || null,
             avatarUrl: avatarUrl || null,
-            role: role || 'CHILD'
+            role: role || 'CHILD',
+            exhibitionEnabled: exhibitionEnabled !== undefined ? exhibitionEnabled : true
         }).returning()
 
         await db.insert(accountStats).values({
@@ -131,7 +133,7 @@ export async function PATCH(req: NextRequest) {
 
     try {
         const body = await req.json()
-        const { id, name, nickname, slug, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted } = body
+        const { id, name, nickname, slug, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted, exhibitionEnabled } = body
         let { zodiac, chineseZodiac } = body
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
@@ -177,6 +179,7 @@ export async function PATCH(req: NextRequest) {
         if (role !== undefined) updateData.role = role
         if (isArchived !== undefined) updateData.isArchived = isArchived
         if (isDeleted !== undefined) updateData.isDeleted = isDeleted
+        if (exhibitionEnabled !== undefined) updateData.exhibitionEnabled = exhibitionEnabled
         if (slug !== undefined) updateData.slug = slug
         else if (nickname !== undefined || name !== undefined) {
              // Optionally auto-update slug if name changes and it wasn't specified? 

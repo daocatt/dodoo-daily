@@ -24,7 +24,8 @@ export async function GET(
             and(
                 eq(users.slug, slug),
                 eq(users.isArchived, false),
-                eq(users.isDeleted, false)
+                eq(users.isDeleted, false),
+                eq(users.exhibitionEnabled, true)
             )
         )
 

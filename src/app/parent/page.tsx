@@ -20,6 +20,7 @@ interface ParentUser {
     name: string
     nickname: string | null
     slug: string | null
+    exhibitionEnabled: boolean
     avatarUrl: string | null
     stars: number
     balance: number
@@ -50,8 +51,9 @@ export default function ParentDashboard() {
                         name: data.name || 'Parent',
                         nickname: data.nickname || '',
                         slug: data.slug || '',
+                        exhibitionEnabled: data.exhibitionEnabled !== false,
                         avatarUrl: data.avatarUrl,
-                        stars: data.goldStars || 0,
+                        stars: data.purpleStars || 0,
                         balance: data.currency || 0,
                         role: 'PARENT'
                     })

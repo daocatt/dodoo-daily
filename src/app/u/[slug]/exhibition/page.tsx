@@ -87,6 +87,21 @@ export default function ExhibitionPage() {
         )
     }
 
+    if (!user) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mb-6">
+                    <Palette className="w-10 h-10 text-slate-300" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-800 mb-2">Oops!</h2>
+                <p className="text-slate-500 mb-8">This gallery is currently private.</p>
+                <Link href="/" className="px-8 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg shadow-slate-200 uppercase tracking-widest text-xs">
+                    Go Back Home
+                </Link>
+            </div>
+        )
+    }
+
     return (
         <div className="flex-1 overflow-y-auto hide-scrollbar pb-20 px-6 md:px-20 max-w-7xl mx-auto w-full pt-12 md:pt-20">
             {/* Header */}

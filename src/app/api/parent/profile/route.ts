@@ -10,8 +10,8 @@ export async function PATCH(req: Request) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { name, nickname, avatarUrl, slug } = await req.json()
-        if (!name && !avatarUrl && !nickname && !slug) return NextResponse.json({ error: 'Missing updates' }, { status: 400 })
+        const { name, nickname, avatarUrl, slug, exhibitionEnabled } = await req.json()
+        if (name === undefined && avatarUrl === undefined && nickname === undefined && slug === undefined && exhibitionEnabled === undefined) return NextResponse.json({ error: 'Missing updates' }, { status: 400 })
 
         // Find current user from session
         const currentUser = await db.query.users.findFirst({
@@ -69,6 +69,7 @@ export async function PATCH(req: Request) {
         if (nickname) updates.nickname = nickname.trim()
         if (avatarUrl) updates.avatarUrl = avatarUrl
         if (slug) updates.slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+        if (exhibitionEnabled !== undefined) updates.exhibitionEnabled = exhibitionEnabled
 
         await db.update(users)
             .set(updates)

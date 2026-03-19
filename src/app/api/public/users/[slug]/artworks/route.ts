@@ -13,7 +13,7 @@ export async function GET(
         // 1. Find user by slug
         const results = await db.select({ id: users.id })
             .from(users)
-            .where(eq(users.slug, slug))
+            .where(and(eq(users.slug, slug), eq(users.exhibitionEnabled, true)))
             .limit(1)
 
         if (results.length === 0) {

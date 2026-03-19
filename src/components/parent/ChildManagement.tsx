@@ -20,6 +20,7 @@ interface Child {
     avatarUrl: string | null
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
     slug?: string
+    exhibitionEnabled?: boolean
     isArchived: boolean
     isDeleted: boolean
     pin?: string
@@ -260,7 +261,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                             className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all tracking-widest"
                             placeholder="••••"
                             maxLength={4}
-                            value={member.pin || ''}
+                            value={String(member.pin || '')}
                             onChange={e => onChange({ ...member, pin: e.target.value })}
                         />
                     </div>
@@ -308,10 +309,15 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                     </div>
                 </div>
 
-                {/* Row 4: Zodiac tags + Slug */}
+                {/* Row 4: Zodiac tags + Slug / Exhibition Toggle */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.slugLabel')}</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex justify-between">
+                            {t('parent.slugLabel')}
+                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${member.exhibitionEnabled !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                {member.exhibitionEnabled !== false ? 'ON' : 'OFF'}
+                            </span>
+                        </label>
                         <div className="flex gap-1.5">
                             <input
                                 className="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all font-mono"
@@ -329,7 +335,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                         const suffix = Math.random().toString(36).substring(2, 6)
                                         onChange({ ...member, slug: base ? `${base}-${suffix}` : suffix })
                                     }}
-                                    className="shrink-0 px-2.5 py-2.5 bg-indigo-50 text-indigo-500 rounded-xl hover:bg-indigo-100 transition-all text-xs font-black"
+                                    className="px-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-blue-500"
                                 >
                                     ✨
                                 </button>
@@ -337,6 +343,23 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         </div>
                     </div>
                     <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('settings.exhibitionStatus')}</label>
+                        <button
+                            type="button"
+                            onClick={() => onChange({ ...member, exhibitionEnabled: member.exhibitionEnabled === false })}
+                            className={`w-full h-[40px] px-4 rounded-xl font-bold text-sm flex items-center justify-between transition-all border ${member.exhibitionEnabled !== false ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${member.exhibitionEnabled !== false ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
+                                {member.exhibitionEnabled !== false ? t('settings.exhibitionEnabled') : t('settings.exhibitionDisabled')}
+                            </span>
+                            <div className={`w-8 h-4 rounded-full relative transition-colors ${member.exhibitionEnabled !== false ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all shadow-sm ${member.exhibitionEnabled !== false ? 'left-4.5' : 'left-0.5'}`} />
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')} / {t('parent.zodiac')}</label>
                         <div className="flex gap-2 py-2.5 px-3 bg-slate-100 rounded-xl">
                             <span className="text-sm font-black text-slate-500">
@@ -349,8 +372,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         </div>
                     </div>
                 </div>
-            </div>
-        )
+            )
     }
 
     const archivedChildren = children.filter(c => !c.isDeleted && c.isArchived)
@@ -379,7 +401,9 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 />
                             ) : (
                                 <div className="w-full h-full bg-blue-50 flex items-center justify-center">
-                                    <span className="text-2xl font-bold text-blue-300 capitalize">{child.nickname?.[0] || child.name[0]}</span>
+                                    <span className="text-2xl font-bold text-blue-300 capitalize">
+                                        {(child.nickname?.[0] || child.name?.[0] || '?')}
+                                    </span>
                                 </div>
                             )}
                             <label className="absolute inset-0 bg-black/40 text-white text-[10px] flex flex-col items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">

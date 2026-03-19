@@ -1,0 +1,1 @@
+ALTER TABLE `Users` ADD `exhibitionEnabled` integer DEFAULT true NOT NULL;

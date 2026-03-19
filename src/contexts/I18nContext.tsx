@@ -312,8 +312,13 @@ const dictionaries: Dictionary = {
         'settings.updateFailed': 'Update failed',
         'settings.updatePin': 'Update PIN',
         'settings.saveNickname': 'Save Nickname',
+        'shop.previewOnly': 'Preview Only Mode',
         'settings.linkId': 'Public Link ID',
-        'settings.linkIdHint': 'Your public exhibition page URL. Use lowercase letters, numbers, and hyphens only.',
+        'settings.linkIdHint': 'Your public exhibition page URL.',
+        'settings.exhibitionEnabled': 'Enable Public Exhibition Page',
+        'settings.exhibitionDisabled': 'Disable Public Exhibition Page',
+        'settings.exhibitionStatus': 'Status',
+        'settings.linkIdHintSuffix': 'Use lowercase letters, numbers, and hyphens only.',
         'settings.saveLinkId': 'Save Link ID',
         'settings.pinLengthError': 'PIN must be at least 4 digits',
         'settings.pinUpdateSuccess': 'PIN updated',
@@ -930,7 +935,11 @@ const dictionaries: Dictionary = {
         'settings.updatePin': '更新密码',
         'settings.saveNickname': '保存昵称修改',
         'settings.linkId': '公开链接 ID',
-        'settings.linkIdHint': '你的公开展览页面地址，只能使用小写字母、数字和连字符。',
+        'settings.linkIdHint': '你的个人公开展示页地址。',
+        'settings.exhibitionEnabled': '启用公开展示页',
+        'settings.exhibitionDisabled': '停用公开展示页',
+        'settings.exhibitionStatus': '展示页状态',
+        'settings.linkIdHintSuffix': '只能使用小写字母、数字和连字符。',
         'settings.saveLinkId': '保存链接 ID',
         'settings.pinLengthError': '密码长度至少为 4 位',
         'settings.pinUpdateSuccess': '密码已更新',
@@ -1150,6 +1159,7 @@ const dictionaries: Dictionary = {
         'ledger.categories.deleteDesc': '正在使用的分类无法删除。',
         'ledger.categories.all': '现有全部分类',
         'ledger.categories.setup': '分类配置',
+        'shop.previewOnly': '仅预览模式',
         'pinned': '便签',
     }
 }
@@ -1200,7 +1210,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
             text = key
         }
 
-        if (params) {
+        if (params && typeof params === 'object') {
             Object.entries(params).forEach(([k, v]) => {
                 text = text.replace(`{${k}}`, v)
             })

@@ -40,7 +40,8 @@ export async function GET(
                 eq(artwork.id, id),
                 eq(artwork.isPublic, true),
                 eq(artwork.isApproved, true),
-                eq(artwork.isArchived, false)
+                eq(artwork.isArchived, false),
+                eq(users.exhibitionEnabled, true)
             )
         )
         .limit(1)

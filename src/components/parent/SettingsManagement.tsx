@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Camera, Check, X, Loader2, Save, Lock, Shield } from 'lucide-react'
+import { Camera, Check, X, Loader2, Save, Lock, Shield, Image as ImageIcon } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { motion } from 'framer-motion'
 import PushSubscriptionManager from '@/components/PushSubscriptionManager'
@@ -11,6 +11,7 @@ type UserProp = {
     name: string
     nickname: string | null
     slug: string | null
+    exhibitionEnabled: boolean
     avatarUrl: string | null
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
 }
@@ -21,6 +22,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
     const [nickname, setNickname] = useState(user?.nickname || '')
     const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || '')
     const [slug, setSlug] = useState(user?.slug || '')
+    const [exhibitionEnabled, setExhibitionEnabled] = useState(user?.exhibitionEnabled !== false)
     const [uploading, setUploading] = useState(false)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState('')
@@ -62,7 +64,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
             const res = await fetch('/api/parent/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, nickname, avatarUrl, slug })
+                body: JSON.stringify({ name, nickname, avatarUrl, slug, exhibitionEnabled })
             })
             if (res.ok) {
                 setMessage(t('parent.profileUpdateSuccess') || 'Profile updated!')
@@ -173,6 +175,43 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                             <p className="text-[10px] text-slate-400 font-bold px-1">
                                 💡 {t('settings.linkIdHint') || 'Your public exhibition page URL.'}
                             </p>
+                        </div>
+
+                        {/* Exhibition Status Toggle */}
+                        <div className="space-y-3 pt-4 border-t border-slate-50">
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1.5">
+                                    {t('settings.exhibitionStatus') || 'Exhibition Status'}
+                                </label>
+                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full ${exhibitionEnabled ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                    {exhibitionEnabled ? 'ONLINE' : 'OFFLINE'}
+                                </span>
+                            </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => { setExhibitionEnabled(!exhibitionEnabled); setError(''); setMessage('') }}
+                                className={`w-full group relative overflow-hidden flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                                    exhibitionEnabled 
+                                    ? 'bg-emerald-50/50 border-emerald-100/50 text-emerald-800 hover:bg-emerald-50 hover:border-emerald-200' 
+                                    : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'
+                                }`}
+                            >
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                                    exhibitionEnabled ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-400'
+                                }`}>
+                                    <ImageIcon className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="font-black text-sm">{exhibitionEnabled ? t('settings.exhibitionEnabled') : t('settings.exhibitionDisabled')}</div>
+                                    <div className="text-[10px] font-bold opacity-60 uppercase tracking-tight">
+                                        {exhibitionEnabled ? 'People can visit your exhibition' : 'Exhibition page is hidden'}
+                                    </div>
+                                </div>
+                                <div className={`ml-auto w-10 h-5 rounded-full relative transition-colors ${exhibitionEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                                    <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all ${exhibitionEnabled ? 'left-6' : 'left-1'}`} />
+                                </div>
+                            </button>
                         </div>
 
                         {/* Feedback */}

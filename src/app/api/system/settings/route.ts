@@ -30,14 +30,14 @@ export async function GET() {
         }
 
         return NextResponse.json(settings)
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to fetch system settings:', error)
         return NextResponse.json({
             isClosed: false,
             needsSetup: false,
-            starsToCoinsRatio: 10,
-            coinsToRmbRatio: 1.0
-        })
+            error: error?.message || 'Unknown error',
+            stack: error?.stack 
+        }, { status: 500 })
     }
 }
 

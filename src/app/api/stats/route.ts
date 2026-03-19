@@ -37,7 +37,7 @@ export async function GET() {
                     currency: 0,
                 }).returning()
                 statsRecord = results[0]
-            } catch (insertError) {
+            } catch (insertError: any) {
                 console.error('[API stats] Insert failed:', insertError.message)
                 // Fallback: maybe it was created by another request in parallel
                 statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
@@ -59,6 +59,7 @@ export async function GET() {
             avatar: userRecord.avatarUrl,
             avatarUrl: userRecord.avatarUrl,
             slug: userRecord.slug,
+            exhibitionEnabled: userRecord.exhibitionEnabled,
             coins: statsRecord.currency,
             timezone: settings?.timezone || 'Asia/Shanghai'
         }

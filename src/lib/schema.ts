@@ -14,6 +14,7 @@ export const users = sqliteTable("Users", {
     name: text("name").notNull().unique(),
     nickname: text("nickname").unique(),
     slug: text("slug").unique(), // For public personal homepage URL
+    exhibitionEnabled: integer("exhibitionEnabled", { mode: "boolean" }).default(true).notNull(),
     pin: text("pin"),
     role: text("role", { enum: ["PARENT", "CHILD", "GRANDPARENT", "OTHER"] }).notNull().default("CHILD"),
     avatarUrl: text("avatarUrl"),
