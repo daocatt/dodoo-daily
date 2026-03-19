@@ -1,5 +1,5 @@
 import { db } from './db'
-import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog } from './schema'
+import { accountStats, accountStatsLog, systemSettings, currencyLog, goldStarLog, purpleStarLog, ledgerRecord, ledgerCategory } from './schema'
 import { eq, and, gte, lte, sql } from 'drizzle-orm'
 
 export type TransactionType = 'CURRENCY' | 'GOLD_STAR' | 'PURPLE_STAR' | 'ANGER_PENALTY'
@@ -109,5 +109,111 @@ export async function convertStarsToCoins(userId: string, starAmount: number) {
 
     // Add Coins
     const addRes = await addBalance(userId, 'CURRENCY', coinsToAdd, `Exchanged ${starsToDeduct} stars`)
+    return addRes
+}
+
+// ==========================================
+// FIAT (Real Money) & BANK SYSTEM
+// ==========================================
+
+export async function addFiatBalance(
+    userId: string,
+    amount: number, // CAN be positive or negative
+    categoryId: string,
+    type: 'INCOME' | 'EXPENSE',
+    description: string,
+    relatedUserId?: string
+) {
+    if (amount === 0) return { success: true, balance: 0 }
+
+    let stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
+    if (!stats) {
+        const newStats = await db.insert(accountStats).values({ userId }).returning()
+        stats = newStats[0]
+    }
+
+    const currentBalance = stats.fiatBalance || 0
+    let delta = amount
+    
+    // Safety check for expense
+    if (type === 'EXPENSE') {
+        delta = -Math.abs(amount)
+        if (currentBalance + delta < 0) {
+            return { success: false, error: '余额不足' } // Insufficient balance
+        }
+    } else {
+        delta = Math.abs(amount)
+    }
+
+    const newBalance = Number((currentBalance + delta).toFixed(2)) // 2 decimal places
+
+    // Using transaction block
+    try {
+        await db.transaction(async (tx) => {
+            // 1. Update stats
+            await tx.update(accountStats)
+                .set({ fiatBalance: newBalance, updatedAt: new Date() })
+                .where(eq(accountStats.userId, userId))
+
+            // 2. Insert ledger record
+            await tx.insert(ledgerRecord).values({
+                userId,
+                categoryId,
+                type,
+                amount: Math.abs(amount), // Always store absolute amount
+                date: new Date(),
+                description,
+                relatedUserId
+            })
+        })
+        return { success: true, balance: newBalance }
+    } catch (e: unknown) {
+        return { success: false, error: (e as Error).message }
+    }
+}
+
+export async function convertCoinsToFiat(userId: string, coinsToExchange: number) {
+    if (coinsToExchange <= 0) return { success: false, error: '无效金额' }
+
+    const settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
+    // Coins to RMB Ratio. Example: 0.1 means 10 coins = 1 RMB
+    const ratio = settings?.coinsToRmbRatio || 0.1
+
+    // Ensure user has enough coins
+    const stats = await db.select().from(accountStats).where(eq(accountStats.userId, userId)).get()
+    const currentCoins = stats?.currency || 0
+    if (currentCoins < coinsToExchange) {
+        return { success: false, error: '金币不足' }
+    }
+
+    const fiatEarned = Number((coinsToExchange * ratio).toFixed(2))
+
+    // 1. Deduct Coins (Virtual Currency)
+    const deductRes = await addBalance(userId, 'CURRENCY', -coinsToExchange, '兑换为零花钱')
+    if (!deductRes || !deductRes.success) return deductRes || { success: false, error: '金币扣除失败' }
+
+    // 2. Get or create an "Exchange" category in Ledger
+    let category = await db.select().from(ledgerCategory)
+        .where(and(eq(ledgerCategory.isSystem, true), eq(ledgerCategory.name, '金币兑换')))
+        .get()
+
+    if (!category) {
+        const newCat = await db.insert(ledgerCategory).values({
+            name: '金币兑换',
+            emoji: '🔄',
+            type: 'INCOME',
+            isSystem: true
+        }).returning()
+        category = newCat[0]
+    }
+
+    // 3. Add Fiat (Real Money)
+    const addRes = await addFiatBalance(
+        userId,
+        fiatEarned,
+        category.id,
+        'INCOME',
+        `由 ${coinsToExchange} 个金币兑换得到`
+    )
     return addRes
 }

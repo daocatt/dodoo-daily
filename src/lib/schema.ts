@@ -33,6 +33,8 @@ export const accountStats = sqliteTable("AccountStats", {
     purpleStars: integer("purpleStars").default(0).notNull(),
     angerPenalties: integer("angerPenalties").default(0).notNull(),
     currency: integer("currency").default(0).notNull(),
+    fiatBalance: real("fiatBalance").default(0).notNull(), // Real money in pocket (账本钱包)
+    bankBalance: real("bankBalance").default(0).notNull(), // Real money in virtual bank
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
@@ -369,3 +371,69 @@ export const homeWidget = sqliteTable("HomeWidget", {
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
+
+// -----------------------------------------------------------------------------
+// LEDGER SYSTEM (账本 / 真实零花钱)
+// -----------------------------------------------------------------------------
+
+export const ledgerCategory = sqliteTable("LedgerCategory", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    emoji: text("emoji").notNull(),
+    type: text("type", { enum: ["INCOME", "EXPENSE"] }).notNull(),
+    isSystem: integer("isSystem", { mode: "boolean" }).default(false).notNull(), 
+    creatorId: text("creatorId").references(() => users.id), // Null if system
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
+export const ledgerRecord = sqliteTable("LedgerRecord", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    categoryId: text("categoryId").notNull().references(() => ledgerCategory.id),
+    type: text("type", { enum: ["INCOME", "EXPENSE"] }).notNull(),
+    amount: real("amount").notNull(), // Real money amount (supports 2 decimals)
+    date: integer("date", { mode: "timestamp_ms" }).notNull(),
+    description: text("description"),
+    relatedUserId: text("relatedUserId").references(() => users.id), // Who is this expense/income related to?
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+// -----------------------------------------------------------------------------
+// VIRTUAL BANK SYSTEM (儿童理财/虚拟银行)
+// -----------------------------------------------------------------------------
+
+export const bankInvestment = sqliteTable("BankInvestment", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    description: text("description"),
+    // 父母手动控制的“净值”，孩子通过净值买入和卖出计算盈亏
+    currentNetValue: real("currentNetValue").default(1.0).notNull(), 
+    isActive: integer("isActive", { mode: "boolean" }).default(true).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+export const bankHoldings = sqliteTable("BankHoldings", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id), // Child holding the investment
+    investmentId: text("investmentId").notNull().references(() => bankInvestment.id),
+    shares: real("shares").notNull(), // Amount of shares they own
+    averageCost: real("averageCost").notNull(), // Cost per share
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+export const bankTransaction = sqliteTable("BankTransaction", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    investmentId: text("investmentId").references(() => bankInvestment.id), // Optional, only if buying fund
+    type: text("type", { enum: ["DEPOSIT", "WITHDRAWAL", "INTEREST", "BUY_FUND", "SELL_FUND"] }).notNull(),
+    amount: real("amount").notNull(), // Money amount
+    shares: real("shares").default(0), // Shares if fund
+    price: real("price"), // Price per share at the time
+    status: text("status", { enum: ["PENDING", "APPROVED", "REJECTED", "COMPLETED"] }).default("COMPLETED").notNull(), // Support withdrawal threshold approval
+    description: text("description"),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+

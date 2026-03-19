@@ -14,6 +14,7 @@ import TasksWidget from '@/components/widgets/TasksWidget'
 import JournalWidget from '@/components/widgets/JournalWidget'
 import PhotoWidget from '@/components/widgets/PhotoWidget'
 import MilestoneWidget from '@/components/widgets/MilestoneWidget'
+import LedgerWidget from '@/components/widgets/LedgerWidget'
 
 type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
 
@@ -84,8 +85,6 @@ const SIZE_LABELS: Record<WidgetSize, string> = {
   GIANT: '8×4',
 }
 
-const GAP = 12   // px between tiles
-const NAV_H = 60 // header height
 
 interface Particle {
   initRotate: number
@@ -517,6 +516,7 @@ export default function Home() {
         PHOTOS:    { Icon: Images,        bg: 'bg-purple-500', glow: 'shadow-purple-500/30', label: t('menu.gallery') },
         SHOP:      { Icon: ShoppingBag,   bg: 'bg-amber-400',  glow: 'shadow-amber-500/30', label: t('menu.shop') },
         MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('parent.milestone') },
+        LEDGER:    { Icon: Wallet,        bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
       }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
       const { Icon, bg, glow, label } = config
@@ -556,6 +556,7 @@ export default function Home() {
         case 'JOURNAL': return <JournalWidget size={w.size} cellSize={cellSize} />
         case 'PHOTOS': return <PhotoWidget size={w.size} cellSize={cellSize} />
         case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
+        case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
         default:
           return (
             <div className="w-full h-full bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400" style={{ fontSize: cellSize * 0.1 }}>
@@ -683,7 +684,8 @@ export default function Home() {
                   { type: 'JOURNAL', Icon: Heart },
                   { type: 'PHOTOS', Icon: Images },
                   { type: 'SHOP', Icon: ShoppingBag },
-                  { type: 'MILESTONE', Icon: Trophy }
+                  { type: 'MILESTONE', Icon: Trophy },
+                  { type: 'LEDGER', Icon: Wallet }
                 ].map(({ type, Icon }) => {
                   return (
                     <button
