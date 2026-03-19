@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import {
     format, addMonths, subMonths, startOfMonth, endOfMonth,
     startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth,
@@ -53,8 +54,12 @@ export default function SmartDatePicker({
     const [month, setMonthState] = useState<Date>(selected || new Date())
     const [view, setView] = useState<'DAYS' | 'MONTHS' | 'YEARS' | 'TIME'>('DAYS')
     const [isOpen, setIsOpen] = useState(false)
+    const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({})
+    const [openUpward, setOpenUpward] = useState(true)
     const containerRef = useRef<HTMLDivElement>(null)
-    
+    const triggerRef = useRef<HTMLDivElement>(null)
+    const [mounted] = useState(() => typeof window !== 'undefined')
+
     const dateLocale = locale === 'zh-CN' ? zhCN : enUS
 
     // Outside click
@@ -68,6 +73,42 @@ export default function SmartDatePicker({
         if (isOpen) document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [isOpen, mode])
+
+    // Compute fixed position for the Portal popover
+    const handleToggle = () => {
+        if (!isOpen && triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect()
+            const CALENDAR_HEIGHT = 430
+            const CALENDAR_WIDTH = 300
+            const spaceAbove = rect.top
+            const spaceBelow = window.innerHeight - rect.bottom
+            const shouldOpenUpward = spaceAbove >= CALENDAR_HEIGHT || spaceAbove > spaceBelow
+            setOpenUpward(shouldOpenUpward)
+
+            // right-align with the trigger, clamp to viewport
+            const right = window.innerWidth - rect.right
+            const clampedRight = Math.max(8, Math.min(right, window.innerWidth - CALENDAR_WIDTH - 8))
+
+            if (shouldOpenUpward) {
+                setPopoverStyle({
+                    position: 'fixed',
+                    bottom: window.innerHeight - rect.top + 12,
+                    right: clampedRight,
+                    width: CALENDAR_WIDTH,
+                    zIndex: 9999,
+                })
+            } else {
+                setPopoverStyle({
+                    position: 'fixed',
+                    top: rect.bottom + 12,
+                    right: clampedRight,
+                    width: CALENDAR_WIDTH,
+                    zIndex: 9999,
+                })
+            }
+        }
+        setIsOpen(prev => !prev)
+    }
 
     const calendarDays = useMemo(() => getCalendarDays(month), [month])
 
@@ -319,7 +360,8 @@ export default function SmartDatePicker({
         <div ref={containerRef} className={clsx('relative w-full', className)}>
             {/* Trigger */}
             <div
-                onClick={() => setIsOpen(!isOpen)}
+                ref={triggerRef}
+                onClick={handleToggle}
                 className={clsx(
                     'w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-5 py-3.5 font-bold text-slate-800 hover:bg-white hover:border-slate-100 transition-all cursor-pointer flex items-center justify-between',
                     isOpen && 'bg-white border-indigo-100',
@@ -334,20 +376,27 @@ export default function SmartDatePicker({
                 <CalendarIcon className={clsx('w-4 h-4', selected ? 'text-indigo-400' : 'text-slate-400')} />
             </div>
 
-            {/* Popover */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                        transition={{ duration: 0.15, ease: 'easeOut' }}
-                        className="absolute z-[2000] bottom-full mb-3 right-0 w-[300px] shadow-[0_20px_60px_-10px_rgba(99,102,241,0.2),0_10px_30px_-10px_rgba(0,0,0,0.15)] border border-slate-100/80 rounded-[2rem] overflow-hidden origin-bottom-right"
-                    >
-                        {CalendarContent}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Portal Popover — rendered at body level to escape overflow:hidden */}
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, y: openUpward ? 8 : -8, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: openUpward ? 8 : -8, scale: 0.97 }}
+                            transition={{ duration: 0.15, ease: 'easeOut' }}
+                            style={{
+                                ...popoverStyle,
+                                transformOrigin: openUpward ? 'bottom right' : 'top right',
+                            }}
+                            className="shadow-[0_20px_60px_-10px_rgba(99,102,241,0.2),0_10px_30px_-10px_rgba(0,0,0,0.15)] border border-slate-100/80 rounded-[2rem] overflow-hidden"
+                        >
+                            {CalendarContent}
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     )
 }

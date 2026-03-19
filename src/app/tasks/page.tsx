@@ -419,11 +419,12 @@ function TasksPageContent() {
                                 const hasApproval = task.isAssigned ? task.confirmationStatus === 'APPROVED' : true;
 
                                 return (
-                                    <motion.div
+                                    <div
                                         key={task.id}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05, type: 'spring' }}
+                                        style={{
+                                            animation: `taskFadeUp 0.22s ease-out both`,
+                                            animationDelay: `${idx * 0.04}s`,
+                                        }}
                                         className={`p-3 md:p-3.5 rounded-xl md:rounded-2xl border-2 md:border-4 backdrop-blur-xl shadow-sm flex flex-col md:flex-row md:items-center gap-3 transition-all duration-300 ${task.completed ? 'bg-white/40 border-white/30' : 'bg-white border-white'}`}
                                     >
                                         <div className="flex items-center gap-3 flex-1">
@@ -538,7 +539,7 @@ function TasksPageContent() {
                                                 )}
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 )
                             })}
                         </div>
