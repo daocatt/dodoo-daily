@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface LedgerRecord {
     id: string
@@ -18,6 +19,7 @@ interface LedgerRecord {
 }
 
 export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
+    const { t } = useI18n()
     const [balance, setBalance] = useState(0)
     const [records, setRecords] = useState<LedgerRecord[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
@@ -58,7 +60,7 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
                             className="font-black text-indigo-600 tracking-tight uppercase opacity-80"
                             style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                         >
-                            账本
+                            {t('ledger.title')}
                         </span>
                     )}
                 </div>
@@ -106,7 +108,7 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
                 ) : (
                     size !== 'ICON' && (
                         <div className="h-full flex flex-col items-center justify-center text-indigo-300 opacity-40 italic font-medium" style={{ fontSize: Math.max(8, cellSize * 0.09) }}>
-                            <span>暂无流水</span>
+                            <span>{t('ledger.noRecords')}</span>
                         </div>
                     )
                 )}
