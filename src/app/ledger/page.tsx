@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wallet, Landmark, Plus, X, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check } from 'lucide-react'
+import { Wallet, Landmark, Plus, X as XIcon, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check } from 'lucide-react'
 import { format, subMonths, addMonths, startOfMonth } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -510,7 +510,7 @@ export default function LedgerPage() {
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-black text-slate-800">{t('ledger.add.title')}</h2>
                                 <button onClick={() => setShowAddModal(false)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                    <X className="w-5 h-5" />
+                                    <XIcon className="w-5 h-5" />
                                 </button>
                             </div>
 
@@ -625,7 +625,7 @@ export default function LedgerPage() {
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('ledger.transfer.title')}</h2>
                                 <button onClick={() => setShowTransferModal(false)} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                    <X className="w-6 h-6" />
+                                    <XIcon className="w-6 h-6" />
                                 </button>
                             </div>
 

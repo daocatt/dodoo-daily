@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays, Users, Edit2, User, Coins, Check, CheckCheck, RotateCcw, Trash2, X } from 'lucide-react'
+import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays, Users, Edit2, User, Coins, Check, CheckCheck, RotateCcw, Trash2, X as XIcon } from 'lucide-react'
 import { getStartOfDayInTimezone, getTodayStringInTimezone } from '@/lib/utils'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
@@ -50,7 +50,7 @@ function TasksPageContent() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
-    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'daily' | 'monthly' | 'assigns'>('today')
+    const [activeTab, setActiveTab] = useState<'planned' | 'today' | 'week' | 'tomorrow' | 'daily' | 'monthly' | 'assigns'>('today')
     const [isParent, setIsParent] = useState(false)
     const [children, setChildren] = useState<Child[]>([])
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
@@ -297,45 +297,54 @@ function TasksPageContent() {
             <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
 
                 {/* Left Sidebar (Tabs) */}
-                <aside className="w-full md:w-[240px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
+                <aside className="w-full md:w-[200px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
                     <div className="flex md:flex-col overflow-x-auto p-1.5 md:p-2 bg-white/60 backdrop-blur-md rounded-lg md:rounded-xl w-full shadow-inner border border-white hide-scrollbar">
                         <button
-                            onClick={() => setActiveTab('today')}
-                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'today' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                            onClick={() => setActiveTab('planned')}
+                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'planned' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Sun className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.today')}</span>
+                            <CalendarDays className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.planned')}</span>
                         </button>
                         <button
-                            onClick={() => setActiveTab('tomorrow')}
-                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'tomorrow' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                            onClick={() => setActiveTab('today')}
+                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'today' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Sunrise className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.tomorrow')}</span>
+                            <Sun className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.today')}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('week')}
-                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'week' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'week' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Calendar className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.thisWeek')}</span>
+                            <Calendar className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.thisWeek')}</span>
+                        </button>
+
+                        <div className="hidden md:block h-px bg-slate-200/50 my-2 mx-4" />
+
+                        <button
+                            onClick={() => setActiveTab('tomorrow')}
+                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'tomorrow' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                        >
+                            <Sunrise className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.tomorrow')}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('daily')}
-                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'daily' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'daily' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <Repeat className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.dailyLoop')}</span>
+                            <Repeat className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.dailyLoop')}</span>
                         </button>
                         <button
                             onClick={() => setActiveTab('monthly')}
-                            className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'monthly' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                            className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'monthly' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                         >
-                            <CalendarDays className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.monthlyLoop')}</span>
+                            <CalendarDays className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.monthlyLoop')}</span>
                         </button>
                         {!isParent && (
                             <div className="flex flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
                                 <button
                                     onClick={() => setActiveTab('assigns')}
-                                    className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                                    className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                                 >
-                                    <Users className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
+                                    <Users className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
                                 </button>
                             </div>
                         )}
@@ -343,15 +352,15 @@ function TasksPageContent() {
                             <div className="flex flex-col gap-1 w-full mt-2 md:mt-4 pt-2 md:pt-4 md:border-t md:border-slate-200/50">
                                 <button
                                     onClick={() => setActiveTab('assigns')}
-                                    className={`flex-1 min-w-[100px] md:w-full flex items-center justify-center md:justify-start gap-3 py-3 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-sm transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                                    className={`flex-1 min-w-[90px] md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3 md:px-5 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all ${activeTab === 'assigns' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                                 >
-                                    <CheckSquare className="w-5 h-5 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
+                                    <CheckSquare className="w-4 h-4 flex-shrink-0" /> <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
                                 </button>
                                 {activeTab === 'assigns' && children.length > 1 && (
                                     <div className="flex md:flex-col gap-1 md:pl-8 mt-1 w-full">
                                         <button
                                             onClick={() => setAssignedChildId('ALL')}
-                                            className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-xs transition-colors shrink-0 ${assignedChildId === 'ALL' ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
+                                            className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-[11px] transition-colors shrink-0 ${assignedChildId === 'ALL' ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
                                         >
                                             {t('tasks.allChildren')}
                                         </button>
@@ -359,9 +368,9 @@ function TasksPageContent() {
                                             <button
                                                 key={child.id}
                                                 onClick={() => setAssignedChildId(child.id)}
-                                                className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-xs transition-colors shrink-0 flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
+                                                className={`py-2 px-4 rounded-xl text-center md:text-left font-bold text-[11px] transition-colors shrink-0 flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100 text-blue-600 md:shadow-inner' : 'text-slate-500 hover:bg-white/50'}`}
                                             >
-                                                {child.avatarUrl && <img src={child.avatarUrl} className="w-4 h-4 rounded-full object-cover hidden md:block" />}
+                                                {child.avatarUrl && <img src={child.avatarUrl} className="w-3.5 h-3.5 rounded-full object-cover hidden md:block" />}
                                                 {child.name}
                                             </button>
                                         ))}
@@ -391,6 +400,37 @@ function TasksPageContent() {
                                 const isAssignIGave = task.isAssigned && task.assignerId === currentUserId;
                                 const isAssignIReceived = task.isAssigned && task.assigneeId === currentUserId;
                                 const isMyOwnTask = !task.isAssigned;
+
+                                if (activeTab === 'planned') {
+                                    return !!task.plannedTime;
+                                }
+
+                                if (activeTab === 'today') {
+                                    const todayStr = getTodayStringInTimezone(systemTimezone);
+                                    if (task.plannedTime) {
+                                        return task.plannedTime.startsWith(todayStr);
+                                    }
+                                    return false;
+                                }
+
+                                if (activeTab === 'tomorrow') {
+                                    const tomorrow = new Date();
+                                    tomorrow.setDate(tomorrow.getDate() + 1);
+                                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                                    if (task.plannedTime) {
+                                        return task.plannedTime.startsWith(tomorrowStr);
+                                    }
+                                    return false;
+                                }
+
+                                if (activeTab === 'week') {
+                                    if (!task.plannedTime) return false;
+                                    const date = new Date(task.plannedTime);
+                                    const now = new Date();
+                                    const weekEnd = endOfWeek(now);
+                                    const weekStart = startOfWeek(now);
+                                    return date >= weekStart && date <= weekEnd;
+                                }
 
                                 if (activeTab === 'assigns') {
                                     // In "Assigns" tab:
@@ -607,7 +647,7 @@ function TasksPageContent() {
                                     )}
                                 </h3>
                                 <button type="button" onClick={() => setShowNewTaskModal(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-slate-400" />
+                                    <XIcon className="w-5 h-5 text-slate-400" />
                                 </button>
                             </div>
                             <div className="overflow-y-auto hide-scrollbar">

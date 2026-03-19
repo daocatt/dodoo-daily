@@ -419,6 +419,7 @@ const dictionaries: Dictionary = {
         // Tasks
         'tasks.title': 'Task List',
         'tasks.newTask': 'New Task',
+        'tasks.planned': 'All Planned',
         'tasks.today': 'Today',
         'tasks.tomorrow': 'Tomorrow',
         'tasks.thisWeek': 'This Week',
@@ -1031,9 +1032,10 @@ const dictionaries: Dictionary = {
         // Tasks
         'tasks.title': '任务清单',
         'tasks.newTask': '新任务',
-        'tasks.today': '今日',
-        'tasks.tomorrow': '明天',
-        'tasks.thisWeek': '本周',
+        'tasks.planned': '所有计划',
+        'tasks.today': '今日任务',
+        'tasks.tomorrow': '明天任务',
+        'tasks.thisWeek': '本周任务',
         'tasks.dailyLoop': '每日循环',
         'tasks.monthlyLoop': '每月循环',
         'tasks.assigned': '分配给我的',
