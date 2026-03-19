@@ -208,7 +208,7 @@ export default function LedgerPage() {
                     <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
                 </div>
             ) : (
-                <main className="flex-1 px-5 py-6 flex flex-col gap-6 overflow-y-auto pb-[env(safe-area-inset-bottom,2rem)]">
+                <main className="flex-1 px-5 py-6 flex flex-col gap-6 overflow-y-auto pb-28">
                     
                     {/* Tab Switcher */}
                     <div className="flex p-1 bg-slate-200/50 rounded-2xl w-full max-w-[240px] mx-auto mb-2">
