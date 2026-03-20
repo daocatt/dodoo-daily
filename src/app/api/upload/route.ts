@@ -4,18 +4,19 @@ import { artwork, users } from '@/lib/schema'
 import { uploadMedia } from '@/lib/storage'
 import { cookies } from 'next/headers'
 import { eq } from 'drizzle-orm'
+import { getSessionUser } from '@/lib/auth';
 
 async function getAuth() {
     const cookieStore = await cookies()
-    const userId = cookieStore.get('dodoo_user_id')?.value
+    const userId = (await getSessionUser())?.userId
     return { userId }
 }
 
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const userId = cookieStore.get('dodoo_user_id')?.value
-        const role = cookieStore.get('dodoo_role')?.value
+        const userId = (await getSessionUser())?.userId
+        const role = (await getSessionUser())?.role
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const formData = await req.formData()

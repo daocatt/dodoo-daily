@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 import { accountStatsLog, currencyLog, goldStarLog, purpleStarLog, users } from '@/lib/schema'
 import { eq, and, desc, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies()
-    const currentUserId = cookieStore.get('dodoo_user_id')?.value
-    const role = cookieStore.get('dodoo_role')?.value
+    const currentUserId = (await getSessionUser())?.userId
+    const role = (await getSessionUser())?.role
 
     if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

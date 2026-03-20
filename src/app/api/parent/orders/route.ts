@@ -4,11 +4,11 @@ import { purchase, users, shopItem, accountStats } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
+import { getSessionUser } from '@/lib/auth'
 
 async function isParent() {
-    const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
-    return role === 'PARENT'
+    const session = await getSessionUser()
+    return session?.role === 'PARENT'
 }
 
 export async function GET() {

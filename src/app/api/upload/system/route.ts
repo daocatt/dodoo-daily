@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadMedia } from '@/lib/storage'
 import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const currentUserId = cookieStore.get('dodoo_user_id')?.value
-        const role = cookieStore.get('dodoo_role')?.value
+        const currentUserId = (await getSessionUser())?.userId
+        const role = (await getSessionUser())?.role
 
         if (!currentUserId || role !== 'PARENT') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -4,11 +4,12 @@ import { wish } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { notifyParents } from '@/lib/push'
+import { getSessionUser } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const currentUserId = cookieStore.get('dodoo_user_id')?.value
+        const currentUserId = (await getSessionUser())?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const results = await db.select()
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const currentUserId = cookieStore.get('dodoo_user_id')?.value
+        const currentUserId = (await getSessionUser())?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const { name, description, imageUrl } = await req.json()

@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const userId = cookieStore.get('dodoo_user_id')?.value
+        const userId = (await getSessionUser())?.userId
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const { pin } = await req.json()

@@ -4,10 +4,11 @@ import { task } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
+import { getSessionUser } from '@/lib/auth'
 
 async function checkParent() {
-    const cookieStore = await cookies()
-    return cookieStore.get('dodoo_role')?.value === 'PARENT'
+    const session = await getSessionUser()
+    return session?.role === 'PARENT'
 }
 
 export async function POST(

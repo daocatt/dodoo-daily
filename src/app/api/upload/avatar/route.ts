@@ -8,11 +8,12 @@ import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 
 import { uploadMedia } from '@/lib/storage'
+import { getSessionUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const currentUserId = cookieStore.get('dodoo_user_id')?.value
+        const currentUserId = (await getSessionUser())?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const formData = await req.formData()
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
 
         // If trying to update someone else's avatar, must be parent
         if (targetUserId !== currentUserId) {
-            const role = cookieStore.get('dodoo_role')?.value
+            const role = (await getSessionUser())?.role
             if (role !== 'PARENT') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 

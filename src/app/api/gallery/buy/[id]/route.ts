@@ -4,11 +4,12 @@ import { artwork, accountStats } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
+import { getSessionUser } from '@/lib/auth';
 
 async function getAuth() {
     const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
-    const id = cookieStore.get('dodoo_user_id')?.value
+    const role = (await getSessionUser())?.role
+    const id = (await getSessionUser())?.userId
     return { role, id }
 }
 

@@ -3,11 +3,12 @@ import { db } from '@/lib/db'
 import { purchase, shopItem } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
     try {
         const cookieStore = await cookies()
-        const currentUserId = cookieStore.get('dodoo_user_id')?.value
+        const currentUserId = (await getSessionUser())?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const orders = await db.select({

@@ -5,11 +5,12 @@ import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
 import { sendPushNotification } from '@/lib/push'
+import { getSessionUser } from '@/lib/auth';
 
 async function checkAuth() {
     const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
-    const userId = cookieStore.get('dodoo_user_id')?.value
+    const role = (await getSessionUser())?.role
+    const userId = (await getSessionUser())?.userId
     return { role, userId }
 }
 
