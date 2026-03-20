@@ -46,3 +46,4 @@ database/dodoo.db
 /database
 /dnd-example
 .eslintcache
+/public/uploads

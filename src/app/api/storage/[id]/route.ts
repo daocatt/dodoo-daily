@@ -10,7 +10,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const user = await getSessionUser();
-  if (!user || user.role !== "parent") {
+  if (!user || user.role?.toLowerCase() !== "parent") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -53,7 +53,7 @@ export async function POST(
     { params }: { params: { id: string } }
 ) {
     const user = await getSessionUser();
-    if (!user || user.role !== "parent") {
+    if (!user || user.role?.toLowerCase() !== "parent") {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -74,11 +74,11 @@ export async function POST(
             createdAt: new Date(),
         });
 
-        // Optionally mark item as no longer for sale or deleted
+        // Mark item as no longer for sale
         await db.update(storageItems)
             .set({ 
                 isForSale: false, 
-                isDeleted: true, // Mark deleted after successful transfer if you don't want it on shelf
+                // We keep it visible so it can show as "Transferred" in list
                 updatedAt: new Date(),
                 version: sql`version + 1`
             })
@@ -96,7 +96,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const user = await getSessionUser();
-  if (!user || user.role !== "parent") {
+  if (!user || user.role?.toLowerCase() !== "parent") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

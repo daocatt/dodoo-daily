@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { storageItems } from "@/lib/schema";
-import { eq, like, and, desc, sql } from "drizzle-orm";
+import { storageItems, storageTransfers } from "@/lib/schema";
+import { eq, like, and, or, desc, sql, getTableColumns, isNotNull } from "drizzle-orm";
 import { getSessionUser } from "@/lib/auth";
 import { nanoid } from "nanoid";
 
@@ -15,20 +15,28 @@ export async function GET(req: Request) {
     const offset = (page - 1) * limit;
 
     try {
-        const conditions = [eq(storageItems.isDeleted, false)];
+        // Items are visible if they are NOT deleted, OR if they were deleted due to a transfer (to see them in history)
+        const visibilityCondition = or(
+            eq(storageItems.isDeleted, false),
+            isNotNull(storageTransfers.id)
+        );
+        const conditions = [visibilityCondition];
 
         if (search) {
             conditions.push(like(storageItems.name, `%${search}%`));
         }
 
-        // Tags are stored as JSON strings. For SQLite, we can use JSON functions to filter.
-        // Or simply use like if we're careful. Let's use clean JSON member check.
         if (tag) {
             conditions.push(sql`EXISTS (SELECT 1 FROM json_each(${storageItems.tags}) WHERE value = ${tag})`);
         }
 
-        const items = await db.select()
+        const items = await db.select({
+            ...getTableColumns(storageItems),
+            isTransferred: sql<boolean>`CASE WHEN ${storageTransfers.id} IS NOT NULL THEN 1 ELSE 0 END`.as('isTransferred'),
+            actualSalePrice: storageTransfers.salePrice
+        })
             .from(storageItems)
+            .leftJoin(storageTransfers, eq(storageItems.id, storageTransfers.itemId))
             .where(and(...conditions))
             .limit(limit)
             .offset(offset)
@@ -44,7 +52,7 @@ export async function GET(req: Request) {
 // POST: Create new item (Parent Only)
 export async function POST(req: Request) {
     const user = await getSessionUser();
-    if (!user || user.role !== "parent") {
+    if (!user || user.role?.toLowerCase() !== "parent") {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

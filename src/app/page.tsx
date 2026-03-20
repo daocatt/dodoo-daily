@@ -574,7 +574,7 @@ export default function Home() {
 
     return (
       <div
-        className="w-full h-full overflow-hidden rounded-3xl"
+        className="w-full h-full overflow-hidden rounded-3xl cursor-pointer active:scale-[0.98] transition-transform"
         onClick={handleWidgetClick}
       >
         {inner}
