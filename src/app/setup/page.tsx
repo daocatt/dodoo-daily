@@ -17,6 +17,17 @@ export default function SetupPage() {
     const { t } = useI18n()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
+    // Check if already setup
+    React.useEffect(() => {
+        fetch('/api/open/system/status')
+            .then(res => res.json())
+            .then(data => {
+                if (data.needsSetup === false) {
+                    router.push('/')
+                }
+            })
+    }, [router])
+
     const genderOptions: { value: Gender; label: string; emoji: string; color: string; bg: string }[] = [
         { value: 'MALE', label: t('setup.boy'), emoji: '👦', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
         { value: 'FEMALE', label: t('setup.girl'), emoji: '👧', color: 'text-rose-600', bg: 'bg-rose-50 border-rose-200' },
