@@ -16,13 +16,17 @@ export async function POST(
             return NextResponse.json({ error: 'Name is required' }, { status: 400 })
         }
 
-        // Check if artwork exists and is not sold
+        // Check if artwork exists, is public, approved and not sold
         const artworks = await db.select().from(artwork).where(eq(artwork.id, id))
         if (artworks.length === 0) {
             return NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
         }
 
         const art = artworks[0]
+        if (art.isArchived || !art.isPublic || !art.isApproved) {
+            return NextResponse.json({ error: 'Artwork is not available for purchase' }, { status: 403 })
+        }
+
         if (art.isSold) {
             return NextResponse.json({ error: 'Artwork is already sold' }, { status: 400 })
         }

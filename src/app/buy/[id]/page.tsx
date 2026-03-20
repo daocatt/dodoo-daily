@@ -12,7 +12,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
     const { id } = await params
     const artworks = await db.select().from(artwork).where(eq(artwork.id, id))
 
-    if (artworks.length === 0) {
+    if (artworks.length === 0 || artworks[0].isArchived || !artworks[0].isPublic || !artworks[0].isApproved) {
         notFound()
     }
 
@@ -30,7 +30,7 @@ export default async function BuyPage({ params }: { params: Promise<{ id: string
 
                 <h1 className="text-3xl font-black text-center mb-2">{art.title}</h1>
                 
-                <ArtBuyInfo priceRMB={art.priceRMB} />
+                <ArtBuyInfo priceCoins={art.priceCoins} />
 
                 <ArtPurchaseControls isSold={art.isSold} artId={art.id} />
             </main>
