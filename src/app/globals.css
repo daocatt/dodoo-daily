@@ -4,7 +4,45 @@
    Natural Texture UI — Design Tokens
    Based on: natural-texture-ui skill
 ───────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────
+   System Baustein — Design Tokens (Default)
+   Industrial Modular aesthetic inspired by precision hardware.
+   --------------------------------------------------------- */
 :root {
+  /* Surface Scale — Warmed to Vintage Putty/Beige */
+  --surface-base: #D1CDBC;   /* Slightly yellowish industrial base */
+  --surface-warm: #E6E2D1;   /* Warm machine casing neutral */
+  --surface-white: #F4F4F2;  /* Light secondary surface/block */
+  
+  /* Typography Scale */
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --text-muted: #6A6B66;
+  
+  /* Functional Accents */
+  --accent-moss: #00853E;    /* Success / Green */
+  --accent-forest: #005B2A;  /* Success Depth */
+  --accent-sage: #D1DED0;    /* Muted Green */
+  --warm-amber: #F2A900;     /* System Highlight / Yellow */
+  --warm-sienna: #B88000;    /* Warning Depth */
+  --danger-terra: #D03027;   /* Critical / Red */
+  --accent-blue: #0055A4;    /* Informational / Blue */
+
+  /* Tactile / Hardware Specifics */
+  --well-bg: #D9D5C4;
+  --shadow-well: inset 2px 2px 4px rgba(0,0,0,0.12), inset -2px -2px 4px rgba(255,255,255,0.6);
+  --shadow-cap: inset 0 2px 2px rgba(255,255,255,0.4), inset 0 -1px 3px rgba(0,0,0,0.2), 0 2px 0 rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.15);
+  --shadow-modular: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius-modular: 3px;
+  --radius-panel: 12px;
+  --groove-dark: rgba(0,0,0,0.18);
+  --groove-light: rgba(255,255,255,0.6);
+}
+
+/* ─────────────────────────────────────────────────────────
+   Nature Texture UI — Legacy Theme
+   ───────────────────────────────────────────────────────── */
+.theme-nature {
   --surface-base: #f5f0e8;
   --surface-warm: #faf7f0;
   --surface-white: #ffffff;
@@ -52,6 +90,16 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: pan-y;
   }
+
+  /* Monospaced Labels Utility */
+  .label-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -94,54 +142,88 @@
    Reusable Surface Classes
 ───────────────────────────────────────────────────────── */
 
-/* Natural card — soft warm shadow, organic radius */
-.natural-card {
-  background: var(--surface-white);
-  border-radius: 24px;
-  box-shadow:
-    0 4px 20px rgba(44, 36, 22, 0.10),
-    0 1px 4px rgba(44, 36, 22, 0.06);
-  padding: 32px;
+/* ─────────────────────────────────────────────────────────
+   Tactile Hardware Primitives (Baustein)
+───────────────────────────────────────────────────────── */
+
+/* Master Panel Container */
+.baustein-panel {
+  background-color: var(--surface-warm);
+  border-radius: var(--radius-panel);
+  box-shadow: 
+    0 20px 50px rgba(0,0,0,0.2),
+    0 5px 15px rgba(0,0,0,0.1),
+    inset 1px 1px 2px rgba(255,255,255,0.7),
+    inset -1px -1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Elevated variant */
-.natural-card-elevated {
-  background: var(--surface-white);
-  border-radius: 24px;
-  box-shadow:
-    0 12px 40px rgba(44, 36, 22, 0.14),
-    0 2px 8px rgba(44, 36, 22, 0.06);
-  padding: 32px;
+/* Background Pattern: Industrial Grid/Dots */
+.app-bg-pattern {
+  background-color: var(--surface-base);
+  background-image: 
+    radial-gradient(var(--groove-dark) 1px, transparent 1px),
+    radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.05) 100%);
+  background-size: 24px 24px, 100% 100%;
 }
 
-/* Inset / sunken panel */
-.natural-inset {
-  background: var(--surface-base);
-  border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 16px;
+/* Hardware Groove (Divider) */
+.hardware-groove {
+  height: 2px;
+  width: 100%;
+  background: var(--groove-dark);
+  border-bottom: 1px solid var(--groove-light);
+}
+
+/* Sunken Well with inner shadow */
+.hardware-well {
+  background: var(--well-bg);
+  box-shadow: var(--shadow-well);
+  position: relative;
+  transition: background 0.2s ease;
+}
+
+/* Elevated Cap with 3D travel */
+.hardware-cap {
+  box-shadow: var(--shadow-cap);
+  transition: all 0.08s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.hardware-btn:active .hardware-cap,
+.hardware-btn.is-active .hardware-cap {
+  transform: translateY(2px);
+  box-shadow: 
+    inset 0 1px 2px rgba(255,255,255,0.3),
+    inset 0 -1px 2px rgba(0,0,0,0.3),
+    0 0px 0 rgba(0,0,0,0.2),
+    0 1px 2px rgba(0,0,0,0.1);
 }
 
 /* ─────────────────────────────────────────────────────────
-   Reusable Utility Classes
+   Legacy Mappings (keeping functional components working)
 ───────────────────────────────────────────────────────── */
 
-/* Small tag / badge */
-.natural-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: var(--accent-sage);
-  color: var(--accent-forest);
-  font-size: 12px;
-  font-weight: 600;
+.natural-card {
+  background: var(--surface-white);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-modular);
+  border: 1px solid var(--groove-dark);
+  padding: 32px;
 }
 
-/* Divider */
+.natural-inset {
+  background: var(--well-bg);
+  box-shadow: var(--shadow-well);
+  border-radius: var(--radius-modular);
+  padding: 16px;
+}
+
 .natural-divider {
   border: none;
-  border-top: 1px solid var(--border-subtle);
+  height: 2px;
+  background: var(--groove-dark);
+  border-bottom: 1px solid var(--groove-light);
   margin: 16px 0;
 }
 

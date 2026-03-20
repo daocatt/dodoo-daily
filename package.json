@@ -1,12 +1,13 @@
 {
   "name": "dodoo-daily",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "node .next/standalone/server.js",
     "lint": "eslint",
+    "version-up": "node scripts/update-version.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:setup": "node migrate.js",
