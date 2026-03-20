@@ -74,9 +74,9 @@ export default function VisitorAuthPage() {
                 <NatureBackground />
                 <div className="relative z-10 bg-white/90 backdrop-blur-3xl p-12 rounded-[3rem] text-center max-w-md shadow-2xl border border-white">
                     <Heart className="w-16 h-16 text-rose-500/30 mx-auto mb-6" />
-                    <h2 className="text-3xl font-black text-slate-800 mb-4">Temporarily Closed</h2>
-                    <p className="text-slate-500 font-bold leading-relaxed">The visitor system is currently undergoing maintenance. Please come back later!</p>
-                    <button onClick={() => router.push('/')} className="mt-8 px-8 py-3 bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs">Back Home</button>
+                    <h2 className="text-3xl font-black text-slate-800 mb-4">{t('guests.control.disableLogin') || 'Temporarily Closed'}</h2>
+                    <p className="text-slate-500 font-bold leading-relaxed">{t('guest.systemMaintenance')}</p>
+                    <button onClick={() => router.push('/')} className="mt-8 px-8 py-3 bg-slate-800 text-white rounded-2xl font-black uppercase tracking-widest text-xs">{t('common.back') || 'Back Home'}</button>
                 </div>
             </div>
         )
@@ -105,14 +105,13 @@ export default function VisitorAuthPage() {
                             onClick={() => { setMode('LOGIN'); setError(''); setSuccessMsg('') }}
                             className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'LOGIN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            Log In
+                            {t('login.login') || 'Log In'}
                         </button>
                         <button 
-                            disabled={settings?.disableVisitorRegistration}
                             onClick={() => { setMode('REGISTER'); setError(''); setSuccessMsg('') }}
-                            className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'REGISTER' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'} disabled:opacity-30`}
+                            className={`flex-1 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${mode === 'REGISTER' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            Register
+                            {t('login.register') || 'Register'}
                         </button>
                     </div>
 
@@ -130,6 +129,23 @@ export default function VisitorAuthPage() {
                                     <h2 className="text-xl font-black text-slate-800 mb-1">Success!</h2>
                                     <p className="text-slate-500 font-bold text-sm mb-6 leading-relaxed px-4">{successMsg}</p>
                                     <button onClick={() => setMode('LOGIN')} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl shadow-indigo-100 active:scale-95 transition-transform">Proceed to Login</button>
+                                </motion.div>
+                            ) : mode === 'REGISTER' && settings?.disableVisitorRegistration ? (
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="text-center py-12"
+                                >
+                                    <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-6 border border-rose-100 shadow-lg shadow-rose-50">
+                                        <Lock className="w-8 h-8" />
+                                    </div>
+                                    <h2 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">
+                                        {t('guest.registrationClosed')}
+                                    </h2>
+                                    <p className="text-slate-500 font-bold text-xs">{t('guest.systemMaintenance')}</p>
+                                    <button onClick={() => setMode('LOGIN')} className="mt-8 px-6 py-2.5 bg-slate-100 text-slate-400 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-colors">
+                                        {t('common.back') || 'Back'}
+                                    </button>
                                 </motion.div>
                             ) : (
                                 <motion.form 

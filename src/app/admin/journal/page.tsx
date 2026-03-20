@@ -118,7 +118,7 @@ export default function JournalPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ y: -4 }}
                 className="break-inside-avoid mb-4 w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-all cursor-pointer group"
-                onClick={() => router.push(`/journal/${entry.id}`)}
+                onClick={() => router.push(`/admin/journal/${entry.id}`)}
             >
                 {/* Image Section - Large Thumbnail */}
                 {entryImages.length > 0 ? (
@@ -200,7 +200,7 @@ export default function JournalPage() {
                 </div>
 
                 <Link
-                    href="/journal/new"
+                    href="/admin/journal/new"
                     className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-orange-500 hover:bg-orange-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95"
                 >
                     <PlusCircle className="w-4 h-4 md:w-5 md:h-5" />
@@ -269,7 +269,7 @@ export default function JournalPage() {
                         <TimelineView
                             entries={entries}
                             onImageClick={(imgs, idx) => setLightbox({ images: imgs, index: idx })}
-                            onEntryClick={(id) => router.push(`/journal/${id}`)}
+                            onEntryClick={(id) => router.push(`/admin/journal/${id}`)}
                         />
                     )}
                 </div>

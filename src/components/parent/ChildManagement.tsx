@@ -103,7 +103,7 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
             })
             if (res.ok) {
                 const data = await res.json()
-                window.location.href = data.redirect || '/'
+                window.location.href = data.redirect || '/admin'
             }
         } catch (e) { console.error(e) } finally { setProcessing(false) }
     }
@@ -325,21 +325,17 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 value={member.slug || ''}
                                 onChange={e => onChange({ ...member, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                             />
-                            {!member.id && (
-                                <button
-                                    type="button"
-                                    title="Auto-generate"
-                                    onClick={() => {
-                                        const base = (member.nickname || member.name || '')
-                                            .toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-                                        const suffix = Math.random().toString(36).substring(2, 6)
-                                        onChange({ ...member, slug: base ? `${base}-${suffix}` : suffix })
-                                    }}
-                                    className="px-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-blue-500"
-                                >
-                                    ✨
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                title="Auto-generate numeric ID"
+                                onClick={() => {
+                                    const randId = Math.floor(10000000 + Math.random() * 90000000).toString();
+                                    onChange({ ...member, slug: randId });
+                                }}
+                                className="px-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-blue-500"
+                            >
+                                ✨
+                            </button>
                         </div>
                     </div>
                     <div className="space-y-1">

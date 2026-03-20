@@ -105,7 +105,7 @@ export default function AccountHUD() {
                     }
                 }
             } else if (res.status === 401 || res.status === 404) {
-                if (pathname && !['/admin/login', '/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
+                if (pathname && !['/admin/login', '/admin/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
                     console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
                     handleLogout()
                 }
@@ -117,19 +117,19 @@ export default function AccountHUD() {
 
     useEffect(() => {
         setMounted(true)
-        if (pathname && !['/admin/login', '/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
+        if (pathname && pathname !== '/' && !['/admin/login', '/admin/setup', '/guest'].some(p => pathname.startsWith(p))) {
             fetchData()
         }
         const interval = setInterval(() => {
-            if (pathname && !['/admin/login', '/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) fetchData()
+            if (pathname && pathname !== '/' && !['/admin/login', '/admin/setup', '/guest'].some(p => pathname.startsWith(p))) fetchData()
         }, 60000)
         return () => clearInterval(interval)
     }, [pathname, fetchData])
 
     if (!mounted) return null
 
-    const hideOn = ['/buy', '/admin/login', '/setup', '/tasks', '/emotions', '/journal', '/shop', '/admin', '/notes', '/u/', '/guest', '/welcome']
-    if (!pathname || hideOn.some(prefix => pathname.startsWith(prefix)) || !stats) return null
+    const hideOn = ['/buy', '/admin/login', '/admin/setup', '/admin/management', '/u/', '/guest', '/welcome']
+    if (!pathname || pathname === '/' || hideOn.some(prefix => pathname.startsWith(prefix)) || !stats) return null
 
     const handleRecharge = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -193,7 +193,7 @@ export default function AccountHUD() {
                         <motion.div
                             whileTap={{ scale: 0.95 }}
                             className="relative cursor-pointer"
-                            onClick={() => (window.location.href = '/settings')}
+                            onClick={() => (window.location.href = stats.isParent ? '/admin/management' : '/admin/settings')}
                         >
                             <div className="w-8 h-8 rounded-full bg-slate-100 shadow-sm overflow-hidden flex items-center justify-center border border-black/[0.03]">
                                 {stats.avatar && stats.avatar.length > 2 ? (
@@ -225,7 +225,7 @@ export default function AccountHUD() {
 
                     {/* Children Section (Parent only) - Hidden on extreme mobile to save space */}
                     {stats.isParent && children.length > 0 && (
-                        <Link href="/stats" className="hidden sm:flex items-center gap-1.5 px-1 hover:opacity-70 transition-opacity">
+                        <Link href="/admin/stats" className="hidden sm:flex items-center gap-1.5 px-1 hover:opacity-70 transition-opacity">
                             <UsersRound className="w-4 h-4 text-slate-400 fill-slate-400 shrink-0" />
                             <span className="text-[13px] font-medium text-slate-600">{children.length}</span>
                         </Link>

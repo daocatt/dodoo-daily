@@ -193,7 +193,7 @@ export default function LedgerPage() {
                 <div className="flex items-center gap-2 md:gap-3">
                     {isParent && (
                         <Link
-                            href="/ledger/categories"
+                            href="/admin/ledger/categories"
                             className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-500 border border-slate-200"
                             title={t('ledger.categories.manage')}
                         >

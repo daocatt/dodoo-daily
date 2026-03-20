@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
     // BUT we should prevent unauthenticated access to EVERYTHING ELSE if not in setup mode.)
 
     // 3. MCP Blocking - No longer used, prevent access
-    if (pathname.startsWith('/mcp')) {
+    if (pathname.startsWith('/admin/mcp')) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 
@@ -43,21 +43,21 @@ export function middleware(request: NextRequest) {
     // 5. Page Protection (UI)
     // List of OPEN UI paths
     const isOpenPage = 
-        pathname === '/welcome' ||
+        pathname === '/' ||
         pathname.startsWith('/admin/login') || 
         pathname.startsWith('/u/') || 
         pathname.startsWith('/buy/') ||
         pathname.startsWith('/guest/') ||
-        pathname.startsWith('/setup') 
+        pathname.startsWith('/admin/setup') 
 
     if (!hasSession && !isOpenPage) {
-        // Default redirect for any unauthenticated PAGE access is now /welcome
-        return NextResponse.redirect(new URL('/welcome', request.url))
+        // Default redirect for any unauthenticated PAGE access is now /
+        return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // prevent logged-in users from seeing the login page
-    if (hasSession && pathname.startsWith('/admin/login')) {
-        return NextResponse.redirect(new URL('/', request.url))
+    // prevent logged-in users from seeing the landing/login pages if authenticated
+    if (hasSession && (pathname === '/' || pathname.startsWith('/admin/login'))) {
+        return NextResponse.redirect(new URL('/admin', request.url))
     }
 
     return NextResponse.next()

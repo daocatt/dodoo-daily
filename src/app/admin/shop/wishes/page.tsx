@@ -44,7 +44,7 @@ export default function WishesPage() {
 
             <header className="relative z-10 flex items-center justify-between p-6 backdrop-blur-md bg-white/40 border-b border-purple-200 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <Link href="/shop" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white hover:bg-slate-50 transition-all shadow-sm text-slate-600 border border-purple-200 group active:scale-95">
+                    <Link href="/admin/shop" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white hover:bg-slate-50 transition-all shadow-sm text-slate-600 border border-purple-200 group active:scale-95">
                         <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
                     </Link>
                     <div>
@@ -70,8 +70,8 @@ export default function WishesPage() {
                         </div>
                         <h2 className="text-2xl font-black text-purple-900 mb-2">{t('wish.noWishes')}</h2>
                         <p className="text-purple-600 font-medium max-w-xs">{t('wish.noWishesDesc')}</p>
-                        <Link href="/shop" className="mt-8 px-8 py-3 bg-purple-500 text-white font-black rounded-2xl shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all active:scale-95">
-                            {t('shop.newWish')}
+                        <Link href="/admin/shop" className="mt-8 px-8 py-3 bg-purple-500 text-white font-black rounded-2xl shadow-lg shadow-purple-200 hover:bg-purple-600 transition-all active:scale-95">
+                            {t('shop.goShop')}
                         </Link>
                     </div>
                 ) : (

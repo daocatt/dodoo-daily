@@ -78,7 +78,7 @@ export default function LoginPage() {
 
             const data = await res.json()
             if (res.ok && data.success) {
-                window.location.href = '/setup'
+                window.location.href = '/admin/setup'
             } else {
                 setError(data.error || t('login.error.failedInit'))
                 setLoading(false)
@@ -113,12 +113,12 @@ export default function LoginPage() {
 
             if (res.ok && data.success) {
                 if (data.needsSetup) {
-                    window.location.href = '/setup'
+                    window.location.href = '/admin/setup'
                 } else {
                     window.location.href = '/'
                 }
             } else if (data.needsPin) {
-                window.location.href = `/auth/set-pin?userId=${data.userId}`
+                window.location.href = `/admin/auth/set-pin?userId=${data.userId}`
             } else {
                 setError(data.error === 'Invalid PIN' ? t('login.error.invalidPin') : (data.error || t('login.error.network')))
                 setLoading(false)

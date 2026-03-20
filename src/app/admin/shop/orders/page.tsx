@@ -43,8 +43,8 @@ export default function OrdersPage() {
 
             <header className="relative z-10 flex items-center justify-between p-6 backdrop-blur-md bg-white/40 border-b border-slate-200 shadow-sm">
                 <div className="flex items-center gap-4">
-                    <Link href="/shop" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white hover:bg-slate-50 transition-all shadow-sm text-slate-600 border border-slate-200 group active:scale-95">
-                        <ChevronLeft className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" />
+                    <Link href="/admin/shop" className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white hover:bg-slate-50 transition-all shadow-sm text-slate-600 border border-slate-200 group active:scale-95">
+                        <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
                     </Link>
                     <div>
                         <h1 className="text-2xl font-black tracking-tight text-slate-800 flex items-center gap-3">
@@ -69,8 +69,8 @@ export default function OrdersPage() {
                         </div>
                         <h2 className="text-2xl font-black text-slate-800 mb-2">{t('parent.noOrders')}</h2>
                         <p className="text-slate-500 font-medium max-w-xs">{t('order.noOrdersDesc')}</p>
-                        <Link href="/shop" className="mt-8 px-8 py-3 bg-amber-500 text-white font-black rounded-2xl shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95">
-                            {t('order.goShopping')}
+                        <Link href="/admin/shop" className="mt-8 px-8 py-3 bg-amber-500 text-white font-black rounded-2xl shadow-lg shadow-amber-200 hover:bg-amber-600 transition-all active:scale-95">
+                            {t('shop.goShop')}
                         </Link>
                     </div>
                 ) : (

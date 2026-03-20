@@ -124,14 +124,14 @@ export default function GalleryPage() {
                         <Plus className="w-5 h-5" />
                     </button>
                     <button
-                        onClick={() => router.push('/gallery/exhibition')}
+                        onClick={() => router.push('/admin/gallery/exhibition')}
                         className="flex items-center justify-center p-2 rounded-2xl bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-white shadow-sm border border-amber-400 aspect-square"
                         title={t('gallery.exhibition') || 'Exhibition Settings'}
                     >
                         <Store className="w-5 h-5" />
                     </button>
                     <button
-                        onClick={() => router.push('/gallery/archive')}
+                        onClick={() => router.push('/admin/gallery/archive')}
                         className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
                         title={t('gallery.archives')}
                     >
@@ -159,7 +159,7 @@ export default function GalleryPage() {
                                 initial={{ opacity: 0, y: 50 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1, type: "spring" }}
-                                onClick={() => router.push(`/gallery/${album.id}`)}
+                                onClick={() => router.push(`/admin/gallery/${album.id}`)}
                                 className="group cursor-pointer flex flex-col items-center"
                             >
                                 {/* Album Cover - overlapping effect */}

@@ -45,7 +45,7 @@ export default function GuestManagement() {
     
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
-    const [activeTab, setActiveTab] = useState<'VISITORS' | 'CODES' | 'IP'>('VISITORS')
+    const [activeTab, setActiveTab] = useState<'VISITORS' | 'CODES' | 'CONTROL' | 'IP'>('VISITORS')
     const [processingId, setProcessingId] = useState<string | null>(null)
     
     // Form states
@@ -59,17 +59,34 @@ export default function GuestManagement() {
     const [newIp, setNewIp] = useState('')
     const [newIpReason, setNewIpReason] = useState('')
 
+    // System Settings for Guest Control
+    const [requireGuestApproval, setRequireGuestApproval] = useState(true)
+    const [requireInvitationCode, setRequireInvitationCode] = useState(false)
+    const [guestInvitationCode, setGuestInvitationCode] = useState('')
+    const [disableVisitorLogin, setDisableVisitorLogin] = useState(false)
+    const [disableVisitorRegistration, setDisableVisitorRegistration] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [gRes, cRes, iRes] = await Promise.all([
+            const [gRes, cRes, iRes, sRes] = await Promise.all([
                 fetch('/api/parent/guests'),
                 fetch('/api/parent/recharge-codes'),
-                fetch('/api/parent/ip-blacklist')
+                fetch('/api/parent/ip-blacklist'),
+                fetch('/api/system/settings')
             ])
             if (gRes.ok) setGuests(await gRes.json())
             if (cRes.ok) setRechargeCodes(await cRes.json())
             if (iRes.ok) setIpBlacklist(await iRes.json())
+            if (sRes.ok) {
+                const sData = await sRes.json();
+                setRequireGuestApproval(sData.requireGuestApproval ?? true)
+                setRequireInvitationCode(sData.requireInvitationCode ?? false)
+                setGuestInvitationCode(sData.guestInvitationCode || '')
+                setDisableVisitorLogin(sData.disableVisitorLogin ?? false)
+                setDisableVisitorRegistration(sData.disableVisitorRegistration ?? false)
+            }
         } catch (e) {
             console.error('Failed to fetch guest management data:', e)
         } finally {
@@ -181,6 +198,28 @@ export default function GuestManagement() {
         }
     }
 
+    const handleUpdateSettings = async (updates: Record<string, unknown>) => {
+        setIsSaving(true)
+        try {
+            const res = await fetch('/api/system/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            })
+            if (res.ok) {
+                if (updates.requireGuestApproval !== undefined) setRequireGuestApproval(updates.requireGuestApproval as boolean)
+                if (updates.requireInvitationCode !== undefined) setRequireInvitationCode(updates.requireInvitationCode as boolean)
+                if (updates.guestInvitationCode !== undefined) setGuestInvitationCode(updates.guestInvitationCode as string)
+                if (updates.disableVisitorLogin !== undefined) setDisableVisitorLogin(updates.disableVisitorLogin as boolean)
+                if (updates.disableVisitorRegistration !== undefined) setDisableVisitorRegistration(updates.disableVisitorRegistration as boolean)
+            }
+        } catch (e) {
+            console.error('Failed to update guest settings', e)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
     const filteredGuests = guests.filter(g => 
         g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         g.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -209,13 +248,13 @@ export default function GuestManagement() {
                 </div>
 
                 <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto min-w-full md:min-w-0">
-                    {(['VISITORS', 'CODES', 'IP'] as const).map((tab) => (
+                    {(['VISITORS', 'CODES', 'CONTROL', 'IP'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            {tab === 'VISITORS' ? t('guests.tabs.visitors') : tab === 'CODES' ? t('guests.tabs.codes') : t('guests.tabs.ip')}
+                            {tab === 'VISITORS' ? t('guests.tabs.visitors') : tab === 'CODES' ? t('guests.tabs.codes') : tab === 'CONTROL' ? t('guests.tabs.control') : t('guests.tabs.ip')}
                         </button>
                     ))}
                 </div>
@@ -479,6 +518,104 @@ export default function GuestManagement() {
                                     {t('guests.ip.empty')}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* TAB: ACCESS CONTROL */}
+            {activeTab === 'CONTROL' && (
+                <div className="space-y-6">
+                    <div className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm space-y-8 max-w-2xl">
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-black text-slate-800">{t('guests.control.title') || 'Guest Access Control'}</h3>
+                            <p className="text-slate-500 text-sm font-medium">{t('guests.control.subtitle') || 'Manage how visitors access your exhibition.'}</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-indigo-100 transition-all">
+                                <div>
+                                    <h4 className="font-black text-slate-800">{t('guests.control.approval') || 'Require Approval'}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{t('guests.control.approvalDesc') || 'New guests must be approved by you'}</p>
+                                </div>
+                                <button
+                                    disabled={isSaving}
+                                    onClick={() => handleUpdateSettings({ requireGuestApproval: !requireGuestApproval })}
+                                    className={`w-14 h-8 rounded-full transition-all relative ${requireGuestApproval ? 'bg-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${requireGuestApproval ? 'right-1' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-indigo-100 transition-all">
+                                <div>
+                                    <h4 className="font-black text-slate-800">{t('guests.control.invitation') || 'Use Invitation Code'}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{t('guests.control.invitationDesc') || 'Only visitors with code can register'}</p>
+                                </div>
+                                <button
+                                    disabled={isSaving}
+                                    onClick={() => handleUpdateSettings({ requireInvitationCode: !requireInvitationCode })}
+                                    className={`w-14 h-8 rounded-full transition-all relative ${requireInvitationCode ? 'bg-indigo-600 shadow-lg shadow-indigo-100' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${requireInvitationCode ? 'right-1' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            <AnimatePresence>
+                            {requireInvitationCode && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-2 px-2"
+                                >
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Invitation Code</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={guestInvitationCode}
+                                            onChange={(e) => setGuestInvitationCode(e.target.value)}
+                                            className="flex-1 bg-white border-2 border-slate-100 rounded-2xl px-6 py-3 font-black text-slate-700 outline-none focus:border-indigo-500 transition-all tracking-wide"
+                                            placeholder="Enter code..."
+                                        />
+                                        <button
+                                            disabled={isSaving}
+                                            onClick={() => handleUpdateSettings({ guestInvitationCode })}
+                                            className="px-8 py-3 bg-slate-800 text-white rounded-2xl font-black text-xs hover:bg-black transition-all shadow-lg active:scale-95"
+                                        >
+                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set Code'}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                            </AnimatePresence>
+
+                            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-rose-100 transition-all">
+                                <div>
+                                    <h4 className="font-black text-slate-800">{t('guests.control.disableLogin') || 'Temporarily Disable Login'}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{t('guests.control.disableLoginDesc') || 'Existing guests cannot log in'}</p>
+                                </div>
+                                <button
+                                    disabled={isSaving}
+                                    onClick={() => handleUpdateSettings({ disableVisitorLogin: !disableVisitorLogin })}
+                                    className={`w-14 h-8 rounded-full transition-all relative ${disableVisitorLogin ? 'bg-rose-500 shadow-lg shadow-rose-100' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${disableVisitorLogin ? 'right-1' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-rose-100 transition-all">
+                                <div>
+                                    <h4 className="font-black text-slate-800">{t('guests.control.disableReg') || 'Disable New Registration'}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{t('guests.control.disableRegDesc') || 'Prevent new visitor signups'}</p>
+                                </div>
+                                <button
+                                    disabled={isSaving}
+                                    onClick={() => handleUpdateSettings({ disableVisitorRegistration: !disableVisitorRegistration })}
+                                    className={`w-14 h-8 rounded-full transition-all relative ${disableVisitorRegistration ? 'bg-rose-500 shadow-lg shadow-rose-100' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${disableVisitorRegistration ? 'right-1' : 'left-1'}`} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

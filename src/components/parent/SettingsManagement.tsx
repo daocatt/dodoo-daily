@@ -171,6 +171,19 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                                     placeholder="your-link-id"
                                     className="flex-1 px-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl outline-none font-mono font-bold text-slate-800 text-sm hover:border-slate-100 hover:bg-white focus:bg-white focus:border-indigo-100 transition-all"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const randId = Math.floor(10000000 + Math.random() * 90000000).toString();
+                                        setSlug(randId);
+                                        setError('');
+                                        setMessage('');
+                                    }}
+                                    className="h-[48px] px-3 bg-white border-2 border-slate-100 rounded-xl hover:border-indigo-100 hover:text-indigo-500 transition-all text-slate-400 group"
+                                    title="Auto-generate numeric ID"
+                                >
+                                    <span className="group-hover:scale-110 block transition-transform">✨</span>
+                                </button>
                             </div>
                             <p className="text-[10px] text-slate-400 font-bold px-1">
                                 💡 {t('settings.linkIdHint') || 'Your public exhibition page URL.'}
