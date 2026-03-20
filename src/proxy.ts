@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function proxy(request: NextRequest) {
-    const userId = request.cookies.get('dodoo_user_id')?.value
+    const hasSession = request.cookies.has('dodoo_session')
 
     const isStaticAsset = request.nextUrl.pathname.match(/\.(png|jpg|jpeg|svg|ico|json|js)$/)
 
     if (
-        !userId &&
+        !hasSession &&
         !request.nextUrl.pathname.startsWith('/login') &&
         !request.nextUrl.pathname.startsWith('/api') &&
         !request.nextUrl.pathname.startsWith('/_next') &&
@@ -17,7 +17,7 @@ export function proxy(request: NextRequest) {
     }
 
     // Also prevent logged-in users from seeing the login page
-    if (userId && request.nextUrl.pathname.startsWith('/login')) {
+    if (hasSession && request.nextUrl.pathname.startsWith('/login')) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 

@@ -5,13 +5,7 @@ const JWT_SECRET = new TextEncoder().encode(
     process.env.JWT_SECRET || 'dodoo-daily-default-secret-change-me-in-production'
 )
 
-/**
- * Clean potential quotes from cookie values (sometimes happens in certain environments)
- */
-function cleanValue(val: string | undefined) {
-    if (!val || val === 'undefined' || val === 'null') return undefined
-    return val.replace(/^["']|["']$/g, '').trim()
-}
+
 
 /**
  * Sign a JWT for a user session
@@ -35,8 +29,6 @@ import { eq, and } from 'drizzle-orm'
 export async function getSessionUser() {
     const cookieStore = await cookies()
     const token = cookieStore.get('dodoo_session')?.value
-    const legacyUserId = cleanValue(cookieStore.get('dodoo_user_id')?.value)
-    const legacyRole = cleanValue(cookieStore.get('dodoo_role')?.value)
 
     let currentUserId: string | undefined
 
@@ -48,12 +40,6 @@ export async function getSessionUser() {
         } catch (e) {
             console.error('JWT verification failed:', e)
         }
-    }
-
-    // 2. Fallback to legacy cookies
-    if (!currentUserId && legacyUserId && legacyRole) {
-        currentUserId = legacyUserId
-        currentUserRole = legacyRole
     }
 
     if (!currentUserId) return null
