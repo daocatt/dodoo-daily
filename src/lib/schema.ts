@@ -413,4 +413,39 @@ export const ledgerRecord = sqliteTable("LedgerRecord", {
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
+export const storageItems = sqliteTable("storageItems", {
+    id: text("id").primaryKey(),
+    creatorId: text("creatorId").references(() => users.id),
+    name: text("name").notNull(),
+    imageUrl: text("imageUrl").notNull(),
+    notes: text("notes"),
+    tags: text("tags").default(sql`'[]'`), 
+    
+    // Financial & Status
+    purchasePrice: real("purchasePrice").default(0),
+    resalePrice: real("resalePrice").default(0),
+    purchaseDate: integer("purchaseDate", { mode: "timestamp_ms" }),
+    isForSale: integer("isForSale", { mode: "boolean" }).default(false).notNull(),
+    
+    // Sync & Internal
+    isSynced: integer("isSynced", { mode: "boolean" }).default(false).notNull(),
+    isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
+    version: integer("version").default(1),
+    
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+export const storageTransfers = sqliteTable("storageTransfers", {
+    id: text("id").primaryKey(),
+    itemId: text("itemId").references(() => storageItems.id).notNull(),
+    transferDate: integer("transferDate", { mode: "timestamp_ms" }).notNull(),
+    salePrice: real("salePrice").notNull(),
+    deliveryMethod: text("deliveryMethod"), // e.g., "self-pickup", "express"
+    buyerId: text("buyerId"), // External ID or placeholder
+    notes: text("notes"),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
+
 

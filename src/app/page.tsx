@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag, Heart, StickyNote, CheckCircle2, Trophy, Images, Layout, Sparkles, Wallet } from 'lucide-react'
+import { Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag, Heart, StickyNote, CheckCircle2, Trophy, Images, Layout, Sparkles, Wallet, Package } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
@@ -15,6 +15,7 @@ import JournalWidget from '@/components/widgets/JournalWidget'
 import PhotoWidget from '@/components/widgets/PhotoWidget'
 import MilestoneWidget from '@/components/widgets/MilestoneWidget'
 import LedgerWidget from '@/components/widgets/LedgerWidget'
+import StorageWidget from '@/components/widgets/StorageWidget'
 
 type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
 
@@ -503,7 +504,8 @@ export default function Home() {
         NOTES: '/notes', SHOP: '/shop',
         TASKS: '/tasks', JOURNAL: '/journal', PHOTOS: '/gallery',
         MILESTONE: '/journal?filter=milestone',
-        LEDGER: '/ledger'
+        LEDGER: '/ledger',
+        STORAGE: '/storage'
       }
       if (routes[w.type]) router.push(routes[w.type])
     }
@@ -519,6 +521,7 @@ export default function Home() {
         SHOP:      { Icon: ShoppingBag,   bg: 'bg-amber-400',  glow: 'shadow-amber-500/30', label: t('menu.shop') },
         MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('parent.milestone') },
         LEDGER:    { Icon: Wallet,        bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
+        STORAGE:   { Icon: Package,       bg: 'bg-amber-600',  glow: 'shadow-amber-600/30', label: t('storage.title') || '物资' },
       }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
       const { Icon, bg, glow, label } = config
@@ -559,6 +562,7 @@ export default function Home() {
         case 'PHOTOS': return <PhotoWidget size={w.size} cellSize={cellSize} />
         case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
         case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
+        case 'STORAGE': return <StorageWidget size={w.size} cellSize={cellSize} />
         default:
           return (
             <div className="w-full h-full bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400" style={{ fontSize: cellSize * 0.1 }}>
@@ -687,7 +691,8 @@ export default function Home() {
                   { type: 'PHOTOS', Icon: Images },
                   { type: 'SHOP', Icon: ShoppingBag },
                   { type: 'MILESTONE', Icon: Trophy },
-                  { type: 'LEDGER', Icon: Wallet }
+                  { type: 'LEDGER', Icon: Wallet },
+                  { type: 'STORAGE', Icon: Package }
                 ].map(({ type, Icon }) => {
                   return (
                     <button
