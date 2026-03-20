@@ -41,6 +41,13 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
         <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-3xl animate-pulse" />
     )
 
+    const formatCompactNumber = (num: number) => {
+        if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
+        if (num >= 10000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+        if (num >= 1000) return (num / 1000).toFixed(2).replace(/\.00$/, '') + 'K'
+        return num.toFixed(2)
+    }
+
     return (
         <motion.div
             whileHover={{ scale: 1.01 }}
@@ -67,11 +74,11 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
                 {/* Total Balance right aligned */}
                 {size !== 'ICON' && (
                     <div
-                        className="px-2 py-0.5 bg-indigo-100/80 rounded-full font-black text-indigo-700 uppercase tracking-widest leading-none flex items-center gap-1"
-                        style={{ fontSize: Math.max(8, cellSize * 0.08) }}
+                        className="px-2 py-0.5 bg-indigo-100/80 rounded-full font-black text-indigo-700 uppercase tracking-widest leading-none flex items-center gap-1 shadow-sm border border-indigo-200/50"
+                        style={{ fontSize: Math.max(9, cellSize * 0.08) }}
                     >
                         <span className="opacity-70">¥</span>
-                        {balance.toFixed(2)}
+                        {formatCompactNumber(balance)}
                     </div>
                 )}
             </div>

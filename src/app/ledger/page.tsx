@@ -95,13 +95,13 @@ export default function LedgerPage() {
 
     useEffect(() => {
         if (activeTab === 'STATS') {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+             
             fetchStats(currentMonth)
         }
     }, [activeTab, currentMonth])
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         fetchData()
     }, [])
 
@@ -244,7 +244,9 @@ export default function LedgerPage() {
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('ledger.balance.available')}</span>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-3xl font-black text-slate-300">¥</span>
-                                <span className="text-6xl font-black text-slate-900 font-number tracking-tighter">{balance.toFixed(2)}</span>
+                                <span className="text-6xl font-black text-slate-900 font-number tracking-tighter">
+                                    {Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(balance)}
+                                </span>
                             </div>
                         </div>
                         
@@ -286,9 +288,9 @@ export default function LedgerPage() {
                                                     <span className="text-xs text-slate-400 font-medium">{new Date(record.date).toLocaleDateString()}</span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-baseline gap-1 font-black font-number text-lg ${isExpense ? 'text-slate-700' : 'text-emerald-500'}">
+                                            <div className={`flex items-baseline gap-1 font-black font-number text-lg ${isExpense ? 'text-slate-700' : 'text-emerald-500'}`}>
                                                 <span>{isExpense ? '-' : '+'}</span>
-                                                <span>{record.amount.toFixed(2)}</span>
+                                                <span>{Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(record.amount)}</span>
                                             </div>
                                             {record.relatedUser && (
                                                 <div className="flex -space-x-2 absolute -right-2 top-0">
@@ -350,7 +352,9 @@ export default function LedgerPage() {
                                     </div>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-xs font-bold text-slate-400">¥</span>
-                                        <span className="text-2xl font-black text-slate-800 font-number">{(statsData.totals?.income || 0).toFixed(2)}</span>
+                                        <span className="text-2xl font-black text-slate-800 font-number">
+                                            {Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(statsData.totals?.income || 0)}
+                                        </span>
                                     </div>
                                 </div>
                                 <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col gap-1">
@@ -360,7 +364,9 @@ export default function LedgerPage() {
                                     </div>
                                     <div className="flex items-baseline gap-1">
                                         <span className="text-xs font-bold text-slate-400">¥</span>
-                                        <span className="text-2xl font-black text-slate-800 font-number">{(statsData.totals?.expense || 0).toFixed(2)}</span>
+                                        <span className="text-2xl font-black text-slate-800 font-number">
+                                            {Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(statsData.totals?.expense || 0)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -449,7 +455,9 @@ export default function LedgerPage() {
                                                                 <span className="text-sm font-black text-slate-700">{cat.name}</span>
                                                             </div>
                                                             <div className="text-right">
-                                                                <div className="text-sm font-black text-slate-800">¥{Number(cat.total).toFixed(2)}</div>
+                                                                <div className="text-sm font-black text-slate-800">
+                                                                    ¥{Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(cat.total))}
+                                                                </div>
                                                                 <div className="text-[10px] font-bold text-slate-400 leading-none">{percentage.toFixed(1)}%</div>
                                                             </div>
                                                         </div>
@@ -673,7 +681,7 @@ export default function LedgerPage() {
                                         />
                                     </div>
                                     <span className="px-1 text-xs font-bold text-slate-400">
-                                        {t('ledger.balance.available')}: ¥{balance.toFixed(2)}
+                                        {t('ledger.balance.available')}: ¥{Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(balance)}
                                     </span>
                                 </div>
 
