@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus, Camera, Image as ImageIcon, ChevronLeft, Upload, Archive, X, Sparkles } from 'lucide-react'
+import { Plus, Camera, Image as ImageIcon, ChevronLeft, Archive, Sparkles, Store } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
@@ -13,6 +13,7 @@ type Artwork = {
     id: string
     title: string
     imageUrl: string
+    thumbnailMedium?: string | null
     priceRMB: number
     priceCoins: number
     isPublic: boolean
@@ -38,9 +39,8 @@ export default function GalleryPage() {
 
     const [newAlbumName, setNewAlbumName] = useState('')
     const [showNewAlbumModal, setShowNewAlbumModal] = useState(false)
-    const [isParent, setIsParent] = useState(false)
-    const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
-    const [children, setChildren] = useState<Child[]>([])
+    const [, setIsParent] = useState(false)
+    const [children] = useState<Child[]>([])
 
     const router = useRouter()
 
@@ -119,6 +119,13 @@ export default function GalleryPage() {
                         <Plus className="w-5 h-5" />
                     </button>
                     <button
+                        onClick={() => router.push('/gallery/exhibition')}
+                        className="flex items-center justify-center p-2 rounded-2xl bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-white shadow-sm border border-amber-400 aspect-square"
+                        title={t('gallery.exhibition') || 'Exhibition Settings'}
+                    >
+                        <Store className="w-5 h-5" />
+                    </button>
+                    <button
                         onClick={() => router.push('/gallery/archive')}
                         className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
                         title={t('gallery.archives')}
@@ -168,7 +175,7 @@ export default function GalleryPage() {
                                                 whileHover={{ scale: 1.05, rotate: 0, zIndex: 20 }}
                                             >
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                                <img src={art.thumbnailMedium || art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
 
                                                 {art.isPublic && (
                                                     <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-indigo-500/90 text-white text-[8px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">

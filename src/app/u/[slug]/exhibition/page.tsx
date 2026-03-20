@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Grid, LayoutList, CheckCircle, Heart, Eye, Coins } from 'lucide-react'
+import { Palette, ArrowLeft, Grid, LayoutList, Heart, Eye, Coins } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -20,6 +20,8 @@ type PublicArtwork = {
     albumId: string | null
     likes: number
     views: number
+    thumbnailMedium?: string | null
+    thumbnailLarge?: string | null
 }
 
 type PublicAlbum = {
@@ -34,6 +36,9 @@ type UserProfile = {
     name: string
     nickname: string | null
     avatarUrl: string | null
+    exhibitionTitle: string | null
+    exhibitionSubtitle: string | null
+    exhibitionDescription: string | null
 }
 
 export default function ExhibitionPage() {
@@ -124,9 +129,11 @@ export default function ExhibitionPage() {
                             </div>
                         )}
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">{t('public.artworks')}</h1>
+                            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                                {user?.exhibitionTitle || t('public.artworks')}
+                            </h1>
                             <p className="text-slate-500 font-medium mt-1">
-                                {user?.nickname || user?.name}&apos;s world of colors and shapes.
+                                {user?.exhibitionSubtitle || `${user?.nickname || user?.name}'s world of colors and shapes.`}
                             </p>
                         </div>
                     </div>
@@ -158,6 +165,14 @@ export default function ExhibitionPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Sales Description / Help Banner */}
+            {user?.exhibitionDescription && (
+                <div className="mb-12 p-6 bg-indigo-50/50 border border-indigo-100 rounded-[28px]">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2">About This Exhibition</p>
+                    <p className="text-slate-700 font-medium leading-relaxed text-sm whitespace-pre-wrap">{user.exhibitionDescription}</p>
+                </div>
+            )}
 
             {/* Album Tabs */}
             {albums.length > 0 && (
@@ -197,7 +212,7 @@ export default function ExhibitionPage() {
                             >
                                 <div className="relative aspect-square md:aspect-[4/5] rounded-[32px] overflow-hidden bg-white shadow-md border-4 border-white mb-4 group-hover:shadow-2xl transition-all duration-500">
                                     <Image 
-                                        src={art.imageUrl} 
+                                        src={art.thumbnailMedium || art.imageUrl || '/placeholder.png'} 
                                         alt={art.title}
                                         fill
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"

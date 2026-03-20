@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { album, artwork, users } from '@/lib/schema'
+import { album, artwork, users, media } from '@/lib/schema'
 import { desc, eq, and } from 'drizzle-orm'
 
 export async function GET(
@@ -25,6 +25,8 @@ export async function GET(
                 id: artwork.id,
                 title: artwork.title,
                 imageUrl: artwork.imageUrl,
+                thumbnailMedium: media.thumbnailMedium,
+                thumbnailLarge: media.thumbnailLarge,
                 priceRMB: artwork.priceRMB,
                 priceCoins: artwork.priceCoins,
                 albumId: artwork.albumId,
@@ -38,6 +40,7 @@ export async function GET(
             })
             .from(artwork)
             .leftJoin(users, eq(artwork.userId, users.id))
+            .leftJoin(media, eq(artwork.imageUrl, media.path))
             .where(and(eq(artwork.albumId, id), eq(artwork.isArchived, false)))
             .orderBy(desc(artwork.createdAt))
 

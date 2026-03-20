@@ -12,6 +12,7 @@ type PosterProps = {
         id: string
         title: string
         imageUrl: string
+        thumbnailMedium?: string | null
         priceRMB: number
         priceCoins: number
         creatorNickname?: string | null
@@ -32,7 +33,9 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
         : `https://dodoo.daily/buy/${artwork.id}`
 
     const creatorLabel = artwork.creatorNickname || artwork.creatorName || 'DoDoo Daily'
-    const proxiedImageUrl = `/api/proxy-image?url=${encodeURIComponent(artwork.imageUrl)}`
+    // Use medium thumbnail for poster (prevents exposing original URL) — will use original only if thumbnail not available
+    const posterImageSource = artwork.thumbnailMedium || artwork.imageUrl
+    const proxiedImageUrl = `/api/proxy-image?url=${encodeURIComponent(posterImageSource)}`
 
     const handleGenerate = async () => {
         if (!posterRef.current || !imgLoaded) return

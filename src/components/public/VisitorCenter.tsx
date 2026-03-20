@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Coins, Ticket, History, Package, LogOut, ChevronRight, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle } from 'lucide-react'
+import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle } from 'lucide-react'
 
 interface GuestData {
     id: string
     name: string
     currency: number
+    phone?: string
+    email?: string
+    address?: string | null
 }
 
 interface CurrencyLog {
@@ -26,13 +29,15 @@ interface Order {
 }
 
 export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { guest: GuestData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
-    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS'>('OVERVIEW')
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'ADDRESS'>('OVERVIEW')
     const [logs, setLogs] = useState<CurrencyLog[]>([])
     const [orders, setOrders] = useState<Order[]>([])
     const [rechargeCode, setRechargeCode] = useState('')
     const [loading, setLoading] = useState(false)
     const [rechargeLoading, setRechargeLoading] = useState(false)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
+    const [addressInput, setAddressInput] = useState(guest.address || '')
+    const [savingAddress, setSavingAddress] = useState(false)
 
     const fetchData = async () => {
         setLoading(true)
@@ -50,6 +55,7 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
 
     useEffect(() => {
         fetchData()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const handleRecharge = async (e: React.FormEvent) => {
@@ -74,6 +80,25 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
             }
         } finally {
             setRechargeLoading(false)
+        }
+    }
+
+    const handleSaveAddress = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSavingAddress(true)
+        try {
+            const res = await fetch('/api/open/visitor/address', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guestId: guest.id, address: addressInput })
+            })
+            if (res.ok) {
+                setMessage({ text: 'Address saved!', type: 'success' })
+            } else {
+                setMessage({ text: 'Failed to save address', type: 'error' })
+            }
+        } finally {
+            setSavingAddress(false)
         }
     }
 
@@ -138,14 +163,14 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
             </div>
 
             {/* Tabs */}
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl">
-                {(['HISTORY', 'ORDERS'] as const).map(tab => (
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto gap-1">
+                {(['HISTORY', 'ORDERS', 'ADDRESS'] as const).map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                        {tab === 'HISTORY' ? '帐变记录' : '收藏记录'}
+                        {tab === 'HISTORY' ? 'Balance' : tab === 'ORDERS' ? 'Orders' : 'Address'}
                     </button>
                 ))}
             </div>
@@ -172,7 +197,7 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                                                 {log.amount > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
                                             </div>
                                             <div>
-                                                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{log.reason === 'RECHARGE' ? '卡密充值' : log.reason === 'PURCHASE' ? '收藏支出' : '手动调整'}</p>
+                                                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{log.reason === 'RECHARGE' ? 'Recharge' : log.reason === 'PURCHASE' ? 'Purchase' : 'Adjustment'}</p>
                                                 <p className="text-[9px] font-bold text-slate-300 uppercase">{new Date(log.createdAt).toLocaleString()}</p>
                                             </div>
                                         </div>
@@ -184,31 +209,71 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                                         </div>
                                     </div>
                                 ))}
-                                {logs.length === 0 && <p className="text-center py-20 text-[10px] text-slate-300 font-black uppercase tracking-widest">暂无帐变记录</p>}
+                                {logs.length === 0 && <p className="text-center py-20 text-[10px] text-slate-300 font-black uppercase tracking-widest">No records yet</p>}
                             </motion.div>
-                        ) : (
+                        ) : activeTab === 'ORDERS' ? (
                             <motion.div 
                                 key="orders" 
                                 initial={{ opacity: 0, y: 10 }} 
                                 animate={{ opacity: 1, y: 0 }} 
                                 className="space-y-3"
                             >
-                                {orders.map(order => (
-                                    <div key={order.id} className="bg-white p-5 rounded-3xl border border-indigo-50 flex justify-between items-center">
-                                        <div>
-                                            <h4 className="font-black text-slate-800 uppercase tracking-tight leading-none mb-2">{order.artworkTitle}</h4>
-                                            <div className="flex items-center gap-2">
-                                                <History className="w-3 h-3 text-slate-300" />
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                {orders.map(order => {
+                                    const statusMap: Record<string, { label: string, color: string }> = {
+                                        PENDING_CONFIRM: { label: 'Awaiting Confirm', color: 'text-amber-600 bg-amber-50' },
+                                        CONFIRMED: { label: 'Processing', color: 'text-blue-600 bg-blue-50' },
+                                        SHIPPED: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50' },
+                                        REFUNDED: { label: 'Refunded', color: 'text-slate-600 bg-slate-100' },
+                                        CANCELLED: { label: 'Cancelled', color: 'text-rose-600 bg-rose-50' },
+                                    }
+                                    const statusInfo = statusMap[order.status] || { label: order.status, color: 'text-emerald-600 bg-emerald-50' }
+                                    return (
+                                        <div key={order.id} className="bg-white p-5 rounded-3xl border border-indigo-50 flex justify-between items-center">
+                                            <div>
+                                                <h4 className="font-black text-slate-800 uppercase tracking-tight leading-none mb-2">{order.artworkTitle}</h4>
+                                                <div className="flex items-center gap-2">
+                                                    <History className="w-3 h-3 text-slate-300" />
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                            <div className={`flex items-center gap-1.5 px-3 py-1.5 ${statusInfo.color} rounded-xl`}>
+                                                <CheckCircle className="w-3 h-3" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">{statusInfo.label}</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg">
-                                            <CheckCircle className="w-3 h-3" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest">已完成</span>
-                                        </div>
-                                    </div>
-                                ))}
-                                {orders.length === 0 && <p className="text-center py-20 text-[10px] text-slate-300 font-black uppercase tracking-widest">暂无收藏记录</p>}
+                                    )
+                                })}
+                                {orders.length === 0 && <p className="text-center py-20 text-[10px] text-slate-300 font-black uppercase tracking-widest">No orders yet</p>}
+                            </motion.div>
+                        ) : (
+                            <motion.div 
+                                key="address" 
+                                initial={{ opacity: 0, y: 10 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                className="space-y-4"
+                            >
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Default Shipping Address</p>
+                                <p className="text-xs text-slate-500">Your default address will be pre-filled when you place an order. You can always edit it at checkout.</p>
+                                <form onSubmit={handleSaveAddress} className="space-y-4">
+                                    <textarea
+                                        value={addressInput}
+                                        onChange={e => setAddressInput(e.target.value)}
+                                        className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 focus:border-indigo-600 focus:bg-white transition-all outline-none rounded-2xl text-sm h-32 resize-none"
+                                        placeholder="Full address including city, province, postal code..."
+                                    />
+                                    <button 
+                                        type="submit"
+                                        disabled={savingAddress}
+                                        className="w-full py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-100 disabled:grayscale transition-all active:scale-95"
+                                    >
+                                        {savingAddress ? 'Saving...' : 'Save Address'}
+                                    </button>
+                                </form>
+                                {message && (
+                                    <p className={`text-[10px] font-black uppercase tracking-widest text-center ${message.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                        {message.text}
+                                    </p>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>

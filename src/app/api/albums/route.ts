@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { album, artwork, users } from '@/lib/schema'
+import { album, artwork, users, media } from '@/lib/schema'
 import { desc, eq, and } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
@@ -25,13 +25,26 @@ export async function GET(req: NextRequest) {
             .where(eq(album.userId, targetUserId))
             .orderBy(desc(album.updatedAt))
 
-        const allArtworks = await db.select()
+        const allArtworksRaw = await db.select({
+            id: artwork.id,
+            title: artwork.title,
+            imageUrl: artwork.imageUrl,
+            thumbnailMedium: media.thumbnailMedium,
+            albumId: artwork.albumId,
+            priceCoins: artwork.priceCoins,
+            priceRMB: artwork.priceRMB,
+            isSold: artwork.isSold,
+            isPublic: artwork.isPublic,
+            isArchived: artwork.isArchived,
+            createdAt: artwork.createdAt,
+        })
             .from(artwork)
+            .leftJoin(media, eq(artwork.imageUrl, media.path))
             .where(and(eq(artwork.userId, targetUserId), eq(artwork.isArchived, false)))
             .orderBy(desc(artwork.createdAt))
 
         const albumsWithArtworks = albums.map(a => {
-            const artworksInAlbum = allArtworks.filter(art => art.albumId === a.id)
+            const artworksInAlbum = allArtworksRaw.filter(art => art.albumId === a.id)
             return {
                 ...a,
                 artworks: artworksInAlbum.slice(0, 3),

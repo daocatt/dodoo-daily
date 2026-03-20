@@ -14,6 +14,8 @@ type Artwork = {
     id: string
     title: string
     imageUrl: string
+    thumbnailMedium?: string | null
+    thumbnailLarge?: string | null
     priceRMB: number
     priceCoins: number
     isSold: boolean
@@ -298,7 +300,7 @@ export default function AlbumDetailPage() {
                                 className="group relative rounded-2xl overflow-hidden shadow-lg bg-white/60 backdrop-blur-md border border-white/50 aspect-square cursor-pointer"
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <img src={art.thumbnailMedium || art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
 
                                 {art.isPublic && (
                                     <div className="absolute top-2 left-2 px-2 py-1 bg-indigo-500/90 text-white text-[10px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">

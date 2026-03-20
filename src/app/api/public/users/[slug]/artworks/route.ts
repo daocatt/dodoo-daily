@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, artwork, album } from '@/lib/schema'
+import { users, artwork, album, media } from '@/lib/schema'
 import { eq, and, desc } from 'drizzle-orm'
 
 export async function GET(
@@ -36,10 +36,13 @@ export async function GET(
             userId: artwork.userId,
             isPublic: artwork.isPublic,
             likes: artwork.likes,
-            views: artwork.views
+            views: artwork.views,
+            thumbnailMedium: media.thumbnailMedium,
+            thumbnailLarge: media.thumbnailLarge
         })
         .from(artwork)
         .leftJoin(album, eq(artwork.albumId, album.id))
+        .leftJoin(media, eq(artwork.imageUrl, media.path))
         .where(
             and(
                 eq(artwork.userId, userId),
@@ -50,7 +53,12 @@ export async function GET(
         )
         .orderBy(desc(artwork.createdAt))
 
-        return NextResponse.json(publicArtworks)
+        const maskedArtworks = publicArtworks.map(art => ({
+            ...art,
+            imageUrl: art.isSold ? art.imageUrl : null // Hide original URL if not sold
+        }))
+
+        return NextResponse.json(maskedArtworks)
     } catch (e) {
         console.error('Public artworks fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

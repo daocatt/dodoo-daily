@@ -26,7 +26,11 @@ export const users = sqliteTable("Users", {
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
     lastLoginAt: integer("lastLoginAt", { mode: "timestamp_ms" }),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
-});
+    // Exhibition Settings
+    exhibitionTitle: text("exhibitionTitle"),
+    exhibitionSubtitle: text("exhibitionSubtitle"),
+    exhibitionDescription: text("exhibitionDescription"), // For help/info page
+}) ;
 
 export const accountStats = sqliteTable("AccountStats", {
     userId: text("userId").primaryKey().references(() => users.id),
@@ -87,6 +91,7 @@ export const guest = sqliteTable("Guest", {
     status: text("status", { enum: ["PENDING", "APPROVED", "BANNED"] }).default("PENDING").notNull(),
     currency: integer("currency").default(0).notNull(),
     lastIp: text("lastIp"),
+    address: text("address"), // Default shipping address
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
@@ -192,7 +197,13 @@ export const order = sqliteTable("Order", {
     amountRMB: real("amountRMB").default(0).notNull(),
     amountCoins: integer("amountCoins").default(0).notNull(),
     paymentType: text("paymentType", { enum: ["COINS", "RMB"] }).default("COINS").notNull(),
-    status: text("status").default("PENDING").notNull(),
+    // Status: PENDING_CONFIRM (WAITING_PAYMENT), CONFIRMED (PAID/PREPARING), SHIPPED, REFUNDED, CANCELLED
+    status: text("status", { enum: ["PENDING_CONFIRM", "CONFIRMED", "SHIPPED", "REFUNDED", "CANCELLED"] }).default("PENDING_CONFIRM").notNull(),
+    contactName: text("contactName"),
+    contactPhone: text("contactPhone"),
+    contactEmail: text("contactEmail"),
+    shippingAddress: text("shippingAddress"),
+    trackingNumber: text("trackingNumber"),
     qrCodeUrl: text("qrCodeUrl"),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
@@ -311,6 +322,9 @@ export const media = sqliteTable("Media", {
     size: integer("size"),
     storageProvider: text("storageProvider").default("LOCAL").notNull(),
     path: text("path").notNull(),
+    // Thumbnail Paths
+    thumbnailMedium: text("thumbnailMedium"), // For List view
+    thumbnailLarge: text("thumbnailLarge"),  // For Detail view
     key: text("key").notNull(),
     bucket: text("bucket"),
     userId: text("userId").references(() => users.id),

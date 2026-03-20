@@ -18,6 +18,9 @@ export async function GET(
             avatarUrl: users.avatarUrl,
             gender: users.gender,
             role: users.role,
+            exhibitionTitle: users.exhibitionTitle,
+            exhibitionSubtitle: users.exhibitionSubtitle,
+            exhibitionDescription: users.exhibitionDescription,
         })
         .from(users)
         .where(

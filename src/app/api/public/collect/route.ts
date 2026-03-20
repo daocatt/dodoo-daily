@@ -6,10 +6,10 @@ import { eq, and } from 'drizzle-orm'
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { artworkId, guestId, guestName, guestPhone, paymentType } = body
+        const { artworkId, guestId, guestName, guestPhone, paymentType, contactName, contactPhone, contactEmail, shippingAddress } = body
 
-        if (!artworkId || !guestName || !guestPhone) {
-            return NextResponse.json({ error: 'Incomplete information' }, { status: 400 })
+        if (!artworkId || !guestName || (!contactEmail && !contactPhone && !guestPhone)) {
+            return NextResponse.json({ error: 'Incomplete information. Email or phone is required.' }, { status: 400 })
         }
 
         // 1. Verify Artwork
@@ -67,7 +67,11 @@ export async function POST(req: NextRequest) {
                 amountRMB: art.priceRMB || 0,
                 amountCoins: art.priceCoins || 0,
                 paymentType: paymentType || 'RMB',
-                status: paymentType === 'COINS' ? 'SUCCESS' : 'PENDING'
+                status: paymentType === 'COINS' ? 'PENDING_CONFIRM' : 'PENDING_CONFIRM', // Ensure standard string is used
+                contactName: contactName || guestName,
+                contactPhone: contactPhone || guestPhone,
+                contactEmail: contactEmail || null,
+                shippingAddress: shippingAddress || null
             }).returning().get()
 
             // Update Artwork Status

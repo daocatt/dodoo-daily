@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Heart, Calendar, Coins, User, Phone, CheckCircle, Download, Eye, Quote, ChevronRight, ShieldAlert } from 'lucide-react'
+import { Palette, ArrowLeft, Heart, Calendar, Coins, User, CheckCircle, Download, Eye, Quote, ChevronRight, ShieldAlert } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -31,6 +31,8 @@ type ArtworkDetail = {
     likes: number
     views: number
     exhibitionDescription: string | null
+    thumbnailMedium?: string | null
+    thumbnailLarge?: string | null
 }
 
 export default function ArtworkDetailPage() {
@@ -39,14 +41,20 @@ export default function ArtworkDetailPage() {
     const [artwork, setArtwork] = useState<ArtworkDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [showCollectModal, setShowCollectModal] = useState(false)
-    const [guestName, setGuestName] = useState('')
-    const [guestPhone, setGuestPhone] = useState('')
     const [submitting, setSubmitting] = useState(false)
     const [success, setSuccess] = useState(false)
     const [isLiking, setIsLiking] = useState(false)
     const [hasLiked, setHasLiked] = useState(false)
-    const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number; phone?: string } | null>(null)
+    const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number; phone?: string; email?: string; address?: string } | null>(null)
     const [showVisitorPanel, setShowVisitorPanel] = useState(false)
+
+    // Contact info
+    const [contactName, setContactName] = useState('')
+    const [contactPhone, setContactPhone] = useState('')
+    const [contactEmail, setContactEmail] = useState('')
+    const [shippingAddress, setShippingAddress] = useState('')
+    const [useSavedAddress, setUseSavedAddress] = useState(true)
+
     const [systemStatus, setSystemStatus] = useState({ disableVisitorLogin: false, disableVisitorRegistration: false })
 
     const id = params?.id as string
@@ -55,7 +63,16 @@ export default function ArtworkDetailPage() {
     useEffect(() => {
         const stored = localStorage.getItem('visitor_data')
         if (stored) {
-            try { setVisitor(JSON.parse(stored)) } catch (e) {}
+            try { 
+                const v = JSON.parse(stored)
+                setVisitor(v) 
+                if (v) {
+                    setContactName(v.name || '')
+                    setContactPhone(v.phone || '')
+                    setContactEmail(v.email || '')
+                    setShippingAddress(v.address || '')
+                }
+            } catch { }
         }
 
         fetch('/api/system/settings')
@@ -118,7 +135,11 @@ export default function ArtworkDetailPage() {
                     guestId: visitor?.id,
                     guestName: visitor?.name || guestName.trim(),
                     guestPhone: visitor?.phone || guestPhone.trim(),
-                    paymentType: visitor ? 'COINS' : 'RMB'
+                    paymentType: visitor ? 'COINS' : 'RMB',
+                    contactName: contactName.trim() || visitor?.name,
+                    contactPhone: contactPhone.trim(),
+                    contactEmail: contactEmail.trim(),
+                    shippingAddress: (useSavedAddress ? visitor?.address : shippingAddress.trim()) || shippingAddress.trim()
                 })
             })
 
@@ -181,7 +202,7 @@ export default function ArtworkDetailPage() {
 
                     <div className="relative aspect-[4/5] md:aspect-[3/4] rounded-[48px] overflow-hidden shadow-2xl border-8 border-white bg-white group">
                         <Image 
-                            src={artwork.imageUrl} 
+                            src={artwork.thumbnailLarge || artwork.imageUrl || '/placeholder.png'} 
                             alt={artwork.title}
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
@@ -197,13 +218,15 @@ export default function ArtworkDetailPage() {
                                 displayName={artistDisplayName}
                                 avatarUrl={artwork.user.avatarUrl || undefined}
                              />
-                             <a 
-                                href={artwork.imageUrl} 
-                                download={artwork.title}
-                                className="p-3 bg-indigo-600 rounded-2xl text-white hover:bg-indigo-700 transition-colors shadow-xl"
-                             >
-                                 <Download className="w-6 h-6" />
-                             </a>
+                             {artwork.imageUrl && (
+                                <a 
+                                    href={artwork.imageUrl} 
+                                    download={artwork.title}
+                                    className="p-3 bg-indigo-600 rounded-2xl text-white hover:bg-indigo-700 transition-colors shadow-xl"
+                                >
+                                    <Download className="w-6 h-6" />
+                                </a>
+                             )}
                         </div>
                     </div>
                 </motion.div>
@@ -388,6 +411,10 @@ export default function ArtworkDetailPage() {
                                                 onSuccess={(data) => {
                                                     setVisitor(data)
                                                     localStorage.setItem('visitor_data', JSON.stringify(data))
+                                                    setContactName(data.name || '')
+                                                    setContactPhone(data.phone || '')
+                                                    setContactEmail(data.email || '')
+                                                    setShippingAddress(data.address || '')
                                                     setShowVisitorPanel(true)
                                                 }}
                                             />
@@ -423,8 +450,73 @@ export default function ArtworkDetailPage() {
                                                     </div>
                                                 </div>
 
+                                                <div className="space-y-4 mb-8">
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-slate-500 mb-1">Contact Name *</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={contactName} 
+                                                            onChange={e => setContactName(e.target.value)} 
+                                                            className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 mb-1">Phone</label>
+                                                            <input 
+                                                                type="tel" 
+                                                                value={contactPhone} 
+                                                                onChange={e => setContactPhone(e.target.value)} 
+                                                                className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
+                                                                required={!contactEmail}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                                                            <input 
+                                                                type="email" 
+                                                                value={contactEmail} 
+                                                                onChange={e => setContactEmail(e.target.value)} 
+                                                                className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
+                                                                required={!contactPhone}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400">At least one contact method (Phone or Email) must be provided.</p>
+                                                    
+                                                    <div>
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <label className="block text-xs font-bold text-slate-500">Shipping Address (Optional)</label>
+                                                            {visitor.address && (
+                                                                <label className="flex items-center gap-2 cursor-pointer">
+                                                                    <input 
+                                                                        type="checkbox" 
+                                                                        checked={useSavedAddress} 
+                                                                        onChange={e => setUseSavedAddress(e.target.checked)} 
+                                                                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                                    />
+                                                                    <span className="text-xs text-slate-500 font-bold">Use default</span>
+                                                                </label>
+                                                            )}
+                                                        </div>
+                                                        {!useSavedAddress || !visitor.address ? (
+                                                            <textarea 
+                                                                value={shippingAddress} 
+                                                                onChange={e => setShippingAddress(e.target.value)} 
+                                                                className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100 h-20 resize-none"
+                                                                placeholder="Enter detailed shipping info..."
+                                                            ></textarea>
+                                                        ) : (
+                                                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600">
+                                                                {visitor.address}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
                                                 <button 
-                                                    disabled={submitting || visitor.currency < artwork.priceCoins}
+                                                    disabled={submitting || visitor.currency < artwork.priceCoins || (!contactEmail && !contactPhone) || !contactName}
                                                     className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:grayscale"
                                                 >
                                                     {submitting ? 'Processing...' : visitor.currency < artwork.priceCoins ? 'Insufficient Coins' : 'Confirm & Collect'}

@@ -34,6 +34,8 @@ const getDirByType = (type: FileType) => {
     }
 };
 
+import sharp from 'sharp';
+
 export async function uploadMedia(file: File, type: FileType, userId?: string) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -41,24 +43,41 @@ export async function uploadMedia(file: File, type: FileType, userId?: string) {
     const now = new Date();
     const dateDir = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
     const ext = file.name.split('.').pop() || 'bin';
-    const fileName = `${uuidv4()}.${ext}`;
+    const uuid = uuidv4();
+    const fileName = `${uuid}.${ext}`;
     const typeDir = getDirByType(type);
 
     // key is the path within storage (relative)
     const key = `${typeDir}/${dateDir}/${fileName}`;
 
-    let path = ''; // The URL used to access the file
+    let path = ''; 
+    let thumbMedPath = null;
+    let thumbLargePath = null;
 
     if (storageProvider === 'R2' && s3Client) {
-        const command = new PutObjectCommand({
+        // Upload original
+        await s3Client.send(new PutObjectCommand({
             Bucket: r2Bucket,
             Key: key,
             Body: buffer,
             ContentType: file.type,
-        });
-
-        await s3Client.send(command);
+        }));
         path = r2PublicDomain ? `${r2PublicDomain}/${key}` : `/${r2Bucket}/${key}`;
+
+        // Generate and upload thumbnails for images
+        if (type === 'IMAGE' || type === 'GALLERY') {
+             const medUuid = uuidv4();
+             const medBuffer = await sharp(buffer).resize(800, 800, { fit: 'inside', withoutEnlargement: true }).toBuffer();
+             const medKey = `${typeDir}/${dateDir}/${medUuid}.webp`;
+             await s3Client.send(new PutObjectCommand({ Bucket: r2Bucket, Key: medKey, Body: medBuffer, ContentType: 'image/webp' }));
+             thumbMedPath = r2PublicDomain ? `${r2PublicDomain}/${medKey}` : `/${r2Bucket}/${medKey}`;
+
+             const largeUuid = uuidv4();
+             const largeBuffer = await sharp(buffer).resize(1600, 1600, { fit: 'inside', withoutEnlargement: true }).toBuffer();
+             const largeKey = `${typeDir}/${dateDir}/${largeUuid}.webp`;
+             await s3Client.send(new PutObjectCommand({ Bucket: r2Bucket, Key: largeKey, Body: largeBuffer, ContentType: 'image/webp' }));
+             thumbLargePath = r2PublicDomain ? `${r2PublicDomain}/${largeKey}` : `/${r2Bucket}/${largeKey}`;
+        }
     } else {
         // LOCAL storage in public/upload
         const uploadDir = join(process.cwd(), 'public', 'upload', typeDir, dateDir);
@@ -66,8 +85,19 @@ export async function uploadMedia(file: File, type: FileType, userId?: string) {
 
         const fullPath = join(uploadDir, fileName);
         await writeFile(fullPath, buffer);
-
         path = `/upload/${typeDir}/${dateDir}/${fileName}`;
+
+        if (type === 'IMAGE' || type === 'GALLERY') {
+            const medUuid = uuidv4();
+            const medFileName = `${medUuid}.webp`;
+            await sharp(buffer).resize(800, 800, { fit: 'inside', withoutEnlargement: true }).toFile(join(uploadDir, medFileName));
+            thumbMedPath = `/upload/${typeDir}/${dateDir}/${medFileName}`;
+
+            const largeUuid = uuidv4();
+            const largeFileName = `${largeUuid}.webp`;
+            await sharp(buffer).resize(1600, 1600, { fit: 'inside', withoutEnlargement: true }).toFile(join(uploadDir, largeFileName));
+            thumbLargePath = `/upload/${typeDir}/${dateDir}/${largeFileName}`;
+        }
     }
 
     // Save to database
@@ -79,6 +109,8 @@ export async function uploadMedia(file: File, type: FileType, userId?: string) {
         size: file.size,
         storageProvider: storageProvider,
         path: path,
+        thumbnailMedium: thumbMedPath,
+        thumbnailLarge: thumbLargePath,
         key: key,
         bucket: storageProvider === 'R2' ? r2Bucket : null,
         userId: userId || null,
