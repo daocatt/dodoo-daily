@@ -9,7 +9,7 @@ import NatureBackground from '@/components/NatureBackground'
 
 export default function WelcomePage() {
     const { t } = useI18n()
-    const [settings, setSettings] = useState<any>(null)
+    const [settings, setSettings] = useState<Record<string, unknown> | null>(null)
     const [images, setImages] = useState<string[]>(['/welcome_nature.png'])
     const [currentIndex, setCurrentIndex] = useState(0)
     const [systemName, setSystemName] = useState('DoDoo Daily')

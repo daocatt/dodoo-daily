@@ -37,11 +37,12 @@ export async function GET() {
                     currency: 0,
                 }).returning()
                 statsRecord = results[0]
-            } catch (insertError: any) {
-                console.error('[API stats] Insert failed:', insertError.message)
+            } catch (insertError: unknown) {
+                const iErr = insertError as Error;
+                console.error('[API stats] Insert failed:', iErr.message)
                 // Fallback: maybe it was created by another request in parallel
                 statsRecord = await db.select().from(accountStats).where(eq(accountStats.userId, currentUserId)).get()
-                if (!statsRecord) throw insertError
+                if (!statsRecord) throw iErr
             }
         }
 

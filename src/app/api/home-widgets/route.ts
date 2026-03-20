@@ -39,9 +39,10 @@ export async function GET(req: NextRequest) {
         }
 
         return NextResponse.json(widgets)
-    } catch (e: any) {
-        console.error('[API home-widgets GET] Error:', e)
-        return NextResponse.json({ error: 'Failed', detail: e.message }, { status: 500 })
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error('[API home-widgets GET] Error:', err)
+        return NextResponse.json({ error: 'Failed', detail: err.message }, { status: 500 })
     }
 }
 
@@ -61,9 +62,10 @@ export async function PATCH(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true })
-    } catch (e: any) {
-        console.error('[API home-widgets PATCH] Error:', e)
-        return NextResponse.json({ error: 'Failed to update', detail: e.message }, { status: 500 })
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error('[API home-widgets PATCH] Error:', err)
+        return NextResponse.json({ error: 'Failed to update', detail: err.message }, { status: 500 })
     }
 }
 
@@ -82,9 +84,10 @@ export async function POST(req: NextRequest) {
         const [res] = await db.insert(homeWidget).values({ userId, type, size, x, y }).returning()
         console.log('[API widgets POST] Success:', res)
         return NextResponse.json(res)
-    } catch (e: any) {
-        console.error('[API widgets POST] Error:', e)
-        return NextResponse.json({ error: 'Failed', detail: e.message }, { status: 500 })
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error('[API widgets POST] Error:', err)
+        return NextResponse.json({ error: 'Failed', detail: err.message }, { status: 500 })
     }
 }
 
@@ -100,8 +103,9 @@ export async function DELETE(req: NextRequest) {
     try {
         await db.delete(homeWidget).where(and(eq(homeWidget.id, id), eq(homeWidget.userId, userId)))
         return NextResponse.json({ success: true })
-    } catch (e: any) {
-        console.error('[API home-widgets DELETE] Error:', e)
-        return NextResponse.json({ error: 'Failed to delete', detail: e.message }, { status: 500 })
+    } catch (e: unknown) {
+        const err = e as Error;
+        console.error('[API home-widgets DELETE] Error:', err)
+        return NextResponse.json({ error: 'Failed to delete', detail: err.message }, { status: 500 })
     }
 }

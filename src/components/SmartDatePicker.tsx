@@ -51,7 +51,7 @@ export default function SmartDatePicker({
     mode = 'popover'
 }: SmartDatePickerProps) {
     const { locale, t } = useI18n()
-    const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime())
+    const isValidDate = (d: unknown) => d instanceof Date && !isNaN((d as Date).getTime())
     const initialMonth = isValidDate(selected) ? (selected as Date) : new Date()
     const [month, setMonthState] = useState<Date>(initialMonth)
     const [view, setView] = useState<'DAYS' | 'MONTHS' | 'YEARS' | 'TIME'>('DAYS')

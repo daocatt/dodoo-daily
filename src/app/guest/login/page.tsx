@@ -24,7 +24,7 @@ export default function VisitorAuthPage() {
     const [error, setError] = useState('')
     const [successMsg, setSuccessMsg] = useState('')
 
-    const [settings, setSettings] = useState<any>(null)
+    const [settings, setSettings] = useState<Record<string, unknown> | null>(null)
 
     useEffect(() => {
         fetch('/api/system/settings').then(res => res.json()).then(setSettings).catch(console.error)
