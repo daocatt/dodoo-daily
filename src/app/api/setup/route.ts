@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { users, accountStats, systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { getSessionUser } from '@/lib/auth'
 
 // GET: Check if setup is needed
 export async function GET() {
@@ -16,9 +17,8 @@ export async function GET() {
 
 // POST: Complete setup — create the child account and mark setup done
 export async function POST(req: NextRequest) {
-    const cookieStore = await cookies()
-    const role = cookieStore.get('dodoo_role')?.value
-    if (role !== 'PARENT') {
+    const session = await getSessionUser()
+    if (session?.role !== 'PARENT') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -41,9 +41,7 @@ export async function POST(req: Request) {
             sameSite: 'lax'
         })
 
-        // 2. Keep legacy cookies for now (to support existing UI logic if any)
-        cookieStore.set('dodoo_user_id', user.id, { maxAge, path: '/' })
-        cookieStore.set('dodoo_role', user.role, { maxAge, path: '/' })
+
 
         // Update last login
         await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));

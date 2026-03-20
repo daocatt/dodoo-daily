@@ -43,9 +43,7 @@ export async function POST(req: NextRequest) {
         // Update JWT session cookie (this is what getSessionUser reads first)
         res.cookies.set('dodoo_session', token, cookieOpts)
 
-        // Also update legacy cookies for backwards compat
-        res.cookies.set('dodoo_user_id', targetUser.id, cookieOpts)
-        res.cookies.set('dodoo_role', targetUser.role, cookieOpts)
+
 
         return res
     } catch (e) {

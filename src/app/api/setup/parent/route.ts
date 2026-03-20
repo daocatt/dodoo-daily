@@ -62,9 +62,16 @@ export async function POST(req: NextRequest) {
             .where(eq(users.id, parentUser.id))
 
         // Log the parent in automatically by setting session cookies
+        const { signSessionJWT } = await import('@/lib/auth')
+        const token = await signSessionJWT(parentUser.id, parentUser.role)
         const cookieStore = await cookies()
-        cookieStore.set('dodoo_user_id', parentUser.id, { maxAge: 60 * 60 * 24 * 365, path: '/' })
-        cookieStore.set('dodoo_role', parentUser.role, { maxAge: 60 * 60 * 24 * 365, path: '/' })
+        cookieStore.set('dodoo_session', token, {
+            maxAge: 60 * 60 * 24 * 365,
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        })
 
         return NextResponse.json({ success: true, needsSetup: true })
 
