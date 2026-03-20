@@ -50,7 +50,7 @@ export default function SettingsPage() {
             .then(res => res.json())
             .then(data => {
                 if (data.isParent) {
-                    router.push('/parent')
+                    router.push('/admin')
                     return
                 }
                 setUser(data)
@@ -58,7 +58,7 @@ export default function SettingsPage() {
                 setSlug(data.slug || '')
                 setLoading(false)
             })
-            .catch(() => router.push('/login'))
+            .catch(() => router.push('/admin/login'))
     }, [router])
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,7 +131,7 @@ export default function SettingsPage() {
 
     const handleLogout = async () => {
         await fetch('/api/auth/logout', { method: 'POST' })
-        window.location.href = '/login'
+        window.location.href = '/admin/login'
     }
 
     if (loading) return (

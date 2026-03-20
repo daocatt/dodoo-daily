@@ -55,6 +55,13 @@ export default function ExhibitionPage() {
     const slug = params?.slug as string
 
     useEffect(() => {
+        // --- NEW: VISITOR AUTH CHECK ---
+        const guestId = typeof document !== 'undefined' ? document.cookie.split('; ').find(row => row.startsWith('dodoo_guest_id='))?.split('=')[1] : null
+        if (!guestId && !localStorage.getItem('dodoo_guest')) {
+            router.push(`/guest/login?returnUrl=${encodeURIComponent(window.location.pathname)}&slug=${slug}`)
+            return
+        }
+
         if (!slug) return
         
         const fetchData = async () => {

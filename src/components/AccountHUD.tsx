@@ -74,10 +74,10 @@ export default function AccountHUD() {
     const handleLogout = async () => {
         try {
             await fetch('/api/auth/logout', { method: 'POST' })
-            window.location.href = '/login'
+            window.location.href = '/admin/login'
         } catch (error) {
             console.error('Logout failed:', error)
-            window.location.href = '/login'
+            window.location.href = '/admin/login'
         }
     }
 
@@ -105,7 +105,7 @@ export default function AccountHUD() {
                     }
                 }
             } else if (res.status === 401 || res.status === 404) {
-                if (pathname && !['/login', '/setup'].some(p => pathname.startsWith(p))) {
+                if (pathname && !['/admin/login', '/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
                     console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
                     handleLogout()
                 }
@@ -117,18 +117,18 @@ export default function AccountHUD() {
 
     useEffect(() => {
         setMounted(true)
-        if (pathname && !['/login', '/setup'].some(p => pathname.startsWith(p))) {
+        if (pathname && !['/admin/login', '/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
             fetchData()
         }
         const interval = setInterval(() => {
-            if (pathname && !['/login', '/setup'].some(p => pathname.startsWith(p))) fetchData()
+            if (pathname && !['/admin/login', '/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) fetchData()
         }, 60000)
         return () => clearInterval(interval)
     }, [pathname, fetchData])
 
     if (!mounted) return null
 
-    const hideOn = ['/buy', '/login', '/setup', '/tasks', '/emotions', '/journal', '/shop', '/parent', '/notes', '/u/']
+    const hideOn = ['/buy', '/admin/login', '/setup', '/tasks', '/emotions', '/journal', '/shop', '/admin', '/notes', '/u/', '/guest', '/welcome']
     if (!pathname || hideOn.some(prefix => pathname.startsWith(prefix)) || !stats) return null
 
     const handleRecharge = async (e: React.FormEvent) => {
@@ -362,7 +362,7 @@ export default function AccountHUD() {
                                         <p className="text-sm text-slate-400">{locale === 'zh-CN' ? '需要先为该孩子补充出生日期，才能添加成长记录。' : 'Please set a birth date for this child before adding growth records.'}</p>
                                         <button
                                             type="button"
-                                            onClick={() => { setShowGrowthModal(false); window.location.href = '/parent' }}
+                                            onClick={() => { setShowGrowthModal(false); window.location.href = '/admin' }}
                                             className="mt-1 px-8 py-3 bg-amber-400 text-white rounded-2xl font-black shadow-lg shadow-amber-200 hover:bg-amber-500 transition-all active:scale-95"
                                         >
                                             {locale === 'zh-CN' ? '前往设置' : 'Go to Settings'}

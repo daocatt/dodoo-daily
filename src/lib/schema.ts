@@ -88,6 +88,7 @@ export const guest = sqliteTable("Guest", {
     name: text("name").notNull(),
     email: text("email"),
     phone: text("phone"),
+    password: text("password"),
     status: text("status", { enum: ["PENDING", "APPROVED", "BANNED"] }).default("PENDING").notNull(),
     currency: integer("currency").default(0).notNull(),
     lastIp: text("lastIp"),
@@ -305,6 +306,7 @@ export const systemSettings = sqliteTable("SystemSettings", {
     guestInvitationCode: text("guestInvitationCode"),
     disableVisitorLogin: integer("disableVisitorLogin", { mode: "boolean" }).default(false).notNull(),
     disableVisitorRegistration: integer("disableVisitorRegistration", { mode: "boolean" }).default(false).notNull(),
+    hideFamilyLogin: integer("hideFamilyLogin", { mode: "boolean" }).default(false).notNull(),
     homepageImages: text("homepageImages"), // stringified JSON array
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
@@ -444,6 +446,19 @@ export const storageTransfers = sqliteTable("storageTransfers", {
     deliveryMethod: text("deliveryMethod"), // e.g., "self-pickup", "express"
     buyerId: text("buyerId"), // External ID or placeholder
     notes: text("notes"),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
+// -----------------------------------------------------------------------------
+// AUDIT & LOGGING SYSTEM
+// -----------------------------------------------------------------------------
+
+export const memberLoginLog = sqliteTable("MemberLoginLog", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("userId").notNull().references(() => users.id),
+    ip: text("ip"),
+    userAgent: text("userAgent"),
+    status: text("status", { enum: ["SUCCESS", "FAILED"] }).default("SUCCESS").notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 

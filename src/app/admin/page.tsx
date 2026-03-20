@@ -14,6 +14,7 @@ import SystemSettings from '@/components/parent/SystemSettings'
 import MediaManagement from '@/components/parent/MediaManagement'
 import ExhibitionManagement from '@/components/parent/ExhibitionManagement'
 import GuestManagement from '@/components/parent/GuestManagement'
+import LoginLog from '@/components/parent/LoginLog'
 
 interface ParentUser {
     id: string
@@ -31,7 +32,7 @@ export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'GUESTS'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'GUESTS' | 'LOGS'>('HOME')
     const [user, setUser] = useState<ParentUser | null>(null)
 
     useEffect(() => {
@@ -85,6 +86,7 @@ export default function ParentDashboard() {
             case 'MEDIA': return <MediaManagement />
             case 'EXHIBITION': return <ExhibitionManagement />
             case 'GUESTS': return <GuestManagement />
+            case 'LOGS': return <LoginLog />
             default: return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
 
@@ -101,6 +103,23 @@ export default function ParentDashboard() {
                             <p className="text-slate-500 text-sm mt-1">{t('parent.familyDesc')}</p>
                         </div>
                         <div className="mt-auto pt-4 text-blue-600 font-bold flex items-center gap-1">
+                            {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
+                        </div>
+                    </button>
+
+                    {/* Audit Logs */}
+                    <button
+                        onClick={() => setView('LOGS')}
+                        className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-indigo-200 transition-all text-left group"
+                    >
+                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                            <Shield className="w-7 h-7 text-indigo-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800">Security Logs</h2>
+                            <p className="text-slate-500 text-sm mt-1">Audit trail of all system login activities.</p>
+                        </div>
+                        <div className="mt-auto pt-4 text-indigo-600 font-bold flex items-center gap-1">
                             {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
                         </div>
                     </button>
@@ -245,14 +264,15 @@ export default function ParentDashboard() {
                     )}
                     <div>
                         <h1 className="text-xl font-black text-slate-900 leading-tight">
-                            {view === 'HOME' ? t('parent.title') :
+                            {view === 'HOME' ? 'Admin Console' :
                                 view === 'PROFILE' ? t('parent.profile') :
                                     view === 'FAMILY' ? t('parent.family') :
                                         view === 'SYSTEM' ? t('parent.settings') :
                                             view === 'MEDIA' ? t('parent.media') :
                                                 view === 'EXHIBITION' ? t('parent.exhibition') :
                                                     view === 'GUESTS' ? t('parent.guests') :
-                                                        view}
+                                                        view === 'LOGS' ? 'Security Logs' :
+                                                            view}
                         </h1>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">{t('parent.controlPanel')}</p>
                     </div>
@@ -275,7 +295,7 @@ export default function ParentDashboard() {
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">
                                 <div className="text-xs font-black text-slate-800">{user.name}</div>
-                                <div className="text-[8px] font-black text-purple-500 uppercase tracking-tighter">Parent Mode</div>
+                                <div className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">Admin Mode</div>
                             </div>
                             <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
                                 <img src={user.avatarUrl || "/dog.svg"} alt={user.name} className="w-full h-full object-cover" />

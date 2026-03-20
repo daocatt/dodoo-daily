@@ -117,6 +117,8 @@ export default function LoginPage() {
                 } else {
                     window.location.href = '/'
                 }
+            } else if (data.needsPin) {
+                window.location.href = `/auth/set-pin?userId=${data.userId}`
             } else {
                 setError(data.error === 'Invalid PIN' ? t('login.error.invalidPin') : (data.error || t('login.error.network')))
                 setLoading(false)

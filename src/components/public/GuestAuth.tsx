@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock } from 'lucide-react'
 
 interface GuestData {
     id: string
@@ -17,8 +17,10 @@ interface GuestAuthProps {
     disableRegistration?: boolean
 }
 
-export default function GuestAuth({ onSuccess, requireInvitationCode, disableRegistration }: GuestAuthProps) {
+export default function GuestAuth({ onSuccess, disableRegistration }: GuestAuthProps) {
     const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN')
+    const [identifier, setIdentifier] = useState('') // email or phone
+    const [password, setPassword] = useState('')
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
@@ -34,10 +36,14 @@ export default function GuestAuth({ onSuccess, requireInvitationCode, disableReg
 
         try {
             const endpoint = mode === 'LOGIN' ? '/api/guest/login' : '/api/guest/register'
+            const payload = mode === 'LOGIN' 
+                ? { identifier, password }
+                : { name, email, phone, password, invitationCode }
+
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, phone, invitationCode })
+                body: JSON.stringify(payload)
             })
 
             const data = await res.json()
@@ -51,7 +57,7 @@ export default function GuestAuth({ onSuccess, requireInvitationCode, disableReg
             } else {
                 setError(data.error || '认证失败')
             }
-        } catch (err) {
+        } catch (_err) {
             setError('网络连接错误')
         } finally {
             setLoading(false)
@@ -70,7 +76,7 @@ export default function GuestAuth({ onSuccess, requireInvitationCode, disableReg
                 </div>
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">等待核准</h3>
                 <p className="text-slate-500 font-medium leading-relaxed">
-                    您的注册申请已提交。由于安全设置，您需要等待家长核准后才能开始访问展厅。
+                    您的注册申请已提交。您需要等待家长核准后才能开始访问展厅。
                 </p>
                 <div className="pt-6">
                     <button 
@@ -96,28 +102,46 @@ export default function GuestAuth({ onSuccess, requireInvitationCode, disableReg
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1">
-                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">姓名 / 昵称</label>
-                    <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                        <input 
-                            required
-                            type="text" 
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                            placeholder="如何称呼您？"
-                        />
-                    </div>
-                </div>
-
-                {mode === 'REGISTER' && (
+                {mode === 'LOGIN' ? (
                     <>
                         <div className="space-y-1">
-                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">邮箱 (选填)</label>
+                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">手机号 / 邮箱</label>
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                <input 
+                                    required
+                                    type="text" 
+                                    value={identifier}
+                                    onChange={e => setIdentifier(e.target.value)}
+                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
+                                    placeholder="输入您的账号"
+                                />
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">姓名 / 昵称</label>
+                            <div className="relative">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                                <input 
+                                    required
+                                    type="text" 
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
+                                    placeholder="如何称呼您？"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">邮箱 (二选一)</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                                 <input 
+                                    required={!phone}
                                     type="email" 
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
@@ -128,7 +152,7 @@ export default function GuestAuth({ onSuccess, requireInvitationCode, disableReg
                         </div>
 
                         <div className="space-y-1">
-                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">手机号 (必填之一)</label>
+                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">手机号 (二选一)</label>
                             <div className="relative">
                                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                                 <input 
@@ -137,16 +161,31 @@ export default function GuestAuth({ onSuccess, requireInvitationCode, disableReg
                                     value={phone}
                                     onChange={e => setPhone(e.target.value)}
                                     className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                    placeholder="用于找回或核对身份"
+                                    placeholder="13812345678"
                                 />
                             </div>
                         </div>
                     </>
                 )}
 
-                {requireInvitationCode && mode === 'REGISTER' && (
+                <div className="space-y-1">
+                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">密码</label>
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                        <input 
+                            required
+                            type="password" 
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
+                            placeholder="输入密码"
+                        />
+                    </div>
+                </div>
+
+                {mode === 'REGISTER' && (
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest ml-1">邀请码</label>
+                        <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest ml-1">邀请码 (必填)</label>
                         <div className="relative">
                             <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                             <input 

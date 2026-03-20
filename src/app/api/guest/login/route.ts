@@ -16,24 +16,24 @@ export async function POST(req: NextRequest) {
         if (isBanned) return NextResponse.json({ error: 'Your IP is restricted' }, { status: 403 })
 
         const body = await req.json()
-        const { name, phone, email } = body
+        const { identifier, password } = body
 
-        if (!name || (!phone && !email)) {
-            return NextResponse.json({ error: 'Name and Phone/Email are required' }, { status: 400 })
+        if (!identifier || !password) {
+            return NextResponse.json({ error: 'Email/Phone and Password are required' }, { status: 400 })
         }
 
         const currentGuest = await db.select().from(guest).where(
             and(
-                eq(guest.name, name),
                 or(
-                    phone ? eq(guest.phone, phone) : undefined,
-                    email ? eq(guest.email, email) : undefined
-                )
+                    eq(guest.phone, identifier),
+                    eq(guest.email, identifier)
+                ),
+                eq(guest.password, password)
             )
         ).get()
 
         if (!currentGuest) {
-            return NextResponse.json({ error: 'Guest not found' }, { status: 404 })
+            return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
         }
 
         if (currentGuest.status === 'BANNED') {

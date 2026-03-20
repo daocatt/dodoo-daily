@@ -113,6 +113,20 @@
       "when": 1774011577405,
       "tag": "0015_update_storage_financial",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1774016796640,
+      "tag": "0016_young_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1774020574236,
+      "tag": "0017_rapid_doctor_strange",
+      "breakpoints": true
     }
   ]
 }

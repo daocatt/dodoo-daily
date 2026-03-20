@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
     const hasSession = request.cookies.has('dodoo_session')
     const pathname = request.nextUrl.pathname
 
@@ -43,17 +43,20 @@ export function proxy(request: NextRequest) {
     // 5. Page Protection (UI)
     // List of OPEN UI paths
     const isOpenPage = 
-        pathname.startsWith('/login') || 
+        pathname === '/welcome' ||
+        pathname.startsWith('/admin/login') || 
         pathname.startsWith('/u/') || 
         pathname.startsWith('/buy/') ||
-        pathname.startsWith('/setup') // Setup page handles its own internal redirect if already done
+        pathname.startsWith('/guest/') ||
+        pathname.startsWith('/setup') 
 
     if (!hasSession && !isOpenPage) {
-        return NextResponse.redirect(new URL('/login', request.url))
+        // Default redirect for any unauthenticated PAGE access is now /welcome
+        return NextResponse.redirect(new URL('/welcome', request.url))
     }
 
     // prevent logged-in users from seeing the login page
-    if (hasSession && pathname.startsWith('/login')) {
+    if (hasSession && pathname.startsWith('/admin/login')) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 

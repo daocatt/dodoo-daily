@@ -57,6 +57,25 @@ Create a daily tool for Children's daily tasks.
   - Journal feed renamed to "Daily Post" for a more active, social feel.
   - Timeline view showcases author avatars and high-impact visual layouts.
 
+## 6. Advanced Access Control & Authentication
+
+- **Admin Isolation**: Separate the family management dashboard to a dedicated `/admin` route for better security and clear entry point.
+- **Mandatory Password Policy**:
+    - All accounts must have a password to log in.
+    - Automatic redirection to "Set Password" if an account is currently password-less to ensure account security.
+- **Login Audit Logs**:
+    - **LoginLog System**: Track every successful login event including timestamp and basic device info.
+    - **Visibility Rules**: Users see their own logs; Parent accounts have full visibility into all members' login history.
+- **Security Alerts**:
+    - **Proactive Notification**: When a `child` account logs in, the system automatically sends a Web Push notification to all `parent` accounts.
+
+## 7. Landing & Guest Experience
+
+- **DoDoo Daily Intro Page**: A default landing page introducing the system's core values and features.
+    - **Dynamic Visuals**: Uses the 5 images configured in the backend settings to create an engaging first impression.
+- **Smart Guest Flow**:
+    - When visitors access a public profile (`/u/[slug]`) without authentication, they are seamlessly guided to a dedicated visitor login/registration page.
+
 ## Database Lifecycle & Migration
 
 To ensure high stability and avoid data loss in production, we use Drizzle Kit's migration system:

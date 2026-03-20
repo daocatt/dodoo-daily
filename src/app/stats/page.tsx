@@ -511,7 +511,7 @@ export default function GrowthStatsPage() {
                                     <p className="text-sm text-slate-400">{locale === 'zh-CN' ? '需要先为该孩子补充出生日期，才能添加成长记录。' : 'Please set a birth date for this child before adding growth records.'}</p>
                                     <button
                                         type="button"
-                                        onClick={() => { setShowRecordModal(false); window.location.href = '/parent' }}
+                                        onClick={() => { setShowRecordModal(false); window.location.href = '/admin' }}
                                         className="mt-2 px-8 py-3 bg-amber-400 text-white rounded-2xl font-black shadow-lg shadow-amber-200 hover:bg-amber-500 transition-all"
                                     >
                                         {locale === 'zh-CN' ? '前往设置' : 'Go to Settings'}

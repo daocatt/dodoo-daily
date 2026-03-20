@@ -19,6 +19,7 @@ export default function SystemSettings() {
     const [guestInvitationCode, setGuestInvitationCode] = useState('')
     const [disableVisitorLogin, setDisableVisitorLogin] = useState(false)
     const [disableVisitorRegistration, setDisableVisitorRegistration] = useState(false)
+    const [hideFamilyLogin, setHideFamilyLogin] = useState(false)
     const [homepageImages, setHomepageImages] = useState<string[]>([])
     const [uploading, setUploading] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -48,6 +49,7 @@ export default function SystemSettings() {
                 setGuestInvitationCode(data.guestInvitationCode || '')
                 setDisableVisitorLogin(data.disableVisitorLogin ?? false)
                 setDisableVisitorRegistration(data.disableVisitorRegistration ?? false)
+                setHideFamilyLogin(data.hideFamilyLogin ?? false)
                 try {
                     setHomepageImages(data.homepageImages ? JSON.parse(data.homepageImages) : [])
                 } catch (e) { setHomepageImages([]) }
@@ -82,6 +84,7 @@ export default function SystemSettings() {
                 if (updates.guestInvitationCode !== undefined) setGuestInvitationCode(updates.guestInvitationCode as string)
                 if (updates.disableVisitorLogin !== undefined) setDisableVisitorLogin(updates.disableVisitorLogin as boolean)
                 if (updates.disableVisitorRegistration !== undefined) setDisableVisitorRegistration(updates.disableVisitorRegistration as boolean)
+                if (updates.hideFamilyLogin !== undefined) setHideFamilyLogin(updates.hideFamilyLogin as boolean)
                 if (updates.homepageImages !== undefined) {
                     try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (e) { }
                 }
@@ -172,6 +175,19 @@ export default function SystemSettings() {
                                     className={`w-14 h-8 rounded-full transition-all relative ${showAllAvatars ? 'bg-emerald-500' : 'bg-slate-300'}`}
                                 >
                                     <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${showAllAvatars ? 'right-1' : 'left-1'}`} />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <h4 className="font-black text-slate-800">Hide Family Login on Welcome</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Hidden family entry for privacy</p>
+                                </div>
+                                <button
+                                    onClick={() => handleUpdateSettings({ hideFamilyLogin: !hideFamilyLogin })}
+                                    className={`w-14 h-8 rounded-full transition-all relative ${hideFamilyLogin ? 'bg-rose-500' : 'bg-slate-300'}`}
+                                >
+                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${hideFamilyLogin ? 'right-1' : 'left-1'}`} />
                                 </button>
                             </div>
 

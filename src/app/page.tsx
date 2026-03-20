@@ -231,8 +231,8 @@ export default function Home() {
       // Redirect to login if unauthorized
       const errorMsg = e instanceof Error ? e.message : String(e)
       if (errorMsg.includes('401')) {
-        console.warn("Home: Unauthorized encounter, redirecting to login...")
-        window.location.href = '/login'
+        console.warn("Home: Unauthorized encounter, redirecting to welcome...")
+        window.location.href = '/welcome'
       }
     } finally {
       setLoading(false)

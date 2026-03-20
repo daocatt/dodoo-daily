@@ -12,13 +12,18 @@ export async function POST(req: NextRequest) {
         if (isBanned) return NextResponse.json({ error: 'Your IP is restricted' }, { status: 403 })
 
         const body = await req.json()
-        const { name, email, phone, invitationCode } = body
+        const { name, email, phone, invitationCode, password } = body
 
-        if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+        if (!name || !password) return NextResponse.json({ error: 'Name and Password are required' }, { status: 400 })
 
         // Fetch settings
         const settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
         
+        // Check invitation code - MUST have it
+        if (!invitationCode || invitationCode !== settings?.guestInvitationCode) {
+            return NextResponse.json({ error: 'Valid invitation code is required' }, { status: 401 })
+        }
+
         if (settings?.disableVisitorLogin) {
             return NextResponse.json({ error: 'System is temporarily closed' }, { status: 403 })
         }
@@ -27,14 +32,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Registration is currently closed' }, { status: 403 })
         }
 
-        // Check invitation code if required
-        if (settings?.requireInvitationCode) {
-            if (invitationCode !== settings.guestInvitationCode) {
-                return NextResponse.json({ error: 'Invalid invitation code' }, { status: 401 })
-            }
-        }
-
         // Check if existing
+        const ident = (email || phone) 
+        if (!ident) return NextResponse.json({ error: 'Email or Phone is required' }, { status: 400 })
+
         const existing = await db.select().from(guest).where(
             or(
                 phone ? eq(guest.phone, phone) : undefined,
@@ -46,16 +47,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Guest with this email or phone already exists' }, { status: 400 })
         }
 
-        // Approval status
-        // If invitation code used, maybe auto-approve? The user said "if using code, default approved"
-        const status = (settings?.requireInvitationCode && invitationCode === settings.guestInvitationCode) 
-            ? 'APPROVED' 
-            : (settings?.requireGuestApproval ? 'PENDING' : 'APPROVED')
+        // 注册通过邀请码，直接 APPROVED
+        const status = 'APPROVED'
 
         const [newGuest] = await db.insert(guest).values({
             name,
             email,
             phone,
+            password, // Storing raw for now as placeholder, ideally bcrypt/jose
             status,
             lastIp: ip,
         }).returning()

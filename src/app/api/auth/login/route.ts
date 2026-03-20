@@ -17,12 +17,23 @@ export async function POST(req: Request) {
         ).all()
 
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        
+        // Enforce mandatory password/PIN
+        if (!user.pin || user.pin.trim() === '') {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Account requires a security PIN to be set before login',
+                needsPin: true,
+                userId: user.id 
+            }, { status: 403 })
+        }
 
         if (user.isArchived || user.isDeleted) {
             return NextResponse.json({ error: 'Account disabled' }, { status: 403 })
         }
 
         if (user.pin && user.pin !== pin) {
+            // Log failed attempt if needed, but for now we focus on success
             return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 })
         }
 
@@ -41,7 +52,30 @@ export async function POST(req: Request) {
             sameSite: 'lax'
         })
 
+        // --- NEW: AUDIT LOG ---
+        const { memberLoginLog } = await import('@/lib/schema')
+        const ip = req.headers.get('x-forwarded-for') || '127.0.0.1'
+        const userAgent = req.headers.get('user-agent') || 'Unknown'
+        await db.insert(memberLoginLog).values({
+            userId: user.id,
+            ip,
+            userAgent,
+            status: 'SUCCESS'
+        })
 
+        // --- NEW: PARENT NOTIFICATION ---
+        if (user.role === 'CHILD') {
+            try {
+                const { notifyParents } = await import('@/lib/push')
+                await notifyParents({
+                    title: 'Child Login Alert 🔔',
+                    body: `${user.nickname || user.name} has just logged into the system.`,
+                    icon: user.avatarUrl || '/dog.svg'
+                })
+            } catch (notifyErr) {
+                console.warn('Failed to notify parents:', notifyErr)
+            }
+        }
 
         // Update last login
         await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id));
