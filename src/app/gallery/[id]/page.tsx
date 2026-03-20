@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles, Camera } from 'lucide-react'
+import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles, Camera, X, ChevronRight, Download } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
@@ -64,8 +64,46 @@ export default function AlbumDetailPage() {
         message: string,
         onConfirm?: () => void
     } | null>(null)
+    const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
     const { t } = useI18n()
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (lightboxIndex === null) return
+            if (e.key === 'ArrowRight') nextImage()
+            if (e.key === 'ArrowLeft') prevImage()
+            if (e.key === 'Escape') setLightboxIndex(null)
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [lightboxIndex, album?.artworks])
+
+    const nextImage = () => {
+        if (!album || lightboxIndex === null) return
+        setLightboxIndex((prev) => (prev! + 1) % album.artworks.length)
+    }
+
+    const prevImage = () => {
+        if (!album || lightboxIndex === null) return
+        setLightboxIndex((prev) => (prev! - 1 + album.artworks.length) % album.artworks.length)
+    }
+
+    const handleDownload = async (url: string, title: string) => {
+        try {
+            const response = await fetch(url)
+            const blob = await response.blob()
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(blob)
+            link.download = `${title}.jpg`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        } catch (err) {
+            console.error('Download failed', err)
+            window.open(url, '_blank')
+        }
+    }
 
     useEffect(() => {
         if (!params?.id) return
@@ -309,7 +347,10 @@ export default function AlbumDetailPage() {
                                     </div>
                                 )}
 
-                                <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent ${art.isSold ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-300 flex flex-col justify-end p-4`}>
+                                <div 
+                                    onClick={() => setLightboxIndex(idx)}
+                                    className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent ${art.isSold ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-300 flex flex-col justify-end p-4`}
+                                >
                                     <h4 className="text-white font-bold text-lg">{art.title}</h4>
 
                                     {art.isSold ? (
@@ -538,6 +579,101 @@ export default function AlbumDetailPage() {
                 )}
             </AnimatePresence>
 
+            {/* Lightbox */}
+            <AnimatePresence>
+                {lightboxIndex !== null && album.artworks[lightboxIndex] && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex flex-col"
+                        onClick={() => setLightboxIndex(null)}
+                    >
+                        {/* Lightbox Header */}
+                        <div className="flex items-center justify-between px-6 py-4 relative z-10 bg-gradient-to-b from-black/60 to-transparent">
+                            <div className="text-white">
+                                <h3 className="text-lg font-bold">{album.artworks[lightboxIndex].title}</h3>
+                                <p className="text-gray-400 text-xs">{lightboxIndex + 1} / {album.artworks.length}</p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDownload(album.artworks[lightboxIndex].imageUrl, album.artworks[lightboxIndex].title)
+                                    }}
+                                    className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-colors border border-white/5"
+                                    title="Download Original"
+                                >
+                                    <Download className="w-6 h-6" />
+                                </button>
+                                <button
+                                    onClick={() => setLightboxIndex(null)}
+                                    className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-colors border border-white/5"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Main Image Area */}
+                        <div className="flex-1 relative flex items-center justify-center p-4 md:p-10 shrink-0 min-h-0">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    prevImage()
+                                }}
+                                className="absolute left-4 z-10 p-4 bg-white/5 hover:bg-white/10 rounded-full text-white backdrop-blur transition-all border border-white/5"
+                            >
+                                <ChevronLeft className="w-8 h-8" />
+                            </button>
+
+                            <motion.div
+                                key={album.artworks[lightboxIndex].id}
+                                initial={{ opacity: 0, scale: 0.9, x: 20 }}
+                                animate={{ opacity: 1, scale: 1, x: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, x: -20 }}
+                                className="relative max-w-full max-h-full flex items-center justify-center shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={album.artworks[lightboxIndex].imageUrl}
+                                    alt={album.artworks[lightboxIndex].title}
+                                    className="max-w-full max-h-full rounded-lg shadow-2xl object-contain border border-white/10"
+                                />
+                            </motion.div>
+
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    nextImage()
+                                }}
+                                className="absolute right-4 z-10 p-4 bg-white/5 hover:bg-white/10 rounded-full text-white backdrop-blur transition-all border border-white/5"
+                            >
+                                <ChevronRight className="w-8 h-8" />
+                            </button>
+                        </div>
+
+                        {/* Thumbnails Strip */}
+                        <div className="h-24 px-6 py-2 bg-black/40 flex items-center gap-3 overflow-x-auto hide-scrollbar shrink-0 border-t border-white/5">
+                            {album.artworks.map((art, idx) => (
+                                <div
+                                    key={`thumb-${art.id}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setLightboxIndex(idx)
+                                    }}
+                                    className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${idx === lightboxIndex ? 'border-amber-500 scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                                >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={art.thumbnailMedium || art.imageUrl} className="w-full h-full object-cover" alt="" />
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Poster Generator Modal */}
             <AnimatePresence>
                 {posterArtwork && (
@@ -560,3 +696,4 @@ export default function AlbumDetailPage() {
         </div>
     )
 }
+
