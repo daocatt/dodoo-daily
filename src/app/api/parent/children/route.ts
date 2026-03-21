@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, accountStats } from '@/lib/schema'
+import { users, accountStats, systemSettings } from '@/lib/schema'
 import { eq, and, not, or } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
             if (!chineseZodiac) chineseZodiac = getChineseZodiac(new Date(birthDate));
         }
         
-        const { slugify, generateNumericSlug } = await import('@/lib/utils');
+        const { generateNumericSlug } = await import('@/lib/utils');
         let finalSlug = slug || generateNumericSlug(8);
 
         // Check uniqueness
@@ -120,6 +120,15 @@ export async function POST(req: NextRequest) {
             purpleStars: 0,
             angerPenalties: 0
         })
+
+        // If a member is added, and the app is still in setup mode (needsSetup = true), clear the setup flag.
+        // This covers the case where the user skips setup to explore, then adds their first member later.
+        const settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
+        if (settings?.needsSetup) {
+            await db.update(systemSettings)
+                .set({ needsSetup: false })
+                .where(eq(systemSettings.id, 'app_settings'))
+        }
 
         return NextResponse.json(newUser)
     } catch (error) {

@@ -614,6 +614,28 @@ const dictionaries: Dictionary = {
         'guest.registrationClosed': 'Visitor registration is currently closed.',
         'guest.systemMaintenance': 'The visitor system is undergoing maintenance.',
         'pinned': 'Pinned',
+
+        // Setup
+        'setup.title': 'Create Family Member',
+        'setup.subtitle': 'Parent Operator Initial Configuration',
+        'setup.boy': 'Boy',
+        'setup.girl': 'Girl',
+        'setup.secret': 'Secret',
+        'setup.errorAvatar': 'Please select an avatar',
+        'setup.errorName': 'Please enter a real name',
+        'setup.errorNickname': 'Please enter a nickname',
+        'setup.errorSubmit': 'Initialization failed',
+        'setup.errorNetwork': 'Network error',
+        'setup.avatarHint': 'Click to select',
+        'setup.realName': 'Real Name',
+        'setup.namePlaceholder': 'e.g. Lucky, Summer',
+        'setup.nickname': 'Nickname',
+        'setup.nicknamePlaceholder': 'Used for login',
+        'setup.gender': 'Gender',
+        'setup.birthDate': 'Birth Date',
+        'setup.skip': 'Skip Setup',
+        'setup.submit': 'Initialize Profile',
+        'setup.uploadAvatar': 'Upload Avatar',
     },
     'zh-CN': {
         // Board
@@ -1223,6 +1245,28 @@ const dictionaries: Dictionary = {
         'ledger.categories.setup': '分类配置',
         'shop.previewOnly': '仅预览模式',
         'pinned': '便签',
+
+        // Setup
+        'setup.title': '创建家庭成员',
+        'setup.subtitle': '主理人首次初始化配置',
+        'setup.boy': '男孩房间',
+        'setup.girl': '女孩房间',
+        'setup.secret': '保密空间',
+        'setup.errorAvatar': '请选择至少一张头像',
+        'setup.errorName': '请输入你的真实姓名',
+        'setup.errorNickname': '请输入你的昵称',
+        'setup.errorSubmit': '账号初始化失败',
+        'setup.errorNetwork': '网络错误，请稍后再试',
+        'setup.avatarHint': '点击选择',
+        'setup.realName': '真实姓名',
+        'setup.namePlaceholder': '例如：Lucky, Summer',
+        'setup.nickname': '昵称',
+        'setup.nicknamePlaceholder': '作为登录显示',
+        'setup.gender': '性别',
+        'setup.birthDate': '生日',
+        'setup.skip': '跳过设置',
+        'setup.submit': '初始化资料',
+        'setup.uploadAvatar': '上传头像',
     }
 }
 

@@ -61,6 +61,18 @@ To maintain "Industrial Density" while preventing clutter (Zero Scroll):
 -   Use `Disc` icons with `animate-spin-slow` in rounded-full `hardware-well` slots for "System Active" indicators.
 -   Use uppercase monospaced labels for everything technical.
 
+### 4. Hardware Inputs (Data Entry)
+Instead of flat unstyled boxes, inputs sit perfectly inside deep recessed slots to replicate physical digital gauges. This references the core `admin/login` PIN input design for thicker bezels:
+- **Wrapper**: `.hardware-well.rounded-xl.p-1.5.bg-[#D1CDBC]` (Providing a sturdy industrial bezel)
+- **Input Style**: `w-full bg-white/90 px-4 py-3.5 rounded-lg border-2 border-transparent focus:border-[var(--accent-moss)] outline-none font-black text-slate-800 text-sm shadow-inner transition-colors`
+
+### 5. Primary Layout Buttons (Action Triggers)
+Action buttons use a nested cap-in-groove construct, identical to the main landing `Family Login` interface:
+- **Outer Wrapper**: `button.hardware-btn.group`
+- **Housing Slot**: `hardware-well h-16 w-full rounded-xl overflow-hidden relative`
+- **Cap (The clickable plate)**: `hardware-cap absolute inset-1.5 bg-[#F4F4F2] rounded-lg group-hover:bg-white`
+- This layout precisely renders physical "travel range", matching industrial standards across all forms.
+
 ---
 
 ## 5. Interaction Model

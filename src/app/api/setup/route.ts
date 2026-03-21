@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users, accountStats, systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth'
 
 // GET: Check if setup is needed
@@ -62,10 +61,13 @@ export async function POST(req: NextRequest) {
             })
         }
 
-        // Mark setup as complete regardless of skip
-        await db.update(systemSettings)
-            .set({ needsSetup: false, updatedAt: new Date() })
-            .where(eq(systemSettings.id, 'app_settings'))
+        // Only mark setup as complete if they actually created a child.
+        // If they skipped, needsSetup remains true, so next time they log in, they will be prompted again.
+        if (!skip) {
+            await db.update(systemSettings)
+                .set({ needsSetup: false, updatedAt: new Date() })
+                .where(eq(systemSettings.id, 'app_settings'))
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {

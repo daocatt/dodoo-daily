@@ -31,7 +31,7 @@ const PanelHeader = ({
         </div>
         <div className="flex items-center gap-4">
             <div className="hidden sm:block px-2 py-0.5 border border-[var(--text-muted)] rounded text-[8px] font-bold opacity-30 tracking-widest">
-                VER: DO-26.P
+                VER: DO-19.C
             </div>
             <div className="px-3 py-1 bg-[var(--well-bg)] rounded-md shadow-inner text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] border border-black/5">
                 {id}
