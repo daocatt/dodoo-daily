@@ -313,7 +313,7 @@ export default function PublicProfileHome() {
                                                 className="group cursor-pointer"
                                                 onClick={() => router.push(`/u/${slug}/exhibition/${art.id}`)}
                                             >
-                                                <div className="hardware-well aspect-[4/5] rounded-[1.5rem] border-4 border-[#C8C4B0] overflow-hidden group/slide mb-6 shadow-well transition-all group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] group-hover:-translate-y-1 relative">
+                                                <div className="hardware-well aspect-[4/5] rounded-[1.5rem] border-4 border-[#C8C4B0] overflow-hidden group/slide mb-6 shadow-well transition-all group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] relative">
                                                     <Image 
                                                         src={art.imageUrl} 
                                                         alt={art.title}
