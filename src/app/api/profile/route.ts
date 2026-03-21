@@ -10,14 +10,22 @@ export async function PATCH(req: Request) {
 
     try {
         const { name, nickname, avatarUrl, gender, birthDate, slug, exhibitionEnabled } = await req.json()
-        if (name === undefined && avatarUrl === undefined && nickname === undefined && slug === undefined && exhibitionEnabled === undefined) return NextResponse.json({ error: 'Missing updates' }, { status: 400 })
+        if ([name, avatarUrl, nickname, slug, exhibitionEnabled].every(v => v === undefined)) {
+            return NextResponse.json({ error: 'Missing updates' }, { status: 400 })
+        }
 
-        // Uniquness check
-        if (name || nickname || slug) {
+        let validatedSlug = slug;
+        if (validatedSlug) {
+            validatedSlug = validatedSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            if (validatedSlug.length < 6) return NextResponse.json({ error: 'Link ID must be at least 6 characters' }, { status: 400 });
+        }
+
+        // Uniqueness check
+        if (name || nickname || validatedSlug) {
             const conditions = [];
             if (name) conditions.push(eq(users.name, name.trim()));
             if (nickname) conditions.push(eq(users.nickname, nickname.trim()));
-            if (slug) conditions.push(eq(users.slug, slug.trim()));
+            if (validatedSlug) conditions.push(eq(users.slug, validatedSlug));
 
             if (conditions.length > 0) {
                 const existing = await db.select().from(users).where(
@@ -28,12 +36,9 @@ export async function PATCH(req: Request) {
                 ).all();
 
                 if (existing.length > 0) {
-                    const hasSameName = name && existing.some(u => u.name === name.trim());
-                    const hasSameNickname = nickname && existing.some(u => u.nickname === nickname.trim());
-                    const hasSameSlug = slug && existing.some(u => u.slug === slug.trim());
-                    if (hasSameName) return NextResponse.json({ error: 'Name already exists' }, { status: 400 });
-                    if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
-                    if (hasSameSlug) return NextResponse.json({ error: 'This link ID is already taken' }, { status: 400 });
+                    if (name && existing.some(u => u.name === name.trim())) return NextResponse.json({ error: 'Name already exists' }, { status: 400 });
+                    if (nickname && existing.some(u => u.nickname === nickname.trim())) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
+                    if (validatedSlug && existing.some(u => u.slug === validatedSlug)) return NextResponse.json({ error: 'This Link ID is already taken' }, { status: 400 });
                 }
             }
         }
@@ -44,7 +49,7 @@ export async function PATCH(req: Request) {
         if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl
         if (gender !== undefined) updates.gender = gender
         if (birthDate !== undefined) updates.birthDate = birthDate ? new Date(birthDate) : null
-        if (slug !== undefined) updates.slug = slug ? slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : null
+        if (validatedSlug !== undefined) updates.slug = validatedSlug
         if (exhibitionEnabled !== undefined) updates.exhibitionEnabled = exhibitionEnabled
 
         updates.updatedAt = new Date()

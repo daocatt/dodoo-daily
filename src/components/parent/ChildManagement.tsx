@@ -76,6 +76,11 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
 
     const handleSave = async (data: Partial<Child>) => {
         if (!data.name || processing) return
+        if (data.slug && data.slug.length < 6) {
+            // Error feedback could be better but this handles it simply
+            alert('Link ID must be at least 6 characters');
+            return;
+        }
         setProcessing(true)
         try {
             const method = data.id ? 'PATCH' : 'POST'

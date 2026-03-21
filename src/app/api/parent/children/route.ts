@@ -78,25 +78,39 @@ export async function POST(req: NextRequest) {
         }
         
         const { generateNumericSlug } = await import('@/lib/utils');
-        let finalSlug = generateNumericSlug(8);
+        let finalSlug = slug;
 
-        // Check uniqueness
-        const conditions = [eq(users.name, name)];
-        if (nickname) conditions.push(eq(users.nickname, nickname));
-        conditions.push(eq(users.slug, finalSlug));
-
-        const existing = await db.select().from(users).where(or(...conditions)).all();
-        if (existing.length > 0) {
-            const hasSameName = existing.some(u => u.name === name);
-            const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
-            const hasSameSlug = existing.some(u => u.slug === finalSlug);
-
-            if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
-            if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
-            if (hasSameSlug) {
-                if (!slug) finalSlug = `${finalSlug}-${Math.random().toString(36).substring(2, 5)}`;
-                else return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+        // If slug is provided, validate it. If not, generate an 8-digit number.
+        if (finalSlug) {
+            finalSlug = finalSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            if (finalSlug.length < 6) {
+                return NextResponse.json({ error: 'Slug must be at least 6 characters' }, { status: 400 });
             }
+        } else {
+            finalSlug = generateNumericSlug(8);
+        }
+
+        // Check uniqueness and handle collisions
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const existingSlug = await db.select().from(users).where(eq(users.slug, finalSlug)).get();
+            if (!existingSlug) break;
+            
+            if (slug) {
+                // If the user provided a slug and it exists, error out
+                return NextResponse.json({ error: 'This Link ID is already taken' }, { status: 400 });
+            } else {
+                // If it was auto-generated, try another one
+                finalSlug = generateNumericSlug(8);
+            }
+        }
+
+        // Additional uniqueness checks for name/nickname
+        const sameName = await db.select().from(users).where(eq(users.name, name)).get();
+        if (sameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
+        
+        if (nickname) {
+            const sameNick = await db.select().from(users).where(eq(users.nickname, nickname)).get();
+            if (sameNick) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
         }
 
         const [newUser] = await db.insert(users).values({
@@ -152,10 +166,18 @@ export async function PATCH(req: NextRequest) {
             if (!chineseZodiac) chineseZodiac = birthDate ? getChineseZodiac(new Date(birthDate)) : null;
         }
 
+        let validatedSlug = slug;
+        if (validatedSlug) {
+            validatedSlug = validatedSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            if (validatedSlug.length < 6) {
+                return NextResponse.json({ error: 'Slug must be at least 6 characters' }, { status: 400 });
+            }
+        }
+        
         const conditions = [];
         if (name) conditions.push(eq(users.name, name));
         if (nickname) conditions.push(eq(users.nickname, nickname));
-        if (slug) conditions.push(eq(users.slug, slug));
+        if (validatedSlug) conditions.push(eq(users.slug, validatedSlug));
 
         if (conditions.length > 0) {
             const existing = await db.select().from(users).where(
@@ -168,11 +190,11 @@ export async function PATCH(req: NextRequest) {
             if (existing.length > 0) {
                 const hasSameName = name && existing.some(u => u.name === name);
                 const hasSameNickname = nickname && existing.some(u => u.nickname === nickname);
-                const hasSameSlug = slug && existing.some(u => u.slug === slug);
+                const hasSameSlug = validatedSlug && existing.some(u => u.slug === validatedSlug);
 
                 if (hasSameName) return NextResponse.json({ error: 'Real Name already exists' }, { status: 400 });
                 if (hasSameNickname) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
-                if (hasSameSlug) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
+                if (hasSameSlug) return NextResponse.json({ error: 'This Link ID is already taken' }, { status: 400 });
             }
         }
 
@@ -189,7 +211,7 @@ export async function PATCH(req: NextRequest) {
         if (isArchived !== undefined) updateData.isArchived = isArchived
         if (isDeleted !== undefined) updateData.isDeleted = isDeleted
         if (exhibitionEnabled !== undefined) updateData.exhibitionEnabled = exhibitionEnabled
-        if (slug !== undefined) updateData.slug = slug
+        if (validatedSlug !== undefined) updateData.slug = validatedSlug
         else if (nickname !== undefined || name !== undefined) {
              // Optionally auto-update slug if name changes and it wasn't specified? 
              // Better only if it doesn't already have one.

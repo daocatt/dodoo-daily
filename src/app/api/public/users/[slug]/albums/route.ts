@@ -16,8 +16,8 @@ export async function GET(
             .where(and(eq(users.slug, slug), eq(users.exhibitionEnabled, true)))
             .limit(1)
 
-        if (results.length === 0 || !/^\d{8}$/.test(results[0].slug || '')) {
-            return NextResponse.json({ error: 'User not found or invalid artist ID' }, { status: 404 })
+        if (results.length === 0 || !/^[a-zA-Z0-9-]{6,}$/.test(results[0].slug || '')) {
+            return NextResponse.json({ error: 'User not found or invalid format' }, { status: 404 })
         }
 
         const userId = results[0].id

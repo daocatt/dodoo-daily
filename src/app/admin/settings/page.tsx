@@ -95,6 +95,7 @@ export default function SettingsPage() {
     }
 
     const handleSlugSave = async () => {
+        if (slug.length > 0 && slug.length < 6) { setSlugError('Minimum 6 characters required'); return }
         setSlugSaving(true); setSlugError(''); setSlugMessage('')
         try {
             const res = await fetch('/api/profile', {

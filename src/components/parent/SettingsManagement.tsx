@@ -59,6 +59,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
     }
 
     const handleSave = async () => {
+        if (slug && slug.length < 6) { setError('Link ID must be at least 6 characters'); return }
         setSaving(true); setError(''); setMessage('')
         try {
             const res = await fetch('/api/parent/profile', {

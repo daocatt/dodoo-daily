@@ -102,6 +102,7 @@ export default function Home() {
   const { locale, setLocale, t } = useI18n()
   const [widgets, setWidgets] = useState<Widget[]>([])
   const [sysSettings, setSysSettings] = useState<SystemSettings | null>(null)
+  const [userRole, setUserRole] = useState<'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER' | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -197,9 +198,10 @@ export default function Home() {
   const fetchData = useCallback(async () => {
     console.log("Home: Fetching data...")
     try {
-      const [settingsRes, widgetsRes] = await Promise.all([
+      const [settingsRes, widgetsRes, statsRes] = await Promise.all([
         fetch('/api/system/settings'),
         fetch('/api/home-widgets'),
+        fetch('/api/stats'),
       ])
       
       console.log(`Home: Response status - settings: ${settingsRes.status}, widgets: ${widgetsRes.status}`)
@@ -218,8 +220,11 @@ export default function Home() {
 
       const settings = await settingsRes.json()
       const widgetsData = await widgetsRes.json()
-      console.log("Home: Data received:", { settings, widgetsData })
+      const statsData = statsRes.ok ? await statsRes.json() : null
+      console.log("Home: Data received:", { settings, widgetsData, statsData })
+      
       setSysSettings(settings)
+      if (statsData) setUserRole(statsData.role)
       if (Array.isArray(widgetsData)) {
         setWidgets(widgetsData)
       } else {
@@ -626,7 +631,7 @@ export default function Home() {
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => router.push('/admin/management')}
+              onClick={() => router.push(userRole === 'PARENT' ? '/admin/management' : '/admin/settings')}
               className="p-2 rounded-xl bg-white border-2 border-slate-100 text-slate-500 shadow-sm flex items-center justify-center transition-all hover:border-indigo-200 hover:text-indigo-600"
               title={t('button.settings')}
             >
