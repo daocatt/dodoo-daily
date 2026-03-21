@@ -3,11 +3,13 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart, Eye } from 'lucide-react'
+import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart, Eye, Layout, Disc, Activity, ShieldCheck, User as UserIcon, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
+import NatureBackground from '@/components/NatureBackground'
+import PanelHeader from '@/components/PanelHeader'
 
 type UserProfile = {
     id: string
@@ -86,23 +88,36 @@ export default function PublicProfileHome() {
 
     if (loading) {
         return (
-            <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="h-dvh flex items-center justify-center app-bg-pattern">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                    <span className="label-mono uppercase tracking-widest text-xs opacity-40">Decrypting Profile...</span>
+                </div>
             </div>
         )
     }
 
     if (!user) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mb-6">
-                    <ImageIcon className="w-10 h-10 text-slate-300" />
+            <div className="h-dvh flex flex-col items-center justify-center p-8 text-center app-bg-pattern">
+                <div className="baustein-panel max-w-md w-full shadow-2xl overflow-hidden">
+                    <PanelHeader id="SYSTEM ERR" accentColor="#F43F5E" />
+                    <div className="p-12 flex flex-col items-center">
+                        <div className="w-20 h-20 hardware-well rounded-full flex items-center justify-center mb-8 bg-rose-50 border-4 border-[#C8C4B0]">
+                            <ShieldCheck className="w-10 h-10 text-rose-300" />
+                        </div>
+                        <h1 className="text-2xl font-black text-slate-800 mb-4 uppercase tracking-tighter">Access Forbidden</h1>
+                        <p className="label-mono opacity-60 italic mb-10 leading-relaxed px-4 text-xs font-bold uppercase tracking-widest leading-loose">The requested artist world has been de-indexed or remains in a closed state.</p>
+                        <button 
+                            onClick={() => router.push('/')} 
+                            className="hardware-btn w-full"
+                        >
+                            <div className="hardware-cap bg-white py-4 rounded-xl font-black uppercase tracking-widest text-[10px] border border-black/5">
+                                Return to Origin
+                            </div>
+                        </button>
+                    </div>
                 </div>
-                <h1 className="text-2xl font-black text-slate-800 mb-2">Oops!</h1>
-                <p className="text-slate-500 mb-8">This artist hasn&apos;t opened their world yet.</p>
-                <Link href="/" className="px-8 py-3 bg-slate-800 text-white rounded-2xl font-bold shadow-lg shadow-slate-200">
-                    Go Back Home
-                </Link>
             </div>
         )
     }
@@ -111,217 +126,229 @@ export default function PublicProfileHome() {
     const featuredWorks = artworks.slice(0, 3)
 
     return (
-        <div className="flex-1 overflow-y-auto hide-scrollbar pb-20">
-            {/* Header / Hero */}
-            <div className="px-6 py-12 md:px-20 md:py-24 max-w-7xl mx-auto w-full">
-                <div className="flex flex-col md:flex-row gap-12 items-center">
-                    {/* User Info */}
-                    <motion.div 
-                        initial={{ opacity: 0, x: -50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex-1 text-center md:text-left"
-                    >
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 font-black text-[10px] uppercase tracking-widest mb-6">
-                            <Sparkles className="w-3 h-3" />
-                            {user.role === 'CHILD' ? 'Little Artist' : 'Creator'}
-                        </div>
-
-                        {user.avatarUrl && (
-                            <motion.div
-                                initial={{ scale: 0, rotate: -20 }}
-                                animate={{ scale: 1, rotate: 0 }}
-                                className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-white p-1.5 shadow-2xl shadow-indigo-100/50 border-4 border-white mb-10 mx-auto md:mx-0 overflow-hidden ring-1 ring-slate-100"
-                            >
-                                <Image 
-                                    src={user.avatarUrl} 
-                                    width={128} 
-                                    height={128} 
-                                    className="w-full h-full object-cover rounded-[2rem]" 
-                                    alt="Avatar" 
-                                />
-                            </motion.div>
-                        )}
-
-                        <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-none mb-6">
-                            {t('public.title', { name: displayName })}
-                        </h1>
-                        <p className="text-lg md:text-xl text-slate-500 font-medium mb-10 max-w-lg mx-auto md:mx-0">
-                            {t('public.hero.subtitle')}
-                        </p>
+        <main className="h-dvh overflow-hidden relative selection:bg-indigo-500/20">
+            <NatureBackground />
+            
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-8">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="baustein-panel w-full max-w-7xl max-h-[96dvh] flex flex-col shadow-[0_40px_120px_rgba(0,0,0,0.3)] bg-[var(--surface-warm)] relative overflow-hidden h-[90vh] md:h-auto md:min-h-[700px]"
+                >
+                    <PanelHeader id="Profile Terminal" systemName={`${displayName.toUpperCase()}®`} />
+                    
+                    <div className="flex-1 flex flex-col md:grid md:grid-cols-12 min-h-0 overflow-hidden">
                         
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-12">
-                            <div className="px-6 py-4 bg-white rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
-                                <div className="p-2 bg-purple-100 rounded-xl text-purple-600">
-                                    <Palette className="w-5 h-5" />
-                                </div>
-                                 <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('public.stats.pieces')}</p>
-                                    <p className="text-xl font-black text-slate-800 leading-tight">{artworks.length}</p>
-                                </div>
-                            </div>
-                            <div className="px-6 py-4 bg-white rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
-                                <div className="p-2 bg-rose-100 rounded-xl text-rose-600">
-                                    <Heart className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">LIKES</p>
-                                    <p className="text-xl font-black text-slate-800 leading-tight">
-                                        {user.totalLikes || 0}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="px-6 py-4 bg-white rounded-3xl shadow-sm border border-slate-100 flex items-center gap-3">
-                                <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
-                                    <Eye className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">VIEWS</p>
-                                    <p className="text-xl font-black text-slate-800 leading-tight">
-                                        {user.totalViews || 0}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-12 items-center">
-                            <Link 
-                                href={`/u/${slug}/exhibition`}
-                                className="inline-flex items-center gap-3 px-8 py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 uppercase tracking-widest text-xs"
-                            >
-                                {t('public.viewExhibition')}
-                                <ArrowRight className="w-5 h-5" />
-                            </Link>
-                            <div className="bg-slate-900 rounded-3xl p-1 shadow-lg shadow-slate-200">
-                                <ShareButton 
-                                    title={`${displayName}'s Art Exhibition`} 
-                                    displayName={displayName}
-                                    avatarUrl={user.avatarUrl || undefined}
-                                />
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Featured Frame */}
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.9, rotate: 5 }}
-                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                        className="relative w-full max-w-sm md:max-w-md aspect-[4/5]"
-                    >
-                        {/* Shadow decoration */}
-                        <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full -z-10" />
-                        
-                        {/* Main Cover Frame */}
-                        <div className="w-full h-full p-6 bg-white rounded-[40px] shadow-2xl border-8 border-white group overflow-hidden relative">
-                            {artworks.length > 0 ? (
-                                <>
-                                    <Image 
-                                        src={artworks[0].imageUrl} 
-                                        alt={artworks[0].title}
-                                        fill
-                                        className="object-cover rounded-[24px]"
-                                    />
-                                    <div className="absolute bottom-10 left-10 right-10 p-6 bg-white/40 backdrop-blur-xl border border-white/40 rounded-3xl">
-                                        <p className="text-xs font-black text-indigo-900 border-b border-indigo-900/10 pb-2 mb-2 uppercase tracking-widest">Featured Work</p>
-                                        <h3 className="text-2xl font-black text-indigo-950 truncate">{artworks[0].title}</h3>
+                        {/* Left Side: Curator Bio */}
+                        <div className="md:col-span-4 lg:col-span-3 flex flex-col border-r-2 border-[var(--groove-dark)] bg-[var(--surface-warm)] overflow-hidden">
+                            <div className="p-4 flex flex-col h-full">
+                                <div className="space-y-6">
+                                    <div className="hardware-well aspect-square rounded-[2rem] border-4 border-[#C8C4B0] overflow-hidden relative group p-1 shadow-well">
+                                        <div className="absolute inset-0 bg-slate-950" />
+                                        <Image
+                                            src={user.avatarUrl || '/dog.svg'}
+                                            alt={displayName}
+                                            fill
+                                            className="object-cover opacity-80 contrast-125 grayscale-[20%] group-hover:grayscale-0 transition-all duration-700 rounded-2xl"
+                                        />
+                                        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] z-10" />
+                                        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] z-20 bg-[length:100%_2px,3px_100%] opacity-40 animate-scanline" />
                                     </div>
-                                </>
-                            ) : (
-                                <div className="w-full h-full bg-slate-50 flex flex-col items-center justify-center text-slate-300 gap-4">
-                                    <ImageIcon className="w-16 h-16" />
-                                    <span className="font-black uppercase tracking-widest text-[10px]">No Feature Yet</span>
-                                </div>
-                            )}
-                        </div>
-                        
-                    </motion.div>
-                </div>
-            </div>
 
-            {/* Featured Section */}
-            {artworks.length > 0 && (
-                <div className="px-6 py-12 md:px-20 max-w-7xl mx-auto w-full">
-                    <div className="flex justify-between items-end mb-10">
-                        <div>
-                            <h2 className="text-3xl font-black text-slate-900 mb-2">{t('public.artworks')}</h2>
-                            <p className="text-slate-500 font-medium tracking-tight">Handpicked selection of my latest works</p>
-                        </div>
-                        <Link href={`/u/${slug}/exhibition`} className="flex items-center gap-2 text-indigo-600 font-black text-sm group">
-                            VIEW ALL 
-                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </div>
+                                    <div className="px-2">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded text-[9px] font-black uppercase tracking-widest shadow-sm">
+                                                {user.role}
+                                            </div>
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="label-mono text-[9px] font-black opacity-30 italic">Online Presence</span>
+                                        </div>
+                                        <h2 className="text-3xl font-black tracking-tighter text-slate-900 leading-none mb-4 uppercase">{displayName}</h2>
+                                        <p className="label-mono text-xs opacity-60 leading-relaxed font-bold border-l-2 border-slate-200 pl-4">
+                                            {t('public.hero.subtitle')}
+                                        </p>
+                                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {featuredWorks.map((art, idx) => (
-                            <motion.div
-                                key={art.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="group cursor-pointer"
-                                onClick={() => router.push(`/u/${slug}/exhibition/${art.id}`)}
-                            >
-                                <div className="relative aspect-[4/5] rounded-[32px] overflow-hidden bg-white shadow-lg border-4 border-white mb-6">
-                                    <Image 
-                                        src={art.imageUrl} 
-                                        alt={art.title}
-                                        fill
-                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-8">
-                                        <div className="flex items-center gap-4 text-white">
-                                            <div className="flex items-center gap-1">
-                                                <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
-                                                <span className="text-xs font-black">{art.likes}</span>
+                                    <div className="hardware-well rounded-2xl p-4 bg-slate-200/40 border border-white/40 space-y-4 shadow-well">
+                                        <div className="flex justify-between items-center px-1">
+                                            <div className="flex items-center gap-2">
+                                                <Star className="w-3 h-3 text-[var(--accent-moss)]" />
+                                                <span className="label-mono text-[9px] font-black opacity-40 uppercase tracking-widest">{t('public.stats.pieces')}</span>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <Eye className="w-4 h-4 text-blue-400" />
-                                                <span className="text-xs font-black">{art.views}</span>
+                                            <span className="text-sm font-black text-slate-800">{artworks.length}</span>
+                                        </div>
+                                        <div className="h-0.5 bg-black/5 w-full" />
+                                        <div className="flex justify-between items-center px-1">
+                                            <div className="flex items-center gap-2">
+                                                <Heart className="w-3 h-3 text-rose-400" />
+                                                <span className="label-mono text-[9px] font-black opacity-40 uppercase tracking-widest">Appreciation</span>
                                             </div>
-                                            <span className="ml-auto text-[10px] font-black bg-indigo-500 px-3 py-1 rounded-full uppercase">
-                                                {art.priceCoins} Coins
-                                            </span>
+                                            <span className="text-sm font-black text-slate-800">{user.totalLikes || 0}</span>
+                                        </div>
+                                        <div className="h-0.5 bg-black/5 w-full" />
+                                        <div className="flex justify-between items-center px-1">
+                                            <div className="flex items-center gap-2">
+                                                <Eye className="w-3 h-3 text-blue-400" />
+                                                <span className="label-mono text-[9px] font-black opacity-40 uppercase tracking-widest">Visibility</span>
+                                            </div>
+                                            <span className="text-sm font-black text-slate-800">{user.totalViews || 0}</span>
                                         </div>
                                     </div>
-                                    {art.isSold && (
-                                        <div className="absolute top-4 right-4 px-3 py-1 bg-rose-500 text-white text-[10px] font-black rounded-lg shadow-lg uppercase tracking-widest flex items-center gap-1">
-                                            <Heart className="w-3 h-3 fill-white" />
-                                            Collected
-                                        </div>
-                                    )}
                                 </div>
-                                <h3 className="text-xl font-black text-slate-800 group-hover:text-indigo-600 transition-colors uppercase tracking-tight leading-tight">{art.title}</h3>
-                                {art.albumTitle && (
-                                    <div className="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-500 text-[9px] font-black rounded-full uppercase tracking-widest mt-1 mb-1">
-                                        {art.albumTitle}
+
+                                <div className="mt-auto pt-6 border-t-2 border-[var(--groove-dark)] flex flex-col gap-2">
+                                     <div className="bg-slate-900 rounded-xl p-0.5 shadow-well">
+                                        <ShareButton 
+                                            title={`${displayName}'s Art Exhibition`} 
+                                            displayName={displayName}
+                                            avatarUrl={user.avatarUrl || undefined}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center px-2 py-1">
+                                         <div className="flex gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                                         </div>
+                                         <span className="label-mono text-[8px] opacity-30 font-bold uppercase tracking-widest italic">Hardware ID: {user.id.slice(0,8)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Middle & Right: Gallery View */}
+                        <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-[var(--well-bg)] overflow-hidden">
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
+                                
+                                {/* Featured Header */}
+                                <div className="flex justify-between items-end mb-10 border-b-2 border-black/5 pb-8">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <Activity className="w-4 h-4 text-indigo-500" />
+                                            <span className="label-mono text-[10px] uppercase font-black tracking-[0.2em] text-indigo-600">{t('public.artworks')}</span>
+                                        </div>
+                                        <h3 className="text-4xl font-black tracking-tighter text-slate-900 leading-tight uppercase">Latest Submissions</h3>
+                                    </div>
+                                    <Link 
+                                        href={`/u/${slug}/exhibition`}
+                                        className="hardware-btn group mb-1"
+                                    >
+                                        <div className="hardware-cap bg-white px-6 py-3 rounded-xl flex items-center gap-3 border border-black/5">
+                                            <span className="label-mono text-xs">Exhibition</span>
+                                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </Link>
+                                </div>
+
+                                {/* Art Grid */}
+                                {artworks.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+                                        {artworks.map((art, idx) => (
+                                            <motion.div
+                                                key={art.id}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.1 }}
+                                                className="group cursor-pointer"
+                                                onClick={() => router.push(`/u/${slug}/exhibition/${art.id}`)}
+                                            >
+                                                <div className="hardware-well aspect-[4/5] rounded-[2.5rem] border-4 border-[#C8C4B0] overflow-hidden group/slide mb-6 shadow-well transition-all group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] group-hover:-translate-y-1 relative">
+                                                    <Image 
+                                                        src={art.imageUrl} 
+                                                        alt={art.title}
+                                                        fill
+                                                        className="object-cover transition-transform duration-700 group-hover/slide:scale-105"
+                                                    />
+                                                    
+                                                    {/* Curator Overlay */}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-0 group-hover/slide:opacity-100 transition-opacity flex flex-col justify-end p-8 gap-4 overflow-hidden">
+                                                        <div className="space-y-2 translate-y-4 group-hover/slide:translate-y-0 transition-transform duration-500">
+                                                            <div className="flex gap-4 text-white/60">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Heart className="w-3.5 h-3.5" />
+                                                                    <span className="label-mono text-[10px]">{art.likes}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Eye className="w-3.5 h-3.5" />
+                                                                    <span className="label-mono text-[10px]">{art.views}</span>
+                                                                </div>
+                                                            </div>
+                                                            <h4 className="text-xl font-bold text-white uppercase tracking-tight truncate leading-tight">{art.title}</h4>
+                                                            {art.albumTitle && (
+                                                                <span className="label-mono text-[8px] px-2 py-0.5 bg-indigo-500 text-white rounded uppercase">{art.albumTitle}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {art.isSold && (
+                                                        <div className="absolute top-6 right-6">
+                                                            <div className="px-3 py-1 bg-rose-500 text-white label-mono text-[9px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
+                                                                <Star className="w-3 h-3 fill-white" />
+                                                                Collected
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="px-2 space-y-1">
+                                                    <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-[0.2em] opacity-30">
+                                                        <span>Project Code: {art.id.slice(0, 6)}</span>
+                                                        <span>{new Date(art.createdAt).getFullYear()}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center gap-4">
+                                                        <h4 className="text-lg font-black text-slate-800 truncate uppercase tracking-tight group-hover:text-indigo-600 transition-colors leading-tight">{art.title}</h4>
+                                                        <div className="shrink-0 flex items-center gap-1.5 px-2 py-0.5 bg-slate-200/50 border border-slate-300 rounded text-[9px] font-black text-slate-500 opacity-60">
+                                                            <Disc className="w-3 h-3 animate-spin-slow" />
+                                                            {art.priceCoins} C
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex-1 flex flex-col items-center justify-center p-20 text-center opacity-20">
+                                        <ImageIcon className="w-20 h-20 mb-6" />
+                                        <p className="label-mono text-sm uppercase tracking-widest font-black">Data Stream Empty</p>
                                     </div>
                                 )}
-                                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">
-                                    {new Date(art.createdAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long' })}
-                                </p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                            </div>
 
-            {/* CTA */}
-            <div className="px-6 py-20">
-                <div className="max-w-4xl mx-auto bg-slate-900 rounded-[48px] p-12 md:p-20 text-center relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 blur-3xl rounded-full" />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/20 blur-3xl rounded-full" />
-                    
-                    <h2 className="text-4xl md:text-5xl font-black text-white mb-8 relative z-10 leading-tight">
-                        See anything you love? <br/><span className="text-indigo-400">Join my journey.</span>
-                    </h2>
-                    <Link 
-                        href={`/u/${slug}/exhibition`}
-                        className="inline-flex items-center gap-3 px-10 py-5 bg-white text-slate-950 rounded-3xl font-black hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 shadow-2xl relative z-10 uppercase tracking-widest text-sm"
-                    >
-                        Browse all works
-                    </Link>
-                </div>
+                            {/* CTA / Quick Access */}
+                            <div className="p-10 border-t-2 border-[var(--groove-dark)] bg-[var(--surface-warm)] shrink-0">
+                                <div className="hardware-well rounded-3xl p-8 bg-slate-900 border-b-4 border-slate-950 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group/cta shadow-well">
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full" />
+                                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 blur-3xl rounded-full" />
+                                    
+                                    <div className="relative z-10 text-center md:text-left space-y-2">
+                                        <h4 className="text-3xl font-black text-white uppercase tracking-tighter leading-tight">Join the exhibition</h4>
+                                        <p className="label-mono text-xs text-indigo-400 font-bold uppercase tracking-widest opacity-60 group-hover/cta:opacity-100 transition-opacity">Explore {displayName}&apos;s full artistic portfolio</p>
+                                    </div>
+
+                                    <button 
+                                        onClick={() => router.push(`/u/${slug}/exhibition`)}
+                                        className="hardware-btn group z-10"
+                                    >
+                                        <div className="hardware-cap bg-white px-10 py-5 rounded-[2rem] flex items-center gap-4 group-hover:bg-slate-50 transition-all border border-black/5">
+                                            <span className="font-black text-slate-900 uppercase tracking-[0.25em] text-xs">Enter World</span>
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
-        </div>
+
+            <style jsx global>{`
+                .shadow-well {
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(255,255,255,0.5);
+                }
+                .app-bg-pattern {
+                    background-image: radial-gradient(var(--groove-dark) 1px, transparent 1px);
+                    background-size: 24px 24px;
+                }
+            `}</style>
+        </main>
     )
 }
+
