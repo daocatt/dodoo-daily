@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         }
         
         const { generateNumericSlug } = await import('@/lib/utils');
-        let finalSlug = slug || generateNumericSlug(8);
+        let finalSlug = generateNumericSlug(8);
 
         // Check uniqueness
         const conditions = [eq(users.name, name)];

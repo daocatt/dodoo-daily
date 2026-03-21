@@ -32,8 +32,9 @@ export async function GET(
             )
         )
 
-        if (results.length === 0) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        // Force UUID check: Only allow accounts with an 8-digit numeric slug to be opened publicly.
+        if (results.length === 0 || !/^\d{8}$/.test(results[0].slug || '')) {
+            return NextResponse.json({ error: 'User not found or invalid ID' }, { status: 404 })
         }
 
         const user = results[0]

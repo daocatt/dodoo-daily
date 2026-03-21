@@ -10,14 +10,14 @@ export async function GET(
     try {
         const { slug } = await params
 
-        // 1. Find user by slug
-        const results = await db.select({ id: users.id })
+        // 1. Find user by slug (Force numeric 8-digit profile check)
+        const results = await db.select({ id: users.id, slug: users.slug })
             .from(users)
             .where(and(eq(users.slug, slug), eq(users.exhibitionEnabled, true)))
             .limit(1)
 
-        if (results.length === 0) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        if (results.length === 0 || !/^\d{8}$/.test(results[0].slug || '')) {
+            return NextResponse.json({ error: 'User not found or invalid artist ID' }, { status: 404 })
         }
 
         const userId = results[0].id

@@ -1,6 +1,7 @@
 import { db } from './db';
 import { users, systemSettings } from './schema';
 import { eq } from 'drizzle-orm';
+import { generateNumericSlug } from './utils';
 
 export async function seed() {
     console.log('🌱 Seeding database...');
@@ -13,6 +14,7 @@ export async function seed() {
             name: 'Parent',
             role: 'PARENT',
             pin: '1234', // Default PIN — user should change this
+            slug: generateNumericSlug(8),
         });
         console.log('✅ Created default Parent account (PIN: 1234)');
     } else {

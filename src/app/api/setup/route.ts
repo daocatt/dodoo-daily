@@ -30,14 +30,13 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Name is required' }, { status: 400 })
             }
 
-            // Auto-generate slug for child
+            // Auto-generate numeric slug for child (8 digits)
             const { generateNumericSlug } = await import('@/lib/utils')
-            const baseSlug = name.trim().toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || generateNumericSlug(8)
-            let candidateSlug = baseSlug
+            let candidateSlug = generateNumericSlug(8)
             for (let i = 1; i <= 10; i++) {
                 const check = await db.select().from(users).where(eq(users.slug, candidateSlug)).all()
                 if (check.length === 0) break
-                candidateSlug = `${baseSlug}-${i}`
+                candidateSlug = generateNumericSlug(8)
             }
 
             // Create the child account
