@@ -47,3 +47,6 @@ database/dodoo.db
 /dnd-example
 .eslintcache
 /public/uploads
+
+# Temporary logs
+lint_output*.txt
