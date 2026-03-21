@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { ChevronLeft, Store, Save, ExternalLink } from 'lucide-react'
+import { ChevronLeft, Store, Save, ExternalLink, MessageSquare, Eye, EyeOff, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
@@ -22,6 +22,10 @@ export default function ExhibitionSettingsPage() {
         exhibitionDescription: '',
         exhibitionEnabled: true
     })
+    
+    // Message management state
+    const [messages, setMessages] = useState<any[]>([]) // eslint-disable-line @typescript-eslint/no-explicit-any
+    const [loadingMessages, setLoadingMessages] = useState(true)
 
     useEffect(() => {
         fetch('/api/auth/profile/exhibition')
@@ -38,7 +42,46 @@ export default function ExhibitionSettingsPage() {
                 }
             })
             .finally(() => setLoading(false))
+
+        fetchMessages()
     }, [])
+
+    const fetchMessages = async () => {
+        try {
+            const res = await fetch('/api/auth/profile/messages')
+            const data = await res.json()
+            if (!data.error) setMessages(data)
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setLoadingMessages(false)
+        }
+    }
+
+    const toggleMessageVisibility = async (id: string, currentStatus: boolean) => {
+        try {
+            const res = await fetch('/api/auth/profile/messages', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, isPublic: !currentStatus }),
+            })
+            if (res.ok) fetchMessages()
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    const deleteMessage = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this message?')) return
+        try {
+            const res = await fetch(`/api/auth/profile/messages?id=${id}`, {
+                method: 'DELETE',
+            })
+            if (res.ok) fetchMessages()
+        } catch (err) {
+            console.error(err)
+        }
+    }
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -161,6 +204,63 @@ export default function ExhibitionSettingsPage() {
                                 </button>
                             </div>
                         </form>
+
+                        {/* Signal Board Management */}
+                        <div className="mt-12 pt-8 border-t border-slate-200">
+                            <div className="flex items-center gap-3 mb-6">
+                                <MessageSquare className="w-6 h-6 text-indigo-500" />
+                                <h3 className="text-xl font-bold text-slate-800">Signal Board Management</h3>
+                            </div>
+                            
+                            {loadingMessages ? (
+                                <div className="py-10 text-center opacity-40">Loading messages...</div>
+                            ) : messages.length === 0 ? (
+                                <div className="py-10 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 text-sm">
+                                    No messages received yet.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {messages.map((m) => (
+                                        <div key={m.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                                                        {m.memberId ? (m.memberNickname || m.memberName) : m.guestName || 'Guest'}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400">
+                                                        {new Date(m.createdAt).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <p className="text-slate-700 text-sm leading-relaxed">{m.text}</p>
+                                            </div>
+                                            <div className="flex gap-2 shrink-0">
+                                                <button
+                                                    onClick={() => toggleMessageVisibility(m.id, m.isPublic)}
+                                                    className={`p-2 rounded-xl border transition-all ${
+                                                        m.isPublic 
+                                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                                                            : 'bg-slate-50 text-slate-400 border-slate-200'
+                                                    }`}
+                                                    title={m.isPublic ? 'Click to Hide' : 'Click to Show'}
+                                                >
+                                                    {m.isPublic ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteMessage(m.id)}
+                                                    className="p-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <p className="text-[10px] text-slate-400 italic text-center pt-2">
+                                        * Default state for new messages: Hidden.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </main>

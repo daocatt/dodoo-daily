@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { guestMessage, users } from '@/lib/schema'
+import { guestMessage, users, guest } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
 import { eq, and, desc } from 'drizzle-orm'
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
             memberId: memberId || null,
             targetUserId: targetUserId,
             text: text,
-            isPublic: isPublic ?? true,
+            isPublic: isPublic ?? false,
         }).returning().get()
 
         return NextResponse.json({ success: true, message: newMessage })
@@ -53,12 +53,27 @@ export async function GET(req: NextRequest) {
 
         if (!userId) return NextResponse.json([])
 
-        const messages = await db.select().from(guestMessage).where(
+        const messages = await db.select({
+            id: guestMessage.id,
+            text: guestMessage.text,
+            createdAt: guestMessage.createdAt,
+            guestId: guestMessage.guestId,
+            memberId: guestMessage.memberId,
+            guestName: guest.name,
+            memberName: users.name,
+            memberNickname: users.nickname
+        })
+        .from(guestMessage)
+        .leftJoin(guest, eq(guestMessage.guestId, guest.id))
+        .leftJoin(users, eq(guestMessage.memberId, users.id))
+        .where(
             and(
-                eq(guestMessage.targetUserId, userId),
+                eq(guestMessage.targetUserId, userId as string), // Cast to string since userId check is above
                 eq(guestMessage.isPublic, true)
             )
-        ).orderBy(desc(guestMessage.createdAt))
+        )
+        .orderBy(desc(guestMessage.createdAt))
+        .limit(20)
 
         return NextResponse.json(messages)
     } catch (e) {

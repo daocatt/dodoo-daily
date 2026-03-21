@@ -33,7 +33,7 @@ export async function GET(
         )
 
         // Validate UUID format: Alphanumeric or numeric, at least 6 characters.
-        if (results.length === 0 || !/^[a-zA-Z0-9-]{6,}$/.test(results[0].slug || '')) {
+        if (results.length === 0 || !/^[a-zA-Z0-9-]{4,}$/.test(results[0].slug || '')) {
             return NextResponse.json({ error: 'User not found or invalid format' }, { status: 404 })
         }
 

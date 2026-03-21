@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle } from 'lucide-react'
+import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin } from 'lucide-react'
 
 interface GuestData {
     id: string
@@ -27,6 +27,18 @@ interface Order {
     status: string
     createdAt: string
 }
+
+const ModalHeader = ({ title, id }: { title: string, id: string }) => (
+    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#CFCBBA] bg-[#E2DFD2] -mx-10 -mt-10 mb-8 rounded-t-[48px]">
+        <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="font-black text-[10px] tracking-tight uppercase text-slate-700">{title}</span>
+        </div>
+        <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
+            {id}
+        </div>
+    </div>
+)
 
 export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { guest: GuestData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'ADDRESS'>('OVERVIEW')
@@ -72,11 +84,11 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
             const data = await res.json()
             if (res.ok) {
                 onUpdateCurrency(data.balance)
-                setMessage({ text: `充值成功！获得 ${data.amount} Coins`, type: 'success' })
+                setMessage({ text: `Success! Received ${data.amount} Coins`, type: 'success' })
                 setRechargeCode('')
                 fetchData()
             } else {
-                setMessage({ text: data.error || '充值失败', type: 'error' })
+                setMessage({ text: data.error || 'Recharge failed', type: 'error' })
             }
         } finally {
             setRechargeLoading(false)
@@ -93,9 +105,9 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                 body: JSON.stringify({ guestId: guest.id, address: addressInput })
             })
             if (res.ok) {
-                setMessage({ text: 'Address saved!', type: 'success' })
+                setMessage({ text: 'Address packet saved!', type: 'success' })
             } else {
-                setMessage({ text: 'Failed to save address', type: 'error' })
+                setMessage({ text: 'Buffer write error', type: 'error' })
             }
         } finally {
             setSavingAddress(false)
@@ -103,182 +115,176 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
     }
 
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div className="flex justify-between items-center bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+        <div className="flex flex-col h-full">
+            <ModalHeader title="VISITOR TERMINAL" id="ACTIVE_NODE" />
+
+            {/* User Profile Micro-Header */}
+            <div className="flex justify-between items-center mb-8 bg-[#F4F4F2] p-4 rounded-2xl border border-[#C8C4B0] shadow-well">
                 <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl">
+                    <div className="w-12 h-12 bg-[#2C2A20] rounded-xl flex items-center justify-center font-black text-indigo-400 text-xl shadow-lg">
                         {guest.name[0].toUpperCase()}
                     </div>
                     <div>
-                        <h3 className="text-xl font-black text-slate-800">{guest.name}</h3>
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">访客帐号</p>
+                        <h3 className="text-base font-black text-slate-800 uppercase tracking-tight">{guest.name}</h3>
+                        <div className="flex items-center gap-3">
+                            {guest.phone && <div className="flex items-center gap-1 opacity-40"><Smartphone className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{guest.phone}</span></div>}
+                            {guest.email && <div className="flex items-center gap-1 opacity-40"><Mail className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{guest.email}</span></div>}
+                        </div>
                     </div>
                 </div>
-                <button onClick={onLogout} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all">
+                <button onClick={onLogout} title="Logout" className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100">
                     <LogOut className="w-5 h-5" />
                 </button>
             </div>
 
-            {/* Stats */}
-            <div className="bg-slate-900 p-8 rounded-[40px] text-white overflow-hidden relative group">
-                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                    <Coins className="w-32 h-32 rotate-12" />
+            {/* Balance Card - Industrial Style */}
+            <div className="hardware-well rounded-3xl p-6 bg-slate-900 border-b-4 border-slate-950 flex justify-between items-center relative overflow-hidden group mb-8 shadow-well">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                    <Coins className="w-24 h-24 rotate-12" />
                 </div>
                 <div className="relative z-10">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300 mb-2">My Balance</p>
+                    <p className="label-mono text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-1">Balance Available</p>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-black tracking-tighter">{guest.currency}</span>
-                        <span className="text-indigo-400 font-bold uppercase tracking-widest text-xs">Coins</span>
+                        <span className="text-4xl font-black tracking-tighter text-white">{guest.currency}</span>
+                        <span className="text-indigo-400 font-bold uppercase tracking-widest text-[9px]">Units</span>
                     </div>
+                </div>
+                <div className="relative z-10">
+                    <button onClick={() => setActiveTab('OVERVIEW')} className="hardware-btn group">
+                        <div className="hardware-cap bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-white border border-white/10">
+                            Recharge
+                        </div>
+                    </button>
                 </div>
             </div>
 
-            {/* Recharge Section */}
-            <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm space-y-4">
-                <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                    <Ticket className="w-4 h-4 text-indigo-500" />
-                    兑换充值码
-                </h4>
-                <form onSubmit={handleRecharge} className="flex gap-3">
-                    <input 
-                        type="text" 
-                        value={rechargeCode}
-                        onChange={e => setRechargeCode(e.target.value)}
-                        className="flex-1 px-5 py-3 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-black text-indigo-600 uppercase tracking-widest text-sm"
-                        placeholder="输入 8 位充值码"
-                    />
-                    <button 
-                        disabled={rechargeLoading || !rechargeCode}
-                        className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-100 disabled:grayscale transition-all active:scale-95"
-                    >
-                        {rechargeLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : '兑换'}
-                    </button>
-                </form>
-                {message && (
-                    <p className={`text-[10px] font-black uppercase tracking-widest text-center ${message.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {message.text}
-                    </p>
-                )}
-            </div>
-
-            {/* Tabs */}
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto gap-1">
-                {(['HISTORY', 'ORDERS', 'ADDRESS'] as const).map(tab => (
+            {/* Tabs - Industrial Style */}
+            <div className="flex bg-[#CFCBBA] p-1 rounded-2xl gap-1 mb-8 shadow-inner border border-[#C8C4B0]">
+                {(['OVERVIEW', 'HISTORY', 'ORDERS', 'ADDRESS'] as const).map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        className={`flex-1 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
                     >
-                        {tab === 'HISTORY' ? 'Balance' : tab === 'ORDERS' ? 'Orders' : 'Address'}
+                        {tab}
                     </button>
                 ))}
             </div>
 
             {/* Tab Content */}
-            <div className="min-h-[300px]">
-                {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500/20" />
-                    </div>
-                ) : (
-                    <AnimatePresence mode="wait">
-                        {activeTab === 'HISTORY' ? (
-                            <motion.div 
-                                key="history" 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                className="space-y-3"
-                            >
-                                {logs.map(log => (
-                                    <div key={log.id} className="bg-white p-4 rounded-2xl border border-slate-50 flex justify-between items-center group">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-2 rounded-xl ${log.amount > 0 ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>
-                                                {log.amount > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{log.reason === 'RECHARGE' ? 'Recharge' : log.reason === 'PURCHASE' ? 'Purchase' : 'Adjustment'}</p>
-                                                <p className="text-[9px] font-bold text-slate-300 uppercase">{new Date(log.createdAt).toLocaleString()}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className={`font-black ${log.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                {log.amount > 0 ? '+' : ''}{log.amount}
-                                            </p>
-                                            <p className="text-[9px] font-black text-slate-300 uppercase">Balance: {log.balance}</p>
-                                        </div>
+            <div className="min-h-[250px] overflow-y-auto custom-scrollbar -mr-2 pr-2">
+                <AnimatePresence mode="wait">
+                    {activeTab === 'OVERVIEW' ? (
+                        <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                            <div className="space-y-4">
+                                <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Ticket className="w-3.5 h-3.5" />
+                                    Access Code Exchange
+                                </h4>
+                                <form onSubmit={handleRecharge} className="flex gap-2">
+                                    <div className="flex-1 hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
+                                        <input 
+                                            type="text" 
+                                            value={rechargeCode}
+                                            onChange={e => setRechargeCode(e.target.value)}
+                                            className="w-full px-4 py-3 bg-[#F4F4F2] rounded-lg outline-none font-black text-indigo-600 uppercase tracking-widest text-xs"
+                                            placeholder="XXXX-XXXX-XXXX"
+                                        />
                                     </div>
-                                ))}
-                                {logs.length === 0 && <p className="text-center py-20 text-[10px] text-slate-300 font-black uppercase tracking-widest">No records yet</p>}
-                            </motion.div>
-                        ) : activeTab === 'ORDERS' ? (
-                            <motion.div 
-                                key="orders" 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                className="space-y-3"
-                            >
-                                {orders.map(order => {
-                                    const statusMap: Record<string, { label: string, color: string }> = {
-                                        PENDING_CONFIRM: { label: 'Awaiting Confirm', color: 'text-amber-600 bg-amber-50' },
-                                        CONFIRMED: { label: 'Processing', color: 'text-blue-600 bg-blue-50' },
-                                        SHIPPED: { label: 'Shipped', color: 'text-indigo-600 bg-indigo-50' },
-                                        REFUNDED: { label: 'Refunded', color: 'text-slate-600 bg-slate-100' },
-                                        CANCELLED: { label: 'Cancelled', color: 'text-rose-600 bg-rose-50' },
-                                    }
-                                    const statusInfo = statusMap[order.status] || { label: order.status, color: 'text-emerald-600 bg-emerald-50' }
-                                    return (
-                                        <div key={order.id} className="bg-white p-5 rounded-3xl border border-indigo-50 flex justify-between items-center">
-                                            <div>
-                                                <h4 className="font-black text-slate-800 uppercase tracking-tight leading-none mb-2">{order.artworkTitle}</h4>
-                                                <div className="flex items-center gap-2">
-                                                    <History className="w-3 h-3 text-slate-300" />
-                                                    <span className="text-[9px] text-slate-400 font-bold uppercase">{new Date(order.createdAt).toLocaleDateString()}</span>
-                                                </div>
-                                            </div>
-                                            <div className={`flex items-center gap-1.5 px-3 py-1.5 ${statusInfo.color} rounded-xl`}>
-                                                <CheckCircle className="w-3 h-3" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest">{statusInfo.label}</span>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                                {orders.length === 0 && <p className="text-center py-20 text-[10px] text-slate-300 font-black uppercase tracking-widest">No orders yet</p>}
-                            </motion.div>
-                        ) : (
-                            <motion.div 
-                                key="address" 
-                                initial={{ opacity: 0, y: 10 }} 
-                                animate={{ opacity: 1, y: 0 }} 
-                                className="space-y-4"
-                            >
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Default Shipping Address</p>
-                                <p className="text-xs text-slate-500">Your default address will be pre-filled when you place an order. You can always edit it at checkout.</p>
-                                <form onSubmit={handleSaveAddress} className="space-y-4">
-                                    <textarea
-                                        value={addressInput}
-                                        onChange={e => setAddressInput(e.target.value)}
-                                        className="w-full px-5 py-4 bg-slate-50 border-2 border-slate-50 focus:border-indigo-600 focus:bg-white transition-all outline-none rounded-2xl text-sm h-32 resize-none"
-                                        placeholder="Full address including city, province, postal code..."
-                                    />
                                     <button 
-                                        type="submit"
-                                        disabled={savingAddress}
-                                        className="w-full py-3 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-100 disabled:grayscale transition-all active:scale-95"
+                                        disabled={rechargeLoading || !rechargeCode}
+                                        className="hardware-btn"
                                     >
-                                        {savingAddress ? 'Saving...' : 'Save Address'}
+                                        <div className="hardware-cap bg-[#2C2A20] px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] text-white disabled:opacity-50 transition-all">
+                                            {rechargeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sync'}
+                                        </div>
                                     </button>
                                 </form>
                                 {message && (
-                                    <p className={`text-[10px] font-black uppercase tracking-widest text-center ${message.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    <p className={`text-[9px] font-black uppercase tracking-widest text-center ${message.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
                                         {message.text}
                                     </p>
                                 )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                )}
+                            </div>
+                        </motion.div>
+                    ) : activeTab === 'HISTORY' ? (
+                        <motion.div key="history" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                            {logs.map(log => (
+                                <div key={log.id} className="bg-[#F4F4F2] p-3 rounded-xl border border-[#C8C4B0]/50 flex justify-between items-center text-[10px]">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-1.5 rounded-lg ${log.amount > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                            {log.amount > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-black text-slate-800 uppercase tracking-tight">{log.reason}</p>
+                                            <p className="text-[8px] font-bold text-slate-400">{new Date(log.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={`font-black ${log.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            {log.amount > 0 ? '+' : ''}{log.amount}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                            {logs.length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO DATA LOGS</p>}
+                        </motion.div>
+                    ) : activeTab === 'ORDERS' ? (
+                        <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+                            {orders.map(order => (
+                                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-[#CFCBBA] flex justify-between items-center shadow-sm">
+                                    <div>
+                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-[11px] mb-1">{order.artworkTitle}</h4>
+                                        <span className="text-[8px] text-slate-400 font-bold uppercase">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${order.status === 'SHIPPED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                        {order.status}
+                                    </div>
+                                </div>
+                            ))}
+                            {orders.length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO TRANSACTION DATA</p>}
+                        </motion.div>
+                    ) : (
+                        <motion.div key="address" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                            <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <MapPin className="w-3.5 h-3.5" />
+                                Shipping Destination
+                            </h4>
+                            <form onSubmit={handleSaveAddress} className="space-y-4">
+                                <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                    <textarea
+                                        value={addressInput}
+                                        onChange={e => setAddressInput(e.target.value)}
+                                        className="w-full px-5 py-4 bg-[#F4F4F2] rounded-xl outline-none text-xs h-32 resize-none font-bold tracking-tight shadow-inner"
+                                        placeholder="Enter delivery logistics destination..."
+                                    />
+                                </div>
+                                <button type="submit" disabled={savingAddress} className="hardware-btn w-full">
+                                    <div className="hardware-cap bg-[#2C2A20] py-3 rounded-xl font-black uppercase tracking-widest text-[9px] text-white">
+                                        {savingAddress ? 'Syncing...' : 'Update Buffer'}
+                                    </div>
+                                </button>
+                            </form>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
+            
+            <style jsx global>{`
+                .shadow-well {
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(255,255,255,0.5);
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #CFCBBA;
+                    border-radius: 10px;
+                }
+            `}</style>
         </div>
     )
 }

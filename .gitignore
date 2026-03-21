@@ -51,3 +51,4 @@ database/dodoo.db
 # Temporary logs
 lint_output*.txt
 lint_u*.txt
+scripts/seed-child.ts

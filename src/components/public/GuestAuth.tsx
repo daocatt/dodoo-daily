@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, CheckCircle2 } from 'lucide-react'
 
 interface GuestData {
     id: string
@@ -17,9 +17,22 @@ interface GuestAuthProps {
     disableRegistration?: boolean
 }
 
+// Reusable Industrial Header for the Modal
+const ModalHeader = ({ title, id }: { title: string, id: string }) => (
+    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#CFCBBA] bg-[#E2DFD2] -mx-10 -mt-10 mb-8 rounded-t-[48px]">
+        <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
+            <span className="font-black text-[10px] tracking-tight uppercase text-slate-700">{title}</span>
+        </div>
+        <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
+            {id}
+        </div>
+    </div>
+)
+
 export default function GuestAuth({ onSuccess, disableRegistration }: GuestAuthProps) {
     const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN')
-    const [identifier, setIdentifier] = useState('') // email or phone
+    const [identifier, setIdentifier] = useState('')
     const [password, setPassword] = useState('')
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
@@ -55,10 +68,10 @@ export default function GuestAuth({ onSuccess, disableRegistration }: GuestAuthP
                     onSuccess(data)
                 }
             } else {
-                setError(data.error || '认证失败')
+                setError(data.error || 'Authentication denied')
             }
         } catch (_err) {
-            setError('网络连接错误')
+            setError('Access signal interrupted')
         } finally {
             setLoading(false)
         }
@@ -66,170 +79,198 @@ export default function GuestAuth({ onSuccess, disableRegistration }: GuestAuthP
 
     if (pendingApproval) {
         return (
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-8 space-y-4"
-            >
-                <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Clock className="w-10 h-10" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">等待核准</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">
-                    您的注册申请已提交。您需要等待家长核准后才能开始访问展厅。
-                </p>
-                <div className="pt-6">
+            <div className="flex flex-col h-full">
+                <ModalHeader title="REGISTRY STATUS" id="PENDING_AUTH" />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-10"
+                >
+                    <div className="w-20 h-20 hardware-well rounded-[2rem] flex items-center justify-center mx-auto mb-8 border-4 border-[#C8C4B0] bg-[#F4F4F2]">
+                        <Clock className="w-10 h-10 text-amber-500" />
+                    </div>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase mb-4">Awaiting Approval</h3>
+                    <p className="label-mono text-xs opacity-60 leading-relaxed px-4 mb-10">
+                        Your identification packet has been received. Please wait for the administrator to authorize your access.
+                    </p>
                     <button 
                         onClick={() => setPendingApproval(false)}
-                        className="text-indigo-600 font-black text-sm uppercase tracking-widest hover:underline"
+                        className="hardware-btn w-full"
                     >
-                        返回登录
+                        <div className="hardware-cap bg-white py-4 rounded-xl font-black uppercase tracking-widest text-[10px] border border-black/5">
+                            Return to Entry
+                        </div>
                     </button>
-                </div>
-            </motion.div>
+                </motion.div>
+            </div>
         )
     }
 
     return (
-        <div className="space-y-8">
-            <div className="text-center">
-                <h2 className="text-3xl font-black text-slate-900 mb-2">
-                    {mode === 'LOGIN' ? '访客登录' : '新访客注册'}
-                </h2>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
-                    {mode === 'LOGIN' ? '欢迎回来访问作品展' : '注册以收藏作品并管理点数'}
-                </p>
-            </div>
+        <div className="flex flex-col h-full">
+            <ModalHeader title={mode === 'LOGIN' ? 'IDENT_REQ' : 'REG_AUTH'} id={mode} />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {mode === 'LOGIN' ? (
-                    <>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">手机号 / 邮箱</label>
-                            <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                <input 
-                                    required
-                                    type="text" 
-                                    value={identifier}
-                                    onChange={e => setIdentifier(e.target.value)}
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                    placeholder="输入您的账号"
-                                />
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">姓名 / 昵称</label>
-                            <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                <input 
-                                    required
-                                    type="text" 
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                    placeholder="如何称呼您？"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">邮箱 (二选一)</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                <input 
-                                    required={!phone}
-                                    type="email" 
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                    placeholder="example@mail.com"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">手机号 (二选一)</label>
-                            <div className="relative">
-                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                                <input 
-                                    required={!email}
-                                    type="tel" 
-                                    value={phone}
-                                    onChange={e => setPhone(e.target.value)}
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                                    placeholder="13812345678"
-                                />
-                            </div>
-                        </div>
-                    </>
-                )}
-
-                <div className="space-y-1">
-                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">密码</label>
-                    <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                        <input 
-                            required
-                            type="password" 
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            className="w-full pl-12 pr-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-600 focus:bg-white transition-all outline-none font-bold text-slate-800"
-                            placeholder="输入密码"
-                        />
-                    </div>
-                </div>
-
-                {mode === 'REGISTER' && (
-                    <div className="space-y-1">
-                        <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest ml-1">邀请码 (必填)</label>
-                        <div className="relative">
-                            <Ticket className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                            <input 
-                                required
-                                type="text" 
-                                value={invitationCode}
-                                onChange={e => setInvitationCode(e.target.value)}
-                                className="w-full pl-12 pr-6 py-4 bg-rose-50 border-2 border-rose-50 rounded-2xl focus:border-rose-500 focus:bg-white transition-all outline-none font-black text-rose-600 uppercase tracking-widest"
-                                placeholder="输入访客邀请码"
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {error && <p className="text-center text-rose-500 text-xs font-bold uppercase tracking-tight">{error}</p>}
-
-                <button 
-                    disabled={loading}
-                    className="w-full py-5 bg-indigo-600 text-white rounded-[32px] font-black text-lg shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 uppercase tracking-widest mt-4"
-                >
-                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
-                        <>
-                            <span>{mode === 'LOGIN' ? '立即进入' : '提交注册'}</span>
-                            <ArrowRight className="w-5 h-5" />
-                        </>
-                    )}
-                </button>
-            </form>
-
-            {!disableRegistration && (
-                <div className="text-center">
+            {/* Mode Switcher */}
+            <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className={`hardware-well p-1 rounded-xl bg-[#CFCBBA] transition-all shadow-well ${mode === 'LOGIN' ? 'opacity-100' : 'opacity-40'}`}>
                     <button 
-                        onClick={() => setMode(mode === 'LOGIN' ? 'REGISTER' : 'LOGIN')}
-                        className="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-indigo-600 transition-colors"
+                        onClick={() => { setMode('LOGIN'); setError('') }}
+                        className={`w-full py-3 rounded-lg font-black uppercase tracking-widest text-[9px] transition-all ${
+                            mode === 'LOGIN' ? 'bg-white shadow-sm text-black' : 'text-black/30 hover:text-black/50'
+                        }`}
                     >
-                        {mode === 'LOGIN' ? '没有帐号？立即注册' : '已有访客帐号？点击登录'}
+                        Log In
                     </button>
                 </div>
-            )}
-
-            <div className="flex items-center gap-2 justify-center pt-4 opacity-30">
-                <ShieldCheck className="w-3 h-3 text-slate-400" />
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Protected Access</span>
+                <div className={`hardware-well p-1 rounded-xl bg-[#CFCBBA] transition-all shadow-well ${mode === 'REGISTER' ? 'opacity-100' : 'opacity-40'}`}>
+                    <button 
+                        onClick={() => { setMode('REGISTER'); setError('') }}
+                        disabled={disableRegistration}
+                        className={`w-full py-3 rounded-lg font-black uppercase tracking-widest text-[9px] transition-all ${
+                            mode === 'REGISTER' ? 'bg-white shadow-sm text-black' : 'text-black/30 hover:text-black/50'
+                        } disabled:cursor-not-allowed`}
+                    >
+                        {disableRegistration ? 'Locked' : 'Join'}
+                    </button>
+                </div>
             </div>
+
+            <AnimatePresence mode="wait">
+                <motion.form 
+                    key={mode}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                    onSubmit={handleSubmit} 
+                    className="flex flex-col gap-5"
+                >
+                    <div className="space-y-4">
+                        {mode === 'LOGIN' ? (
+                            <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
+                                <div className="relative">
+                                    <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
+                                    <input 
+                                        required
+                                        type="text" 
+                                        value={identifier}
+                                        onChange={e => setIdentifier(e.target.value)}
+                                        className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-sm tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
+                                        placeholder="Email or Phone Identifier"
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
+                                    <div className="relative">
+                                        <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
+                                        <input 
+                                            required
+                                            type="text" 
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-sm tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
+                                            placeholder="Display Name"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
+                                        <input 
+                                            required={!email}
+                                            type="email" 
+                                            value={email}
+                                            onChange={e => setEmail(e.target.value)}
+                                            className="w-full px-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-xs tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
+                                            placeholder="Email Addr"
+                                        />
+                                    </div>
+                                    <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
+                                        <input 
+                                            required={!email}
+                                            type="tel" 
+                                            value={phone}
+                                            onChange={e => setPhone(e.target.value)}
+                                            className="w-full px-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-xs tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
+                                            placeholder="Phone Num"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#B88000]/20 shadow-well">
+                                    <div className="relative">
+                                        <Ticket className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--warm-amber)] opacity-40" />
+                                        <input 
+                                            required
+                                            type="text" 
+                                            value={invitationCode}
+                                            onChange={e => setInvitationCode(e.target.value)}
+                                            className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-black text-sm tracking-[0.2em] text-[var(--warm-amber)] border-2 border-transparent focus:border-[var(--warm-amber)]/40 transition-all"
+                                            placeholder="INVITATION PIN"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
+                            <div className="relative">
+                                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
+                                <input 
+                                    required
+                                    type="password" 
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-sm tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
+                                    placeholder="Security Key"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="p-3 bg-rose-50 border-l-4 border-rose-500 flex items-center gap-3 hardware-well rounded-lg">
+                            <Terminal className="w-3.5 h-3.5 text-rose-500" />
+                            <span className="label-mono text-rose-600 text-[9px] font-black uppercase tracking-tight">{error}</span>
+                        </div>
+                    )}
+
+                    <button 
+                        disabled={loading}
+                        className="hardware-btn w-full mt-2"
+                    >
+                        <div className="hardware-cap bg-white py-5 rounded-[2rem] flex items-center justify-center gap-4 group border-2 border-[#CFCBBA] shadow-sm hover:bg-[#F4F4F2] transition-all">
+                            {loading ? <Loader2 className="w-6 h-6 animate-spin text-indigo-500" /> : (
+                                <>
+                                    <span className="text-sm font-black uppercase tracking-widest text-[#2C2A20]">
+                                        {mode === 'LOGIN' ? 'Authorize Access' : 'Secure Registry'}
+                                    </span>
+                                    <ArrowRight className="w-5 h-5 text-indigo-500 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </div>
+                    </button>
+                </motion.form>
+            </AnimatePresence>
+
+            <div className="px-1 py-4 flex justify-between items-center text-[7px] shrink-0 opacity-40 mt-4 border-t border-[#CFCBBA]/30">
+                <div className="flex items-center gap-2">
+                    <Activity className="w-2.5 h-2.5" />
+                    <span className="label-mono uppercase tracking-[0.2em]">S-Link: SECURE_PASS</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    <span className="label-mono uppercase tracking-[0.2em]">Prot-V2</span>
+                </div>
+            </div>
+            
+            <style jsx global>{`
+                .shadow-well {
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(255,255,255,0.5);
+                }
+            `}</style>
         </div>
     )
 }

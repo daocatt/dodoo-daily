@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 export default function NatureBackground() {
     return (
-        <div className="absolute inset-0 z-0 overflow-hidden bg-[#fdfcf7]">
+        <div className="fixed inset-0 z-0 overflow-hidden bg-[#fdfcf7]">
             {/* Mesh Gradient Foundation */}
             <div className="absolute inset-0 opacity-40 bg-[radial-gradient(at_0%_0%,hsla(143,30%,85%,1)_0,transparent_50%),radial-gradient(at_50%_0%,hsla(34,50%,95%,1)_0,transparent_50%),radial-gradient(at_100%_0%,hsla(186,40%,90%,1)_0,transparent_50%),radial-gradient(at_0%_100%,hsla(43,60%,92%,1)_0,transparent_50%),radial-gradient(at_50%_100%,hsla(143,40%,88%,1)_0,transparent_50%),radial-gradient(at_100%_100%,hsla(22,70%,94%,1)_0,transparent_50%)]" />
 

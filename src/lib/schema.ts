@@ -319,7 +319,7 @@ export const guestMessage = sqliteTable("GuestMessage", {
     memberId: text("memberId").references(() => users.id),
     targetUserId: text("targetUserId").notNull().references(() => users.id),
     text: text("text").notNull(),
-    isPublic: integer("isPublic", { mode: "boolean" }).default(true).notNull(),
+    isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 

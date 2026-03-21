@@ -57,21 +57,30 @@ To maintain "Industrial Density" while preventing clutter (Zero Scroll):
 -   Split layout: Left side for **integrated screen** (visual/image), right side for **controls**.
 -   Between sections: A 2px "Groove" (`.hardware-groove`).
 
-### 3. Technical Micro-details (Status)
+### 3. Modals & Floating Panels (Dialogs)
+To guarantee pixel-perfect consistency across all modals (irrespective of their height/width) and avoid hardware-acceleration rendering bugs during animations:
+- **Decoupled Structure**: Never apply borders and radii directly to the `motion.div`. 
+    - **Outer Wrapper**: `<motion.div className="w-full relative">` for layout max-width, scaling, and translation.
+    - **Inner Casing (The Panel)**: A static `div` handles all physical properties.
+- **Strict Styling**: The inner casing MUST strictly use: `className="baustein-panel w-full bg-[#E2DFD2] rounded-[2rem] shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col"`.
+- This ensures the `2rem` border radius is identical on every popup, preserving the heavy industrial feel.
+
+### 4. Technical Micro-details (Status)
 -   Use `Disc` icons with `animate-spin-slow` in rounded-full `hardware-well` slots for "System Active" indicators.
 -   Use uppercase monospaced labels for everything technical.
 
-### 4. Hardware Inputs (Data Entry)
+### 5. Hardware Inputs (Data Entry)
 Instead of flat unstyled boxes, inputs sit perfectly inside deep recessed slots to replicate physical digital gauges. This references the core `admin/login` PIN input design for thicker bezels:
 - **Wrapper**: `.hardware-well.rounded-xl.p-1.5.bg-[#D1CDBC]` (Providing a sturdy industrial bezel)
 - **Input Style**: `w-full bg-white/90 px-4 py-3.5 rounded-lg border-2 border-transparent focus:border-[var(--accent-moss)] outline-none font-black text-slate-800 text-sm shadow-inner transition-colors`
 
-### 5. Primary Layout Buttons (Action Triggers)
+### 6. Primary Layout Buttons (Action Triggers)
 Action buttons use a nested cap-in-groove construct, identical to the main landing `Family Login` interface:
 - **Outer Wrapper**: `button.hardware-btn.group`
 - **Housing Slot**: `hardware-well h-16 w-full rounded-xl overflow-hidden relative`
 - **Cap (The clickable plate)**: `hardware-cap absolute inset-1.5 bg-[#F4F4F2] rounded-lg group-hover:bg-white`
 - This layout precisely renders physical "travel range", matching industrial standards across all forms.
+
 
 ---
 

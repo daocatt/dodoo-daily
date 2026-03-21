@@ -16,7 +16,7 @@ export async function GET(
             .where(and(eq(users.slug, slug), eq(users.exhibitionEnabled, true)))
             .limit(1)
             
-        if (results.length === 0 || !/^[a-zA-Z0-9-]{6,}$/.test(results[0].slug || '')) {
+        if (results.length === 0 || !/^[a-zA-Z0-9-]{4,}$/.test(results[0].slug || '')) {
             return NextResponse.json({ error: 'User not found or invalid format' }, { status: 404 })
         }
 
@@ -48,7 +48,8 @@ export async function GET(
                 eq(artwork.userId, userId),
                 eq(artwork.isPublic, true),
                 eq(artwork.isApproved, true),
-                eq(artwork.isArchived, false)
+                eq(artwork.isArchived, false),
+                eq(artwork.isSold, true)
             )
         )
         .orderBy(desc(artwork.createdAt))
