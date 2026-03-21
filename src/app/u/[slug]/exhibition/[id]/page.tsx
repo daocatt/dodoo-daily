@@ -34,6 +34,8 @@ type ArtworkDetail = {
     exhibitionDescription: string | null
     thumbnailMedium?: string | null
     thumbnailLarge?: string | null
+    buyerId?: string | null
+    buyerMemberId?: string | null
 }
 
 export default function ArtworkDetailPage() {
@@ -88,12 +90,12 @@ export default function ArtworkDetailPage() {
         fetch('/api/stats')
             .then(res => res.ok ? res.json() : null)
             .then(data => {
-                if (data && data.id) {
+                if (data && (data.userId || data.id)) {
                     setMember({
-                        id: data.id,
+                        id: data.userId || data.id,
                         name: data.name,
                         nickname: data.nickname,
-                        currency: data.currency
+                        currency: data.coins || data.currency || 0
                     })
                 }
             })
@@ -102,12 +104,15 @@ export default function ArtworkDetailPage() {
 
     useEffect(() => {
         if (!id) return
-        
         const fetchData = async () => {
             try {
                 const res = await fetch(`/api/public/artworks/${id}`)
                 if (res.ok) {
                     setArtwork(await res.json())
+                    // Check if already liked in this browser
+                    if (localStorage.getItem(`artwork_liked_${id}`)) {
+                        setHasLiked(true)
+                    }
                 }
             } catch (err) {
                 console.error(err)
@@ -115,7 +120,6 @@ export default function ArtworkDetailPage() {
                 setLoading(false)
             }
         }
-
         fetchData()
     }, [id])
 
@@ -124,11 +128,20 @@ export default function ArtworkDetailPage() {
         setIsLiking(true)
 
         try {
-            const res = await fetch(`/api/public/artworks/${id}/like`, { method: 'POST' })
+            const res = await fetch(`/api/public/artworks/${id}/like`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    guestId: visitor?.id,
+                    memberId: member?.id
+                })
+            })
             if (res.ok) {
                 const data = await res.json()
                 setArtwork(prev => prev ? { ...prev, likes: data.likes } : null)
                 setHasLiked(true)
+                // Persist like status in local storage for instant feedback
+                localStorage.setItem(`artwork_liked_${id}`, 'true')
             }
         } catch (err) {
             console.error(err)
@@ -218,15 +231,16 @@ export default function ArtworkDetailPage() {
                         Back to Exhibition
                     </Link>
 
-                    <div className="relative aspect-[4/5] md:aspect-[3/4] rounded-[48px] overflow-hidden shadow-2xl border-8 border-white bg-white group">
+                    <div className="relative aspect-[4/5] md:aspect-[3/4] rounded-[48px] overflow-hidden shadow-2xl border-8 border-white bg-white group max-h-[80vh]">
                         <Image 
                             src={artwork.thumbnailLarge || artwork.imageUrl || '/placeholder.png'} 
                             alt={artwork.title}
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
+                            priority
                         />
                         {artwork.isFeatured && (
-                            <div className="absolute top-10 left-10 z-20">
+                            <div className="absolute top-6 left-6 z-20">
                                 <div className="px-5 py-2 bg-amber-500 text-white label-mono text-xs font-black rounded-xl shadow-2xl uppercase tracking-[0.2em] flex items-center gap-2 border-2 border-white/50 backdrop-blur-md">
                                     <Star className="w-4 h-4 fill-white" />
                                     {t('gallery.detail.featured')}
@@ -239,15 +253,6 @@ export default function ArtworkDetailPage() {
                                 displayName={artistDisplayName}
                                 avatarUrl={artwork.user.avatarUrl || undefined}
                              />
-                             {artwork.imageUrl && (
-                                <a 
-                                    href={artwork.imageUrl} 
-                                    download={artwork.title}
-                                    className="p-3 bg-indigo-600 rounded-2xl text-white hover:bg-indigo-700 transition-colors shadow-xl"
-                                >
-                                    <Download className="w-6 h-6" />
-                                </a>
-                             )}
                         </div>
                     </div>
                 </motion.div>
@@ -324,85 +329,79 @@ export default function ArtworkDetailPage() {
                     </div>
 
                     {/* Actions */}
-                    {!artwork.isSold ? (
-                        <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4">
+                        {!artwork.isSold ? (
                             <button 
-                                onClick={() => setShowCollectModal(true)}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[32px] font-black text-lg shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest"
+                                onClick={() => {
+                                    if (!visitor && !member) {
+                                        setShowVisitorPanel(false)
+                                        setShowCollectModal(true)
+                                    } else {
+                                        setShowCollectModal(true)
+                                    }
+                                }}
+                                className="w-full py-5 bg-slate-900 text-white rounded-[32px] font-black text-lg shadow-2xl shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest"
                             >
                                 {t('public.collect')}
                             </button>
-                            <p className="text-center text-slate-400 text-xs font-medium">Acquiring this piece will result in a physical poster for collection.</p>
-                        </div>
-                    ) : (
-                        <div className="p-8 bg-indigo-50 border border-indigo-100 rounded-[32px] flex flex-col items-center text-center gap-3">
-                            <div className="p-4 bg-indigo-600 rounded-full text-white">
-                                <CheckCircle className="w-8 h-8" />
+                        ) : (member?.id === artwork.buyerMemberId || (visitor && visitor.id === artwork.buyerId)) ? (
+                            <div className="text-center py-5 px-6 bg-emerald-50 rounded-[32px] border-2 border-emerald-100 flex flex-col items-center justify-center gap-2 shadow-sm">
+                                <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200">
+                                    <CheckCircle className="w-6 h-6" />
+                                </div>
+                                <span className="text-xs font-black text-emerald-600 uppercase tracking-widest mt-1">
+                                    Collected
+                                </span>
                             </div>
-                            <h3 className="text-xl font-black text-slate-900">This work is now collected</h3>
-                            <p className="text-slate-500 font-medium">It has found its way to a private collection. You can still admire it here.</p>
-                        </div>
-                    )}
-
-                    {/* Visitor Portal Trigger */}
-                    <div className="mt-8 pt-8 border-t border-slate-50">
-                        {systemStatus.disableVisitorLogin && !member ? (
-                            <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                <ShieldAlert className="w-6 h-6 text-rose-400 mx-auto mb-2" />
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">访客系统暂时不对外开放</p>
-                            </div>
-                        ) : member ? (
-                            <div className="flex items-center gap-3 w-full p-4 bg-indigo-50 rounded-2xl border border-indigo-100 group">
-                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm">
-                                    {member.name[0].toUpperCase()}
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Family Member Online</p>
-                                    <h4 className="font-black text-slate-800 uppercase tracking-tight">{member.nickname || member.name}</h4>
-                                </div>
-                                <div className="ml-auto flex items-center gap-2">
-                                    <Coins className="w-4 h-4 text-amber-500" />
-                                    <span className="font-black text-indigo-600 text-sm">{member.currency}</span>
-                                </div>
-                            </div>
-                        ) : visitor ? (
-                            <button 
-                                onClick={() => {
-                                    setShowVisitorPanel(true)
-                                    setShowCollectModal(true)
-                                }}
-                                className="flex items-center gap-3 w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-xl hover:border-indigo-100 transition-all"
-                            >
-                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm">
-                                    {visitor.name[0].toUpperCase()}
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Logged in Visitor</p>
-                                    <h4 className="font-black text-slate-800 uppercase tracking-tight">{visitor.name}</h4>
-                                </div>
-                                <div className="ml-auto flex items-center gap-2">
-                                    <Coins className="w-4 h-4 text-amber-500" />
-                                    <span className="font-black text-indigo-600 text-sm">{visitor.currency}</span>
-                                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
-                                </div>
-                            </button>
                         ) : (
-                            <div className="text-center">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
-                                    {systemStatus.disableVisitorRegistration ? '仅限老访客登录' : '想要收藏作品或充值点数？'}
-                                </p>
-                                <button 
-                                    onClick={() => {
-                                        setShowVisitorPanel(false)
-                                        setShowCollectModal(true)
-                                    }}
-                                    className="px-8 py-3 bg-white border-2 border-slate-900 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm"
-                                >
-                                    访客登录 {systemStatus.disableVisitorRegistration ? '' : '/ 注册'}
-                                </button>
+                            <div className="text-center py-4 px-6 bg-slate-50/50 backdrop-blur-sm rounded-[32px] border border-slate-100 flex items-center justify-center gap-2">
+                                <CheckCircle className="w-4 h-4 text-slate-300" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-50">Stored in a Private Collection</span>
                             </div>
                         )}
+                        
+                        {!artwork.isSold && (
+                            <p className="text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                                Physical collection available upon request
+                            </p>
+                        )}
                     </div>
+
+                    {/* Visitor Login Box - ONLY for unlogged users */}
+                    {!visitor && !member && (
+                        <div className="mt-8 pt-8 border-t border-slate-50 text-center">
+                            {systemStatus.disableVisitorLogin ? (
+                                <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <ShieldAlert className="w-6 h-6 text-rose-400 mx-auto mb-2" />
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                        {t('public.loginClosed') || 'Visitor terminal offline'}
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
+                                        {systemStatus.disableVisitorRegistration 
+                                            ? t('public.loginPromptLimited') 
+                                            : t('public.loginPrompt')}
+                                    </p>
+                                    <button 
+                                        onClick={() => {
+                                            setShowVisitorPanel(false)
+                                            setShowCollectModal(true)
+                                        }}
+                                        className="hardware-btn group w-full max-w-[280px] mx-auto"
+                                    >
+                                        <div className="hardware-cap bg-slate-900 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl group-hover:scale-[1.02] transition-all active:scale-[0.98]">
+                                            <User className="w-4 h-4 text-indigo-400" />
+                                            {systemStatus.disableVisitorRegistration 
+                                                ? t('public.loginActionLimited') 
+                                                : t('public.loginAction')}
+                                        </div>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </motion.div>
             </div>
 
@@ -606,6 +605,13 @@ export default function ArtworkDetailPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+            <style>{`
+            .no-scrollbar::-webkit-scrollbar { display: none; }
+            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            .hardware-btn { perspective: 1000px; }
+            .hardware-cap { transition: transform 0.1s; border-bottom: 4px solid rgba(0,0,0,0.3); }
+            .hardware-btn:active .hardware-cap { transform: translateY(2px); border-bottom-width: 2px; }
+        `}</style>
+    </div>
     )
 }

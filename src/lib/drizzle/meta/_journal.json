@@ -148,6 +148,13 @@
       "when": 1774116772605,
       "tag": "0020_spooky_argent",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1774119534139,
+      "tag": "0021_shallow_black_panther",
+      "breakpoints": true
     }
   ]
 }

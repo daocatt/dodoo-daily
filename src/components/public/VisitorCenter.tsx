@@ -1,8 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin, Heart } from 'lucide-react'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface GuestData {
     id: string
@@ -24,6 +27,8 @@ interface CurrencyLog {
 interface Order {
     id: string
     artworkTitle: string
+    artworkImage: string
+    artworkId: string
     status: string
     createdAt: string
 }
@@ -41,9 +46,12 @@ const ModalHeader = ({ title, id }: { title: string, id: string }) => (
 )
 
 export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { guest: GuestData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
-    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'ADDRESS'>('OVERVIEW')
+    const { t } = useI18n()
+    const params = useParams()
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'ADDRESS'>('OVERVIEW')
     const [logs, setLogs] = useState<CurrencyLog[]>([])
     const [orders, setOrders] = useState<Order[]>([])
+    const [likes, setLikes] = useState<Order[]>([])
     const [rechargeCode, setRechargeCode] = useState('')
     const [loading, setLoading] = useState(false)
     const [rechargeLoading, setRechargeLoading] = useState(false)
@@ -54,12 +62,14 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [lRes, oRes] = await Promise.all([
+            const [lRes, oRes, fRes] = await Promise.all([
                 fetch(`/api/guest/logs?guestId=${guest.id}`),
-                fetch(`/api/guest/orders?guestId=${guest.id}`)
+                fetch(`/api/guest/orders?guestId=${guest.id}`),
+                fetch(`/api/guest/likes?guestId=${guest.id}`)
             ])
             if (lRes.ok) setLogs(await lRes.json())
             if (oRes.ok) setOrders(await oRes.json())
+            if (fRes.ok) setLikes(await fRes.json())
         } finally {
             setLoading(false)
         }
@@ -159,14 +169,14 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
             </div>
 
             {/* Tabs - Industrial Style */}
-            <div className="flex bg-[#CFCBBA] p-1 rounded-2xl gap-1 mb-8 shadow-inner border border-[#C8C4B0]">
-                {(['OVERVIEW', 'HISTORY', 'ORDERS', 'ADDRESS'] as const).map(tab => (
+            <div className="flex bg-[#CFCBBA] p-1 rounded-2xl gap-1 mb-8 shadow-inner border border-[#C8C4B0] overflow-x-auto no-scrollbar">
+                {(['OVERVIEW', 'HISTORY', 'ORDERS', 'COLLECTIONS', 'FAVORITES', 'ADDRESS'] as const).map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`flex-1 py-2.5 px-3 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
                     >
-                        {tab}
+                        {t(`public.visitor.${tab.toLowerCase()}`)}
                     </button>
                 ))}
             </div>
@@ -231,18 +241,61 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                         </motion.div>
                     ) : activeTab === 'ORDERS' ? (
                         <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                            {orders.map(order => (
-                                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-[#CFCBBA] flex justify-between items-center shadow-sm">
-                                    <div>
-                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-[11px] mb-1">{order.artworkTitle}</h4>
-                                        <span className="text-[8px] text-slate-400 font-bold uppercase">{new Date(order.createdAt).toLocaleDateString()}</span>
+                            {orders.filter(o => o.status === 'PENDING_CONFIRM').map(order => (
+                                <div key={order.id} className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm">
+                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
+                                        {order.artworkImage && <img src={order.artworkImage} alt={order.artworkTitle} className="w-full h-full object-cover" />}
                                     </div>
-                                    <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${order.status === 'SHIPPED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{order.artworkTitle}</h4>
+                                        <span className="text-[7px] text-slate-400 font-bold uppercase block">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest border bg-amber-50 text-amber-600 border-amber-100 shrink-0`}>
                                         {order.status}
                                     </div>
                                 </div>
                             ))}
-                            {orders.length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO TRANSACTION DATA</p>}
+                            {orders.filter(o => o.status === 'PENDING_CONFIRM').length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO PENDING DATA</p>}
+                        </motion.div>
+                    ) : activeTab === 'COLLECTIONS' ? (
+                        <motion.div key="collections" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+                            {orders.filter(o => o.status !== 'PENDING_CONFIRM').map(order => (
+                                <div key={order.id} className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm">
+                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
+                                        {order.artworkImage && <img src={order.artworkImage} alt={order.artworkTitle} className="w-full h-full object-cover" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{order.artworkTitle}</h4>
+                                        <span className="text-[7px] text-slate-400 font-bold uppercase block">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className={`px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest border ${order.status === 'SHIPPED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'} shrink-0`}>
+                                        {order.status}
+                                    </div>
+                                </div>
+                            ))}
+                            {orders.filter(o => o.status !== 'PENDING_CONFIRM').length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO COLLECTION DATA</p>}
+                        </motion.div>
+                    ) : activeTab === 'FAVORITES' ? (
+                        <motion.div key="favorites" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+                            {likes.map(like => (
+                                <Link 
+                                    key={like.id} 
+                                    href={`/u/${params?.slug}/exhibition/${like.artworkId}`}
+                                    className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm hover:border-indigo-200 transition-colors"
+                                >
+                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
+                                        {like.artworkImage && <img src={like.artworkImage} alt={like.artworkTitle} className="w-full h-full object-cover" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{like.artworkTitle}</h4>
+                                        <span className="text-[7px] text-slate-400 font-bold uppercase block">{new Date(like.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <div className="p-2 text-rose-500">
+                                        <Heart className="w-4 h-4 fill-rose-500" />
+                                    </div>
+                                </Link>
+                            ))}
+                            {likes.length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO FAVORITES STORED</p>}
                         </motion.div>
                     ) : (
                         <motion.div key="address" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">

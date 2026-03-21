@@ -213,6 +213,15 @@ export const order = sqliteTable("Order", {
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
+export const artworkLike = sqliteTable("ArtworkLike", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    artworkId: text("artworkId").notNull().references(() => artwork.id),
+    guestId: text("guestId").references(() => guest.id),
+    memberId: text("memberId").references(() => users.id),
+    ip: text("ip"),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
 // -----------------------------------------------------------------------------
 // JOURNAL SYSTEM
 // -----------------------------------------------------------------------------

@@ -28,6 +28,8 @@ export async function GET(
             exhibitionDescription: artwork.exhibitionDescription,
             thumbnailMedium: media.thumbnailMedium,
             thumbnailLarge: media.thumbnailLarge,
+            buyerId: artwork.buyerId,
+            buyerMemberId: artwork.buyerMemberId,
             user: {
                 name: users.name,
                 nickname: users.nickname,

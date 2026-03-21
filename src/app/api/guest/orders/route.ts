@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
             status: order.status,
             createdAt: order.createdAt,
             artworkTitle: artwork.title,
+            artworkImage: artwork.imageUrl,
+            artworkId: artwork.id,
         })
         .from(order)
         .leftJoin(artwork, eq(order.artworkId, artwork.id))
