@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Grid, LayoutList, Heart, Eye, Star, Disc } from 'lucide-react'
+import { Palette, ArrowLeft, Grid, LayoutList, Heart, Eye, Star, Disc, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
+import NatureBackground from '@/components/NatureBackground'
+import PanelHeader from '@/components/PanelHeader'
 
 
 type PublicArtwork = {
@@ -87,8 +89,11 @@ export default function ExhibitionPage() {
 
     if (loading) {
         return (
-            <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="h-dvh flex items-center justify-center app-bg-pattern">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                    <span className="label-mono uppercase tracking-widest text-xs opacity-40">Accessing Archives...</span>
+                </div>
             </div>
         )
     }
@@ -109,7 +114,18 @@ export default function ExhibitionPage() {
     }
 
     return (
-        <div className="flex-1 overflow-y-auto hide-scrollbar pb-20 px-4 md:px-12 max-w-[1400px] mx-auto w-full pt-6 md:pt-10">
+        <main className="min-h-dvh relative selection:bg-indigo-500/20 pb-20">
+            <NatureBackground />
+            
+            <div className="relative z-10 flex flex-col items-center py-12 px-4 md:px-8">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="baustein-panel w-full max-w-7xl flex flex-col shadow-[0_40px_120px_rgba(0,0,0,0.3)] bg-[var(--surface-warm)] relative rounded-[2rem] overflow-hidden"
+                >
+                    <PanelHeader id="Gallery Archives" systemName="EXHIBITION" />
+                    
+                    <div className="flex-1 overflow-y-auto hide-scrollbar pb-20 px-6 md:px-12 w-full pt-8 md:pt-14">
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b-2 border-black/5 pb-8">
                 <div className="space-y-4">
@@ -277,7 +293,20 @@ export default function ExhibitionPage() {
                         </div>
                     )}
                 </AnimatePresence>
-            </div>
+                    </div>
+                </div>
+            </motion.div>
         </div>
+
+            <style jsx global>{`
+                .shadow-well {
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(255,255,255,0.5);
+                }
+                .app-bg-pattern {
+                    background-image: radial-gradient(var(--groove-dark) 1px, transparent 1px);
+                    background-size: 24px 24px;
+                }
+            `}</style>
+        </main>
     )
 }

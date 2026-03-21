@@ -1,15 +1,19 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Heart, Calendar, Coins, User, CheckCircle, Download, Eye, Quote, ChevronRight, ShieldAlert, Star } from 'lucide-react'
+import { ArrowLeft, Loader2, Heart, Eye, Share2, Coins, Disc, User, ShieldAlert, CheckCircle, ChevronRight, X, User as UserIcon, Maximize2, History } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
+import NatureBackground from '@/components/NatureBackground'
+import PanelHeader from '@/components/PanelHeader'
 import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
 import GuestAuth from '@/components/public/GuestAuth'
 import VisitorCenter from '@/components/public/VisitorCenter'
+import AuthGate from '@/components/public/AuthGate'
+import { useAuthSession } from '@/hooks/useAuthSession'
 
 type ArtworkDetail = {
     id: string
@@ -51,6 +55,7 @@ export default function ArtworkDetailPage() {
     const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number; phone?: string; email?: string; address?: string } | null>(null)
     const [member, setMember] = useState<{ id: string; name: string; nickname?: string; currency: number } | null>(null)
     const [showVisitorPanel, setShowVisitorPanel] = useState(false)
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false)
 
     // Contact info
     const [contactName, setContactName] = useState('')
@@ -196,8 +201,11 @@ export default function ArtworkDetailPage() {
 
     if (loading) {
         return (
-            <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+            <div className="h-dvh flex items-center justify-center app-bg-pattern">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                    <span className="label-mono uppercase tracking-widest text-xs opacity-40">Connecting to Artifact...</span>
+                </div>
             </div>
         )
     }
@@ -205,7 +213,7 @@ export default function ArtworkDetailPage() {
     if (!artwork) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-500">
-                <Palette className="w-12 h-12 mb-4 opacity-20" />
+                <User className="w-12 h-12 mb-4 opacity-20" />
                 <p>Artwork not found.</p>
             </div>
         )
@@ -214,196 +222,280 @@ export default function ArtworkDetailPage() {
     const artistDisplayName = artwork.user.nickname || artwork.user.name
 
     return (
-        <div className="flex-1 overflow-y-auto hide-scrollbar pb-20 pt-12">
-            <div className="max-w-7xl mx-auto px-6 md:px-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start">
-                
-                {/* Left Side: Artwork Visuals */}
+        <main className="min-h-dvh relative selection:bg-indigo-500/20 pb-20">
+            <NatureBackground />
+            
+            <div className="relative z-10 flex flex-col items-center py-12 px-4 md:px-8">
                 <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="relative"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="baustein-panel w-full max-w-7xl flex flex-col shadow-[0_40px_120px_rgba(0,0,0,0.3)] bg-[var(--surface-warm)] relative rounded-[2rem] overflow-hidden"
                 >
-                    <Link 
-                        href={`/u/${slug}/exhibition`}
-                        className="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold mb-8 group transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        Back to Exhibition
-                    </Link>
-
-                    <div className="relative aspect-[4/5] md:aspect-[3/4] rounded-[48px] overflow-hidden shadow-2xl border-8 border-white bg-white group max-h-[80vh]">
-                        <Image 
-                            src={artwork.thumbnailLarge || artwork.imageUrl || '/placeholder.png'} 
-                            alt={artwork.title}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
-                            priority
-                        />
-                        {artwork.isFeatured && (
-                            <div className="absolute top-6 left-6 z-20">
-                                <div className="px-5 py-2 bg-amber-500 text-white label-mono text-xs font-black rounded-xl shadow-2xl uppercase tracking-[0.2em] flex items-center gap-2 border-2 border-white/50 backdrop-blur-md">
-                                    <Star className="w-4 h-4 fill-white" />
-                                    {t('gallery.detail.featured')}
+                    <PanelHeader id={`ART#${id?.slice(0, 8)}`} systemName="ARCHIVE DETAIL" />
+                    
+                    <div className="flex-1 flex flex-col lg:grid lg:grid-cols-12 min-h-0">
+                        {/* Left Side: Artwork Media */}
+                        <div className="lg:col-span-12 xl:col-span-6 p-6 md:p-14 bg-[var(--well-bg)] flex flex-col items-center justify-center relative overflow-hidden min-h-[500px] border-r-2 border-[var(--groove-dark)]">
+                            <div className="absolute inset-0 pointer-events-none opacity-[0.03] app-bg-pattern z-0" />
+                            <Link 
+                                href={`/u/${slug}/exhibition`}
+                                className="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 font-bold mb-8 group transition-colors absolute top-8 left-8 z-20"
+                            >
+                                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                Back to Exhibition
+                            </Link>
+                            
+                            <motion.div 
+                                onClick={() => setIsLightboxOpen(true)}
+                                whileHover={{ scale: 1.01 }}
+                                className="relative w-full max-w-xl aspect-[4/5] md:aspect-[3/4] rounded-none overflow-hidden border-4 border-slate-600 bg-slate-900 group max-h-[75vh] mx-auto z-10 cursor-zoom-in group shadow-[12px_12px_0px_#94a3b8]"
+                            >
+                                <Image 
+                                    src={artwork.thumbnailLarge || artwork.imageUrl || '/placeholder.png'} 
+                                    alt={artwork.title}
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
+                                    priority
+                                />
+                                {artwork.isFeatured && (
+                                    <div className="absolute top-6 left-6 z-20">
+                                        <div className="px-5 py-2 bg-amber-500 text-white label-mono text-xs font-black rounded-xl shadow-2xl uppercase tracking-[0.2em] flex items-center gap-2 border-2 border-white/50 backdrop-blur-md">
+                                            <User className="w-4 h-4 fill-white" />
+                                            {t('gallery.detail.featured')}
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30">
+                                    <Maximize2 className="w-8 h-8 text-white opacity-60" />
                                 </div>
-                            </div>
-                        )}
-                        <div className="absolute bottom-6 right-6 flex gap-2">
-                             <ShareButton 
-                                title={artwork.title} 
-                                displayName={artistDisplayName}
-                                avatarUrl={artwork.user.avatarUrl || undefined}
-                             />
+                                
+                                <div className="absolute bottom-6 right-6 flex gap-2 z-40">
+                                    <ShareButton 
+                                        title={artwork.title} 
+                                        displayName={artistDisplayName}
+                                        avatarUrl={artwork.user.avatarUrl || undefined}
+                                    />
+                                </div>
+                            </motion.div>
                         </div>
-                    </div>
-                </motion.div>
 
-                {/* Right Side: Information */}
-                <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="pt-12"
-                >
-                    <div className="inline-flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-indigo-100 p-0.5 relative">
-                            {artwork.user.avatarUrl ? (
-                                <Image src={artwork.user.avatarUrl} alt="Avatar" width={32} height={32} className="w-full h-full object-cover rounded-full" />
-                            ) : (
-                                <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                    <User className="w-3 h-3 text-slate-300" />
+                        {/* Right Side: Information */}
+                        <motion.div 
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="lg:col-span-12 xl:col-span-6 p-8 md:p-14 md:pt-16 flex flex-col bg-[var(--surface-warm)]"
+                        >
+                            <div className="inline-flex items-center gap-2 mb-4">
+                                <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-[var(--groove-dark)] p-0.5 relative bg-white">
+                                    {artwork.user.avatarUrl ? (
+                                        <Image src={artwork.user.avatarUrl} alt="Avatar" width={40} height={40} className="w-full h-full object-cover rounded-lg" />
+                                    ) : (
+                                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                                            <UserIcon className="w-4 h-4 text-slate-300" />
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="font-black text-slate-500 text-xs uppercase tracking-widest">{artistDisplayName}</span>
+                            </div>
+
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-none mb-4 lowercase tracking-tighter">
+                                {artwork.title}
+                            </h1>
+
+                            {artwork.albumTitle && (
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                                    <User className="w-3 h-3" />
+                                    {artwork.albumTitle}
                                 </div>
                             )}
-                        </div>
-                        <span className="font-black text-slate-400 text-xs uppercase tracking-widest">{artistDisplayName}</span>
-                    </div>
 
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 leading-none mb-4 lowercase tracking-tighter">
-                        {artwork.title}
-                    </h1>
-
-                    {artwork.albumTitle && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
-                            <Palette className="w-3 h-3" />
-                            {artwork.albumTitle}
-                        </div>
-                    )}
-
-                        <div className="flex items-center gap-6 mb-12 border-b border-slate-100 pb-8">
-                            <div className="flex items-center gap-2 group cursor-pointer" onClick={handleLike}>
-                                <Heart className={`w-4 h-4 transition-all ${hasLiked ? 'text-rose-500 fill-rose-500 scale-125' : 'text-slate-300 group-hover:text-rose-400'}`} />
-                                <span className={`text-sm font-black uppercase tracking-widest ${hasLiked ? 'text-rose-600' : 'text-slate-500'}`}>
-                                    {artwork.likes} Likes
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Eye className="w-4 h-4 text-blue-300" />
-                                <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">
-                                    {artwork.views} Views
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 ml-auto">
-                                <Calendar className="w-4 h-4 text-slate-300" />
-                                <span className="text-slate-500 text-sm font-bold uppercase tracking-widest">
-                                    {new Date(artwork.createdAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                </span>
-                            </div>
-                        </div>
-
-                    {artwork.exhibitionDescription && (
-                        <div className="mb-12 relative">
-                            <Quote className="absolute -top-4 -left-4 w-12 h-12 text-indigo-50/50 -z-10" />
-                            <div className="bg-indigo-50/30 p-8 rounded-[32px] border border-indigo-50/50">
-                                <p className="text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic font-serif">
-                                    &ldquo;{artwork.exhibitionDescription}&rdquo;
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="mb-12">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Acquisition Price</p>
-                        <div className="flex items-center gap-3">
-                            <Coins className="w-8 h-8 text-indigo-600" />
-                            <span className="text-4xl font-black text-slate-900 tracking-tight">{artwork.priceCoins} </span>
-                            <span className="text-indigo-600 font-black text-xl">Coins</span>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-4">
-                        {!artwork.isSold ? (
-                            <button 
-                                onClick={() => {
-                                    if (!visitor && !member) {
-                                        setShowVisitorPanel(false)
-                                        setShowCollectModal(true)
-                                    } else {
-                                        setShowCollectModal(true)
-                                    }
-                                }}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[32px] font-black text-lg shadow-2xl shadow-slate-200 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest"
-                            >
-                                {t('public.collect')}
-                            </button>
-                        ) : (member?.id === artwork.buyerMemberId || (visitor && visitor.id === artwork.buyerId)) ? (
-                            <div className="text-center py-5 px-6 bg-emerald-50 rounded-[32px] border-2 border-emerald-100 flex flex-col items-center justify-center gap-2 shadow-sm">
-                                <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-200">
-                                    <CheckCircle className="w-6 h-6" />
+                            <div className="flex items-center gap-6 mb-12 border-b-2 border-slate-200/50 pb-8">
+                                <div className="flex items-center gap-2 group cursor-pointer" onClick={handleLike}>
+                                    <Heart className={`w-4 h-4 transition-all ${hasLiked ? 'text-red-600 fill-red-600 scale-125' : 'text-slate-300 group-hover:text-red-400'}`} />
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${hasLiked ? 'text-red-600' : 'text-slate-400'}`}>
+                                        {artwork.likes} {t('public.stats.likes') || 'Likes'}
+                                    </span>
                                 </div>
-                                <span className="text-xs font-black text-emerald-600 uppercase tracking-widest mt-1">
-                                    Collected
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="text-center py-4 px-6 bg-slate-50/50 backdrop-blur-sm rounded-[32px] border border-slate-100 flex items-center justify-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-slate-300" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-50">Stored in a Private Collection</span>
-                            </div>
-                        )}
-                        
-                        {!artwork.isSold && (
-                            <p className="text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
-                                Physical collection available upon request
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Visitor Login Box - ONLY for unlogged users */}
-                    {!visitor && !member && (
-                        <div className="mt-8 pt-8 border-t border-slate-50 text-center">
-                            {systemStatus.disableVisitorLogin ? (
-                                <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                    <ShieldAlert className="w-6 h-6 text-rose-400 mx-auto mb-2" />
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                        {t('public.loginClosed') || 'Visitor terminal offline'}
-                                    </p>
+                                <div className="flex items-center gap-2">
+                                    <Eye className="w-4 h-4 text-blue-500" />
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                        {artwork.views} {t('public.stats.views') || 'Views'}
+                                    </span>
                                 </div>
-                            ) : (
-                                <>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
-                                        {systemStatus.disableVisitorRegistration 
-                                            ? t('public.loginPromptLimited') 
-                                            : t('public.loginPrompt')}
-                                    </p>
+                                <div className="flex items-center gap-2 ml-auto">
+                                    <History className="w-4 h-4 text-slate-300" />
+                                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                        {new Date(artwork.createdAt).toLocaleDateString(locale === 'zh-CN' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'short' })}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {artwork.exhibitionDescription && (
+                                <div className="mb-12 relative">
+                                    <User className="absolute -top-4 -left-4 w-12 h-12 text-indigo-50/50 -z-10" />
+                                    <div className="bg-indigo-50/30 p-8 rounded-[32px] border border-indigo-50/50">
+                                        <p className="text-xl md:text-2xl font-medium text-slate-700 leading-relaxed italic font-serif">
+                                            &ldquo;{artwork.exhibitionDescription}&rdquo;
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="mb-12 hardware-well bg-slate-100/30 p-6 rounded-2xl border border-slate-200/50 shadow-well">
+                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-2">Acquisition Price</p>
+                                <div className="flex items-center gap-3">
+                                    <Coins className="w-8 h-8 text-[#ef4444]" />
+                                    <span className="text-4xl font-black text-[#ef4444] tracking-tight">{artwork.priceCoins} </span>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex flex-col gap-4">
+                                {/* Purchase Logic - NEW HARD-WELL DESIGN */}
+                                {!artwork.isSold ? (
                                     <button 
                                         onClick={() => {
-                                            setShowVisitorPanel(false)
-                                            setShowCollectModal(true)
+                                            if (visitor || member) {
+                                                setShowCollectModal(true)
+                                            } else {
+                                                setShowVisitorPanel(false)
+                                                setShowCollectModal(true)
+                                            }
                                         }}
-                                        className="hardware-btn group w-full max-w-[280px] mx-auto"
+                                        className="hardware-btn group w-full mb-6"
                                     >
-                                        <div className="hardware-cap bg-slate-900 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl group-hover:scale-[1.02] transition-all active:scale-[0.98]">
-                                            <User className="w-4 h-4 text-indigo-400" />
-                                            {systemStatus.disableVisitorRegistration 
-                                                ? t('public.loginActionLimited') 
-                                                : t('public.loginAction')}
+                                        <div className="hard-well-well rounded-[32px] p-1.5 bg-slate-950 shadow-inner">
+                                            <div className="hard-well-cap bg-gradient-to-b from-slate-800 to-slate-900 text-white py-5 rounded-[28px] font-black tracking-[0.2em] uppercase text-sm flex items-center justify-center gap-4 border-t border-white/10 group-hover:from-indigo-900 group-hover:to-slate-900 transition-all shadow-lg active:translate-y-1">
+                                                <Disc className="w-5 h-5 animate-spin-slow text-indigo-400" />
+                                                {t('public.collect')} — {artwork.priceCoins}
+                                            </div>
                                         </div>
                                     </button>
-                                </>
-                            )}
-                        </div>
-                    )}
+                                ) : (member?.id === artwork.buyerMemberId || (visitor && visitor.id === artwork.buyerId)) ? (
+                                    <div className="text-center py-6 px-8 bg-emerald-50/50 rounded-2xl border-2 border-emerald-100 flex flex-col items-center justify-center gap-2 mb-8 shadow-inner">
+                                        <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
+                                            <CheckCircle className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] mt-2">
+                                            Ownership: Confirmed
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div className="hardware-well bg-slate-950 p-8 rounded-3xl flex flex-col items-center justify-center gap-3 border-4 border-[#C8C4B0] shadow-well mb-10 text-center relative overflow-hidden group">
+                                        <div className="absolute inset-0 opacity-5 pointer-events-none app-bg-pattern" />
+                                        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 relative mb-2">
+                                            <ShieldAlert className="w-6 h-6 text-amber-500 animate-pulse" />
+                                            <div className="absolute inset-0 bg-amber-500/10 blur-xl animate-pulse rounded-full" />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <span className="label-mono text-[8px] font-black text-slate-500 uppercase tracking-[0.3em]">Protocol: ARCHIVED_SECURE</span>
+                                            <p className="text-white font-black text-sm uppercase tracking-[0.15em] leading-tight">
+                                                Stored in a Private Collection
+                                            </p>
+                                        </div>
+                                        <div className="mt-4 flex items-center gap-1.5 opacity-20">
+                                            <div className="w-1 h-1 rounded-full bg-slate-400" />
+                                            <div className="w-8 h-0.5 bg-slate-800" />
+                                            <div className="w-1 h-1 rounded-full bg-slate-400" />
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {!artwork.isSold && (
+                                    <p className="text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-8">
+                                        Physical collection available upon request
+                                    </p>
+                                )}
+
+                                {/* Visitor Login Box - ONLY for unlogged users */}
+                                {!visitor && !member && (
+                                    <div className="mt-auto pt-8 border-t border-slate-100 text-center">
+                                        {systemStatus.disableVisitorLogin ? (
+                                            <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                                <ShieldAlert className="w-6 h-6 text-rose-400 mx-auto mb-2" />
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                                    {t('public.loginClosed') || 'Visitor terminal offline'}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">
+                                                    {systemStatus.disableVisitorRegistration 
+                                                        ? t('public.loginPromptLimited') 
+                                                        : t('public.loginPrompt')}
+                                                </p>
+                                                <button 
+                                                    onClick={() => {
+                                                        setShowVisitorPanel(false)
+                                                        setShowCollectModal(true)
+                                                    }}
+                                                    className="hardware-btn group w-full block"
+                                                >
+                                                    <div className="hardware-well h-24 w-full rounded-2xl overflow-hidden relative">
+                                                        <div className="hardware-cap absolute inset-2 bg-[#E8E8E4] rounded-xl flex items-center px-8 justify-between group-hover:bg-white transition-all shadow-sm active:translate-y-0.5">
+                                                            <div className="flex items-center gap-4 min-w-0">
+                                                                <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100 shrink-0 shadow-inner">
+                                                                    <UserIcon className="w-6 h-6 text-amber-500" />
+                                                                </div>
+                                                                <span className="font-black text-slate-800 tracking-tight uppercase whitespace-nowrap">
+                                                                    {systemStatus.disableVisitorRegistration 
+                                                                        ? t('public.loginActionLimited') 
+                                                                        : t('public.loginAction')}
+                                                                </span>
+                                                            </div>
+                                                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-amber-500 transition-colors shrink-0" />
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
                 </motion.div>
             </div>
+
+            {/* Lightbox Overlay */}
+            <AnimatePresence>
+                {isLightboxOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 md:p-12 cursor-zoom-out"
+                        onClick={() => setIsLightboxOpen(false)}
+                    >
+                        <motion.button 
+                            className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
+                            onClick={() => setIsLightboxOpen(false)}
+                        >
+                            <X className="w-8 h-8" />
+                        </motion.button>
+                        
+                        <motion.div 
+                            layoutId="artwork-image"
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="relative w-full h-full max-w-6xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <Image 
+                                src={artwork.imageUrl || '/placeholder.png'} 
+                                alt={artwork.title}
+                                fill
+                                className="object-contain"
+                            />
+                        </motion.div>
+                        
+                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-white/80 label-mono text-xs uppercase tracking-widest font-black">
+                            {artwork.title}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Collect Modal */}
             <AnimatePresence>
@@ -605,13 +697,25 @@ export default function ArtworkDetailPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-            <style>{`
-            .no-scrollbar::-webkit-scrollbar { display: none; }
-            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            .hardware-btn { perspective: 1000px; }
-            .hardware-cap { transition: transform 0.1s; border-bottom: 4px solid rgba(0,0,0,0.3); }
-            .hardware-btn:active .hardware-cap { transform: translateY(2px); border-bottom-width: 2px; }
+            <style jsx global>{`
+            .shadow-well {
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 1px 1px rgba(255,255,255,0.05);
+            }
+            .app-bg-pattern {
+                background-image: radial-gradient(var(--groove-dark) 1px, transparent 1px);
+                background-size: 24px 24px;
+            }
+            .hard-well-well {
+                box-shadow: inset 0 3px 6px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.1);
+            }
+            .hard-well-cap {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .hardware-btn:active .hard-well-cap {
+                transform: translateY(2px);
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            }
         `}</style>
-    </div>
+    </main>
     )
 }
