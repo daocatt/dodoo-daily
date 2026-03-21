@@ -105,7 +105,8 @@ export default function AccountHUD() {
                     }
                 }
             } else if (res.status === 401 || res.status === 404) {
-                if (pathname && !['/admin/login', '/admin/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
+                const isInternalPage = ['/admin', '/management', '/settings'].some(p => pathname?.startsWith(p))
+                if (isInternalPage && pathname && !['/admin/login', '/admin/setup', '/welcome', '/guest'].some(p => pathname.startsWith(p))) {
                     console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
                     handleLogout()
                 }

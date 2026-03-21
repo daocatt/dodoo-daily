@@ -46,6 +46,7 @@ export default function ArtworkDetailPage() {
     const [isLiking, setIsLiking] = useState(false)
     const [hasLiked, setHasLiked] = useState(false)
     const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number; phone?: string; email?: string; address?: string } | null>(null)
+    const [member, setMember] = useState<{ id: string; name: string; nickname?: string; currency: number } | null>(null)
     const [showVisitorPanel, setShowVisitorPanel] = useState(false)
 
     // Contact info
@@ -81,6 +82,21 @@ export default function ArtworkDetailPage() {
                 disableVisitorLogin: data.disableVisitorLogin ?? false,
                 disableVisitorRegistration: data.disableVisitorRegistration ?? false
             }))
+
+        // Fetch Member Session
+        fetch('/api/stats')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data && data.id) {
+                    setMember({
+                        id: data.id,
+                        name: data.name,
+                        nickname: data.nickname,
+                        currency: data.currency
+                    })
+                }
+            })
+            .catch(() => {})
     }, [])
 
     useEffect(() => {
@@ -133,13 +149,14 @@ export default function ArtworkDetailPage() {
                 body: JSON.stringify({
                     artworkId: id,
                     guestId: visitor?.id,
-                    guestName: visitor?.name || guestName.trim(),
-                    guestPhone: visitor?.phone || guestPhone.trim(),
-                    paymentType: visitor ? 'COINS' : 'RMB',
-                    contactName: contactName.trim() || visitor?.name,
+                    memberId: member?.id,
+                    guestName: member?.name || visitor?.name || contactName.trim(),
+                    guestPhone: visitor?.phone || contactPhone.trim(),
+                    paymentType: (visitor || member) ? 'COINS' : 'RMB',
+                    contactName: contactName.trim() || member?.name || visitor?.name,
                     contactPhone: contactPhone.trim(),
                     contactEmail: contactEmail.trim(),
-                    shippingAddress: (useSavedAddress ? visitor?.address : shippingAddress.trim()) || shippingAddress.trim()
+                    shippingAddress: member ? 'INTERNAL_FAMILY_MEMBER' : ((useSavedAddress ? visitor?.address : shippingAddress.trim()) || shippingAddress.trim())
                 })
             })
 
@@ -325,10 +342,24 @@ export default function ArtworkDetailPage() {
 
                     {/* Visitor Portal Trigger */}
                     <div className="mt-8 pt-8 border-t border-slate-50">
-                        {systemStatus.disableVisitorLogin ? (
+                        {systemStatus.disableVisitorLogin && !member ? (
                             <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
                                 <ShieldAlert className="w-6 h-6 text-rose-400 mx-auto mb-2" />
                                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">访客系统暂时不对外开放</p>
+                            </div>
+                        ) : member ? (
+                            <div className="flex items-center gap-3 w-full p-4 bg-indigo-50 rounded-2xl border border-indigo-100 group">
+                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm">
+                                    {member.name[0].toUpperCase()}
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Family Member Online</p>
+                                    <h4 className="font-black text-slate-800 uppercase tracking-tight">{member.nickname || member.name}</h4>
+                                </div>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <Coins className="w-4 h-4 text-amber-500" />
+                                    <span className="font-black text-indigo-600 text-sm">{member.currency}</span>
+                                </div>
                             </div>
                         ) : visitor ? (
                             <button 
@@ -405,7 +436,7 @@ export default function ArtworkDetailPage() {
                                                     localStorage.setItem('visitor_data', JSON.stringify(updated))
                                                 }}
                                             />
-                                        ) : !visitor ? (
+                                        ) : !visitor && !member ? (
                                             <GuestAuth 
                                                 disableRegistration={systemStatus.disableVisitorRegistration}
                                                 onSuccess={(data) => {
@@ -428,16 +459,16 @@ export default function ArtworkDetailPage() {
                                             >
                                                 <h2 className="text-3xl font-black text-slate-900 mb-2">Nearly Yours</h2>
                                                 <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b border-slate-100 pb-6 mb-8">
-                                                    Confirm your collection of this masterpiece
+                                                    {member ? 'Direct collection for family members' : 'Confirm your collection of this masterpiece'}
                                                 </p>
-
+                                                
                                                 <div className="space-y-6 mb-10">
                                                     <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
                                                         <div className="flex justify-between items-center mb-4">
                                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Balance</span>
                                                             <div className="flex items-center gap-1">
                                                                 <Coins className="w-3.5 h-3.5 text-amber-500" />
-                                                                <span className="font-black text-slate-900">{visitor.currency}</span>
+                                                                <span className="font-black text-slate-900">{(member || visitor)!.currency}</span>
                                                             </div>
                                                         </div>
                                                         <div className="flex justify-between items-center border-t border-slate-200 pt-4">
@@ -450,87 +481,96 @@ export default function ArtworkDetailPage() {
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-4 mb-8">
-                                                    <div>
-                                                        <label className="block text-xs font-bold text-slate-500 mb-1">Contact Name *</label>
-                                                        <input 
-                                                            type="text" 
-                                                            value={contactName} 
-                                                            onChange={e => setContactName(e.target.value)} 
-                                                            className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
+                                                {!member ? (
+                                                    <div className="space-y-4 mb-8">
                                                         <div>
-                                                            <label className="block text-xs font-bold text-slate-500 mb-1">Phone</label>
+                                                            <label className="block text-xs font-bold text-slate-500 mb-1">Contact Name *</label>
                                                             <input 
-                                                                type="tel" 
-                                                                value={contactPhone} 
-                                                                onChange={e => setContactPhone(e.target.value)} 
+                                                                type="text" 
+                                                                value={contactName} 
+                                                                onChange={e => setContactName(e.target.value)} 
                                                                 className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
-                                                                required={!contactEmail}
+                                                                required
                                                             />
                                                         </div>
-                                                        <div>
-                                                            <label className="block text-xs font-bold text-slate-500 mb-1">Email</label>
-                                                            <input 
-                                                                type="email" 
-                                                                value={contactEmail} 
-                                                                onChange={e => setContactEmail(e.target.value)} 
-                                                                className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
-                                                                required={!contactPhone}
-                                                            />
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-slate-500 mb-1">Phone</label>
+                                                                <input 
+                                                                    type="tel" 
+                                                                    value={contactPhone} 
+                                                                    onChange={e => setContactPhone(e.target.value)} 
+                                                                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
+                                                                    required={!contactEmail}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                                                                <input 
+                                                                    type="email" 
+                                                                    value={contactEmail} 
+                                                                    onChange={e => setContactEmail(e.target.value)} 
+                                                                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
+                                                                    required={!contactPhone}
+                                                                />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <p className="text-[10px] text-slate-400">At least one contact method (Phone or Email) must be provided.</p>
-                                                    
-                                                    <div>
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <label className="block text-xs font-bold text-slate-500">Shipping Address (Optional)</label>
-                                                            {visitor.address && (
-                                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                                    <input 
-                                                                        type="checkbox" 
-                                                                        checked={useSavedAddress} 
-                                                                        onChange={e => setUseSavedAddress(e.target.checked)} 
-                                                                        className="rounded text-indigo-600 focus:ring-indigo-500"
-                                                                    />
-                                                                    <span className="text-xs text-slate-500 font-bold">Use default</span>
-                                                                </label>
+                                                        <p className="text-[10px] text-slate-400">At least one contact method (Phone or Email) must be provided.</p>
+                                                        
+                                                        <div>
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <label className="block text-xs font-bold text-slate-500">Shipping Address (Optional)</label>
+                                                                {visitor?.address && (
+                                                                    <label className="flex items-center gap-2 cursor-pointer">
+                                                                        <input 
+                                                                            type="checkbox" 
+                                                                            checked={useSavedAddress} 
+                                                                            onChange={e => setUseSavedAddress(e.target.checked)} 
+                                                                            className="rounded text-indigo-600 focus:ring-indigo-500"
+                                                                        />
+                                                                        <span className="text-xs text-slate-500 font-bold">Use default</span>
+                                                                    </label>
+                                                                )}
+                                                            </div>
+                                                            {!useSavedAddress || !visitor?.address ? (
+                                                                <textarea 
+                                                                    value={shippingAddress} 
+                                                                    onChange={e => setShippingAddress(e.target.value)} 
+                                                                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100 h-20 resize-none"
+                                                                    placeholder="Enter detailed shipping info..."
+                                                                ></textarea>
+                                                            ) : (
+                                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600">
+                                                                    {visitor.address}
+                                                                </div>
                                                             )}
                                                         </div>
-                                                        {!useSavedAddress || !visitor.address ? (
-                                                            <textarea 
-                                                                value={shippingAddress} 
-                                                                onChange={e => setShippingAddress(e.target.value)} 
-                                                                className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100 h-20 resize-none"
-                                                                placeholder="Enter detailed shipping info..."
-                                                            ></textarea>
-                                                        ) : (
-                                                            <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600">
-                                                                {visitor.address}
-                                                            </div>
-                                                        )}
                                                     </div>
-                                                </div>
+                                                ) : (
+                                                    <div className="mb-8 p-6 bg-green-50 rounded-3xl border border-green-100 flex items-center gap-3">
+                                                       <CheckCircle className="w-5 h-5 text-green-600" />
+                                                       <p className="text-xs text-green-700 font-bold">Family member discount applied: No shipping info required.</p>
+                                                    </div>
+                                                )}
 
                                                 <button 
-                                                    disabled={submitting || visitor.currency < artwork.priceCoins || (!contactEmail && !contactPhone) || !contactName}
+                                                    disabled={submitting || (member || visitor)!.currency < artwork.priceCoins || (!member && (!contactEmail && !contactPhone || !contactName))}
                                                     className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:grayscale"
                                                 >
-                                                    {submitting ? 'Processing...' : visitor.currency < artwork.priceCoins ? 'Insufficient Coins' : 'Confirm & Collect'}
+                                                    {submitting ? 'Processing...' : (member || visitor)!.currency < artwork.priceCoins ? 'Insufficient Coins' : 'Confirm & Collect'}
                                                 </button>
                                                 
-                                                <div className="text-center mt-6">
-                                                    <button 
-                                                        type="button" 
-                                                        onClick={() => setShowVisitorPanel(true)}
-                                                        className="text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-indigo-600"
-                                                    >
-                                                        Manage Coins & View Profile
-                                                    </button>
-                                                </div>
+                                                {!member && (
+                                                    <div className="text-center mt-6">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setShowVisitorPanel(true)}
+                                                            className="text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-indigo-600"
+                                                        >
+                                                            Manage Coins & View Profile
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </form>
                                         )}
                                     </>

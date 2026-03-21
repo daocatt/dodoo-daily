@@ -182,6 +182,7 @@ export const artwork = sqliteTable("Artwork", {
     albumId: text("albumId").references(() => album.id),
     isSold: integer("isSold", { mode: "boolean" }).default(false).notNull(),
     buyerId: text("buyerId").references(() => guest.id),
+    buyerMemberId: text("buyerMemberId").references(() => users.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
     isApproved: integer("isApproved", { mode: "boolean" }).default(false).notNull(),
@@ -194,7 +195,8 @@ export const artwork = sqliteTable("Artwork", {
 export const order = sqliteTable("Order", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     artworkId: text("artworkId").notNull().references(() => artwork.id),
-    guestId: text("guestId").notNull().references(() => guest.id),
+    guestId: text("guestId").references(() => guest.id),
+    memberId: text("memberId").references(() => users.id),
     amountRMB: real("amountRMB").default(0).notNull(),
     amountCoins: integer("amountCoins").default(0).notNull(),
     paymentType: text("paymentType", { enum: ["COINS", "RMB"] }).default("COINS").notNull(),
@@ -309,6 +311,16 @@ export const systemSettings = sqliteTable("SystemSettings", {
     hideFamilyLogin: integer("hideFamilyLogin", { mode: "boolean" }).default(false).notNull(),
     homepageImages: text("homepageImages"), // stringified JSON array
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+export const guestMessage = sqliteTable("GuestMessage", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    guestId: text("guestId").references(() => guest.id),
+    memberId: text("memberId").references(() => users.id),
+    targetUserId: text("targetUserId").notNull().references(() => users.id),
+    text: text("text").notNull(),
+    isPublic: integer("isPublic", { mode: "boolean" }).default(true).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 // -----------------------------------------------------------------------------

@@ -3,13 +3,16 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart, Eye, Layout, Disc, Activity, ShieldCheck, User as UserIcon, Loader2 } from 'lucide-react'
+import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart, Eye, Layout, Disc, Activity, ShieldCheck, User as UserIcon, Loader2, MessageSquare, Send } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
 import NatureBackground from '@/components/NatureBackground'
 import PanelHeader from '@/components/PanelHeader'
+import GuestAuth from '@/components/public/GuestAuth'
+import VisitorCenter from '@/components/public/VisitorCenter'
+import { AnimatePresence } from 'motion/react'
 
 type UserProfile = {
     id: string
@@ -48,17 +51,17 @@ export default function PublicProfileHome() {
     const [user, setUser] = useState<UserProfile | null>(null)
     const [artworks, setArtworks] = useState<PublicArtwork[]>([])
     const [loading, setLoading] = useState(true)
+    const [messages, setMessages] = useState<{ id?: string; text: string; createdAt: number; guestId?: string | null; memberId?: string | null }[]>([])
+    const [showMsgModal, setShowMsgModal] = useState(false)
+    const [msgText, setMsgText] = useState('')
+    const [sending, setSending] = useState(false)
+    const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number } | null>(null)
+    const [member, setMember] = useState<{ id: string; name: string } | null>(null)
+    const [showVisitorPanel, setShowVisitorPanel] = useState(false)
 
     const slug = params?.slug as string
 
     useEffect(() => {
-        // --- NEW: VISITOR AUTH CHECK ---
-        const guestId = typeof document !== 'undefined' ? document.cookie.split('; ').find(row => row.startsWith('dodoo_guest_id='))?.split('=')[1] : null
-        if (!guestId && !localStorage.getItem('dodoo_guest')) {
-            router.push(`/guest/login?returnUrl=${encodeURIComponent(window.location.pathname)}&slug=${slug}`)
-            return
-        }
-
         if (!slug) return
         
         const fetchData = async () => {
@@ -83,8 +86,56 @@ export default function PublicProfileHome() {
             }
         }
 
+        const stored = localStorage.getItem('visitor_data')
+        if (stored) {
+            try { setVisitor(JSON.parse(stored)) } catch {}
+        }
+
+        fetch('/api/stats')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => { if (data?.id) setMember(data) })
+
         fetchData()
     }, [slug])
+
+    const fetchMessages = async () => {
+        if (!user?.id) return
+        const res = await fetch(`/api/public/message?userId=${user.id}`)
+        if (res.ok) setMessages(await res.json())
+    }
+
+    useEffect(() => {
+        fetchMessages()
+    }, [user])
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!msgText.trim()) return
+        setSending(true)
+
+        try {
+            const res = await fetch('/api/public/message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetUserId: user!.id,
+                    text: msgText.trim(),
+                    guestId: visitor?.id,
+                    isPublic: true
+                })
+            })
+
+            if (res.ok) {
+                setMsgText('')
+                setShowMsgModal(false)
+                fetchMessages()
+            }
+        } catch (err) {
+            console.error(err)
+        } finally {
+            setSending(false)
+        }
+    }
 
     if (loading) {
         return (
@@ -310,6 +361,44 @@ export default function PublicProfileHome() {
                                         <p className="label-mono text-sm uppercase tracking-widest font-black">Data Stream Empty</p>
                                     </div>
                                 )}
+
+                                {/* Message Board */}
+                                <div className="mt-12 pt-12 border-t-2 border-black/5">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <div className="flex items-center gap-2">
+                                            <MessageSquare className="w-4 h-4 text-indigo-500" />
+                                            <h3 className="text-2xl font-black uppercase tracking-tighter">Transmission Logs</h3>
+                                        </div>
+                                        <button 
+                                            onClick={() => setShowMsgModal(true)}
+                                            className="px-4 py-2 bg-slate-900 text-white rounded-xl label-mono text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                                        >
+                                            Leave Message
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="space-y-4 max-h-96 overflow-y-auto pr-4 custom-scrollbar pb-10">
+                                        {messages.length > 0 ? messages.map((m, i) => (
+                                            <div key={i} className="hardware-well p-6 rounded-3xl bg-white/50 border border-white/50 shadow-well relative group">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center text-[7px] font-black text-slate-500">
+                                                            {m.guestId ? 'G' : 'M'}
+                                                        </div>
+                                                        <span className="label-mono text-[9px] font-black uppercase tracking-widest text-indigo-600">Secure Signal</span>
+                                                    </div>
+                                                    <span className="label-mono text-[8px] opacity-30">{new Date(m.createdAt).toLocaleString()}</span>
+                                                </div>
+                                                <p className="text-slate-700 font-medium leading-relaxed">{m.text}</p>
+                                            </div>
+                                        )) : (
+                                            <div className="text-center py-12 bg-slate-100/50 rounded-3xl border border-dashed border-slate-300">
+                                                <p className="label-mono text-[10px] opacity-40 uppercase font-black">Waiting for incoming signal...</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
                             </div>
 
                             {/* CTA / Quick Access */}
@@ -338,6 +427,64 @@ export default function PublicProfileHome() {
                     </div>
                 </motion.div>
             </div>
+
+            {/* Message Modal */}
+            <AnimatePresence>
+                {showMsgModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl"
+                        onClick={() => setShowMsgModal(false)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="w-full max-w-md bg-white rounded-[48px] p-10 shadow-2xl relative overflow-hidden"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {!visitor && !member && !showVisitorPanel ? (
+                                <GuestAuth 
+                                    onSuccess={(data) => {
+                                        setVisitor(data)
+                                        localStorage.setItem('visitor_data', JSON.stringify(data))
+                                        setShowVisitorPanel(true)
+                                    }}
+                                />
+                            ) : showVisitorPanel && visitor ? (
+                                <VisitorCenter guest={visitor} onLogout={() => { setVisitor(null); localStorage.removeItem('visitor_data'); setShowVisitorPanel(false) }} />
+                            ) : (
+                                <form onSubmit={handleSendMessage}>
+                                    <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tighter">New Transmission</h2>
+                                    <p className="label-mono text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-100 pb-4">
+                                        Sending as {member?.name || visitor?.name}
+                                    </p>
+                                    
+                                    <textarea 
+                                        value={msgText}
+                                        onChange={e => setMsgText(e.target.value)}
+                                        placeholder="Type your message here..."
+                                        className="w-full h-40 bg-slate-50 border-2 border-slate-100 rounded-3xl p-6 text-slate-800 font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all resize-none mb-8"
+                                        required
+                                    />
+                                    
+                                    <button 
+                                        disabled={sending || !msgText.trim()}
+                                        className="hardware-btn w-full group"
+                                    >
+                                        <div className="hardware-cap bg-indigo-600 py-5 rounded-[2rem] flex items-center justify-center gap-3 text-white group-hover:bg-indigo-700 transition-all disabled:grayscale">
+                                            <Send className="w-4 h-4" />
+                                            <span className="font-black uppercase tracking-widest text-xs">{sending ? 'Sending...' : 'Transmit Signal'}</span>
+                                        </div>
+                                    </button>
+                                </form>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <style jsx global>{`
                 .shadow-well {
