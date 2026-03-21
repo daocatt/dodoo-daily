@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { Lock, User, Loader2, ArrowLeft, CheckSquare, Upload } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Lock, User, Loader2, ArrowLeft, CheckCircle2, Upload, Terminal, Disc, ShieldCheck, Power, Activity } from 'lucide-react'
+import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
-import NatureBackground from '@/components/NatureBackground'
 
 type AuthUser = {
     id: string
@@ -15,6 +15,22 @@ type AuthUser = {
     hasPin: boolean
 }
 
+// Common Panel Header - Moved outside for React best practices
+const PanelHeader = ({ id, systemName }: { id: string; systemName: string }) => (
+    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[var(--groove-dark)] bg-[var(--surface-warm)]">
+        <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-moss)] shadow-[0_0_8px_var(--accent-moss)] animate-pulse" />
+            <span className="font-black text-sm tracking-tight">{systemName}</span>
+        </div>
+        <div className="flex items-center gap-4">
+            <div className="px-2 py-0.5 border border-[var(--text-muted)] rounded text-[8px] font-bold opacity-30">MODEL: DO-19.X</div>
+            <div className="px-3 py-1 bg-[var(--well-bg)] rounded-md shadow-inner text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                {id}
+            </div>
+        </div>
+    </div>
+)
+
 export default function LoginPage() {
     const [users, setUsers] = useState<AuthUser[]>([])
     const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null)
@@ -22,9 +38,9 @@ export default function LoginPage() {
     const [rememberMe, setRememberMe] = useState(true)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const { t, locale } = useI18n()
+    const { t } = useI18n()
     const [showAllAvatars, setShowAllAvatars] = useState(true)
-    const [systemName, setSystemName] = useState('DoDoo Family')
+    const [systemName, setSystemName] = useState('DoDoo System')
     const [nickname, setNickname] = useState('')
 
     // First Launch States
@@ -45,323 +61,295 @@ export default function LoginPage() {
                     setIsFirstLaunch(true)
                 }
                 setShowAllAvatars(settingsData.showAllAvatars ?? true)
-                setSystemName(settingsData.systemName || 'DoDoo Family')
+                setSystemName(settingsData.systemName || 'DoDoo System')
                 setLoading(false)
             })
             .catch(err => {
                 console.error(err)
-                setError(t('login.error.network'))
                 setLoading(false)
             })
-    }, [t])
-
-    const handleFirstLaunchSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!firstLaunchName.trim()) {
-            setError(t('login.error.enterName'))
-            return
-        }
-        setLoading(true)
-        setError('')
-
-        const formData = new FormData()
-        formData.append('name', firstLaunchName)
-        if (firstLaunchAvatarFile) {
-            formData.append('file', firstLaunchAvatarFile)
-        }
-
-        try {
-            const res = await fetch('/api/setup/parent', {
-                method: 'POST',
-                body: formData
-            })
-
-            const data = await res.json()
-            if (res.ok && data.success) {
-                window.location.href = '/admin/setup'
-            } else {
-                setError(data.error || t('login.error.failedInit'))
-                setLoading(false)
-            }
-        } catch (err) {
-            setError(t('login.error.network'))
-            setLoading(false)
-        }
-    }
+    }, [])
 
     const handleLogin = async (e?: React.FormEvent) => {
         if (e) e.preventDefault()
         if (!selectedUser) return
-
         setLoading(true)
         setError('')
-
         try {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: selectedUser.id,
                     pin: selectedUser.hasPin ? pin : undefined,
                     rememberMe
                 })
             })
-
             const data = await res.json()
-
             if (res.ok && data.success) {
-                if (data.needsSetup) {
-                    window.location.href = '/admin/setup'
-                } else {
-                    window.location.href = '/'
-                }
-            } else if (data.needsPin) {
-                window.location.href = `/admin/auth/set-pin?userId=${data.userId}`
+                window.location.href = data.needsSetup ? '/admin/setup' : '/'
             } else {
-                setError(data.error === 'Invalid PIN' ? t('login.error.invalidPin') : (data.error || t('login.error.network')))
+                setError(data.error === 'Invalid PIN' ? t('login.error.invalidPin') : (data.error || 'Network Error'))
                 setLoading(false)
             }
-        } catch (err) {
-            setError(t('login.error.network'))
+        } catch {
             setLoading(false)
         }
     }
 
-    return (
-        <div className="h-dvh flex items-center justify-center relative overflow-hidden text-[#4a3728]">
-            <NatureBackground />
 
-            <div className="relative z-10 w-full max-w-4xl p-6">
+    return (
+        <main className="h-dvh overflow-hidden app-bg-pattern flex items-center justify-center p-4 md:p-8 relative">
+            {/* Global Back Button */}
+            <div className="absolute top-6 left-6 z-50">
+                <button 
+                    onClick={() => window.location.href = '/'}
+                    className="hardware-btn group"
+                >
+                    <div className="hardware-cap bg-white px-4 py-2 rounded-xl flex items-center gap-2 border border-black/5">
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                        <span className="label-mono">{t('common.back')}</span>
+                    </div>
+                </button>
+            </div>
+
+            <div className="w-full max-w-6xl">
                 <AnimatePresence mode="wait">
                     {!selectedUser ? (
                         <motion.div
-                            key="selector"
-                            initial={{ opacity: 0, scale: 0.9 }}
+                            key="user-selector"
+                            initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
-                            className="flex flex-col items-center"
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="baustein-panel shadow-[0_40px_100px_rgba(0,0,0,0.3)] grid grid-cols-1 md:grid-cols-12 max-h-[90vh] md:h-[640px] w-full overflow-hidden"
                         >
-                            <h1 className="text-3xl md:text-5xl font-extrabold text-[#4a3728] mb-12 drop-shadow-sm tracking-tight text-center">
-                                {systemName}
-                            </h1>
-
-                            {loading ? (
-                                <Loader2 className="w-12 h-12 animate-spin text-white drop-shadow-md" />
-                            ) : isFirstLaunch ? (
-                                <form onSubmit={handleFirstLaunchSubmit} className="flex flex-col items-center gap-6 w-full max-w-sm">
-                                    <div className="relative group w-40 h-40 md:w-56 md:h-56 rounded-2xl bg-[#4a3728]/10 backdrop-blur-md border-2 border-[#43aa8b] shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 hover:bg-[#4a3728]/20 hover:shadow-2xl cursor-pointer" onClick={() => firstLaunchFileInputRef.current?.click()}>
-                                        <div className={`absolute top-4 left-4 px-3 py-1 text-[10px] md:text-xs font-bold rounded-full text-white z-20 bg-[#43aa8b]/90 shadow-md flex items-center gap-1`}>
-                                            <Upload className="w-3 h-3" /> {t('login.firstLaunchAvatar')}
-                                        </div>
-                                        {firstLaunchAvatarPreview ? (
-                                            <img src={firstLaunchAvatarPreview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110 select-none" />
-                                        ) : (
-                                            <div className="flex flex-col items-center gap-2 text-white/80 group-hover:scale-110 transition-transform duration-500">
-                                                <img src="/parent_avatar.png" alt="default" className="w-32 h-32 object-cover rounded-full" />
+                            {/* Left Side: Monitor - Fixed on Desktop */}
+                            <div className="hidden md:flex md:col-span-4 bg-[var(--well-bg)] p-8 flex-col items-center justify-center border-r-2 border-[var(--groove-dark)] relative overflow-hidden h-full">
+                                {/* Monitor Scan Lines Effect */}
+                                <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
+                                
+                                <div className="w-full max-w-xs space-y-8 relative z-10 text-center">
+                                    <div className="hardware-well aspect-square rounded-2xl flex items-center justify-center border-4 border-[#C8C4B0] overflow-hidden group bg-slate-950 relative">
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 1.15 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 1.2, ease: 'circOut' }}
+                                            className="absolute inset-0"
+                                        >
+                                            <Image
+                                                src="/cyber_home.png"
+                                                alt="System Visual"
+                                                fill
+                                                className="object-cover opacity-70 contrast-125 grayscale-[20%]"
+                                                priority
+                                            />
+                                        </motion.div>
+                                        
+                                        {/* CRT Effect Overlays */}
+                                        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)] z-10" />
+                                        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.15)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] z-20 bg-[length:100%_2px,3px_100%] opacity-40 animate-scanline" />
+                                        
+                                        <div className="absolute bottom-3 right-3 z-30">
+                                            <div className="px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/10 rounded flex items-center gap-1.5 shadow-xl">
+                                                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
+                                                <span className="label-mono text-[8px] text-emerald-400 opacity-80 uppercase tracking-widest">Monitor Ready</span>
                                             </div>
-                                        )}
-                                        <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.2)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                    </div>
-                                    <input ref={firstLaunchFileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                        const file = e.target.files?.[0]
-                                        if (file) {
-                                            setFirstLaunchAvatarFile(file)
-                                            setFirstLaunchAvatarPreview(URL.createObjectURL(file))
-                                        }
-                                    }} />
-
-                                    <input
-                                        autoFocus
-                                        type="text"
-                                        required
-                                        value={firstLaunchName}
-                                        onChange={e => setFirstLaunchName(e.target.value)}
-                                        placeholder={t('login.firstLaunchPlaceholder')}
-                                        className="w-full px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl border-2 border-slate-100 focus:border-[#43aa8b] focus:ring-4 focus:ring-[#43aa8b]/20 outline-none transition-all font-bold text-xl text-center shadow-lg text-[#4a3728]"
-                                    />
-
-                                    {error && <div className="text-rose-500 font-bold bg-white/90 px-4 py-2 rounded-xl text-sm w-full text-center">{error}</div>}
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading || !firstLaunchName.trim()}
-                                        className="w-full py-4 mt-2 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-xl font-bold text-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 flex items-center justify-center"
-                                    >
-                                        {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('login.enterSystem')}
-                                    </button>
-                                </form>
-                            ) : (
-                                showAllAvatars ? (
-                                    <div className="flex flex-wrap justify-center gap-6 md:gap-12">
-                                        {users.map((u, i) => (
-                                            <motion.button
-                                                key={u.id}
-                                                onClick={() => {
-                                                    setSelectedUser(u)
-                                                    setPin('')
-                                                    setError('')
-                                                }}
-                                                initial={{ opacity: 0, y: 50 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: i * 0.1, type: 'spring' }}
-                                                whileTap={{ scale: 0.98 }}
-                                                className="group flex flex-col items-center gap-6"
-                                            >
-                                                <div className={`w-40 h-40 md:w-56 md:h-56 rounded-2xl bg-[#4a3728]/5 backdrop-blur-md border-2 ${u.role === 'PARENT' ? 'border-[#43aa8b]' : 'border-[#277da1]'} shadow-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:bg-[#4a3728]/10 group-hover:shadow-2xl relative`}>
-                                                    <div className={`absolute top-4 left-4 px-3 py-1 text-[10px] md:text-xs font-bold rounded-full text-white z-20 ${u.role === 'PARENT' ? 'bg-[#43aa8b]/90' : 'bg-[#277da1]/90'}`}>
-                                                        {u.role === 'PARENT' ? t('login.parent') : t('login.child')}
-                                                    </div>
-                                                    {u.avatarUrl ? (
-                                                        <img
-                                                            src={`${u.avatarUrl}?v=4`}
-                                                            alt={u.nickname || u.name}
-                                                            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-125 select-none"
-                                                            onError={(e) => { e.currentTarget.src = "/dog.svg"; }}
-                                                        />
-                                                    ) : (
-                                                        <User className={`w-16 h-16 md:w-20 md:h-20 text-white/80 drop-shadow-sm transition-transform duration-500 ease-out group-hover:scale-125`} />
-                                                    )}
-                                                    <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.2)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                </div>
-                                                <span className="text-xl md:text-3xl font-bold text-white drop-shadow-md tracking-wide bg-[#4a3728]/40 px-6 py-2 rounded-xl backdrop-blur-md group-hover:bg-[#4a3728]/60 transition-colors">
-                                                    {u.nickname || u.name}
-                                                </span>
-                                            </motion.button>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <form
-                                        onSubmit={(e) => {
-                                            e.preventDefault();
-                                            const found = users.find(u => (u.nickname || u.name).toLowerCase() === nickname.toLowerCase());
-                                            if (found) {
-                                                setSelectedUser(found);
-                                                setError('');
-                                            } else {
-                                                setError(t('login.error.userNotFound'))
-                                            }
-                                        }}
-                                        className="flex flex-col items-center gap-8 w-full max-w-sm bg-white/40 backdrop-blur-2xl p-10 rounded-3xl border border-white/50 shadow-2xl"
-                                    >
-                                        <div className="w-24 h-24 rounded-2xl bg-white shadow-xl flex items-center justify-center relative -mt-20 border-4 border-white/80">
-                                            <img src="/dog.svg" className="w-16 h-16" alt="logo" />
                                         </div>
-
-                                        <div className="w-full space-y-4">
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                                                    <User className="w-5 h-5 text-[#4a3728]/40" />
-                                                </div>
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    required
-                                                    value={nickname}
-                                                    onChange={e => setNickname(e.target.value)}
-                                                    placeholder={t('login.enterNickname')}
-                                                    className="w-full pl-14 pr-6 py-5 bg-white/90 rounded-2xl border-2 border-transparent focus:border-[#43aa8b] outline-none transition-all font-black text-xl text-[#4a3728] shadow-sm italic"
-                                                />
-                                            </div>
-
-                                            {error && <div className="text-rose-500 font-bold bg-rose-50 px-4 py-2 rounded-xl text-xs w-full text-center border border-rose-100">{error}</div>}
-
-                                            <button
-                                                type="submit"
-                                                className="w-full py-5 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-2xl font-black text-xl shadow-lg transition-all hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-3"
-                                            >
-                                                {t('login.nextStep')}
-                                            </button>
-                                        </div>
-                                    </form>
-                                )
-                            )}
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="auth"
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="max-w-md w-full mx-auto"
-                        >
-                            <button
-                                onClick={() => setSelectedUser(null)}
-                                className="flex items-center gap-2 text-[#4a3728] hover:text-[#1a241a] mb-6 font-bold transition-all bg-white/60 px-5 py-2 rounded-xl backdrop-blur-sm mx-auto shadow-sm border border-[#4a3728]/10"
-                            >
-                                <ArrowLeft className="w-4 h-4" />
-                                {t('login.back')}
-                            </button>
-
-                            <form onSubmit={handleLogin} className="bg-white/90 backdrop-blur-2xl p-8 md:p-10 rounded-2xl shadow-xl border border-white flex flex-col items-center">
-                                <div className={`w-24 h-24 rounded-xl overflow-hidden bg-[#ebf3eb] shadow-inner flex items-center justify-center mb-6`}>
-                                    {selectedUser.avatarUrl ? (
-                                        <img
-                                            src={`${selectedUser.avatarUrl}?v=4`}
-                                            alt={selectedUser.name}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { e.currentTarget.src = "/dog.svg"; }}
-                                        />
-                                    ) : (
-                                        <User className="w-10 h-10 text-white drop-shadow-sm" />
-                                    )}
-                                </div>
-
-                                <h2 className="text-2xl font-black text-slate-800 mb-2">{selectedUser.name}</h2>
-                                <p className="text-slate-500 font-medium mb-8 text-sm">
-                                    {selectedUser.role === 'PARENT' ? t('login.parent') : t('login.child')}
-                                </p>
-
-                                {error && (
-                                    <div className="w-full bg-red-50 text-red-500 font-bold px-4 py-3 rounded-2xl mb-6 text-center text-sm border border-red-100">
-                                        {error}
                                     </div>
-                                )}
 
-                                {selectedUser.hasPin ? (
-                                    <div className="w-full mb-6">
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <Lock className="w-5 h-5 text-slate-400" />
-                                            </div>
-                                            <input
-                                                type="password"
-                                                required
-                                                value={pin}
-                                                onChange={e => setPin(e.target.value)}
-                                                placeholder={t('login.pinPlaceholder')}
-                                                className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border-2 border-slate-100 focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 outline-none transition-all font-bold text-lg shadow-sm"
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center px-1">
+                                            <span className="label-mono">System Core</span>
+                                            <span className="label-mono text-[var(--accent-moss)]">Online</span>
+                                        </div>
+                                        <div className="h-1 bg-black/10 rounded-full overflow-hidden">
+                                            <motion.div 
+                                                className="h-full bg-[var(--accent-moss)] w-full"
+                                                animate={{ x: ['-100%', '0%'] }}
+                                                transition={{ duration: 1.5, ease: 'easeOut' }}
                                             />
                                         </div>
                                     </div>
-                                ) : null}
+                                </div>
+                            </div>
 
-                                <label className="flex items-center gap-3 w-full mb-8 cursor-pointer group">
-                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${rememberMe ? 'bg-[#4a5a4a] border-[#4a5a4a]' : 'border-[#d1dcd1] bg-white group-hover:border-[#4a5a4a]'}`}>
-                                        {rememberMe && <CheckSquare className="w-4 h-4 text-white" />}
+                            {/* Right Side: Controls */}
+                            <div className="col-span-1 md:col-span-8 flex flex-col h-full overflow-hidden">
+                                <PanelHeader id="Access Terminal" systemName={systemName} />
+                                <div className="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar bg-[var(--surface-warm)]">
+                                    <div className="mb-4 text-center md:text-left">
+                                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-[var(--text-primary)] mb-1 uppercase">Identify Profile</h1>
+                                        <p className="label-mono opacity-60 text-[9px] uppercase tracking-widest leading-none">Select operator node</p>
                                     </div>
-                                    <span className="font-bold text-[#4a5a4a] select-none">{t('login.rememberMe')}</span>
-                                    <input
-                                        type="checkbox"
-                                        checked={rememberMe}
-                                        onChange={e => setRememberMe(e.target.checked)}
-                                        className="hidden"
-                                    />
-                                </label>
 
+                                    {loading ? (
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            {[...Array(4)].map((_, i) => (
+                                                <div key={i} className="hardware-well h-44 rounded-2xl animate-pulse" />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className={`grid gap-3 md:gap-4 justify-items-center ${
+                                            users.length <= 1 ? 'grid-cols-1 max-w-xs mx-auto' : 
+                                            users.length === 2 ? 'grid-cols-2' : 
+                                            users.length === 3 ? 'grid-cols-3' : 
+                                            'grid-cols-2 lg:grid-cols-4'
+                                        }`}>
+                                            {users.map((u, i) => (
+                                                <motion.button
+                                                    key={u.id}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: i * 0.05 }}
+                                                    onClick={() => setSelectedUser(u)}
+                                                    className="hardware-btn group transition-all w-full max-w-[170px]"
+                                                >
+                                                    <div className="hardware-cap p-2.5 bg-white rounded-2xl flex flex-col items-center justify-center gap-2.5 border-2 border-black/5 group-hover:bg-[var(--surface-white)] transition-colors h-40">
+                                                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border-2 border-[var(--well-bg)] shadow-inner">
+                                                            {u.avatarUrl ? (
+                                                                <img src={`${u.avatarUrl}?v=4`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-transform duration-500 group-hover:scale-110" alt="" />
+                                                            ) : (
+                                                                <div className="w-full h-full bg-slate-100 flex items-center justify-center"><User className="w-8 h-8 text-slate-300" /></div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="font-extrabold text-[10px] md:text-[11px] uppercase tracking-tighter text-[var(--text-primary)] text-center px-1 truncate w-full">
+                                                                {u.nickname || u.name}
+                                                            </span>
+                                                            <div className="w-6 h-1 bg-[var(--accent-blue)] mt-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full" />
+                                                        </div>
+                                                    </div>
+                                                </motion.button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="px-6 py-4 border-t-2 border-[var(--groove-dark)] bg-[var(--well-bg)] flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-8 h-8 rounded-full hardware-well flex items-center justify-center opacity-40"><Power className="w-4 h-4" /></div>
+                                        <span className="label-mono">Main Console</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-[var(--accent-moss)]" />
+                                        <span className="label-mono text-[var(--accent-moss)]">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="auth-console"
+                            initial={{ opacity: 0, scale: 1.02 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="baustein-panel shadow-[0_60px_120px_rgba(0,0,0,0.4)] grid grid-cols-1 md:grid-cols-12 min-h-[550px] max-h-[85vh] h-auto overflow-hidden"
+                        >
+                            {/* Monitor Column */}
+                            <div className="md:col-span-3 bg-[var(--well-bg)] p-8 border-r-2 border-[var(--groove-dark)] flex flex-col">
                                 <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full py-4 bg-[#43aa8b] hover:bg-[#328a6f] text-white rounded-xl font-bold text-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0 flex justify-center items-center"
+                                    onClick={() => setSelectedUser(null)}
+                                    className="hardware-btn group w-fit mb-12"
                                 >
-                                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('login.loginButton')}
+                                    <div className="hardware-cap bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-black/5">
+                                        <ArrowLeft className="w-4 h-4" />
+                                        <span className="label-mono">Reset</span>
+                                    </div>
                                 </button>
-                            </form>
+                                
+                                <div className="flex-1 flex flex-col items-center justify-center gap-6">
+                                    <div className="hardware-well w-32 h-32 rounded-3xl border-4 border-[#C8C4B0] overflow-hidden p-1 shadow-2xl">
+                                        {selectedUser.avatarUrl ? (
+                                            <img src={`${selectedUser.avatarUrl}?v=4`} className="w-full h-full object-cover rounded-2xl" alt="" />
+                                        ) : (
+                                            <div className="w-full h-full bg-white/20 flex items-center justify-center"><User className="w-12 h-12 text-black/20" /></div>
+                                        )}
+                                    </div>
+                                    <div className="text-center">
+                                        <h2 className="text-2xl font-black uppercase text-[var(--text-primary)]">{selectedUser.nickname || selectedUser.name}</h2>
+                                        <p className="label-mono uppercase opacity-40 tracking-[0.2em]">{selectedUser.role} ACCESS LEVEL</p>
+                                    </div>
+                                    <div className="w-full bg-black/5 rounded-md p-4 space-y-2 mt-4">
+                                        <div className="flex justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
+                                            <span>Hardware UID</span>
+                                            <span>{selectedUser.id.slice(0, 8)}</span>
+                                        </div>
+                                        <div className="h-0.5 bg-black/10 w-full" />
+                                        <div className="flex justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
+                                            <span>Status</span>
+                                            <span className="text-[var(--accent-moss)]">Waiting PIN</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Input Column */}
+                            <div className="md:col-span-9 flex flex-col bg-[var(--surface-warm)]">
+                                <PanelHeader id="Security Input" systemName={systemName} />
+                                <form onSubmit={handleLogin} className="flex-1 p-8 md:p-16 flex flex-col justify-center max-w-lg mx-auto w-full">
+                                    <div className="mb-10 text-center">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 hardware-well rounded-full mb-6">
+                                            <Lock className="w-5 h-5 opacity-40" />
+                                        </div>
+                                        <h3 className="text-2xl font-black uppercase mb-2">Enter Credentials</h3>
+                                        <p className="label-mono opacity-50 italic">Mechanical PIN entry required for decryption</p>
+                                    </div>
+
+                                    {error && (
+                                        <div className="mb-8 p-4 bg-rose-50 border-l-4 border-rose-500 flex items-center gap-3">
+                                            <Terminal className="w-4 h-4 text-rose-500" />
+                                            <span className="label-mono text-rose-600 text-[10px]">{error}</span>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-8">
+                                        {selectedUser.hasPin && (
+                                            <div className="hardware-well rounded-2xl p-2 bg-[#D1CDBC]">
+                                                <input
+                                                    autoFocus
+                                                    type="password"
+                                                    required
+                                                    value={pin}
+                                                    onChange={e => setPin(e.target.value)}
+                                                    placeholder="####"
+                                                    className="w-full bg-white/90 px-6 py-6 rounded-xl border-2 border-transparent focus:border-[var(--accent-moss)] outline-none font-black text-4xl tracking-[0.4em] text-center shadow-inner placeholder:text-black/5 h-24"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div 
+                                            onClick={() => setRememberMe(!rememberMe)}
+                                            className="flex items-center gap-4 cursor-pointer group select-none"
+                                        >
+                                            <div className={`hardware-btn w-6 h-6 rounded-md ${rememberMe ? 'is-active' : ''}`}>
+                                                <div className={`hardware-cap w-full h-full flex items-center justify-center rounded-md border transition-all ${
+                                                    rememberMe ? 'bg-[var(--accent-moss)] text-white border-[var(--accent-moss)] shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]' : 'bg-white border-black/10'
+                                                }`}>
+                                                    {rememberMe && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                                </div>
+                                            </div>
+                                            <span className={`label-mono transition-opacity ${rememberMe ? 'opacity-100 font-bold' : 'opacity-60'}`}>Persistent Session (Stay Logged In)</span>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="hardware-btn w-full mt-6"
+                                        >
+                                            <div className="hardware-cap bg-[var(--surface-white)] py-6 rounded-2xl border-2 border-[var(--groove-dark)] flex items-center justify-center gap-4 group">
+                                                {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : (
+                                                    <>
+                                                        <span className="text-xl font-black uppercase tracking-widest group-hover:text-[var(--accent-moss)] transition-colors">Authorize</span>
+                                                        <ArrowLeft className="w-6 h-6 rotate-180 group-hover:translate-x-1 transition-transform" />
+                                                    </>
+                                                )}
+                                            </div>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
-        </div>
+        </main>
     )
 }
