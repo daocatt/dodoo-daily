@@ -1,36 +1,30 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, CheckCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, CheckCircle, ChevronRight, ArrowLeft } from 'lucide-react'
 
 interface GuestData {
     id: string
     name: string
     currency: number
     status?: string
+    phone?: string
+    email?: string
+    address?: string
 }
 
 interface GuestAuthProps {
     onSuccess: (guestData: GuestData) => void
-    requireInvitationCode?: boolean
     disableRegistration?: boolean
+    /**
+     * Optional: If true, renders the container as a modal-ready baustein panel.
+     * Defaults to true as the primary use case is the "Visitor Auth Popup".
+     */
+    asTerminal?: boolean
 }
 
-// Reusable Industrial Header for the Modal
-const ModalHeader = ({ title, id }: { title: string, id: string }) => (
-    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#CFCBBA] bg-[#E2DFD2] -mx-10 -mt-10 mb-8 rounded-t-[48px]">
-        <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
-            <span className="font-black text-[10px] tracking-tight uppercase text-slate-700">{title}</span>
-        </div>
-        <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
-            {id}
-        </div>
-    </div>
-)
-
-export default function GuestAuth({ onSuccess, disableRegistration }: GuestAuthProps) {
+export default function GuestAuth({ onSuccess, disableRegistration, asTerminal = true }: GuestAuthProps) {
     const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN')
     const [identifier, setIdentifier] = useState('')
     const [password, setPassword] = useState('')
@@ -77,200 +71,226 @@ export default function GuestAuth({ onSuccess, disableRegistration }: GuestAuthP
         }
     }
 
-    if (pendingApproval) {
+    // Use a memoized rendering to prevent component re-definition bugs
+    const renderContent = () => {
         return (
-            <div className="flex flex-col h-full">
-                <ModalHeader title="REGISTRY STATUS" id="PENDING_AUTH" />
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-10"
-                >
-                    <div className="w-20 h-20 hardware-well rounded-[2rem] flex items-center justify-center mx-auto mb-8 border-4 border-[#C8C4B0] bg-[#F4F4F2]">
-                        <Clock className="w-10 h-10 text-amber-500" />
+            <div className="flex flex-col flex-1 bg-[#E2DFD2]">
+                {/* Header Section */}
+                <div className="flex items-center justify-between px-8 py-5 border-b-2 border-black/5 bg-[#F4F2E8] shrink-0">
+                    <div className="flex items-center gap-4">
+                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(79,70,229,0.4)] animate-pulse" />
+                        <span className="font-black text-xs tracking-[0.25em] uppercase text-slate-600">Visitor Terminal</span>
                     </div>
-                    <h3 className="text-2xl font-black text-slate-800 tracking-tight uppercase mb-4">Awaiting Approval</h3>
-                    <p className="label-mono text-xs opacity-60 leading-relaxed px-4 mb-10">
-                        Your identification packet has been received. Please wait for the administrator to authorize your access.
-                    </p>
-                    <button 
-                        onClick={() => setPendingApproval(false)}
-                        className="hardware-btn w-full"
-                    >
-                        <div className="hardware-cap bg-white py-4 rounded-xl font-black uppercase tracking-widest text-[10px] border border-black/5">
-                            Return to Entry
-                        </div>
-                    </button>
-                </motion.div>
+                    <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        AUTH_NODE: {mode}
+                    </div>
+                </div>
+
+                <div className="flex flex-col flex-1 p-10 pt-8 min-h-[460px]">
+                    {/* Mode Switcher - Mechanical Buttons */}
+                    <div className="grid grid-cols-2 gap-6 mb-10 shrink-0">
+                        <button 
+                            type="button"
+                            onClick={() => { setMode('LOGIN'); setError('') }}
+                            className={`hardware-btn transition-all ${mode === 'LOGIN' ? 'scale-[1.02]' : 'opacity-40 scale-95 grayscale'}`}
+                        >
+                            <div className={`hardware-cap py-3 rounded-xl font-black uppercase tracking-widest text-[10px] border-2 transition-all ${
+                                mode === 'LOGIN' ? 'bg-white border-black/10 text-black shadow-lg' : 'bg-transparent border-black/5 text-slate-500'
+                            }`}>
+                                Identify
+                            </div>
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => { setMode('REGISTER'); setError('') }}
+                            disabled={disableRegistration}
+                            className={`hardware-btn transition-all ${mode === 'REGISTER' ? 'scale-[1.02]' : 'opacity-40 scale-95 grayscale'} ${disableRegistration ? 'cursor-not-allowed' : ''}`}
+                        >
+                            <div className={`hardware-cap py-3 rounded-xl font-black uppercase tracking-widest text-[10px] border-2 transition-all ${
+                                mode === 'REGISTER' ? 'bg-white border-black/10 text-black shadow-lg' : 'bg-transparent border-black/5 text-slate-500'
+                            }`}>
+                                Registry
+                            </div>
+                        </button>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        {pendingApproval ? (
+                            <motion.div 
+                                key="pending"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-black/5 rounded-[2rem] border-2 border-dashed border-black/10"
+                            >
+                                <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mb-6 shadow-well">
+                                    <ShieldCheck className="w-10 h-10 text-amber-600 animate-pulse" />
+                                </div>
+                                <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Request Transmitted</h3>
+                                <p className="label-mono opacity-50 text-[10px] leading-relaxed max-w-[200px] mb-8">Node awaiting administrative validation. Termination of terminal session recommended.</p>
+                                <button 
+                                    onClick={() => setPendingApproval(false)}
+                                    className="hardware-btn group w-full"
+                                >
+                                    <div className="hardware-cap bg-white py-4 rounded-xl border-2 border-black/10 flex items-center justify-center gap-3">
+                                        <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Login</span>
+                                    </div>
+                                </button>
+                            </motion.div>
+                        ) : (disableRegistration && mode === 'REGISTER') ? (
+                            <motion.div 
+                                key="disabled"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="flex-1 flex flex-col items-center justify-center text-center p-8"
+                            >
+                                <div className="w-16 h-16 hardware-well rounded-2xl flex items-center justify-center mx-auto mb-6 border-4 border-[#C8C4B0] bg-[#F4F4F2]">
+                                    <Lock className="w-8 h-8 opacity-40 text-slate-400" />
+                                </div>
+                                <h3 className="text-xl font-black uppercase mb-2">Restricted</h3>
+                                <p className="label-mono opacity-50 uppercase mb-12 tracking-widest text-[10px]">Registry node offline</p>
+                                <button 
+                                    onClick={() => setMode('LOGIN')} 
+                                    className="hardware-btn group w-full"
+                                >
+                                    <div className="hardware-cap bg-white py-4 rounded-xl border-2 border-black/10 flex items-center justify-center gap-3">
+                                        <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1" />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Login</span>
+                                    </div>
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <motion.form 
+                                key={mode}
+                                initial={{ opacity: 0, x: 10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                onSubmit={handleSubmit} 
+                                className="flex flex-col flex-1 pb-4"
+                            >
+                                <div className="space-y-5 flex-1 overflow-y-auto pr-1">
+                                    {mode === 'LOGIN' ? (
+                                        <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                            <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20 z-10" />
+                                            <input 
+                                                required
+                                                type="text" 
+                                                value={identifier}
+                                                onChange={e => setIdentifier(e.target.value)}
+                                                className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                placeholder="Identifier (Email / Phone)"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                                <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20 z-10" />
+                                                <input 
+                                                    required
+                                                    type="text" 
+                                                    value={name}
+                                                    onChange={e => setName(e.target.value)}
+                                                    className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                    placeholder="Display Name"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                                    <input 
+                                                        required={!phone}
+                                                        type="email" 
+                                                        value={email}
+                                                        onChange={e => setEmail(e.target.value)}
+                                                        className="w-full px-6 py-4 bg-white rounded-xl outline-none font-bold text-xs tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                        placeholder="Email"
+                                                    />
+                                                </div>
+                                                <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                                    <input 
+                                                        required={!email}
+                                                        type="tel" 
+                                                        value={phone}
+                                                        onChange={e => setPhone(e.target.value)}
+                                                        className="w-full px-6 py-4 bg-white rounded-xl outline-none font-bold text-xs tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                        placeholder="Phone"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="relative group hardware-well rounded-2xl bg-[#B88000]/10 p-1 shadow-inner">
+                                                <Ticket className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--warm-amber)] opacity-40 z-10" />
+                                                <input 
+                                                    required
+                                                    type="text" 
+                                                    value={invitationCode}
+                                                    onChange={e => setInvitationCode(e.target.value)}
+                                                    className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-black text-sm tracking-[0.2em] text-[var(--warm-amber)] shadow-md border-2 border-transparent focus:border-[var(--warm-amber)]/30 transition-all"
+                                                    placeholder="INVITATION CODE"
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                        <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20 z-10" />
+                                        <input 
+                                            required
+                                            type="password" 
+                                            value={password}
+                                            onChange={e => setPassword(e.target.value)}
+                                            className="w-full pl-14 pr-24 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                            placeholder="密码"
+                                        />
+                                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-slate-400 opacity-40 tracking-widest pointer-events-none">密码 / PW</span>
+                                    </div>
+                                </div>
+
+                                {error && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="my-6 p-4 bg-red-50 border-l-4 border-red-500 flex items-center gap-3 rounded-lg"
+                                    >
+                                        <Terminal className="w-4 h-4 text-red-500" />
+                                        <span className="label-mono text-red-600 text-[10px] font-black uppercase tracking-tighter leading-none">{error}</span>
+                                    </motion.div>
+                                )}
+
+                                {/* Standardized Hardware Submit Button */}
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="hardware-btn w-full mt-10 shrink-0"
+                                >
+                                    <div className="hardware-cap bg-white py-6 rounded-2xl border-2 border-black/10 flex items-center justify-center gap-4 group transition-all shadow-xl group-hover:bg-slate-50">
+                                        {loading ? <Loader2 className="w-8 h-8 animate-spin text-amber-500" /> : (
+                                            <>
+                                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-black/5 shrink-0 shadow-inner group-hover:bg-amber-50 group-hover:border-amber-100 transition-colors">
+                                                    <ShieldCheck className="w-5 h-5 text-slate-400 group-hover:text-amber-500 transition-colors" />
+                                                </div>
+                                                <span className="text-lg font-black uppercase tracking-[0.2em] text-slate-700 group-hover:text-black transition-colors">{mode === 'LOGIN' ? 'Authorize' : 'Join Node'}</span>
+                                                <ArrowRight className="w-6 h-6 text-slate-300 group-hover:text-amber-500 transition-transform group-hover:translate-x-1" />
+                                            </>
+                                        )}
+                                    </div>
+                                </button>
+                            </motion.form>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
         )
     }
 
+    if (!asTerminal) return renderContent()
+
+    // Complete self-contained Baustein Panel Shell
     return (
-        <div className="flex flex-col h-full">
-            <ModalHeader title={mode === 'LOGIN' ? 'IDENT_REQ' : 'REG_AUTH'} id={mode} />
-
-            {/* Mode Switcher */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className={`hardware-well p-1 rounded-xl bg-[#CFCBBA] transition-all shadow-well ${mode === 'LOGIN' ? 'opacity-100' : 'opacity-40'}`}>
-                    <button 
-                        onClick={() => { setMode('LOGIN'); setError('') }}
-                        className={`w-full py-3 rounded-lg font-black uppercase tracking-widest text-[9px] transition-all ${
-                            mode === 'LOGIN' ? 'bg-white shadow-sm text-black' : 'text-black/30 hover:text-black/50'
-                        }`}
-                    >
-                        Log In
-                    </button>
-                </div>
-                <div className={`hardware-well p-1 rounded-xl bg-[#CFCBBA] transition-all shadow-well ${mode === 'REGISTER' ? 'opacity-100' : 'opacity-40'}`}>
-                    <button 
-                        onClick={() => { setMode('REGISTER'); setError('') }}
-                        disabled={disableRegistration}
-                        className={`w-full py-3 rounded-lg font-black uppercase tracking-widest text-[9px] transition-all ${
-                            mode === 'REGISTER' ? 'bg-white shadow-sm text-black' : 'text-black/30 hover:text-black/50'
-                        } disabled:cursor-not-allowed`}
-                    >
-                        {disableRegistration ? 'Locked' : 'Join'}
-                    </button>
-                </div>
-            </div>
-
-            <AnimatePresence mode="wait">
-                <motion.form 
-                    key={mode}
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                    onSubmit={handleSubmit} 
-                    className="flex flex-col gap-5"
-                >
-                    <div className="space-y-4">
-                        {mode === 'LOGIN' ? (
-                            <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
-                                <div className="relative">
-                                    <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
-                                    <input 
-                                        required
-                                        type="text" 
-                                        value={identifier}
-                                        onChange={e => setIdentifier(e.target.value)}
-                                        className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-sm tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
-                                        placeholder="Email or Phone Identifier"
-                                    />
-                                </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
-                                    <div className="relative">
-                                        <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
-                                        <input 
-                                            required
-                                            type="text" 
-                                            value={name}
-                                            onChange={e => setName(e.target.value)}
-                                            className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-sm tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
-                                            placeholder="Display Name"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
-                                        <input 
-                                            required={!email}
-                                            type="email" 
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            className="w-full px-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-xs tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
-                                            placeholder="Email Addr"
-                                        />
-                                    </div>
-                                    <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
-                                        <input 
-                                            required={!email}
-                                            type="tel" 
-                                            value={phone}
-                                            onChange={e => setPhone(e.target.value)}
-                                            className="w-full px-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-xs tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
-                                            placeholder="Phone Num"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#B88000]/20 shadow-well">
-                                    <div className="relative">
-                                        <Ticket className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--warm-amber)] opacity-40" />
-                                        <input 
-                                            required
-                                            type="text" 
-                                            value={invitationCode}
-                                            onChange={e => setInvitationCode(e.target.value)}
-                                            className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-black text-sm tracking-[0.2em] text-[var(--warm-amber)] border-2 border-transparent focus:border-[var(--warm-amber)]/40 transition-all"
-                                            placeholder="INVITATION PIN"
-                                        />
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        <div className="hardware-well rounded-[1.5rem] p-0.5 bg-[#C8C4B0] shadow-well">
-                            <div className="relative">
-                                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20" />
-                                <input 
-                                    required
-                                    type="password" 
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    className="w-full pl-14 pr-6 py-4 bg-[#F4F4F2] rounded-[1.25rem] outline-none font-bold text-sm tracking-tight border-2 border-transparent focus:border-indigo-500/30 transition-all"
-                                    placeholder="Security Key"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="p-3 bg-rose-50 border-l-4 border-rose-500 flex items-center gap-3 hardware-well rounded-lg">
-                            <Terminal className="w-3.5 h-3.5 text-rose-500" />
-                            <span className="label-mono text-rose-600 text-[9px] font-black uppercase tracking-tight">{error}</span>
-                        </div>
-                    )}
-
-                    <button 
-                        disabled={loading}
-                        className="hardware-btn w-full mt-2"
-                    >
-                        <div className="hardware-cap bg-white py-5 rounded-[2rem] flex items-center justify-center gap-4 group border-2 border-[#CFCBBA] shadow-sm hover:bg-[#F4F4F2] transition-all">
-                            {loading ? <Loader2 className="w-6 h-6 animate-spin text-indigo-500" /> : (
-                                <>
-                                    <span className="text-sm font-black uppercase tracking-widest text-[#2C2A20]">
-                                        {mode === 'LOGIN' ? 'Authorize Access' : 'Secure Registry'}
-                                    </span>
-                                    <ArrowRight className="w-5 h-5 text-indigo-500 group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </div>
-                    </button>
-                </motion.form>
-            </AnimatePresence>
-
-            <div className="px-1 py-4 flex justify-between items-center text-[7px] shrink-0 opacity-40 mt-4 border-t border-[#CFCBBA]/30">
-                <div className="flex items-center gap-2">
-                    <Activity className="w-2.5 h-2.5" />
-                    <span className="label-mono uppercase tracking-[0.2em]">S-Link: SECURE_PASS</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-2.5 h-2.5" />
-                    <span className="label-mono uppercase tracking-[0.2em]">Prot-V2</span>
-                </div>
-            </div>
-            
-            <style jsx global>{`
-                .shadow-well {
-                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(255,255,255,0.5);
-                }
-            `}</style>
+        <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[3rem] shadow-[0_60px_150px_rgba(0,0,0,0.5)] relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col">
+            {renderContent()}
         </div>
     )
 }

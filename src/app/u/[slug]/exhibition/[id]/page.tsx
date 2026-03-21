@@ -3,16 +3,16 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft, Loader2, Heart, Eye, Share2, Coins, Disc, User, ShieldAlert, CheckCircle, ChevronRight, X, User as UserIcon, Maximize2, History } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, Heart, Eye, Share2, Coins, Disc, User, ShieldAlert, ShieldCheck, CheckCircle, ChevronRight, X, User as UserIcon, Maximize2, History } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import NatureBackground from '@/components/NatureBackground'
 import PanelHeader from '@/components/PanelHeader'
 import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
-import GuestAuth from '@/components/public/GuestAuth'
-import VisitorCenter from '@/components/public/VisitorCenter'
 import AuthGate from '@/components/public/AuthGate'
+import VisitorCenter from '@/components/public/VisitorCenter'
+import GuestAuth from '@/components/public/GuestAuth'
 import { useAuthSession } from '@/hooks/useAuthSession'
 
 type ArtworkDetail = {
@@ -85,11 +85,16 @@ export default function ArtworkDetailPage() {
         }
 
         fetch('/api/system/settings')
-            .then(res => res.json())
-            .then(data => setSystemStatus({
-                disableVisitorLogin: data.disableVisitorLogin ?? false,
-                disableVisitorRegistration: data.disableVisitorRegistration ?? false
-            }))
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data) {
+                    setSystemStatus({
+                        disableVisitorLogin: data.disableVisitorLogin ?? false,
+                        disableVisitorRegistration: data.disableVisitorRegistration ?? false
+                    })
+                }
+            })
+            .catch(() => {})
 
         // Fetch Member Session
         fetch('/api/stats')
@@ -189,8 +194,12 @@ export default function ArtworkDetailPage() {
                 setSuccess(true)
                 setArtwork(prev => prev ? { ...prev, isSold: true } : null)
             } else {
-                const errData = await res.json()
-                alert(errData.error || 'Collection failed')
+                try {
+                    const errData = await res.json()
+                    alert(errData.error || 'Collection failed')
+                } catch {
+                    alert('Collection failed (server communication error)')
+                }
             }
         } catch (err) {
             console.error(err)
@@ -495,227 +504,178 @@ export default function ArtworkDetailPage() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
-
-            {/* Collect Modal */}
+            </AnimatePresence>            {/* Collect Modal */}
             <AnimatePresence>
                 {showCollectModal && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl"
-                        onClick={() => !success && setShowCollectModal(false)}
-                    >
-                        <motion.div 
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-md bg-white rounded-[48px] p-10 md:p-12 shadow-2xl relative overflow-hidden"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <AnimatePresence mode="wait">
-                                {!success ? (
-                                    <>
-                                        {showVisitorPanel && visitor ? (
-                                            <VisitorCenter 
-                                                guest={visitor} 
-                                                onLogout={() => {
-                                                    setVisitor(null)
-                                                    localStorage.removeItem('visitor_data')
-                                                    setShowVisitorPanel(false)
-                                                }}
-                                                onUpdateCurrency={(val) => {
-                                                    const updated = { ...visitor, currency: val }
-                                                    setVisitor(updated)
-                                                    localStorage.setItem('visitor_data', JSON.stringify(updated))
-                                                }}
-                                            />
-                                        ) : !visitor && !member ? (
-                                            <GuestAuth 
-                                                disableRegistration={systemStatus.disableVisitorRegistration}
-                                                onSuccess={(data) => {
-                                                    setVisitor(data)
-                                                    localStorage.setItem('visitor_data', JSON.stringify(data))
-                                                    setContactName(data.name || '')
-                                                    setContactPhone(data.phone || '')
-                                                    setContactEmail(data.email || '')
-                                                    setShippingAddress(data.address || '')
-                                                    setShowVisitorPanel(true)
-                                                }}
-                                            />
-                                        ) : (
-                                            <form 
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl" onClick={() => !success && setShowCollectModal(false)}>
+                        <div className="w-full max-w-md" onClick={e => e.stopPropagation()}>
+                            <AuthGate 
+                                mode="ANY"
+                                fallback={
+                                    <GuestAuth 
+                                        asTerminal={true}
+                                        onSuccess={(data) => {
+                                            localStorage.setItem('visitor_data', JSON.stringify(data))
+                                            window.dispatchEvent(new Event('storage'))
+                                        }} 
+                                    />
+                                }
+                            >
+                            {() => (
+                                <motion.div 
+                                    initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                                    animate={{ scale: 1, y: 0, opacity: 1 }}
+                                    exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                                    className="w-full max-w-md bg-[#E2DFD2] rounded-[2rem] p-10 shadow-[0_40px_100px_rgba(0,0,0,0.4)] relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <AnimatePresence mode="wait">
+                                        {!success ? (
+                                            <motion.form 
                                                 key="form"
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
                                                 exit={{ opacity: 0 }}
                                                 onSubmit={handleCollect}
+                                                className="flex flex-col text-left"
                                             >
-                                                <h2 className="text-3xl font-black text-slate-900 mb-2">Nearly Yours</h2>
-                                                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b border-slate-100 pb-6 mb-8">
-                                                    {member ? 'Direct collection for family members' : 'Confirm your collection of this masterpiece'}
-                                                </p>
-                                                
-                                                <div className="space-y-6 mb-10">
-                                                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                                                        <div className="flex justify-between items-center mb-4">
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Balance</span>
-                                                            <div className="flex items-center gap-1">
-                                                                <Coins className="w-3.5 h-3.5 text-amber-500" />
-                                                                <span className="font-black text-slate-900">{(member || visitor)!.currency}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex justify-between items-center border-t border-slate-200 pt-4">
-                                                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Required Coins</span>
-                                                            <div className="flex items-center gap-1">
-                                                                <Coins className="w-3.5 h-3.5 text-indigo-600" />
-                                                                <span className="font-black text-slate-900">{artwork.priceCoins}</span>
-                                                            </div>
-                                                        </div>
+                                                {/* Header matches Standard Identification Format */}
+                                                <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#E2DFD2] shrink-0 -mx-10 -mt-10 mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)] animate-pulse" />
+                                                        <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">Collection Protocol</span>
+                                                    </div>
+                                                    <div className="px-2.5 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
+                                                        ID: {(member || visitor)?.id?.slice(0, 8)}
                                                     </div>
                                                 </div>
 
-                                                {!member ? (
+                                                <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tighter leading-none">Nearly Yours</h2>
+                                                <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b border-black/5 pb-6 mb-8 leading-relaxed">
+                                                    {member ? 'Direct collection for family members' : 'Confirm your collection of this masterpiece'}
+                                                </p>
+                                                
+                                                <div className="flex items-center justify-between mb-8 p-5 hardware-well rounded-2xl bg-[#D6D2C0]/30 shadow-well">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg">
+                                                            <Disc className="w-6 h-6 text-indigo-400 animate-spin-slow" />
+                                                        </div>
+                                                        <div className="label-mono uppercase">
+                                                            <div className="text-[9px] opacity-40 font-black mb-0.5 text-slate-500">Exchange Rate</div>
+                                                            <div className="text-sm font-black text-slate-800 tracking-tight">{artwork.priceCoins} Coins</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right label-mono uppercase">
+                                                        <div className="text-[9px] opacity-40 font-black mb-0.5 text-slate-500">Inventory</div>
+                                                        <div className="text-sm font-black text-indigo-600 tracking-tight">{(member || visitor)?.currency || 0} C</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Contact & Shipping for Visitors */}
+                                                {!member && (
                                                     <div className="space-y-4 mb-8">
-                                                        <div>
-                                                            <label className="block text-xs font-bold text-slate-500 mb-1">Contact Name *</label>
+                                                        <div className="hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
                                                             <input 
                                                                 type="text" 
                                                                 value={contactName} 
                                                                 onChange={e => setContactName(e.target.value)} 
-                                                                className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
+                                                                placeholder="Contact Name"
+                                                                className="w-full px-5 py-3.5 bg-white/95 rounded-lg outline-none font-bold text-xs tracking-tight shadow-inner"
                                                                 required
                                                             />
                                                         </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="block text-xs font-bold text-slate-500 mb-1">Phone</label>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div className="hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
                                                                 <input 
                                                                     type="tel" 
                                                                     value={contactPhone} 
                                                                     onChange={e => setContactPhone(e.target.value)} 
-                                                                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
-                                                                    required={!contactEmail}
+                                                                    placeholder="Phone (Option)"
+                                                                    className="w-full px-4 py-3 bg-white/95 rounded-lg outline-none font-bold text-[10px] tracking-tight shadow-inner"
                                                                 />
                                                             </div>
-                                                            <div>
-                                                                <label className="block text-xs font-bold text-slate-500 mb-1">Email</label>
+                                                            <div className="hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
                                                                 <input 
                                                                     type="email" 
                                                                     value={contactEmail} 
                                                                     onChange={e => setContactEmail(e.target.value)} 
-                                                                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100"
-                                                                    required={!contactPhone}
+                                                                    placeholder="Email (Option)"
+                                                                    className="w-full px-4 py-3 bg-white/95 rounded-lg outline-none font-bold text-[10px] tracking-tight shadow-inner"
                                                                 />
                                                             </div>
                                                         </div>
-                                                        <p className="text-[10px] text-slate-400">At least one contact method (Phone or Email) must be provided.</p>
-                                                        
-                                                        <div>
-                                                            <div className="flex items-center justify-between mb-1">
-                                                                <label className="block text-xs font-bold text-slate-500">Shipping Address (Optional)</label>
-                                                                {visitor?.address && (
-                                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                                        <input 
-                                                                            type="checkbox" 
-                                                                            checked={useSavedAddress} 
-                                                                            onChange={e => setUseSavedAddress(e.target.checked)} 
-                                                                            className="rounded text-indigo-600 focus:ring-indigo-500"
-                                                                        />
-                                                                        <span className="text-xs text-slate-500 font-bold">Use default</span>
-                                                                    </label>
-                                                                )}
-                                                            </div>
-                                                            {!useSavedAddress || !visitor?.address ? (
-                                                                <textarea 
-                                                                    value={shippingAddress} 
-                                                                    onChange={e => setShippingAddress(e.target.value)} 
-                                                                    className="w-full bg-slate-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-slate-100 h-20 resize-none"
-                                                                    placeholder="Enter detailed shipping info..."
-                                                                ></textarea>
-                                                            ) : (
-                                                                <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-sm text-slate-600">
-                                                                    {visitor.address}
-                                                                </div>
-                                                            )}
+                                                        <div className="hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
+                                                            <textarea 
+                                                                value={shippingAddress} 
+                                                                onChange={e => setShippingAddress(e.target.value)} 
+                                                                placeholder="Shipping Address (Optional)"
+                                                                className="w-full px-5 py-3 h-20 bg-white/95 rounded-lg outline-none font-bold text-xs tracking-tight shadow-inner resize-none"
+                                                            ></textarea>
                                                         </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="mb-8 p-6 bg-green-50 rounded-3xl border border-green-100 flex items-center gap-3">
-                                                       <CheckCircle className="w-5 h-5 text-green-600" />
-                                                       <p className="text-xs text-green-700 font-bold">Family member discount applied: No shipping info required.</p>
                                                     </div>
                                                 )}
 
                                                 <button 
-                                                    disabled={submitting || (member || visitor)!.currency < artwork.priceCoins || (!member && (!contactEmail && !contactPhone || !contactName))}
-                                                    className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:grayscale"
+                                                    type="submit"
+                                                    disabled={submitting || ((member || visitor)?.currency || 0) < artwork.priceCoins}
+                                                    className={`hardware-btn group w-full ${submitting || ((member || visitor)?.currency || 0) < artwork.priceCoins ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                                                 >
-                                                    {submitting ? 'Processing...' : (member || visitor)!.currency < artwork.priceCoins ? 'Insufficient Coins' : 'Confirm & Collect'}
-                                                </button>
-                                                
-                                                {!member && (
-                                                    <div className="text-center mt-6">
-                                                        <button 
-                                                            type="button" 
-                                                            onClick={() => setShowVisitorPanel(true)}
-                                                            className="text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:text-indigo-600"
-                                                        >
-                                                            Manage Coins & View Profile
-                                                        </button>
+                                                    <div className="hardware-well h-20 w-full rounded-2xl overflow-hidden relative shadow-well bg-[#CFCBBA]">
+                                                        <div className="hardware-cap absolute inset-1.5 bg-slate-900 rounded-xl flex items-center px-10 justify-between group-hover:bg-black transition-all shadow-xl active:translate-y-0.5">
+                                                            <div className="flex items-center gap-4">
+                                                                {submitting ? <Loader2 className="w-6 h-6 animate-spin text-indigo-400" /> : <ShieldCheck className="w-6 h-6 text-indigo-400" />}
+                                                                <span className="text-sm font-black uppercase tracking-widest text-white">{submitting ? 'Processing...' : 'Confirm Collection'}</span>
+                                                            </div>
+                                                            <ArrowRight className="w-5 h-5 text-slate-600 group-hover:text-indigo-400 transition-colors shrink-0" />
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </form>
+                                                </button>
+                                            </motion.form>
+                                        ) : (
+                                            <motion.div 
+                                                key="success"
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="text-center py-8"
+                                            >
+                                                <div className="w-24 h-24 bg-indigo-50 flex items-center justify-center rounded-full mx-auto mb-8 shadow-inner border-2 border-indigo-100">
+                                                    <CheckCircle className="w-12 h-12 text-indigo-500" />
+                                                </div>
+                                                <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tighter uppercase">Signal Received!</h2>
+                                                <p className="text-slate-500 font-bold text-sm mb-10 leading-relaxed px-4 tracking-tight uppercase">Your collection request has been processed. The studio cluster will finalize the logistics shortly.</p>
+                                                <button 
+                                                    onClick={() => {
+                                                        setShowCollectModal(false)
+                                                        setSuccess(false)
+                                                    }}
+                                                    className="hardware-btn group w-full block"
+                                                >
+                                                    <div className="hardware-well h-16 w-full rounded-xl overflow-hidden relative shadow-well bg-[#CFCBBA] p-0.5">
+                                                        <div className="hardware-cap absolute inset-1 bg-white rounded-lg flex items-center justify-center font-black uppercase tracking-widest text-slate-800 shadow-sm active:translate-y-0.5">
+                                                            Terminate Session
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </motion.div>
                                         )}
-                                    </>
-                                ) : (
-                                    <motion.div 
-                                        key="success"
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="text-center py-8"
-                                    >
-                                        <div className="w-24 h-24 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                                            <CheckCircle className="w-12 h-12" />
-                                        </div>
-                                        <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Collection Requested!</h2>
-                                        <p className="text-slate-500 font-medium mb-10">We&apos;ve received your inquiry. The artist&apos;s family will contact you soon about the physical poster collection.</p>
-                                        <button 
-                                            onClick={() => {
-                                                setShowCollectModal(false)
-                                                setSuccess(false)
-                                            }}
-                                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest"
-                                        >
-                                            Done
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </motion.div>
-                    </motion.div>
+                                    </AnimatePresence>
+                                </motion.div>
+                            )}
+                        </AuthGate>
+                        </div>
+                    </div>
                 )}
             </AnimatePresence>
+
             <style jsx global>{`
-            .shadow-well {
-                box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 1px 1px rgba(255,255,255,0.05);
-            }
-            .app-bg-pattern {
-                background-image: radial-gradient(var(--groove-dark) 1px, transparent 1px);
-                background-size: 24px 24px;
-            }
-            .hard-well-well {
-                box-shadow: inset 0 3px 6px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.1);
-            }
-            .hard-well-cap {
-                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            }
-            .hardware-btn:active .hard-well-cap {
-                transform: translateY(2px);
-                box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-            }
-        `}</style>
-    </main>
+                .shadow-well {
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.15), 0 1px 1px rgba(255,255,255,0.05);
+                }
+                .app-bg-pattern {
+                    background-image: radial-gradient(var(--groove-dark) 1px, transparent 1px);
+                    background-size: 24px 24px;
+                }
+            `}</style>
+        </main>
     )
 }

@@ -11,6 +11,7 @@ import ShareButton from '@/components/public/ShareButton'
 import NatureBackground from '@/components/NatureBackground'
 import PanelHeader from '@/components/PanelHeader'
 import VisitorCenter from '@/components/public/VisitorCenter'
+import GuestAuth from '@/components/public/GuestAuth'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
 import { AnimatePresence } from 'motion/react'
@@ -477,88 +478,110 @@ export default function PublicProfileHome() {
                         className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-xl"
                         onClick={() => setShowMsgModal(false)}
                     >
-                        <motion.div 
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-md relative"
+                        <div 
+                            className="w-full max-w-md"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[2rem] shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col">
-                                <AuthGate mode="ANY">
-                                    {() => (
-                                        <>
-                                            {showVisitorPanel && visitor ? (
-                                                <div className="p-8">
-                                                    <VisitorCenter guest={visitor} onLogout={() => { localStorage.removeItem('visitor_data'); document.cookie = 'dodoo_guest_id=; path=/; max-age=0'; window.dispatchEvent(new Event('storage')); setShowVisitorPanel(false) }} onUpdateCurrency={() => { window.dispatchEvent(new Event('storage')) }} />
+                            <AuthGate 
+                                mode="ANY"
+                                fallback={
+                                    <GuestAuth 
+                                        asTerminal={true}
+                                        onSuccess={(data) => {
+                                            localStorage.setItem('visitor_data', JSON.stringify(data))
+                                            window.dispatchEvent(new Event('storage'))
+                                        }} 
+                                    />
+                                }
+                            >
+                            {() => (
+                                <motion.div 
+                                    initial={{ scale: 0.9, y: 20 }}
+                                    animate={{ scale: 1, y: 0 }}
+                                    exit={{ scale: 0.9, y: 20 }}
+                                    className="w-full max-w-md bg-[#E2DFD2] rounded-[2rem] p-10 shadow-[0_40px_100px_rgba(0,0,0,0.4)] relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[2rem] shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col p-10">
+                                        {showVisitorPanel && visitor ? (
+                                            <VisitorCenter 
+                                                guest={visitor} 
+                                                onLogout={() => { 
+                                                    localStorage.removeItem('visitor_data')
+                                                    document.cookie = 'dodoo_guest_id=; path=/; max-age=0'
+                                                    window.dispatchEvent(new Event('storage'))
+                                                    setShowVisitorPanel(false) 
+                                                }} 
+                                                onUpdateCurrency={() => { 
+                                                    window.dispatchEvent(new Event('storage')) 
+                                                }} 
+                                            />
+                                        ) : (
+                                            <form onSubmit={handleSendMessage} className="flex flex-col h-full">
+                                                {/* Hardware Header clipped by parent overflow-hidden - Sync with GuestAuth Standard */}
+                                                <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#E2DFD2] shrink-0 -mx-10 -mt-10 mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)] animate-pulse" />
+                                                        <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">New Transmission</span>
+                                                    </div>
+                                                    <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
+                                                        ID: {member?.nickname || member?.name || visitor?.name || 'GUEST'}
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <form onSubmit={handleSendMessage} className="flex flex-col h-full">
-                                                    {/* Hardware Header clipped by parent overflow-hidden */}
-                                                    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#D6D2C0] shrink-0">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)] animate-pulse" />
-                                                            <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">New Transmission</span>
-                                                        </div>
-                                                        <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
-                                                            {member?.nickname || member?.name || visitor?.name || 'Guest'}
-                                                        </div>
+                                                
+                                                <div className="flex flex-col">
+                                                    {/* Identity block */}
+                                                    <div className="mb-6 p-4 bg-amber-50/50 border-l-4 border-amber-400 flex items-center gap-3 hardware-well rounded-r-xl">
+                                                        <UserIcon className="w-4 h-4 text-amber-500 shrink-0" />
+                                                        <span className="label-mono text-amber-600 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Identity: {member?.nickname || member?.name || visitor?.name}</span>
                                                     </div>
                                                     
-                                                    <div className="p-8 flex flex-col">
-                                                        {/* Identity block */}
-                                                        <div className="mb-6 p-4 bg-amber-50/50 border-l-4 border-amber-400 flex items-center gap-3 hardware-well rounded-r-xl">
-                                                            <UserIcon className="w-4 h-4 text-amber-500 shrink-0" />
-                                                            <span className="label-mono text-amber-600 text-[10px] uppercase font-bold tracking-widest leading-relaxed">Identity: {member?.nickname || member?.name || visitor?.name}</span>
-                                                        </div>
-                                                        
-                                                        {/* TextArea with sunken well - Setup specification */}
-                                                        <div className="hardware-well rounded-xl p-1.5 bg-[#D1CDBC] mb-8">
-                                                            <textarea 
-                                                                value={msgText}
-                                                                onChange={e => setMsgText(e.target.value)}
-                                                                placeholder="Enter transmission data..."
-                                                                className="w-full h-48 bg-white/90 px-6 py-5 rounded-lg border-2 border-transparent focus:border-indigo-500/30 outline-none font-black text-slate-800 placeholder:text-slate-400 text-sm shadow-inner transition-colors resize-none"
-                                                                required
-                                                            />
-                                                        </div>
-                                                        
-                                                        {/* Sunken Action Button - Setup specification */}
-                                                        <button 
-                                                            disabled={sending || !msgText.trim()}
-                                                            className={`hardware-btn group w-full block transition-opacity ${sending || !msgText.trim() ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
-                                                        >
-                                                            <div className="hardware-well h-16 w-full rounded-xl overflow-hidden relative bg-[#D1CDBC] p-1 shadow-well">
-                                                                <div className="hardware-cap absolute inset-1.5 bg-[#F4F4F2] rounded-lg flex items-center px-5 justify-between group-hover:bg-white transition-all shadow-sm">
-                                                                    <div className="flex items-center gap-3 min-w-0">
-                                                                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 shrink-0 shadow-inner group-hover:bg-indigo-50 transition-colors">
-                                                                            {sending ? <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" /> : <Send className="w-4 h-4 text-indigo-500" />}
-                                                                        </div>
-                                                                        <span className="font-black text-slate-800 tracking-[0.2em] uppercase text-sm leading-none">{sending ? 'TRANSMITTING...' : 'SEND SIGNAL'}</span>
-                                                                    </div>
-                                                                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors shrink-0" />
-                                                                </div>
-                                                            </div>
-                                                        </button>
-                                                        
-                                                        {/* Secondary Action */}
-                                                        <div className="mt-6 text-center">
-                                                            <button 
-                                                                type="button" 
-                                                                onClick={() => setShowMsgModal(false)}
-                                                                className="label-mono text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 hover:text-slate-600 transition-colors"
-                                                            >
-                                                                Ab-Abort Transmission
-                                                            </button>
-                                                        </div>
+                                                    {/* TextArea with sunken well */}
+                                                    <div className="hardware-well rounded-xl p-1.5 bg-[#D1CDBC] mb-8">
+                                                        <textarea 
+                                                            value={msgText}
+                                                            onChange={e => setMsgText(e.target.value)}
+                                                            placeholder="Enter transmission data..."
+                                                            className="w-full h-48 bg-white/90 px-6 py-5 rounded-lg border-2 border-transparent focus:border-indigo-500/30 outline-none font-black text-slate-800 placeholder:text-slate-400 text-sm shadow-inner transition-colors resize-none"
+                                                            required
+                                                        />
                                                     </div>
-                                                </form>
-                                            )}
-                                        </>
-                                    )}
-                                </AuthGate>
-                            </div>
-                        </motion.div>
+                                                    
+                                                    {/* Action Button */}
+                                                    <button 
+                                                        disabled={sending || !msgText.trim()}
+                                                        className={`hardware-btn group w-full block transition-opacity ${sending || !msgText.trim() ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                                                    >
+                                                        <div className="hardware-well h-16 w-full rounded-xl overflow-hidden relative bg-[#D1CDBC] p-1 shadow-well">
+                                                            <div className="hardware-cap absolute inset-1.5 bg-[#F4F4F2] rounded-lg flex items-center px-5 justify-between group-hover:bg-white transition-all shadow-sm">
+                                                                <div className="flex items-center gap-3 min-w-0">
+                                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 shrink-0 shadow-inner group-hover:bg-indigo-50 transition-colors">
+                                                                        {sending ? <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" /> : <Send className="w-4 h-4 text-indigo-500" />}
+                                                                    </div>
+                                                                    <span className="font-black text-slate-800 tracking-[0.2em] uppercase text-sm leading-none">{sending ? 'TRANSMITTING...' : 'SEND SIGNAL'}</span>
+                                                                </div>
+                                                                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors shrink-0" />
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                    
+                                                    <div className="mt-6 text-center">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => setShowMsgModal(false)}
+                                                            className="label-mono text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 hover:text-slate-600 transition-colors"
+                                                        >
+                                                            Ab-Abort Transmission
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AuthGate>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

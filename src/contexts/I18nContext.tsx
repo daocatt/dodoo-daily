@@ -408,6 +408,8 @@ const dictionaries: Dictionary = {
         'public.noArt': 'No public artworks yet.',
         'public.stats.pieces': 'Artworks',
         'public.stats.stars': 'Purple Stars',
+        'public.stats.likes': 'Likes',
+        'public.stats.views': 'Views',
 
         // Site
         'site.title': 'DoDoo Daily',
@@ -1105,8 +1107,10 @@ const dictionaries: Dictionary = {
         'public.visitor.favorites': '收藏夹',
         'public.visitor.address': '配送',
         'public.noArt': '目前还没有公开的作品。',
-        'public.stats.pieces': '总作品数',
-        'public.stats.stars': '艺术紫星',
+        'public.stats.pieces': '作品',
+        'public.stats.stars': '紫星',
+        'public.stats.likes': '获赞',
+        'public.stats.views': '浏览',
 
         // Site
         'site.title': 'DoDoo Daily',

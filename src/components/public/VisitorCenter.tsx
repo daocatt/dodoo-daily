@@ -34,13 +34,13 @@ interface Order {
 }
 
 const ModalHeader = ({ title, id }: { title: string, id: string }) => (
-    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#CFCBBA] bg-[#E2DFD2] -mx-10 -mt-10 mb-8 rounded-t-[48px]">
+    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#D6D2C0] shrink-0 -mx-10 -mt-10 mb-8 rounded-t-[1.8rem]">
         <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <span className="font-black text-[10px] tracking-tight uppercase text-slate-700">{title}</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+            <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">{title}</span>
         </div>
-        <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
-            {id}
+        <div className="px-2.5 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
+            ID: {id.slice(0, 8)}
         </div>
     </div>
 )
