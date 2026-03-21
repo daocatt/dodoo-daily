@@ -81,7 +81,7 @@ export default function LoginPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id: selectedUser.id,
-                    pin: selectedUser.hasPin ? pin : undefined,
+                    pin,
                     rememberMe
                 })
             })
@@ -301,19 +301,17 @@ export default function LoginPage() {
                                     )}
 
                                     <div className="space-y-8">
-                                        {selectedUser.hasPin && (
-                                            <div className="hardware-well rounded-2xl p-2 bg-[#D1CDBC]">
-                                                <input
-                                                    autoFocus
-                                                    type="password"
-                                                    required
-                                                    value={pin}
-                                                    onChange={e => setPin(e.target.value)}
-                                                    placeholder="####"
-                                                    className="w-full bg-white/90 px-6 py-6 rounded-xl border-2 border-transparent focus:border-[var(--accent-moss)] outline-none font-black text-4xl tracking-[0.4em] text-center shadow-inner placeholder:text-black/5 h-24"
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="hardware-well rounded-2xl p-2 bg-[#D1CDBC]">
+                                            <input
+                                                autoFocus
+                                                type="password"
+                                                required
+                                                value={pin}
+                                                onChange={e => setPin(e.target.value)}
+                                                placeholder="####"
+                                                className="w-full bg-white/90 px-6 py-6 rounded-xl border-2 border-transparent focus:border-[var(--accent-moss)] outline-none font-black text-4xl tracking-[0.4em] text-center shadow-inner placeholder:text-black/5 h-24"
+                                            />
+                                        </div>
 
                                         <div 
                                             onClick={() => setRememberMe(!rememberMe)}
