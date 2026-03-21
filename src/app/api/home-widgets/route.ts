@@ -4,7 +4,7 @@ import { homeWidget, users } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const user = await getSessionUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { userId } = user
@@ -20,11 +20,16 @@ export async function GET(req: NextRequest) {
         // If no widgets, provide default layout
         if (widgets.length === 0) {
             const defaults = [
-                { type: 'TASKS', size: 'WIDE', x: 0, y: 0 },
-                { type: 'NOTES', size: 'SQUARE', x: 4, y: 0 },
-                { type: 'JOURNAL', size: 'ICON', x: 6, y: 0 },
-                { type: 'PHOTOS', size: 'ICON', x: 7, y: 0 },
-                { type: 'SHOP', size: 'SQUARE', x: 0, y: 2 }
+                // Row 1: 2x2 widgets
+                { type: 'NOTES', size: 'SQUARE', x: 0, y: 0 },
+                { type: 'TASKS', size: 'SQUARE', x: 2, y: 0 },
+                { type: 'LEDGER', size: 'SQUARE', x: 4, y: 0 },
+                { type: 'STORAGE', size: 'SQUARE', x: 6, y: 0 },
+                // Row 2: 1x1 widgets
+                { type: 'JOURNAL', size: 'ICON', x: 0, y: 2 },
+                { type: 'MILESTONE', size: 'ICON', x: 1, y: 2 },
+                { type: 'PHOTOS', size: 'ICON', x: 2, y: 2 },
+                { type: 'SHOP', size: 'ICON', x: 3, y: 2 }
             ]
 
             const inserted = []

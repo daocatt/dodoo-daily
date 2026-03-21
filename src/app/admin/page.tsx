@@ -168,7 +168,7 @@ export default function Home() {
     return { cellSize, gridCols: currentCols, maxRows: currentMaxRows, gridWidth, gridHeight, currentGap, pageOffsetX, pageOffsetY }
   }, [stageW, stageH])
 
-  const { cellSize, gridCols, maxRows, gridWidth, gridHeight, currentGap, pageOffsetX, pageOffsetY } = dimensions
+  const { cellSize, gridCols, maxRows, currentGap, pageOffsetX, pageOffsetY } = dimensions
 
   // Carousel Configuration
   const pageCount = 3
@@ -237,7 +237,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     fetchData()
@@ -444,10 +444,9 @@ export default function Home() {
       }
 
       // Find an empty slot horizontally across pages
-      const isIconOnly = ICON_ONLY_WIDGETS.includes(type);
-      const reqW = isIconOnly ? 1 : 2;
-      const reqH = isIconOnly ? 1 : 2;
-      const initialSize = isIconOnly ? 'ICON' : 'SQUARE';
+      const reqW = 1;
+      const reqH = 1;
+      const initialSize = 'ICON';
 
       let foundSlot = false;
       let nx = 0;
