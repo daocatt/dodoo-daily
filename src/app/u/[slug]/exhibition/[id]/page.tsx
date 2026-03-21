@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Heart, Calendar, Coins, User, CheckCircle, Download, Eye, Quote, ChevronRight, ShieldAlert } from 'lucide-react'
+import { Palette, ArrowLeft, Heart, Calendar, Coins, User, CheckCircle, Download, Eye, Quote, ChevronRight, ShieldAlert, Star } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -18,6 +18,7 @@ type ArtworkDetail = {
     priceRMB: number
     priceCoins: number
     isSold: boolean
+    isFeatured: boolean
     createdAt: number
     albumId: string | null
     albumTitle: string | null
@@ -224,9 +225,12 @@ export default function ArtworkDetailPage() {
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                         />
-                        {artwork.isSold && (
-                            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
-                                <span className="bg-rose-500 text-white px-8 py-3 rounded-2xl font-black shadow-2xl skew-x-[-10deg] tracking-widest text-lg">COLLECTED</span>
+                        {artwork.isFeatured && (
+                            <div className="absolute top-10 left-10 z-20">
+                                <div className="px-5 py-2 bg-amber-500 text-white label-mono text-xs font-black rounded-xl shadow-2xl uppercase tracking-[0.2em] flex items-center gap-2 border-2 border-white/50 backdrop-blur-md">
+                                    <Star className="w-4 h-4 fill-white" />
+                                    {t('gallery.detail.featured')}
+                                </div>
                             </div>
                         )}
                         <div className="absolute bottom-6 right-6 flex gap-2">

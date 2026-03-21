@@ -30,6 +30,7 @@ export async function GET(
             priceRMB: artwork.priceRMB,
             priceCoins: artwork.priceCoins,
             isSold: artwork.isSold,
+            isFeatured: artwork.isFeatured,
             createdAt: artwork.createdAt,
             albumId: artwork.albumId,
             albumTitle: album.title,
@@ -48,18 +49,12 @@ export async function GET(
                 eq(artwork.userId, userId),
                 eq(artwork.isPublic, true),
                 eq(artwork.isApproved, true),
-                eq(artwork.isArchived, false),
-                eq(artwork.isSold, true)
+                eq(artwork.isArchived, false)
             )
         )
         .orderBy(desc(artwork.createdAt))
 
-        const maskedArtworks = publicArtworks.map(art => ({
-            ...art,
-            imageUrl: art.isSold ? art.imageUrl : null // Hide original URL if not sold
-        }))
-
-        return NextResponse.json(maskedArtworks)
+        return NextResponse.json(publicArtworks)
     } catch (e) {
         console.error('Public artworks fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

@@ -181,6 +181,7 @@ export const artwork = sqliteTable("Artwork", {
     priceCoins: integer("priceCoins").default(0).notNull(),
     albumId: text("albumId").references(() => album.id),
     isSold: integer("isSold", { mode: "boolean" }).default(false).notNull(),
+    isFeatured: integer("isFeatured", { mode: "boolean" }).default(false).notNull(),
     buyerId: text("buyerId").references(() => guest.id),
     buyerMemberId: text("buyerMemberId").references(() => users.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),

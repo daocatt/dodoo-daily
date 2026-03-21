@@ -17,6 +17,7 @@ export async function GET(
             priceRMB: artwork.priceRMB,
             priceCoins: artwork.priceCoins,
             isSold: artwork.isSold,
+            isFeatured: artwork.isFeatured,
             createdAt: artwork.createdAt,
             userId: artwork.userId,
             albumId: artwork.albumId,
@@ -61,12 +62,7 @@ export async function GET(
             .set({ views: sql`${artwork.views} + 1` })
             .where(eq(artwork.id, id))
 
-        const maskedData = {
-            ...data,
-            imageUrl: data.isSold ? data.imageUrl : null
-        }
-
-        return NextResponse.json({ ...maskedData, views: data.views + 1 })
+        return NextResponse.json({ ...data, views: data.views + 1 })
     } catch (e) {
         console.error('Public artwork detail fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })

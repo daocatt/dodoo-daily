@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
-import { Upload, X, Camera, Sparkles } from 'lucide-react'
+import { motion } from 'motion/react'
+import { Upload, X, Camera, Sparkles, Star } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 
 type Album = {
@@ -25,6 +25,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
     const [uploadPriceCoins, setUploadPriceCoins] = useState('')
     const [uploadAlbumId, setUploadAlbumId] = useState(defaultAlbumId || '')
     const [uploadIsPublic, setUploadIsPublic] = useState(false)
+    const [uploadIsFeatured, setUploadIsFeatured] = useState(false)
     const [uploadExhibitionDescription, setUploadExhibitionDescription] = useState('')
     const [uploadFiles, setUploadFiles] = useState<File[]>([])
     const [uploadPreviews, setUploadPreviews] = useState<string[]>([])
@@ -61,6 +62,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
         const coins = uploadIsPublic ? (uploadPriceCoins || '0') : '0'
         formData.append('priceCoins', coins)
         formData.append('isPublic', uploadIsPublic.toString())
+        formData.append('isFeatured', uploadIsFeatured.toString())
         formData.append('exhibitionDescription', uploadExhibitionDescription)
 
         if (selectedChildId) {
@@ -80,6 +82,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
                 setUploadPreviews([])
                 setUploadPriceCoins('')
                 setUploadIsPublic(false)
+                setUploadIsFeatured(false)
                 onSuccess()
                 onClose()
             }
@@ -176,6 +179,20 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
                                 className={`w-10 h-5 rounded-full transition-all relative ${uploadIsPublic ? 'bg-purple-500' : 'bg-slate-200'}`}
                             >
                                 <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${uploadIsPublic ? 'left-5.5' : 'left-0.5'}`} />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-amber-50 rounded-xl border border-amber-100">
+                            <div className="flex items-center gap-2">
+                                <Star className={`w-4 h-4 ${uploadIsFeatured ? 'text-amber-500' : 'text-slate-400'}`} />
+                                <label className="text-xs font-bold text-slate-700">精选 (Featured)</label>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setUploadIsFeatured(!uploadIsFeatured)}
+                                className={`w-10 h-5 rounded-full transition-all relative ${uploadIsFeatured ? 'bg-amber-500' : 'bg-slate-200'}`}
+                            >
+                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${uploadIsFeatured ? 'left-5.5' : 'left-0.5'}`} />
                             </button>
                         </div>
 

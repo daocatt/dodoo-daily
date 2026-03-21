@@ -7,14 +7,14 @@ import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth';
 
 async function getAuth() {
-    const cookieStore = await cookies()
+    await cookies()
     const userId = (await getSessionUser())?.userId
     return { userId }
 }
 
 export async function POST(req: NextRequest) {
     try {
-        const cookieStore = await cookies()
+        await cookies()
         const userId = (await getSessionUser())?.userId
         const role = (await getSessionUser())?.role
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
         const albumId = formData.get('albumId') as string
         const targetUserId = formData.get('targetUserId') as string
         const isPublic = formData.get('isPublic') === 'true'
+        const isFeatured = formData.get('isFeatured') === 'true'
         const exhibitionDescription = formData.get('exhibitionDescription') as string || null
 
         if (!files || files.length === 0) {
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
                 priceCoins,
                 albumId: albumId || null,
                 isPublic,
+                isFeatured,
                 isApproved,
                 exhibitionDescription,
             }).returning()

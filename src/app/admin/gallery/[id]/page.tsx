@@ -19,6 +19,7 @@ type Artwork = {
     priceRMB: number
     priceCoins: number
     isSold: boolean
+    isFeatured: boolean
     albumId?: string | null
     isArchived?: boolean
     isPublic?: boolean
@@ -54,6 +55,7 @@ export default function AlbumDetailPage() {
     const [editPriceCoins, setEditPriceCoins] = useState('')
     const [editAlbumId, setEditAlbumId] = useState('')
     const [editIsPublic, setEditIsPublic] = useState(false)
+    const [editIsFeatured, setEditIsFeatured] = useState(false)
     const [availableAlbums, setAvailableAlbums] = useState<AvailableAlbum[]>([])
     const [editingAlbumTitle, setEditingAlbumTitle] = useState(false)
     const [editAlbumName, setEditAlbumName] = useState('')
@@ -163,7 +165,8 @@ export default function AlbumDetailPage() {
                     priceCoins: editIsPublic ? (editPriceCoins || '0') : '0',
                     albumId: editAlbumId === 'archive' ? null : editAlbumId,
                     isArchived: editAlbumId === 'archive',
-                    isPublic: editIsPublic
+                    isPublic: editIsPublic,
+                    isFeatured: editIsFeatured
                 })
             })
             if (res.ok) {
@@ -347,6 +350,13 @@ export default function AlbumDetailPage() {
                                     </div>
                                 )}
 
+                                {art.isFeatured && (
+                                    <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-amber-500 text-white label-mono text-[9px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1">
+                                        <Sparkles className="w-3 h-3" />
+                                        {t('gallery.detail.featured')}
+                                    </div>
+                                )}
+
                                 <div 
                                     onClick={() => setLightboxIndex(idx)}
                                     className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent ${art.isSold ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-300 flex flex-col justify-end p-4`}
@@ -385,6 +395,7 @@ export default function AlbumDetailPage() {
                                             setEditPriceCoins(art.priceCoins.toString())
                                             setEditAlbumId(art.albumId || 'archive')
                                             setEditIsPublic(art.isPublic || false)
+                                            setEditIsFeatured(art.isFeatured || false)
                                             setEditingArtwork(art)
                                         }}
                                         className="absolute top-2 right-2 p-2 bg-white/40 hover:bg-white/60 backdrop-blur rounded-full text-slate-800 transition-colors opacity-0 group-hover:opacity-100"
@@ -453,6 +464,25 @@ export default function AlbumDetailPage() {
                                         className={`w-12 h-6 rounded-full transition-all relative ${editIsPublic ? 'bg-purple-500 shadow-md ring-4 ring-purple-100' : 'bg-slate-200'}`}
                                     >
                                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${editIsPublic ? 'left-7' : 'left-1'}`} />
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-xl ${editIsFeatured ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-400'} transition-colors`}>
+                                            <Star className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700">精选 (Featured)</label>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Show featured badge</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditIsFeatured(!editIsFeatured)}
+                                        className={`w-12 h-6 rounded-full transition-all relative ${editIsFeatured ? 'bg-amber-500 shadow-md ring-4 ring-amber-100' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all shadow-sm ${editIsFeatured ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
 

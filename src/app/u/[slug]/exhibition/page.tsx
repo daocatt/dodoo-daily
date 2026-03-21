@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Palette, ArrowLeft, Grid, LayoutList, Heart, Eye, Coins, Star, Disc, ArrowRight } from 'lucide-react'
+import { Palette, ArrowLeft, Grid, LayoutList, Heart, Eye, Star, Disc } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
-import ShareButton from '@/components/public/ShareButton'
+
 
 type PublicArtwork = {
     id: string
@@ -16,6 +16,7 @@ type PublicArtwork = {
     priceRMB: number
     priceCoins: number
     isSold: boolean
+    isFeatured: boolean
     createdAt: number
     albumId: string | null
     likes: number
@@ -122,7 +123,7 @@ export default function ExhibitionPage() {
                     
                     <div>
                         <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase leading-none mb-3">
-                            {user?.exhibitionTitle || 'Exhibition Gallery'}
+                            {user?.exhibitionTitle || 'Exhibition'}
                         </h1>
                         <p className="label-mono text-xs md:text-sm text-slate-500 font-bold opacity-60 border-l-2 border-slate-200 pl-4">
                             {user?.exhibitionSubtitle || `${user?.nickname || user?.name}'s curated selection.`}
@@ -237,12 +238,12 @@ export default function ExhibitionPage() {
                                         </div>
                                     </div>
 
-                                    {/* Sold Tag (Homepage Style) */}
-                                    {art.isSold && (
+                                    {/* Featured Tag (Restyled from Sold) */}
+                                    {art.isFeatured && (
                                         <div className="absolute top-6 right-6 z-20">
-                                            <div className="px-3 py-1 bg-rose-500 text-white label-mono text-[9px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
+                                            <div className="px-3 py-1 bg-amber-500 text-white label-mono text-[9px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
                                                 <Star className="w-3 h-3 fill-white" />
-                                                Collected
+                                                {t('gallery.detail.featured')}
                                             </div>
                                         </div>
                                     )}

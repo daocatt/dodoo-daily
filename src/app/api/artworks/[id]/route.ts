@@ -10,20 +10,21 @@ export async function PUT(
     try {
         const { id } = await params
         const body = await req.json()
-        const { title, albumId, priceRMB, priceCoins, isArchived, isPublic } = body
-
+        const { title, albumId, priceRMB, priceCoins, isArchived, isPublic, isFeatured } = body
+        
         const currentArtwork = await db.select().from(artwork).where(eq(artwork.id, id))
         if (currentArtwork.length === 0) {
             return NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
         }
 
-        const updateData: Partial<typeof artwork.$inferInsert> = {}
+        const updateData: Record<string, string | number | boolean | null> = {}
         if (title !== undefined) updateData.title = title
         if (albumId !== undefined) updateData.albumId = albumId || null
         if (priceRMB !== undefined) updateData.priceRMB = parseFloat(priceRMB) || 0
         if (priceCoins !== undefined) updateData.priceCoins = parseInt(priceCoins, 10) || 0
         if (isArchived !== undefined) updateData.isArchived = isArchived
         if (isPublic !== undefined) updateData.isPublic = isPublic
+        if (isFeatured !== undefined) updateData.isFeatured = isFeatured
 
         const updated = await db.update(artwork)
             .set(updateData)

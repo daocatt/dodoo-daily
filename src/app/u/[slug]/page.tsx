@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { Sparkles, Palette, Star, ArrowRight, Image as ImageIcon, Heart, Eye, Disc, Activity, ShieldCheck, User as UserIcon, Loader2, MessageSquare, Send, ChevronRight } from 'lucide-react'
+import { Star, ArrowRight, Image as ImageIcon, Heart, Eye, Disc, Activity, ShieldCheck, User as UserIcon, Loader2, MessageSquare, Send, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -38,6 +38,7 @@ type PublicArtwork = {
     priceRMB: number
     priceCoins: number
     isSold: boolean
+    isFeatured: boolean
     createdAt: number
     likes: number
     views: number
@@ -349,11 +350,11 @@ export default function PublicProfileHome() {
                                                         )}
                                                     </div>
                                                     
-                                                    {art.isSold && (
+                                                    {art.isFeatured && (
                                                         <div className="absolute top-6 right-6">
-                                                            <div className="px-3 py-1 bg-rose-500 text-white label-mono text-[9px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
+                                                            <div className="px-3 py-1 bg-amber-500 text-white label-mono text-[9px] font-black rounded-lg shadow-xl uppercase tracking-widest flex items-center gap-1.5">
                                                                 <Star className="w-3 h-3 fill-white" />
-                                                                Collected
+                                                                {t('gallery.detail.featured')}
                                                             </div>
                                                         </div>
                                                     )}
