@@ -198,8 +198,6 @@ const dictionaries: Dictionary = {
         'login.parent': 'Parent',
         'login.pinPlaceholder': 'Password',
         'login.password': 'Password',
-        'login.authorize': 'Authorize',
-        'login.registry': 'Registry',
         'login.join': 'Join',
         'login.rememberMe': 'Remember for 30 days',
         'login.title': 'Welcome to DoDoo Daily!',
@@ -506,6 +504,19 @@ const dictionaries: Dictionary = {
         'public.stats.stars': 'Purple Stars',
         'public.stats.likes': 'Appreciation',
         'public.stats.views': 'Resonance',
+        'public.latestSubmissions': 'Latest Submissions',
+        'public.signalBoard': 'Signal Board',
+        'public.leaveMessage': 'Leave Message',
+        'public.exhibition.join': 'Join the Exhibition',
+        'public.exhibition.description': 'Explore {name}\'s full artistic portfolio across all curated albums.',
+        'public.modal.transmission': 'New Transmission',
+        'public.modal.transmitting': 'TRANSMITTING...',
+        'public.modal.sendSignal': 'SEND SIGNAL',
+        'public.modal.abort': 'Ab-Abort Transmission',
+        'public.modal.placeholder': 'Enter transmission data...',
+        'public.modal.error.short': 'Transmission too short (Min. 10 characters).',
+        'public.modal.success': 'Signal Transmitted Successfully!',
+        'public.modal.error.failed': 'Transmission Failed. Signal Lost.',
 
         // Site
         'site.title': 'DoDoo Daily',
@@ -1124,7 +1135,6 @@ const dictionaries: Dictionary = {
         'login.enterCredentials': '输入身份凭证',
         'login.mechanicalPinEntry': '请输入密码以进行解密',
         'login.persistentSession': '持久化会话 (保持登录状态)',
-        'login.authorize': '授权登录',
         'login.reset': '重置',
         'login.systemCore': '系统核心',
         'login.monitorReady': '监视器就绪',
@@ -1146,7 +1156,6 @@ const dictionaries: Dictionary = {
         'login.emailPlaceholder': '电子邮箱',
         'login.phonePlaceholder': '手机号码',
         'login.emailPhoneHint': '邮箱和手机号至少填写一个',
-        'login.registry': '注册',
 
         // Gender
         'gender.male': '男',
@@ -1167,8 +1176,6 @@ const dictionaries: Dictionary = {
         'settings.enterNewPin': '输入新密码',
         'settings.errorNetwork': '网络错误',
         'settings.realName': '真实姓名',
-        'settings.systemLanguage': 'System Default Language',
-        'settings.systemLanguageDesc': 'Default language for visitors and guests.',
         'settings.nicknameHint': '当“显示所有头像”被禁用时用于登录（不区分大小写）',
         'settings.nicknamePlaceholder': '你的简短昵称',
         'settings.systemLanguage': '系统默认语言',
@@ -1311,6 +1318,19 @@ const dictionaries: Dictionary = {
         'public.stats.stars': '紫星',
         'public.stats.likes': '欣赏',
         'public.stats.views': '共鸣',
+        'public.latestSubmissions': '最近录入',
+        'public.signalBoard': '信号板',
+        'public.leaveMessage': '留下信号',
+        'public.exhibition.join': '进入展厅',
+        'public.exhibition.description': '探索小小艺术家的全部精选专辑，以及存储在此处的每一件杰作。',
+        'public.modal.transmission': '建立新信号',
+        'public.modal.transmitting': '信号发射中...',
+        'public.modal.sendSignal': '发射信号',
+        'public.modal.abort': '中止信号发射',
+        'public.modal.placeholder': '输入您的讯息内容...',
+        'public.modal.error.short': '讯息太短（最少需 10 个字）',
+        'public.modal.success': '信号已成功发射！',
+        'public.modal.error.failed': '发射失败，信号丢失。',
 
         // Site
         'site.title': 'DoDoo Daily',
@@ -1527,7 +1547,7 @@ export function I18nProvider({ children, defaultLocale = 'en' }: { children: Rea
     const handleSetLocale = (newLocale: Locale) => {
         setLocale(newLocale)
         localStorage.setItem('dodoo-locale', newLocale)
-        
+
         // Asynchronously attempt to sync with database (for family members only)
         // We use a silent background fetch to avoid blocking the UI transition.
         if (typeof window !== 'undefined') {
@@ -1541,12 +1561,12 @@ export function I18nProvider({ children, defaultLocale = 'en' }: { children: Rea
 
     const t = (key: string, params?: Record<string, string>) => {
         let text = dictionaries[locale][key]
-        
+
         // Fallback to English if missing in Chinese
         if (!text && locale === 'zh-CN') {
             text = dictionaries['en'][key]
         }
-        
+
         // Fallback to Chinese if missing in English
         if (!text && locale === 'en') {
             text = dictionaries['zh-CN'][key]

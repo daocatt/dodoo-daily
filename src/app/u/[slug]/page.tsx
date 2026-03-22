@@ -69,6 +69,7 @@ export default function PublicProfileHome() {
     const [showMsgModal, setShowMsgModal] = useState(false)
     const [msgText, setMsgText] = useState('')
     const [sending, setSending] = useState(false)
+    const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
     const { user: member, visitor } = useAuthSession()
     const [showVisitorPanel, setShowVisitorPanel] = useState(false)
 
@@ -111,13 +112,16 @@ export default function PublicProfileHome() {
     useEffect(() => {
         fetchMessages()
     }, [fetchMessages])
-
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!msgText.trim()) return
         setSending(true)
-
         try {
+            if (msgText.trim().length < 10) {
+                setStatus({ type: 'error', message: t('public.modal.error.short') })
+                setSending(false)
+                return
+            }
+
             const res = await fetch('/api/public/message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -131,12 +135,20 @@ export default function PublicProfileHome() {
             })
 
             if (res.ok) {
+                setStatus({ type: 'success', message: t('public.modal.success') })
                 setMsgText('')
-                setShowMsgModal(false)
                 fetchMessages()
+                // Auto close after 2s
+                setTimeout(() => {
+                    setShowMsgModal(false)
+                    setStatus(null)
+                }, 2000)
+            } else {
+                setStatus({ type: 'error', message: t('public.modal.error.failed') })
             }
         } catch (err) {
             console.error(err)
+            setStatus({ type: 'error', message: t('public.modal.error.failed') })
         } finally {
             setSending(false)
         }
@@ -288,7 +300,7 @@ export default function PublicProfileHome() {
                                             <Activity className="w-4 h-4 text-indigo-500" />
                                             <span className="label-mono text-[10px] uppercase font-black tracking-[0.2em] text-indigo-600">{t('public.artworks')}</span>
                                         </div>
-                                        <h3 className="text-2xl md:text-4xl font-black tracking-tighter text-slate-900 leading-tight uppercase">Latest Submissions</h3>
+                                        <h3 className="text-2xl md:text-4xl font-black tracking-tighter text-slate-900 leading-tight uppercase">{t('public.latestSubmissions')}</h3>
                                     </div>
                                     <div className="flex justify-end md:block">
                                         <Link 
@@ -388,13 +400,13 @@ export default function PublicProfileHome() {
                                     <div className="flex items-center justify-between mb-8">
                                         <div className="flex items-center gap-2">
                                             <MessageSquare className="w-5 h-5 text-[var(--warm-amber)]" />
-                                            <h3 className="text-2xl font-black uppercase tracking-tighter">Signal Board</h3>
+                                            <h3 className="text-2xl font-black uppercase tracking-tighter">{t('public.signalBoard')}</h3>
                                         </div>
                                         <button 
                                             onClick={() => setShowMsgModal(true)}
                                             className="px-4 py-2 bg-slate-900 text-white rounded-xl label-mono text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
                                         >
-                                            Leave Message
+                                            {t('public.leaveMessage')}
                                         </button>
                                     </div>
                                     
@@ -448,8 +460,8 @@ export default function PublicProfileHome() {
                                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
                                             <span className="label-mono text-[10px] uppercase font-black tracking-[0.3em] text-indigo-600/60">Portfolio Access</span>
                                         </div>
-                                        <h4 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-tight">Join the exhibition</h4>
-                                        <p className="label-mono text-[10px] text-slate-500 font-bold uppercase tracking-widest opacity-60">Explore {displayName}&apos;s full artistic portfolio across all curated albums</p>
+                                        <h4 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-tight">{t('public.exhibition.join')}</h4>
+                                        <p className="label-mono text-[10px] text-slate-500 font-bold uppercase tracking-widest opacity-60">{t('public.exhibition.description', { name: displayName })}</p>
                                     </div>
 
                                     <button 
@@ -499,10 +511,9 @@ export default function PublicProfileHome() {
                                     initial={{ scale: 0.9, y: 20 }}
                                     animate={{ scale: 1, y: 0 }}
                                     exit={{ scale: 0.9, y: 20 }}
-                                    className="w-full max-w-md bg-[#E2DFD2] rounded-[2rem] p-10 shadow-[0_40px_100px_rgba(0,0,0,0.4)] relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col"
+                                    className="baustein-panel w-full max-w-md bg-[#E2DFD2] rounded-[3rem] p-8 shadow-[0_40px_100px_rgba(0,0,0,0.4)] relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col"
                                     onClick={e => e.stopPropagation()}
                                 >
-                                    <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[2rem] shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col p-10">
                                         {showVisitorPanel && visitor ? (
                                             <VisitorCenter 
                                                 guest={visitor} 
@@ -522,7 +533,7 @@ export default function PublicProfileHome() {
                                                 <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#E2DFD2] shrink-0 -mx-10 -mt-10 mb-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)] animate-pulse" />
-                                                        <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">New Transmission</span>
+                                                        <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">{t('public.modal.transmission')}</span>
                                                     </div>
                                                     <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
                                                         ID: {member?.nickname || member?.name || visitor?.name || 'GUEST'}
@@ -541,16 +552,35 @@ export default function PublicProfileHome() {
                                                         <textarea 
                                                             value={msgText}
                                                             onChange={e => setMsgText(e.target.value)}
-                                                            placeholder="Enter transmission data..."
+                                                            placeholder={t('public.modal.placeholder')}
                                                             className="w-full h-48 bg-white/90 px-6 py-5 rounded-lg border-2 border-transparent focus:border-indigo-500/30 outline-none font-black text-slate-800 placeholder:text-slate-400 text-sm shadow-inner transition-colors resize-none"
                                                             required
                                                         />
                                                     </div>
+
+                                                    {/* Status Display Area */}
+                                                    <AnimatePresence>
+                                                        {status && (
+                                                            <motion.div 
+                                                                initial={{ opacity: 0, scale: 0.95 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                                className={`mb-6 p-4 rounded-xl border-2 font-black label-mono text-[10px] uppercase tracking-widest text-center shadow-sm flex items-center justify-center gap-3 ${
+                                                                    status.type === 'success' 
+                                                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600' 
+                                                                    : 'bg-rose-50 border-rose-200 text-rose-600'
+                                                                }`}
+                                                            >
+                                                                <div className={`w-2 h-2 rounded-full ${status.type === 'success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`} />
+                                                                {status.message}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
                                                     
                                                     {/* Action Button */}
                                                     <button 
-                                                        disabled={sending || !msgText.trim()}
-                                                        className={`hardware-btn group w-full block transition-opacity ${sending || !msgText.trim() ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                                                        disabled={sending || msgText.trim().length < 10}
+                                                        className={`hardware-btn group w-full block transition-opacity ${sending || msgText.trim().length < 10 ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                                                     >
                                                         <div className="hardware-well h-16 w-full rounded-xl overflow-hidden relative bg-[#D1CDBC] p-1 shadow-well">
                                                             <div className="hardware-cap absolute inset-1.5 bg-[#F4F4F2] rounded-lg flex items-center px-5 justify-between group-hover:bg-white transition-all shadow-sm">
@@ -558,7 +588,7 @@ export default function PublicProfileHome() {
                                                                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 shrink-0 shadow-inner group-hover:bg-indigo-50 transition-colors">
                                                                         {sending ? <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" /> : <Send className="w-4 h-4 text-indigo-500" />}
                                                                     </div>
-                                                                    <span className="font-black text-slate-800 tracking-[0.2em] uppercase text-sm leading-none">{sending ? 'TRANSMITTING...' : 'SEND SIGNAL'}</span>
+                                                                    <span className="font-black text-slate-800 tracking-[0.2em] uppercase text-sm leading-none">{sending ? t('public.modal.transmitting') : t('public.modal.sendSignal')}</span>
                                                                 </div>
                                                                 <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors shrink-0" />
                                                             </div>
@@ -571,13 +601,12 @@ export default function PublicProfileHome() {
                                                             onClick={() => setShowMsgModal(false)}
                                                             className="label-mono text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 hover:text-slate-600 transition-colors"
                                                         >
-                                                            Ab-Abort Transmission
+                                                            {t('public.modal.abort')}
                                                         </button>
                                                     </div>
                                                 </div>
                                             </form>
                                         )}
-                                    </div>
                                 </motion.div>
                             )}
                         </AuthGate>
