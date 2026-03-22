@@ -40,7 +40,7 @@ export default function GuestLoginPage() {
                     onSuccess={(data) => {
                         localStorage.setItem('visitor_data', JSON.stringify(data))
                         window.dispatchEvent(new Event('storage'))
-                        router.back()
+                        router.push('/guest')
                     }} 
                 />
             </motion.div>

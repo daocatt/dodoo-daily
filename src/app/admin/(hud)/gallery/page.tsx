@@ -23,6 +23,7 @@ type Album = {
     id: string
     title: string
     artworks: Artwork[]
+    totalArtworks?: number
 }
 
 type Child = {

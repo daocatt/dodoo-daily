@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import {
@@ -24,7 +23,7 @@ import {
     CalendarDays,
     AlertCircle
 } from 'lucide-react'
-import { useI18n } from '@/contexts/I18nContext'
+import { useI18n, Locale } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
 import SmartDatePicker from '@/components/SmartDatePicker'
 import { format } from 'date-fns'
@@ -68,7 +67,6 @@ export default function AccountHUD() {
     const [recordDate, setRecordDate] = useState<Date>(new Date())
     const [mounted, setMounted] = useState(false)
 
-    const pathname = usePathname()
     const { t, locale } = useI18n()
     const [isMobile, setIsMobile] = useState(false)
     const handleLogout = async () => {
@@ -89,7 +87,7 @@ export default function AccountHUD() {
         return () => window.removeEventListener('resize', handleResize)
     }, [])
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (loadKids = false) => {
         try {
             const res = await fetch('/api/stats')
             if (res.ok) {
@@ -101,11 +99,11 @@ export default function AccountHUD() {
                     const localSaved = localStorage.getItem('dodoo-locale')
                     if (!localSaved && typeof setLocale === 'function') {
                         console.log('[AccountHUD] Fresh start detected, syncing locale from database:', data.locale)
-                        setLocale(data.locale as any)
+                        setLocale(data.locale as Locale)
                     }
                 }
 
-                if (data.isParent) {
+                if (data.isParent && loadKids) {
                     const cRes = await fetch('/api/parent/children')
                     if (cRes.ok) {
                         const kids = await cRes.json()
@@ -114,36 +112,28 @@ export default function AccountHUD() {
                     }
                 }
             } else if (res.status === 401 || res.status === 404) {
-                // If we are on a PUBLIC page (welcome, guest login, etc), NEVER trigger a forced logout
-                const isPublicPage = ['/welcome', '/guest', '/buy', '/u/', '/admin/login'].some(p => pathname?.startsWith(p)) || pathname === '/'
-                if (isPublicPage) return
-
-                const isInternalPage = ['/admin', '/management', '/settings'].some(p => pathname?.startsWith(p))
-                if (isInternalPage && pathname && !['/admin/login'].some(p => pathname.startsWith(p))) {
-                    console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
-                    handleLogout()
-                }
+                console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
+                handleLogout()
             }
         } catch (err) {
             console.error("AccountHUD: Fetch failed", err)
         }
-    }, [pathname])
+    }, [])
 
     useEffect(() => {
         setMounted(true)
-        if (pathname && pathname !== '/' && !['/admin/login', '/guest'].some(p => pathname.startsWith(p))) {
-            fetchData()
-        }
+        fetchData(true)
+        
         const interval = setInterval(() => {
-            if (pathname && pathname !== '/' && !['/admin/login', '/guest'].some(p => pathname.startsWith(p))) fetchData()
+            fetchData(false)
         }, 60000)
+        
         return () => clearInterval(interval)
-    }, [pathname, fetchData])
+    }, [fetchData])
 
     if (!mounted) return null
 
-    const hideOn = ['/buy', '/admin/login', '/admin/setup', '/admin/management', '/u/', '/guest', '/welcome']
-    if (!pathname || pathname === '/' || hideOn.some(prefix => pathname.startsWith(prefix)) || !stats) return null
+    if (!stats) return null
 
     const handleRecharge = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -280,11 +270,10 @@ export default function AccountHUD() {
                         )}
 
                         {/* Exhibition Link */}
-                        {(stats.slug || (stats.isParent && children.some(c => c.slug))) && (
+                        {stats.slug && (
                             <button
                                 onClick={() => {
-                                    const slug = stats.slug || children.find(c => c.id === targetChildId)?.slug || children.find(c => c.slug)?.slug;
-                                    if (slug) window.open(`/u/${slug}`, '_blank')
+                                    if (stats.slug) window.open(`/u/${stats.slug}`, '_blank')
                                 }}
                                 className="flex items-center text-indigo-500 hover:text-indigo-600 transition-colors p-1"
                                 title={t('parent.viewPublicProfile')}

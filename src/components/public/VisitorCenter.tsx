@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin, Heart } from 'lucide-react'
+import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin, Heart, Users, User } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -48,7 +48,7 @@ const ModalHeader = ({ title, id }: { title: string, id: string }) => (
 export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { guest: GuestData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
     const { t } = useI18n()
     const params = useParams()
-    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'ADDRESS'>('OVERVIEW')
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'ADDRESS' | 'PROFILE'>('OVERVIEW')
     const [logs, setLogs] = useState<CurrencyLog[]>([])
     const [orders, setOrders] = useState<Order[]>([])
     const [likes, setLikes] = useState<Order[]>([])
@@ -58,6 +58,11 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
     const [addressInput, setAddressInput] = useState(guest.address || '')
     const [savingAddress, setSavingAddress] = useState(false)
+    const [profileName, setProfileName] = useState(guest.name || '')
+    const [profileEmail, setProfileEmail] = useState(guest.email || '')
+    const [profilePhone, setProfilePhone] = useState(guest.phone || '')
+    const [profilePassword, setProfilePassword] = useState('')
+    const [savingProfile, setSavingProfile] = useState(false)
 
     const fetchData = async () => {
         setLoading(true)
@@ -124,6 +129,38 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
         }
     }
 
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setSavingProfile(true)
+        setMessage(null)
+        try {
+            const res = await fetch('/api/guest/profile', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    guestId: guest.id, 
+                    name: profileName, 
+                    email: profileEmail, 
+                    phone: profilePhone, 
+                    password: profilePassword 
+                })
+            })
+            const data = await res.json()
+            if (res.ok) {
+                setMessage({ text: 'Profile identity updated.', type: 'success' })
+                setProfilePassword('')
+                // Update local storage
+                const existing = JSON.parse(localStorage.getItem('visitor_data') || '{}')
+                localStorage.setItem('visitor_data', JSON.stringify({ ...existing, ...data }))
+                window.dispatchEvent(new Event('storage'))
+            } else {
+                setMessage({ text: data.error || 'Update failed', type: 'error' })
+            }
+        } finally {
+            setSavingProfile(false)
+        }
+    }
+
     return (
         <div className="flex flex-col h-full">
             <ModalHeader title="VISITOR TERMINAL" id="ACTIVE_NODE" />
@@ -142,9 +179,15 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                         </div>
                     </div>
                 </div>
-                <button onClick={onLogout} title="Logout" className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100">
-                    <LogOut className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <Link href="/guest/family" title="Family Exhibition" className="flex items-center gap-2 p-3 text-indigo-500 hover:text-white hover:bg-indigo-500 rounded-xl transition-all border border-transparent hover:border-indigo-600 bg-indigo-50">
+                        <Users className="w-5 h-5" />
+                        <span className="text-[10px] font-black uppercase hidden sm:block">Family</span>
+                    </Link>
+                    <button onClick={onLogout} title="Logout" className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100">
+                        <LogOut className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             {/* Balance Card - Industrial Style */}
@@ -170,7 +213,7 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
 
             {/* Tabs - Industrial Style */}
             <div className="flex bg-[#CFCBBA] p-1 rounded-2xl gap-1 mb-8 shadow-inner border border-[#C8C4B0] overflow-x-auto no-scrollbar">
-                {(['OVERVIEW', 'HISTORY', 'ORDERS', 'COLLECTIONS', 'FAVORITES', 'ADDRESS'] as const).map(tab => (
+                {(['OVERVIEW', 'HISTORY', 'ORDERS', 'COLLECTIONS', 'FAVORITES', 'ADDRESS', 'PROFILE'] as const).map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -297,7 +340,7 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                             ))}
                             {likes.length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO FAVORITES STORED</p>}
                         </motion.div>
-                    ) : (
+                    ) : activeTab === 'ADDRESS' ? (
                         <motion.div key="address" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                             <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <MapPin className="w-3.5 h-3.5" />
@@ -318,6 +361,65 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                                     </div>
                                 </button>
                             </form>
+                        </motion.div>
+                    ) : (
+                        <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                            <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <User className="w-3.5 h-3.5" />
+                                Identity Config
+                            </h4>
+                            <form onSubmit={handleSaveProfile} className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                        <input
+                                            required
+                                            value={profileName}
+                                            onChange={e => setProfileName(e.target.value)}
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder="Nickname"
+                                        />
+                                    </div>
+                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                        <input
+                                            required={!profilePhone}
+                                            type="email"
+                                            value={profileEmail}
+                                            onChange={e => setProfileEmail(e.target.value)}
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder="Email Address"
+                                        />
+                                    </div>
+                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                        <input
+                                            required={!profileEmail}
+                                            type="tel"
+                                            value={profilePhone}
+                                            onChange={e => setProfilePhone(e.target.value)}
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder="Phone Number"
+                                        />
+                                    </div>
+                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                        <input
+                                            type="password"
+                                            value={profilePassword}
+                                            onChange={e => setProfilePassword(e.target.value)}
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder="New Password (Optional)"
+                                        />
+                                    </div>
+                                </div>
+                                <button type="submit" disabled={savingProfile} className="hardware-btn w-full">
+                                    <div className="hardware-cap bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] text-white">
+                                        {savingProfile ? 'Patching Identity...' : 'Execute Profile Update'}
+                                    </div>
+                                </button>
+                            </form>
+                            {message && (
+                                <p className={`text-[9px] font-black uppercase tracking-widest text-center ${message.type === 'success' ? 'text-emerald-500' : 'text-rose-500'} pt-2`}>
+                                    {message.text}
+                                </p>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getSessionUser();
   if (!user || user.role?.toLowerCase() !== "parent") {
@@ -15,7 +15,7 @@ export async function PUT(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { 
         name, imageUrl, notes, tags, 
@@ -50,7 +50,7 @@ export async function PUT(
 // POST to /api/storage/[id]/transfer to record a sale
 export async function POST(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const user = await getSessionUser();
     if (!user || user.role?.toLowerCase() !== "parent") {
@@ -58,7 +58,7 @@ export async function POST(
     }
 
     try {
-        const { id } = params;
+        const { id } = await params;
         const body = await req.json();
         const { transferDate, salePrice, deliveryMethod, buyerId, notes } = body;
 
@@ -93,7 +93,7 @@ export async function POST(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getSessionUser();
   if (!user || user.role?.toLowerCase() !== "parent") {
@@ -101,7 +101,7 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
     await db.update(storageItems)
       .set({ 

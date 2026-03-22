@@ -250,7 +250,7 @@ export default function PublicProfileHome() {
                                         <div className="flex justify-between items-center px-1">
                                             <div className="flex items-center gap-2 text-rose-400">
                                                 <Heart className="w-3 h-3 fill-current" />
-                                                <span className="label-mono text-[8px] md:text-[9px] font-black opacity-60 uppercase tracking-widest leading-none">Appreciation</span>
+                                                <span className="label-mono text-[8px] md:text-[9px] font-black opacity-60 uppercase tracking-widest leading-none">{t('public.stats.likes')}</span>
                                             </div>
                                             <span className="text-xs md:text-sm font-black text-slate-800">{user.totalLikes || 0}</span>
                                         </div>
@@ -258,7 +258,7 @@ export default function PublicProfileHome() {
                                         <div className="flex justify-between items-center px-1">
                                             <div className="flex items-center gap-2 text-blue-400">
                                                 <Eye className="w-3 h-3 fill-current" />
-                                                <span className="label-mono text-[8px] md:text-[9px] font-black opacity-60 uppercase tracking-widest leading-none">Visibility</span>
+                                                <span className="label-mono text-[8px] md:text-[9px] font-black opacity-60 uppercase tracking-widest leading-none">{t('public.stats.views')}</span>
                                             </div>
                                             <span className="text-xs md:text-sm font-black text-slate-800">{user.totalViews || 0}</span>
                                         </div>

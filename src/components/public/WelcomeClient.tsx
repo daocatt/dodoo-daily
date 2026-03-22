@@ -26,13 +26,19 @@ interface WelcomeClientProps {
     initialSettings: SystemSettings
 }
 
+interface VisitorData {
+    id: string
+    name: string
+    currency: number
+}
+
 export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
     const { t } = useI18n()
     const [settings] = useState<SystemSettings>(initialSettings)
     const [images, setImages] = useState<string[]>(['/cyber_settlement.png'])
     const [currentIndex, setCurrentIndex] = useState(0)
     const systemName = initialSettings?.systemName?.toUpperCase() || 'DODOO DAILY'
-    const [visitor, setVisitor] = useState<any>(null)
+    const [visitor, setVisitor] = useState<VisitorData | null>(null)
 
     useEffect(() => {
         const checkVisitor = () => {

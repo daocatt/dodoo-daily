@@ -16,7 +16,11 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   allowedDevOrigins: [
-    'dodoo.local'
+    'dodoo.local',
+    '127.0.0.1',
+    '127.0.0.1:3000',
+    'localhost',
+    'localhost:3000'
   ],
   // Add an empty turbopack config to silence the error with custom webpack
   turbopack: {}

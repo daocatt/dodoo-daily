@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { I18nProvider } from '@/contexts/I18nContext'
-import AccountHUD from '@/components/AccountHUD'
 import Script from 'next/script'
 import { db } from '@/lib/db'
 import { systemSettings } from '@/lib/schema'
@@ -67,7 +66,6 @@ export default async function RootLayout({
       </head>
       <body>
         <I18nProvider defaultLocale={defaultLocale as 'en' | 'zh-CN'}>
-          <AccountHUD />
           {children}
         </I18nProvider>
 

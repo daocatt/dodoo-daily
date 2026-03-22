@@ -378,7 +378,7 @@ export default function LedgerPage() {
                                     {t('ledger.stats.trend')}
                                 </h3>
                                 
-                                {statsData.chartData?.length > 0 ? (
+                                {statsData.chartData && statsData.chartData.length > 0 ? (
                                     <div className="relative h-48 flex items-end justify-between gap-1 group">
                                         {/* Max guide lines */}
                                         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pr-2">

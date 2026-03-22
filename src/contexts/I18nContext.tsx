@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
-type Locale = 'en' | 'zh-CN'
+export type Locale = 'en' | 'zh-CN'
 
 type Dictionary = Record<Locale, Record<string, string>>
 
@@ -504,8 +504,8 @@ const dictionaries: Dictionary = {
         'public.noArt': 'No public artworks yet.',
         'public.stats.pieces': 'Artworks',
         'public.stats.stars': 'Purple Stars',
-        'public.stats.likes': 'Likes',
-        'public.stats.views': 'Views',
+        'public.stats.likes': 'Appreciation',
+        'public.stats.views': 'Resonance',
 
         // Site
         'site.title': 'DoDoo Daily',
@@ -1309,8 +1309,8 @@ const dictionaries: Dictionary = {
         'public.noArt': '目前还没有公开的作品。',
         'public.stats.pieces': '作品',
         'public.stats.stars': '紫星',
-        'public.stats.likes': '获赞',
-        'public.stats.views': '浏览',
+        'public.stats.likes': '欣赏',
+        'public.stats.views': '共鸣',
 
         // Site
         'site.title': 'DoDoo Daily',

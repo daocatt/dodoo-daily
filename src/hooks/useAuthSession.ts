@@ -15,6 +15,8 @@ export interface AuthSession {
         id: string
         name: string
         currency: number
+        email?: string | null
+        phone?: string | null
     } | null
     loading: boolean
     isFamily: boolean
@@ -33,7 +35,7 @@ export function useAuthSession() {
         setLoading(true)
         try {
             // 1. Check Family Member Session
-            const statsRes = await fetch('/api/stats')
+            const statsRes = await fetch('/api/public/session')
             if (statsRes.ok) {
                 const data = await statsRes.json()
                 if (data && (data.id || data.userId)) {
