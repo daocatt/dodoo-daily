@@ -76,6 +76,11 @@ export default async function RootLayout({
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
+                // Prevent SW in development to avoid refresh loops
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                   console.log('PWA: Skipping ServiceWorker in dev mode');
+                   return;
+                }
                 navigator.serviceWorker.register('/sw.js').then(function(registration) {
                   console.log('PWA: ServiceWorker registration successful with scope: ', registration.scope);
                 }, function(err) {
