@@ -188,6 +188,7 @@ const dictionaries: Dictionary = {
         'login.invitationCode': 'Invitation Code',
         'login.emailPlaceholder': 'Email',
         'login.phonePlaceholder': 'Phone',
+        'login.emailPhoneHint': 'Email and Phone cannot both be empty',
         'login.registry': 'Register',
         'login.loginButton': 'Login',
         'login.login': 'Log In',
@@ -1144,6 +1145,7 @@ const dictionaries: Dictionary = {
         'login.invitationCode': '邀请码',
         'login.emailPlaceholder': '电子邮箱',
         'login.phonePlaceholder': '手机号码',
+        'login.emailPhoneHint': '邮箱和手机号至少填写一个',
         'login.registry': '注册',
 
         // Gender

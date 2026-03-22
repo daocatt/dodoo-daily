@@ -191,7 +191,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                 onSubmit={handleSubmit} 
                                 className="flex flex-col flex-1 pb-4"
                             >
-                                <div className="space-y-5 flex-1 overflow-y-auto pr-1">
+                                <div className="space-y-4 flex-1 overflow-y-auto pr-1">
                                     {mode === 'LOGIN' ? (
                                         <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
                                             <User className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20 z-10" />
@@ -200,7 +200,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                 type="text" 
                                                 value={identifier}
                                                 onChange={e => setIdentifier(e.target.value)}
-                                                className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                className="w-full pl-14 pr-6 py-2.5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
                                                 placeholder={t('login.identifierPlaceholder')}
                                             />
                                         </div>
@@ -213,32 +213,37 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                     type="text" 
                                                     value={name}
                                                     onChange={e => setName(e.target.value)}
-                                                    className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                    className="w-full pl-14 pr-6 py-2.5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
                                                     placeholder={t('login.nickname')}
                                                 />
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
-                                                    <input 
-                                                        required={!phone}
-                                                        type="email" 
-                                                        value={email}
-                                                        onChange={e => setEmail(e.target.value)}
-                                                        className="w-full px-6 py-4 bg-white rounded-xl outline-none font-bold text-xs tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                                        placeholder={t('login.emailPlaceholder') || 'Email'}
-                                                    />
-                                                </div>
-                                                <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
-                                                    <input 
-                                                        required={!email}
-                                                        type="tel" 
-                                                        value={phone}
-                                                        onChange={e => setPhone(e.target.value)}
-                                                        className="w-full px-6 py-4 bg-white rounded-xl outline-none font-bold text-xs tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                                        placeholder={t('login.phonePlaceholder') || 'Phone'}
-                                                    />
-                                                </div>
+                                            <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20 z-10" />
+                                                <input 
+                                                    required={!phone}
+                                                    type="email" 
+                                                    value={email}
+                                                    onChange={e => setEmail(e.target.value)}
+                                                    className="w-full pl-14 pr-6 py-2.5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                    placeholder={t('login.emailPlaceholder') || 'Email'}
+                                                />
+                                            </div>
+
+                                            <p className="text-[9px] font-bold text-black/20 uppercase tracking-widest px-2 -mt-2">
+                                                * {t('login.emailPhoneHint')}
+                                            </p>
+
+                                            <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
+                                                <Phone className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/20 z-10" />
+                                                <input 
+                                                    required={!email}
+                                                    type="tel" 
+                                                    value={phone}
+                                                    onChange={e => setPhone(e.target.value)}
+                                                    className="w-full pl-14 pr-6 py-2.5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                                    placeholder={t('login.phonePlaceholder') || 'Phone'}
+                                                />
                                             </div>
 
                                             <div className="relative group hardware-well rounded-2xl bg-[#B88000]/10 p-1 shadow-inner">
@@ -248,7 +253,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                     type="text" 
                                                     value={invitationCode}
                                                     onChange={e => setInvitationCode(e.target.value)}
-                                                    className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-black text-sm tracking-[0.2em] text-[var(--warm-amber)] shadow-md border-2 border-transparent focus:border-[var(--warm-amber)]/30 transition-all"
+                                                    className="w-full pl-14 pr-6 py-2.5 bg-white rounded-xl outline-none font-black text-sm tracking-[0.2em] text-[var(--warm-amber)] shadow-md border-2 border-transparent focus:border-[var(--warm-amber)]/30 transition-all"
                                                     placeholder={t('login.invitationCode')}
                                                 />
                                             </div>
@@ -262,7 +267,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                             type="password" 
                                             value={password}
                                             onChange={e => setPassword(e.target.value)}
-                                            className="w-full pl-14 pr-10 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                            className="w-full pl-14 pr-10 py-2.5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
                                             placeholder={t('login.password')}
                                         />
                                     </div>
