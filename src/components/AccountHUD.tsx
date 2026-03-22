@@ -115,11 +115,11 @@ export default function AccountHUD() {
                 }
             } else if (res.status === 401 || res.status === 404) {
                 // If we are on a PUBLIC page (welcome, guest login, etc), NEVER trigger a forced logout
-                const isPublicPage = ['/welcome', '/guest', '/buy', '/u/'].some(p => pathname?.startsWith(p)) || pathname === '/'
+                const isPublicPage = ['/welcome', '/guest', '/buy', '/u/', '/admin/login'].some(p => pathname?.startsWith(p)) || pathname === '/'
                 if (isPublicPage) return
 
                 const isInternalPage = ['/admin', '/management', '/settings'].some(p => pathname?.startsWith(p))
-                if (isInternalPage && pathname && !['/admin/login', '/admin/setup'].some(p => pathname.startsWith(p))) {
+                if (isInternalPage && pathname && !['/admin/login'].some(p => pathname.startsWith(p))) {
                     console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
                     handleLogout()
                 }
@@ -131,11 +131,11 @@ export default function AccountHUD() {
 
     useEffect(() => {
         setMounted(true)
-        if (pathname && pathname !== '/' && !['/admin/login', '/admin/setup', '/guest'].some(p => pathname.startsWith(p))) {
+        if (pathname && pathname !== '/' && !['/admin/login', '/guest'].some(p => pathname.startsWith(p))) {
             fetchData()
         }
         const interval = setInterval(() => {
-            if (pathname && pathname !== '/' && !['/admin/login', '/admin/setup', '/guest'].some(p => pathname.startsWith(p))) fetchData()
+            if (pathname && pathname !== '/' && !['/admin/login', '/guest'].some(p => pathname.startsWith(p))) fetchData()
         }, 60000)
         return () => clearInterval(interval)
     }, [pathname, fetchData])
