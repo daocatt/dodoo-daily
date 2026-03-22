@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, CheckCircle, ChevronRight, ArrowLeft } from 'lucide-react'
+import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, ArrowLeft } from 'lucide-react'
+import { useI18n } from '@/contexts/I18nContext'
 
 interface GuestData {
     id: string
@@ -35,6 +36,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [pendingApproval, setPendingApproval] = useState(false)
+    const { t } = useI18n()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -64,7 +66,8 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
             } else {
                 setError(data.error || 'Authentication denied')
             }
-        } catch (_err) {
+        } catch (err) {
+            console.error('Guest Auth failed:', err)
             setError('Access signal interrupted')
         } finally {
             setLoading(false)
@@ -79,7 +82,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                 <div className="flex items-center justify-between px-8 py-5 border-b-2 border-black/5 bg-[#F4F2E8] shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(79,70,229,0.4)] animate-pulse" />
-                        <span className="font-black text-xs tracking-[0.25em] uppercase text-slate-600">Visitor Terminal</span>
+                        <span className="font-black text-xs tracking-[0.25em] uppercase text-slate-600">{t('login.visitorTerminal')}</span>
                     </div>
                     <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[9px] font-black uppercase tracking-widest text-slate-400">
                         AUTH_NODE: {mode}
@@ -87,30 +90,30 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                 </div>
 
                 <div className="flex flex-col flex-1 p-10 pt-8 min-h-[460px]">
-                    {/* Mode Switcher - Mechanical Buttons */}
-                    <div className="grid grid-cols-2 gap-6 mb-10 shrink-0">
+                    {/* Mode Switcher - Mechanical Inset Buttons */}
+                    <div className="grid grid-cols-2 gap-4 mb-10 shrink-0 p-1 hardware-well rounded-2xl bg-[#E2E0D4]/30">
                         <button 
                             type="button"
                             onClick={() => { setMode('LOGIN'); setError('') }}
-                            className={`hardware-btn transition-all ${mode === 'LOGIN' ? 'scale-[1.02]' : 'opacity-40 scale-95 grayscale'}`}
+                            className={`py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all transform ${
+                                mode === 'LOGIN' 
+                                    ? 'bg-white text-black shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_1px_white] scale-[0.98]' 
+                                    : 'text-slate-400 hover:text-slate-600'
+                            }`}
                         >
-                            <div className={`hardware-cap py-3 rounded-xl font-black uppercase tracking-widest text-[10px] border-2 transition-all ${
-                                mode === 'LOGIN' ? 'bg-white border-black/10 text-black shadow-lg' : 'bg-transparent border-black/5 text-slate-500'
-                            }`}>
-                                Identify
-                            </div>
+                            {t('login.login')}
                         </button>
                         <button 
                             type="button"
                             onClick={() => { setMode('REGISTER'); setError('') }}
                             disabled={disableRegistration}
-                            className={`hardware-btn transition-all ${mode === 'REGISTER' ? 'scale-[1.02]' : 'opacity-40 scale-95 grayscale'} ${disableRegistration ? 'cursor-not-allowed' : ''}`}
+                            className={`py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all transform ${
+                                mode === 'REGISTER' 
+                                    ? 'bg-white text-black shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_1px_white] scale-[0.98]' 
+                                    : 'text-slate-400 hover:text-slate-600'
+                            } ${disableRegistration ? 'opacity-30 cursor-not-allowed' : ''}`}
                         >
-                            <div className={`hardware-cap py-3 rounded-xl font-black uppercase tracking-widest text-[10px] border-2 transition-all ${
-                                mode === 'REGISTER' ? 'bg-white border-black/10 text-black shadow-lg' : 'bg-transparent border-black/5 text-slate-500'
-                            }`}>
-                                Registry
-                            </div>
+                            {t('login.join')}
                         </button>
                     </div>
 
@@ -126,15 +129,15 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                 <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mb-6 shadow-well">
                                     <ShieldCheck className="w-10 h-10 text-amber-600 animate-pulse" />
                                 </div>
-                                <h3 className="text-xl font-black uppercase tracking-tighter mb-2">Request Transmitted</h3>
-                                <p className="label-mono opacity-50 text-[10px] leading-relaxed max-w-[200px] mb-8">Node awaiting administrative validation. Termination of terminal session recommended.</p>
+                                <h3 className="text-xl font-black uppercase tracking-tighter mb-2">{t('login.requestTransmitted')}</h3>
+                                <p className="label-mono opacity-50 text-[10px] leading-relaxed max-w-[200px] mb-8">{t('login.pendingApprovalSub')}</p>
                                 <button 
                                     onClick={() => setPendingApproval(false)}
                                     className="hardware-btn group w-full"
                                 >
                                     <div className="hardware-cap bg-white py-4 rounded-xl border-2 border-black/10 flex items-center justify-center gap-3">
                                         <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Login</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('login.returnToLogin')}</span>
                                     </div>
                                 </button>
                             </motion.div>
@@ -149,15 +152,15 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                 <div className="w-16 h-16 hardware-well rounded-2xl flex items-center justify-center mx-auto mb-6 border-4 border-[#C8C4B0] bg-[#F4F4F2]">
                                     <Lock className="w-8 h-8 opacity-40 text-slate-400" />
                                 </div>
-                                <h3 className="text-xl font-black uppercase mb-2">Restricted</h3>
-                                <p className="label-mono opacity-50 uppercase mb-12 tracking-widest text-[10px]">Registry node offline</p>
+                                <h3 className="text-xl font-black uppercase mb-2">{t('login.restricted')}</h3>
+                                <p className="label-mono opacity-50 uppercase mb-12 tracking-widest text-[10px]">{t('login.registryOffline')}</p>
                                 <button 
                                     onClick={() => setMode('LOGIN')} 
                                     className="hardware-btn group w-full"
                                 >
                                     <div className="hardware-cap bg-white py-4 rounded-xl border-2 border-black/10 flex items-center justify-center gap-3">
                                         <ArrowLeft className="w-5 h-5 text-slate-400 group-hover:-translate-x-1" />
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Login</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('login.returnToLogin')}</span>
                                     </div>
                                 </button>
                             </motion.div>
@@ -180,7 +183,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                 value={identifier}
                                                 onChange={e => setIdentifier(e.target.value)}
                                                 className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                                placeholder="Identifier (Email / Phone)"
+                                                placeholder={t('login.identifierPlaceholder')}
                                             />
                                         </div>
                                     ) : (
@@ -193,7 +196,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                     value={name}
                                                     onChange={e => setName(e.target.value)}
                                                     className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                                    placeholder="Display Name"
+                                                    placeholder={t('login.nickname')}
                                                 />
                                             </div>
 
@@ -205,7 +208,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                         value={email}
                                                         onChange={e => setEmail(e.target.value)}
                                                         className="w-full px-6 py-4 bg-white rounded-xl outline-none font-bold text-xs tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                                        placeholder="Email"
+                                                        placeholder={t('login.emailPlaceholder') || 'Email'}
                                                     />
                                                 </div>
                                                 <div className="relative group hardware-well rounded-2xl bg-[#D1CDBC] p-1 shadow-inner">
@@ -215,7 +218,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                         value={phone}
                                                         onChange={e => setPhone(e.target.value)}
                                                         className="w-full px-6 py-4 bg-white rounded-xl outline-none font-bold text-xs tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                                        placeholder="Phone"
+                                                        placeholder={t('login.phonePlaceholder') || 'Phone'}
                                                     />
                                                 </div>
                                             </div>
@@ -228,7 +231,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                                     value={invitationCode}
                                                     onChange={e => setInvitationCode(e.target.value)}
                                                     className="w-full pl-14 pr-6 py-5 bg-white rounded-xl outline-none font-black text-sm tracking-[0.2em] text-[var(--warm-amber)] shadow-md border-2 border-transparent focus:border-[var(--warm-amber)]/30 transition-all"
-                                                    placeholder="INVITATION CODE"
+                                                    placeholder={t('login.invitationCode')}
                                                 />
                                             </div>
                                         </>
@@ -241,10 +244,9 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                             type="password" 
                                             value={password}
                                             onChange={e => setPassword(e.target.value)}
-                                            className="w-full pl-14 pr-24 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
-                                            placeholder="密码"
+                                            className="w-full pl-14 pr-10 py-5 bg-white rounded-xl outline-none font-bold text-sm tracking-tight shadow-md border-2 border-transparent focus:border-indigo-500/20 transition-all"
+                                            placeholder={t('login.password')}
                                         />
-                                        <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-slate-400 opacity-40 tracking-widest pointer-events-none">密码 / PW</span>
                                     </div>
                                 </div>
 
@@ -259,22 +261,37 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                                     </motion.div>
                                 )}
 
-                                {/* Standardized Hardware Submit Button */}
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="hardware-btn w-full mt-10 shrink-0"
+                                    className="hardware-btn group w-full mt-8 block"
                                 >
-                                    <div className="hardware-cap bg-white py-6 rounded-2xl border-2 border-black/10 flex items-center justify-center gap-4 group transition-all shadow-xl group-hover:bg-slate-50">
-                                        {loading ? <Loader2 className="w-8 h-8 animate-spin text-amber-500" /> : (
-                                            <>
-                                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-black/5 shrink-0 shadow-inner group-hover:bg-amber-50 group-hover:border-amber-100 transition-colors">
-                                                    <ShieldCheck className="w-5 h-5 text-slate-400 group-hover:text-amber-500 transition-colors" />
+                                    <div className="hardware-well h-24 w-full rounded-2xl overflow-hidden relative">
+                                        <div className="hardware-cap absolute inset-2 bg-[#F4F4F2] rounded-xl flex items-center px-8 justify-between group-hover:bg-white transition-all shadow-sm">
+                                            {loading ? (
+                                                <div className="flex-1 flex items-center justify-center">
+                                                    <Loader2 className={`w-8 h-8 animate-spin ${mode === 'REGISTER' ? 'text-blue-500' : 'text-amber-500'}`} />
                                                 </div>
-                                                <span className="text-lg font-black uppercase tracking-[0.2em] text-slate-700 group-hover:text-black transition-colors">{mode === 'LOGIN' ? 'Authorize' : 'Join Node'}</span>
-                                                <ArrowRight className="w-6 h-6 text-slate-300 group-hover:text-amber-500 transition-transform group-hover:translate-x-1" />
-                                            </>
-                                        )}
+                                            ) : (
+                                                <>
+                                                    <div className="flex items-center gap-4 min-w-0">
+                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner border transition-all ${
+                                                            mode === 'REGISTER' 
+                                                                ? 'bg-blue-50 border-blue-100 text-blue-500' 
+                                                                : 'bg-amber-50 border-amber-100 text-amber-500'
+                                                        }`}>
+                                                            <ShieldCheck className="w-6 h-6" />
+                                                        </div>
+                                                        <span className="font-black text-slate-800 text-lg tracking-tight uppercase whitespace-nowrap">
+                                                            {mode === 'LOGIN' ? t('login.authorize') : t('login.registry')}
+                                                        </span>
+                                                    </div>
+                                                    <ArrowRight className={`w-6 h-6 transition-all group-hover:translate-x-1 ${
+                                                        mode === 'REGISTER' ? 'text-blue-500' : 'text-amber-500'
+                                                    }`} />
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </button>
                             </motion.form>

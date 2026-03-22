@@ -25,6 +25,7 @@ export const users = sqliteTable("Users", {
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
     lastLoginAt: integer("lastLoginAt", { mode: "timestamp_ms" }),
+    locale: text("locale").default("en").notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     // Exhibition Settings
     exhibitionTitle: text("exhibitionTitle"),
@@ -93,6 +94,7 @@ export const guest = sqliteTable("Guest", {
     currency: integer("currency").default(0).notNull(),
     lastIp: text("lastIp"),
     address: text("address"), // Default shipping address
+    locale: text("locale").default("en").notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
@@ -320,6 +322,7 @@ export const systemSettings = sqliteTable("SystemSettings", {
     disableVisitorRegistration: integer("disableVisitorRegistration", { mode: "boolean" }).default(false).notNull(),
     hideFamilyLogin: integer("hideFamilyLogin", { mode: "boolean" }).default(false).notNull(),
     homepageImages: text("homepageImages"), // stringified JSON array
+    defaultLocale: text("defaultLocale").default("en").notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 

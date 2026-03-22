@@ -101,14 +101,14 @@ export default function LoginPage() {
     return (
         <main className="h-dvh overflow-hidden app-bg-pattern flex items-center justify-center p-4 md:p-8 relative">
             {/* Global Back Button */}
-            <div className="absolute top-6 left-6 z-50">
+            <div className="absolute top-10 left-10 z-50">
                 <button 
                     onClick={() => window.location.href = '/'}
                     className="hardware-btn group"
                 >
-                    <div className="hardware-cap bg-white px-4 py-2 rounded-xl flex items-center gap-2 border border-black/5">
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="label-mono">{t('common.back')}</span>
+                    <div className="hardware-cap bg-white px-6 py-3 rounded-2xl flex items-center gap-3 border border-black/5 shadow-sm active:translate-y-0.5 transition-all">
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-slate-400 group-hover:text-indigo-500" />
+                        <span className="label-mono text-[11px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">{t('common.back')}</span>
                     </div>
                 </button>
             </div>
@@ -152,15 +152,15 @@ export default function LoginPage() {
                                         <div className="absolute bottom-3 right-3 z-30">
                                             <div className="px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/10 rounded flex items-center gap-1.5 shadow-xl">
                                                 <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
-                                                <span className="label-mono text-[8px] text-emerald-400 opacity-80 uppercase tracking-widest">Monitor Ready</span>
+                                                <span className="label-mono text-[8px] text-emerald-400 opacity-80 uppercase tracking-widest">{t('login.monitorReady')}</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center px-1">
-                                            <span className="label-mono">System Core</span>
-                                            <span className="label-mono text-[var(--accent-moss)]">Online</span>
+                                            <span className="label-mono">{t('login.systemCore')}</span>
+                                            <span className="label-mono text-[var(--accent-moss)]">{t('login.active')}</span>
                                         </div>
                                         <div className="h-1 bg-black/10 rounded-full overflow-hidden">
                                             <motion.div 
@@ -178,8 +178,8 @@ export default function LoginPage() {
                                 <PanelHeader id="Access Terminal" systemName={systemName} />
                                 <div className="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar bg-[var(--surface-warm)]">
                                     <div className="mb-4 text-center md:text-left">
-                                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-[var(--text-primary)] mb-1 uppercase">Identify Profile</h1>
-                                        <p className="label-mono opacity-60 text-[9px] uppercase tracking-widest leading-none">Select operator node</p>
+                                        <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-[var(--text-primary)] mb-1 uppercase">{t('login.identifyProfile')}</h1>
+                                        <p className="label-mono opacity-60 text-[9px] uppercase tracking-widest leading-none">{t('login.selectOperator')}</p>
                                     </div>
 
                                     {loading ? (
@@ -227,11 +227,11 @@ export default function LoginPage() {
                                 <div className="px-6 py-4 border-t-2 border-[var(--groove-dark)] bg-[var(--well-bg)] flex justify-between items-center shrink-0">
                                     <div className="flex items-center gap-4">
                                         <div className="w-8 h-8 rounded-full hardware-well flex items-center justify-center opacity-40"><Power className="w-4 h-4" /></div>
-                                        <span className="label-mono">Main Console</span>
+                                        <span className="label-mono">{t('login.mainConsole')}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-[var(--accent-moss)]" />
-                                        <span className="label-mono text-[var(--accent-moss)]">Active</span>
+                                        <span className="label-mono text-[var(--accent-moss)] uppercase">{t('login.active')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -251,7 +251,7 @@ export default function LoginPage() {
                                 >
                                     <div className="hardware-cap bg-white px-4 py-2 rounded-lg flex items-center gap-2 border border-black/5">
                                         <ArrowLeft className="w-4 h-4" />
-                                        <span className="label-mono">Reset</span>
+                                        <span className="label-mono">{t('login.reset')}</span>
                                     </div>
                                 </button>
                                 
@@ -265,7 +265,7 @@ export default function LoginPage() {
                                     </div>
                                     <div className="text-center">
                                         <h2 className="text-2xl font-black uppercase text-[var(--text-primary)]">{selectedUser.nickname || selectedUser.name}</h2>
-                                        <p className="label-mono uppercase opacity-40 tracking-[0.2em]">{selectedUser.role} ACCESS LEVEL</p>
+                                        <p className="label-mono uppercase opacity-40 tracking-[0.2em]">{selectedUser.role} {t('login.accessLevel')}</p>
                                     </div>
                                     <div className="w-full bg-black/5 rounded-md p-4 space-y-2 mt-4">
                                         <div className="flex justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
@@ -274,8 +274,8 @@ export default function LoginPage() {
                                         </div>
                                         <div className="h-0.5 bg-black/10 w-full" />
                                         <div className="flex justify-between text-[8px] font-black uppercase tracking-widest opacity-40">
-                                            <span>Status</span>
-                                            <span className="text-[var(--accent-moss)]">Waiting PIN</span>
+                                            <span>{t('parent.status')}</span>
+                                            <span className="text-[var(--accent-moss)]">{t('login.waitingPin')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -284,21 +284,28 @@ export default function LoginPage() {
                             {/* Input Column */}
                             <div className="md:col-span-9 flex flex-col bg-[var(--surface-warm)]">
                                 <PanelHeader id="Security Input" systemName={systemName} />
-                                <form onSubmit={handleLogin} className="flex-1 p-8 md:p-16 flex flex-col justify-center max-w-lg mx-auto w-full">
+                                <form onSubmit={handleLogin} className="flex-1 p-8 md:p-16 flex flex-col justify-center max-w-lg mx-auto w-full overflow-y-auto custom-scrollbar">
                                     <div className="mb-10 text-center">
                                         <div className="inline-flex items-center justify-center w-12 h-12 hardware-well rounded-full mb-6">
                                             <Lock className="w-5 h-5 opacity-40" />
                                         </div>
-                                        <h3 className="text-2xl font-black uppercase mb-2">Enter Credentials</h3>
-                                        <p className="label-mono opacity-50 italic">Mechanical PIN entry required for decryption</p>
+                                        <h3 className="text-2xl font-black uppercase mb-2">{t('login.enterCredentials')}</h3>
+                                        <p className="label-mono opacity-50 italic">{t('login.mechanicalPinEntry')}</p>
                                     </div>
 
-                                    {error && (
-                                        <div className="mb-8 p-4 bg-rose-50 border-l-4 border-rose-500 flex items-center gap-3">
-                                            <Terminal className="w-4 h-4 text-rose-500" />
-                                            <span className="label-mono text-rose-600 text-[10px]">{error}</span>
-                                        </div>
-                                    )}
+                                    <AnimatePresence mode="wait">
+                                        {error && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                animate={{ opacity: 1, height: 'auto', marginTop: -8, marginBottom: 24 }}
+                                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                className="p-3 bg-rose-50 border-l-4 border-rose-500 flex items-center gap-3 overflow-hidden rounded-r"
+                                            >
+                                                <Terminal className="w-4 h-4 text-rose-500 shrink-0" />
+                                                <span className="label-mono text-rose-600 text-[10px] break-words">{error}</span>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
 
                                     <div className="space-y-8">
                                         <div className="hardware-well rounded-2xl p-2 bg-[#D1CDBC]">
@@ -324,7 +331,7 @@ export default function LoginPage() {
                                                     {rememberMe && <CheckCircle2 className="w-3.5 h-3.5" />}
                                                 </div>
                                             </div>
-                                            <span className={`label-mono transition-opacity ${rememberMe ? 'opacity-100 font-bold' : 'opacity-60'}`}>Persistent Session (Stay Logged In)</span>
+                                            <span className={`label-mono transition-opacity ${rememberMe ? 'opacity-100 font-bold' : 'opacity-60'}`}>{t('login.persistentSession')}</span>
                                         </div>
 
                                         <button
@@ -335,7 +342,7 @@ export default function LoginPage() {
                                             <div className="hardware-cap bg-[var(--surface-white)] py-6 rounded-2xl border-2 border-[var(--groove-dark)] flex items-center justify-center gap-4 group">
                                                 {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : (
                                                     <>
-                                                        <span className="text-xl font-black uppercase tracking-widest group-hover:text-[var(--accent-moss)] transition-colors">Authorize</span>
+                                                        <span className="text-xl font-black uppercase tracking-widest group-hover:text-[var(--accent-moss)] transition-colors">{t('login.authorize')}</span>
                                                         <ArrowLeft className="w-6 h-6 rotate-180 group-hover:translate-x-1 transition-transform" />
                                                     </>
                                                 )}

@@ -6,9 +6,11 @@ import { motion } from 'motion/react'
 import GuestAuth from '@/components/public/GuestAuth'
 import NatureBackground from '@/components/NatureBackground'
 import { ArrowLeft } from 'lucide-react'
+import { useI18n } from '@/contexts/I18nContext'
 
 export default function GuestLoginPage() {
     const router = useRouter()
+    const { t } = useI18n()
 
     return (
         <main className="min-h-dvh relative flex flex-col items-center justify-center p-6 bg-[#E2DFD2] app-bg-pattern overflow-hidden">
@@ -17,17 +19,15 @@ export default function GuestLoginPage() {
             
             {/* Hardware Back Button - Synced with Admin Terminal */}
             <div className="absolute top-10 left-10 z-50">
-                <motion.button 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                <button 
                     onClick={() => router.back()}
                     className="hardware-btn group"
                 >
                     <div className="hardware-cap bg-white px-6 py-3 rounded-2xl flex items-center gap-3 border border-black/5 shadow-sm active:translate-y-0.5 transition-all">
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-slate-400 group-hover:text-indigo-500" />
-                        <span className="label-mono text-[11px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">Back</span>
+                        <span className="label-mono text-[11px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">{t?.('common.back') || 'Back'}</span>
                     </div>
-                </motion.button>
+                </button>
             </div>
 
             {/* The ONLY Source of Truth for Visitor Auth */}

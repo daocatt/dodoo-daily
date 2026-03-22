@@ -52,3 +52,4 @@ database/dodoo.db
 lint_output*.txt
 lint_u*.txt
 scripts/seed-child.ts
+lint_results.txt

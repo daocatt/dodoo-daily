@@ -11,6 +11,7 @@ async function checkIsParent() {
 
 export async function GET() {
     try {
+        const isParent = await checkIsParent()
         let settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
 
         if (!settings) {
@@ -27,6 +28,25 @@ export async function GET() {
                 homepageImages: JSON.stringify(['/carousel/bg1.jpg', '/carousel/bg2.jpg', '/carousel/bg3.jpg'])
             }).returning()
             settings = newSettings
+        }
+
+        // If not a parent, return only a safe public subset
+        if (!isParent && settings) {
+             const publicSettings = {
+                id: settings.id,
+                systemName: settings.systemName,
+                systemSubtitle: settings.systemSubtitle,
+                timezone: settings.timezone,
+                isClosed: settings.isClosed,
+                needsSetup: settings.needsSetup,
+                showAllAvatars: settings.showAllAvatars,
+                homepageImages: settings.homepageImages,
+                disableVisitorLogin: settings.disableVisitorLogin,
+                disableVisitorRegistration: settings.disableVisitorRegistration,
+                defaultLocale: settings.defaultLocale,
+                // Do NOT include guestInvitationCode or financial ratios for non-parents
+            }
+            return NextResponse.json(publicSettings)
         }
 
         return NextResponse.json(settings)
@@ -62,6 +82,7 @@ export async function PATCH(req: NextRequest) {
         if (typeof body.disableVisitorLogin === 'boolean') updates.disableVisitorLogin = body.disableVisitorLogin
         if (typeof body.disableVisitorRegistration === 'boolean') updates.disableVisitorRegistration = body.disableVisitorRegistration
         if (body.homepageImages !== undefined) updates.homepageImages = body.homepageImages
+        if (body.defaultLocale !== undefined) updates.defaultLocale = body.defaultLocale
 
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
 

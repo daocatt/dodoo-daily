@@ -48,7 +48,7 @@ export default function LoginLog({ userId }: { userId?: string }) {
             <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300">
                 <Clock className="w-8 h-8" />
             </div>
-            <p className="font-bold text-slate-400">No login history found yet.</p>
+            <p className="font-bold text-slate-400">{t('logs.empty') || 'No login history found yet.'}</p>
         </div>
     )
 
@@ -57,9 +57,9 @@ export default function LoginLog({ userId }: { userId?: string }) {
             <div className="flex items-center justify-between px-2 mb-2">
                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
                     <Shield className="w-5 h-5 text-indigo-500" />
-                    Security Logs
+                    {t('parent.securityLogs')}
                 </h3>
-                <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 bg-slate-50 px-3 py-1 rounded-full">Recent 100 Entries</span>
+                <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 bg-slate-50 px-3 py-1 rounded-full">{t('logs.recentEntries', { count: '100' }) || 'Recent 100 Entries'}</span>
             </div>
 
             <div className="bg-white/70 backdrop-blur-xl rounded-[2.5rem] border border-white/80 shadow-xl overflow-hidden divide-y divide-slate-100">

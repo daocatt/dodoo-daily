@@ -22,12 +22,12 @@ type MediaRecord = {
 }
 
 const TYPE_FILTERS = [
-    { label: 'All', value: 'ALL' },
-    { label: 'Images', value: 'IMAGE' },
-    { label: 'Voices', value: 'VOICE' },
-    { label: 'Videos', value: 'VIDEO' },
-    { label: 'Documents', value: 'DOC' },
-    { label: 'Gallery', value: 'GALLERY' },
+    { label: 'parent.media.filter.all', value: 'ALL' },
+    { label: 'parent.media.filter.images', value: 'IMAGE' },
+    { label: 'parent.media.filter.voices', value: 'VOICE' },
+    { label: 'parent.media.filter.videos', value: 'VIDEO' },
+    { label: 'parent.media.filter.docs', value: 'DOC' },
+    { label: 'parent.media.filter.gallery', value: 'GALLERY' },
 ]
 
 export default function MediaManagement() {
@@ -94,7 +94,7 @@ export default function MediaManagement() {
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this file? This is a permanent physical deletion.')) return
+        if (!confirm(t('parent.media.deleteConfirm'))) return
 
         try {
             const res = await fetch(`/api/media/${id}`, { method: 'DELETE' })
@@ -156,13 +156,13 @@ export default function MediaManagement() {
                         className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
                         {TYPE_FILTERS.filter(f => f.value !== 'ALL').map(f => (
-                            <option key={f.value} value={f.value}>{f.label}</option>
+                            <option key={f.value} value={f.value}>{t(f.label)}</option>
                         ))}
                     </select>
 
                     <label className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-lg shadow-orange-200 transition-all cursor-pointer active:scale-95">
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                        <span className="text-xs font-black uppercase tracking-widest">{uploading ? 'Uploading...' : 'Upload File'}</span>
+                        <span className="text-xs font-black uppercase tracking-widest">{uploading ? t('parent.media.uploading') : t('parent.media.upload')}</span>
                         <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
                     </label>
                 </div>
@@ -175,14 +175,14 @@ export default function MediaManagement() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search files..."
+                            placeholder={t('parent.media.search')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
                         />
                     </div>
                     <button type="submit" className="px-6 py-3 bg-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 transition-colors">
-                        Search
+                        {t('parent.media.searchBtn')}
                     </button>
                 </form>
 
@@ -196,7 +196,7 @@ export default function MediaManagement() {
                                 : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
                                 }`}
                         >
-                            {f.label}
+                            {t(f.label)}
                         </button>
                     ))}
                 </div>
@@ -206,11 +206,11 @@ export default function MediaManagement() {
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 border-dashed">
                     <Loader2 className="w-10 h-10 animate-spin text-orange-200 mb-4" />
-                    <p className="text-slate-400 font-medium">Scanning folders...</p>
+                    <p className="text-slate-400 font-medium">{t('parent.media.scanning')}</p>
                 </div>
             ) : media.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 border-dashed text-slate-400 uppercase tracking-widest font-black text-xs">
-                    No files found
+                    {t('parent.media.noFiles')}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

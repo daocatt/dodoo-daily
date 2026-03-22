@@ -28,6 +28,7 @@ export default function SystemSettings() {
     const [starsToCoinsRatio, setStarsToCoinsRatio] = useState(10)
     const [coinsToRmbRatio, setCoinsToRmbRatio] = useState(1.0)
     const [timezone, setTimezone] = useState('Asia/Shanghai')
+    const [defaultLocale, setDefaultLocale] = useState<'en' | 'zh-CN'>('en')
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
     // All available timezones
@@ -53,6 +54,7 @@ export default function SystemSettings() {
                 try {
                     setHomepageImages(data.homepageImages ? JSON.parse(data.homepageImages) : [])
                 } catch (e) { setHomepageImages([]) }
+                setDefaultLocale(data.defaultLocale || 'en')
                 setLoading(false)
             })
             .catch(() => setLoading(false))
@@ -88,10 +90,11 @@ export default function SystemSettings() {
                 if (updates.homepageImages !== undefined) {
                     try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (e) { }
                 }
-                showToast('Settings updated successfully!')
+                if (updates.defaultLocale !== undefined) setDefaultLocale(updates.defaultLocale as 'en' | 'zh-CN')
+                showToast(t('settings.updateSuccess'))
                 setShowConfirm(false)
             } else {
-                showToast('Failed to update settings', 'error')
+                showToast(t('settings.updateFailed'), 'error')
             }
         } catch (e) {
             console.error('Failed to update settings', e)
@@ -101,7 +104,7 @@ export default function SystemSettings() {
         }
     }
 
-    if (loading) return <div className="p-12 text-center text-slate-400">Loading system status...</div>
+    if (loading) return <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('settings.loading')}</div>
 
     return (
         <div className="max-w-4xl mx-auto space-y-12 py-12">
@@ -128,16 +131,16 @@ export default function SystemSettings() {
                             <div className="p-2 bg-indigo-50 rounded-lg">
                                 <LayoutGrid className="w-5 h-5 text-indigo-500" />
                             </div>
-                            <h3 className="text-2xl font-black text-slate-800">Base Configuration</h3>
+                            <h3 className="text-2xl font-black text-slate-800">{t('settings.baseConfig')}</h3>
                         </div>
-                        <p className="text-slate-500 text-sm font-medium">System identity, login preferences, and time settings.</p>
+                        <p className="text-slate-500 text-sm font-medium">{t('settings.baseConfigDesc')}</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                         <div className="space-y-6">
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">System Name</label>
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">{t('settings.systemName')}</label>
                                     <input
                                         type="text"
                                         value={systemName}
@@ -147,7 +150,7 @@ export default function SystemSettings() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">System Subtitle</label>
+                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400">{t('settings.systemSubtitle')}</label>
                                     <input
                                         type="text"
                                         value={systemSubtitle}
@@ -162,13 +165,13 @@ export default function SystemSettings() {
                                 disabled={isSaving}
                                 className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-lg active:scale-95"
                             >
-                                Save Identity Settings
+                                {t('settings.saveIdentity')}
                             </button>
 
                             <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
                                 <div>
-                                    <h4 className="font-black text-slate-800">Display All Avatars on Login</h4>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Uncheck to require nickname + PIN</p>
+                                    <h4 className="font-black text-slate-800">{t('settings.showAllAvatars')}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{t('settings.showAllAvatarsDesc')}</p>
                                 </div>
                                 <button
                                     onClick={() => handleUpdateSettings({ showAllAvatars: !showAllAvatars })}
@@ -180,8 +183,8 @@ export default function SystemSettings() {
 
                             <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100">
                                 <div>
-                                    <h4 className="font-black text-slate-800">Hide Family Login on Welcome</h4>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Hidden family entry for privacy</p>
+                                    <h4 className="font-black text-slate-800">{t('settings.hideFamilyLogin')}</h4>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{t('settings.hideFamilyLoginDesc')}</p>
                                 </div>
                                 <button
                                     onClick={() => handleUpdateSettings({ hideFamilyLogin: !hideFamilyLogin })}
@@ -190,12 +193,28 @@ export default function SystemSettings() {
                                     <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-sm ${hideFamilyLogin ? 'right-1' : 'left-1'}`} />
                                 </button>
                             </div>
+                            
+                            {/* System Default Language */}
+                            <div className="space-y-2 pt-4 border-t border-slate-100">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <Globe className="w-3 h-3 text-indigo-400" />
+                                    {t('settings.systemLanguage')}
+                                </label>
+                                <select
+                                    value={defaultLocale}
+                                    onChange={(e) => handleUpdateSettings({ defaultLocale: e.target.value })}
+                                    className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
+                                >
+                                    <option value="en">English (US)</option>
+                                    <option value="zh-CN">简体中文 (Chinese)</option>
+                                </select>
+                            </div>
 
                             {/* Moved System Timezone here */}
                             <div className="space-y-2 pt-4 border-t border-slate-100">
                                 <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                     <Globe className="w-3 h-3 text-indigo-400" />
-                                    System Timezone
+                                    {t('settings.timezone')}
                                 </label>
                                 <div className="flex flex-col gap-3">
                                     <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 flex items-center justify-between">
@@ -224,7 +243,7 @@ export default function SystemSettings() {
 
                         <div className="space-y-4">
                             <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
-                                Homepage Carousel (Max 5)
+                                {t('settings.homeCarousel')}
                                 <span className="text-[10px] text-indigo-400">{homepageImages.length}/5</span>
                             </label>
                             <div className="grid grid-cols-5 gap-3">
@@ -270,13 +289,13 @@ export default function SystemSettings() {
                 {/* Reward System Settings */}
                 <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8">
                     <div className="space-y-2">
-                        <h3 className="text-2xl font-black text-slate-800">Reward Economy</h3>
-                        <p className="text-slate-500 text-sm font-medium">Define conversion ratios for stars and coins.</p>
+                        <h3 className="text-2xl font-black text-slate-800">{t('settings.rewardEconomy')}</h3>
+                        <p className="text-slate-500 text-sm font-medium">{t('settings.rewardEconomyDesc')}</p>
                     </div>
 
                     <div className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">Stars to 1 Coin</label>
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">{t('settings.starsToCoins')}</label>
                             <div className="flex items-center gap-4">
                                 <input
                                     type="number"
@@ -289,13 +308,13 @@ export default function SystemSettings() {
                                     disabled={isSaving}
                                     className="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 disabled:opacity-50 transition-all shadow-lg"
                                 >
-                                    Set
+                                    {t('settings.set')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">1 Coin to $ (RMB)</label>
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-400">{t('settings.coinsToRmb')}</label>
                             <div className="flex items-center gap-4">
                                 <input
                                     type="number"
@@ -309,28 +328,28 @@ export default function SystemSettings() {
                                     disabled={isSaving}
                                     className="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-700 disabled:opacity-50 transition-all shadow-lg"
                                 >
-                                    Set
+                                    {t('settings.set')}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8 flex flex-col justify-between">
+                <div className="bg-white p-10 rounded-xl border border-slate-100 shadow-xl shadow-slate-200/40 space-y-4 flex flex-col justify-between">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <div className="p-4 bg-amber-50 rounded-2xl">
                                 <Power className={`w-8 h-8 ${isClosed ? 'text-rose-500' : 'text-emerald-500'}`} />
                             </div>
                             <div className={`px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${isClosed ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                                {isClosed ? 'Closed / Offline' : 'Active / Online'}
+                                {isClosed ? t('settings.statusClosed') : t('settings.statusActive')}
                             </div>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800">Master Switch</h3>
+                        <h3 className="text-2xl font-black text-slate-800">{t('settings.masterSwitch')}</h3>
                         <p className="text-slate-500 text-sm leading-relaxed font-medium">
                             {isClosed
-                                ? "The system is currently restricted. Only parents can access management features."
-                                : "The system is fully operational. All users can log in and interact with the app."}
+                                ? t('settings.masterSwitchClosedDesc')
+                                : t('settings.masterSwitchActiveDesc')}
                         </p>
                     </div>
 
@@ -341,7 +360,7 @@ export default function SystemSettings() {
                             : 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-200 shadow-lg'
                             }`}
                     >
-                        {isClosed ? 'Activate System' : 'Close System Now'}
+                        {isClosed ? t('settings.activateSystem') : t('settings.closeSystem')}
                     </button>
                 </div>
             </div>
@@ -365,7 +384,7 @@ export default function SystemSettings() {
                     <div className="flex-1 text-center md:text-left space-y-4">
                         <div className="space-y-1">
                             <h3 className="text-3xl font-black text-slate-800 tracking-tight">DoDoo Daily</h3>
-                            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">Modern Family Companion System</p>
+                            <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-xs">{t('settings.modernCompanion')}</p>
                         </div>
 
                         <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
@@ -387,7 +406,7 @@ export default function SystemSettings() {
                                 className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all active:scale-95"
                             >
                                 <Globe className="w-4 h-4" />
-                                <span>Feedback & Info</span>
+                                <span>{t('settings.feedback')}</span>
                                 <ExternalLink className="w-3 h-3 opacity-50" />
                             </a>
 
@@ -396,7 +415,7 @@ export default function SystemSettings() {
                                 className="flex items-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-sm font-bold hover:bg-rose-100 transition-all active:scale-95"
                             >
                                 <Mail className="w-4 h-4" />
-                                <span>Contact Developer</span>
+                                <span>{t('settings.contact')}</span>
                             </a>
                         </div>
                     </div>
@@ -404,10 +423,10 @@ export default function SystemSettings() {
 
                 <div className="mt-12 pt-8 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-300">
                     <div className="flex items-center gap-1.5">
-                        Made with <Heart className="w-3 h-3 text-rose-400 fill-rose-400" /> for my Family
+                        {t('settings.footerMadeWith')} <Heart className="w-3 h-3 text-rose-400 fill-rose-400" /> {t('settings.footerForFamily')}
                     </div>
                     <div>
-                        © {new Date().getFullYear()} DoDoo Daily Project
+                        © {new Date().getFullYear()} {t('settings.footerProject')}
                     </div>
                 </div>
             </div>
@@ -426,25 +445,25 @@ export default function SystemSettings() {
                                 <ShieldAlert className="w-10 h-10" />
                             </div>
                             <h3 className="text-3xl font-black text-center text-slate-800 mb-4 uppercase tracking-tight">
-                                {isClosed ? 'Open System?' : 'Shutdown?'}
+                                {isClosed ? t('settings.confirmOpenTitle') : t('settings.confirmCloseTitle')}
                             </h3>
                             <p className="text-center text-slate-500 font-medium mb-10 leading-relaxed">
                                 {isClosed
-                                    ? "Are you sure you want to bring the system back online? All feature blocks will be removed."
-                                    : "This will disable all non-parent features. Children will not be able to log in until it is reactivated."}
+                                    ? t('settings.confirmOpenDesc')
+                                    : t('settings.confirmCloseDesc')}
                             </p>
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={() => handleUpdateSettings({ isClosed: !isClosed })}
                                     className={`w-full py-5 text-white rounded-lg font-black text-lg transition-all shadow-xl active:scale-95 ${isClosed ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'}`}
                                 >
-                                    Confirm Action
+                                    {t('settings.confirmAction')}
                                 </button>
                                 <button
                                     onClick={() => setShowConfirm(false)}
                                     className="w-full py-5 bg-slate-50 text-slate-400 rounded-lg font-bold hover:bg-slate-100 transition-all"
                                 >
-                                    Nevermind
+                                    {t('settings.nevermind')}
                                 </button>
                             </div>
                         </motion.div>

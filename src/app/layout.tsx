@@ -43,20 +43,30 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  let defaultLocale = 'en'
+  try {
+    const settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
+    if (settings?.defaultLocale) {
+      defaultLocale = settings.defaultLocale
+    }
+  } catch (error) {
+    console.error('Failed to fetch default locale:', error)
+  }
+
   return (
-    <html lang="en">
+    <html lang={defaultLocale === 'zh-CN' ? 'zh' : 'en'}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <I18nProvider>
+        <I18nProvider defaultLocale={defaultLocale as 'en' | 'zh-CN'}>
           <AccountHUD />
           {children}
         </I18nProvider>

@@ -65,6 +65,7 @@ export default function GuestManagement() {
     const [guestInvitationCode, setGuestInvitationCode] = useState('')
     const [disableVisitorLogin, setDisableVisitorLogin] = useState(false)
     const [disableVisitorRegistration, setDisableVisitorRegistration] = useState(false)
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
     const [isSaving, setIsSaving] = useState(false)
 
     const fetchData = async () => {
@@ -92,6 +93,11 @@ export default function GuestManagement() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type })
+        setTimeout(() => setToast(null), 3000)
     }
 
     useEffect(() => {
@@ -212,9 +218,13 @@ export default function GuestManagement() {
                 if (updates.guestInvitationCode !== undefined) setGuestInvitationCode(updates.guestInvitationCode as string)
                 if (updates.disableVisitorLogin !== undefined) setDisableVisitorLogin(updates.disableVisitorLogin as boolean)
                 if (updates.disableVisitorRegistration !== undefined) setDisableVisitorRegistration(updates.disableVisitorRegistration as boolean)
+                showToast(t('guests.control.updateSuccess'))
+            } else {
+                showToast('Update failed!', 'error')
             }
         } catch (e) {
             console.error('Failed to update guest settings', e)
+            showToast('Network error', 'error')
         } finally {
             setIsSaving(false)
         }
@@ -236,7 +246,21 @@ export default function GuestManagement() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-20">
+        <div className="max-w-6xl mx-auto space-y-8 pb-20 relative">
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -50 }}
+                        className={`fixed top-8 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-white ${toast.type === 'success' ? 'bg-[#43aa8b]' : 'bg-rose-500'}`}
+                    >
+                        {toast.type === 'success' ? <Check className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+                        {toast.message}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Header & Tabs */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -568,7 +592,7 @@ export default function GuestManagement() {
                                     animate={{ opacity: 1, height: 'auto' }}
                                     className="space-y-2 px-2"
                                 >
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Invitation Code</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('guests.control.invitationCode')}</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
@@ -582,7 +606,7 @@ export default function GuestManagement() {
                                             onClick={() => handleUpdateSettings({ guestInvitationCode })}
                                             className="px-8 py-3 bg-slate-800 text-white rounded-2xl font-black text-xs hover:bg-black transition-all shadow-lg active:scale-95"
                                         >
-                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Set Code'}
+                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('guests.control.setCode')}
                                         </button>
                                     </div>
                                 </motion.div>

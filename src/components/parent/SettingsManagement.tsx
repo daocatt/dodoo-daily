@@ -78,7 +78,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
     }
 
     const handlePinUpdate = async () => {
-        if (pin.length < 4) { setPinError(t('settings.pinLengthError') || 'PIN must be at least 4 digits'); return }
+        if (pin.length < 4) { setPinError(t('settings.pinLengthError') || 'Password must be at least 4 digits'); return }
         setPinSaving(true); setPinError(''); setPinMessage('')
         try {
             const res = await fetch('/api/user/pin', {
@@ -86,7 +86,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pin })
             })
-            if (res.ok) { setPinMessage(t('settings.pinUpdateSuccess') || 'PIN updated!'); setPin('') }
+            if (res.ok) { setPinMessage(t('settings.pinUpdateSuccess') || 'Password updated!'); setPin('') }
             else { setPinError(t('settings.updateFailed') || 'Failed') }
         } catch (e) { setPinError(t('settings.errorNetwork') || 'Network error') }
         finally { setPinSaving(false) }
@@ -261,7 +261,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                         <Lock className="w-5 h-5 text-indigo-500" />
                     </div>
                     <div>
-                        <h3 className="font-black text-slate-800">{t('settings.securityPin') || 'Security PIN'}</h3>
+                        <h3 className="font-black text-slate-800">{t('settings.securityPin') || 'Security Password'}</h3>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{t('settings.securityPinDesc') || 'Update your access code'}</p>
                     </div>
                 </div>
@@ -294,7 +294,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                     className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-60 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
                 >
                     {pinSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-                    {pinSaving ? (t('common.loading') || 'Updating…') : (t('settings.updatePin') || 'Update PIN')}
+                    {pinSaving ? (t('common.loading') || 'Updating…') : (t('settings.updatePin') || 'Update Password')}
                 </button>
             </div>
 

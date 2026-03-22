@@ -62,6 +62,7 @@ export async function GET() {
             slug: userRecord.slug,
             exhibitionEnabled: userRecord.exhibitionEnabled,
             coins: statsRecord.currency,
+            locale: userRecord.locale,
             timezone: settings?.timezone || 'Asia/Shanghai'
         }
 

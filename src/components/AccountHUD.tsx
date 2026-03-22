@@ -96,6 +96,15 @@ export default function AccountHUD() {
                 const data = await res.json()
                 setStats(data)
 
+                // Sync locale from database to localStorage if no local cache exists (Fresh Start)
+                if (data.locale && data.locale !== locale) {
+                    const localSaved = localStorage.getItem('dodoo-locale')
+                    if (!localSaved && typeof setLocale === 'function') {
+                        console.log('[AccountHUD] Fresh start detected, syncing locale from database:', data.locale)
+                        setLocale(data.locale as any)
+                    }
+                }
+
                 if (data.isParent) {
                     const cRes = await fetch('/api/parent/children')
                     if (cRes.ok) {

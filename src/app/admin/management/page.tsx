@@ -116,8 +116,8 @@ export default function ParentDashboard() {
                             <Shield className="w-7 h-7 text-indigo-500" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-slate-800">Security Logs</h2>
-                            <p className="text-slate-500 text-sm mt-1">Audit trail of all system login activities.</p>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.securityLogs')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.securityLogsDesc')}</p>
                         </div>
                         <div className="mt-auto pt-4 text-indigo-600 font-bold flex items-center gap-1">
                             {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
@@ -264,14 +264,14 @@ export default function ParentDashboard() {
                     )}
                     <div>
                         <h1 className="text-xl font-black text-slate-900 leading-tight">
-                            {view === 'HOME' ? 'Admin Console' :
+                            {view === 'HOME' ? t('parent.adminConsole') :
                                 view === 'PROFILE' ? t('parent.profile') :
                                     view === 'FAMILY' ? t('parent.family') :
                                         view === 'SYSTEM' ? t('parent.settings') :
                                             view === 'MEDIA' ? t('parent.media') :
                                                 view === 'EXHIBITION' ? t('parent.exhibition') :
                                                     view === 'GUESTS' ? t('parent.guests') :
-                                                        view === 'LOGS' ? 'Security Logs' :
+                                                        view === 'LOGS' ? t('parent.securityLogs') :
                                                             view}
                         </h1>
                         <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest leading-tight">{t('parent.controlPanel')}</p>
@@ -295,7 +295,7 @@ export default function ParentDashboard() {
                         <div className="flex items-center gap-3">
                             <div className="text-right hidden sm:block">
                                 <div className="text-xs font-black text-slate-800">{user.name}</div>
-                                <div className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">Admin Mode</div>
+                                <div className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">{t('parent.adminMode')}</div>
                             </div>
                             <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
                                 <img src={user.avatarUrl || "/dog.svg"} alt={user.name} className="w-full h-full object-cover" />
