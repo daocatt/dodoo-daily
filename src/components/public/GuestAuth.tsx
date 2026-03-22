@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, ArrowLeft } from 'lucide-react'
+import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 
 interface GuestData {
@@ -36,6 +36,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [pendingApproval, setPendingApproval] = useState(false)
+    const [success, setSuccess] = useState(false)
     const { t } = useI18n()
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +62,10 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                 if (data.status === 'PENDING') {
                     setPendingApproval(true)
                 } else {
-                    onSuccess(data)
+                    setSuccess(true)
+                    setTimeout(() => {
+                        onSuccess(data)
+                    }, 1500)
                 }
             } else {
                 setError(data.error || 'Authentication denied')
@@ -94,7 +98,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                     <div className="grid grid-cols-2 gap-4 mb-10 shrink-0 p-1 hardware-well rounded-2xl bg-[#E2E0D4]/30">
                         <button 
                             type="button"
-                            onClick={() => { setMode('LOGIN'); setError('') }}
+                            onClick={() => { setMode('LOGIN'); setError(''); setSuccess(false) }}
                             className={`py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all transform ${
                                 mode === 'LOGIN' 
                                     ? 'bg-white text-black shadow-[0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_1px_white] scale-[0.98]' 
@@ -105,7 +109,7 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                         </button>
                         <button 
                             type="button"
-                            onClick={() => { setMode('REGISTER'); setError('') }}
+                            onClick={() => { setMode('REGISTER'); setError(''); setSuccess(false) }}
                             disabled={disableRegistration}
                             className={`py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all transform ${
                                 mode === 'REGISTER' 
@@ -118,7 +122,21 @@ export default function GuestAuth({ onSuccess, disableRegistration, asTerminal =
                     </div>
 
                     <AnimatePresence mode="wait">
-                        {pendingApproval ? (
+                        {success ? (
+                            <motion.div 
+                                key="success"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-black/5 rounded-[2rem] border-2 border-emerald-200/50"
+                            >
+                                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6 shadow-well border border-emerald-200">
+                                    <CheckCircle className="w-10 h-10 text-emerald-600" />
+                                </div>
+                                <h3 className="text-xl font-black uppercase tracking-tighter mb-2 text-emerald-900">{t('login.accessGranted')}</h3>
+                                <p className="label-mono opacity-50 text-[10px] leading-relaxed max-w-[200px] mb-8 uppercase">{t('login.redirecting')}</p>
+                            </motion.div>
+                        ) : pendingApproval ? (
                             <motion.div 
                                 key="pending"
                                 initial={{ opacity: 0, scale: 0.95 }}

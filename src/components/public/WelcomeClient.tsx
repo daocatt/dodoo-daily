@@ -32,7 +32,26 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
     const [images, setImages] = useState<string[]>(['/cyber_settlement.png'])
     const [currentIndex, setCurrentIndex] = useState(0)
     const systemName = initialSettings?.systemName?.toUpperCase() || 'DODOO DAILY'
+    const [visitor, setVisitor] = useState<any>(null)
 
+    useEffect(() => {
+        const checkVisitor = () => {
+            const stored = localStorage.getItem('visitor_data')
+            if (stored) {
+                try {
+                    setVisitor(JSON.parse(stored))
+                } catch (e) {
+                    console.error('Invalid visitor data', e)
+                }
+            } else {
+                setVisitor(null)
+            }
+        }
+        
+        checkVisitor()
+        window.addEventListener('storage', checkVisitor)
+        return () => window.removeEventListener('storage', checkVisitor)
+    }, [])
     useEffect(() => {
         if (initialSettings?.homepageImages) {
             try {
@@ -159,7 +178,9 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
                                                         <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100 shrink-0 shadow-inner">
                                                             <Layout className="w-5 h-5 text-amber-500" />
                                                         </div>
-                                                        <span className="font-black text-slate-800 tracking-tight uppercase whitespace-nowrap">{t('welcome.visitorEntrance')}</span>
+                                                        <span className="font-black text-slate-800 tracking-tight uppercase whitespace-nowrap">
+                                                            {visitor ? t('welcome.visitorHub') : t('welcome.visitorEntrance')}
+                                                        </span>
                                                     </div>
                                                     <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-amber-500 transition-colors shrink-0" />
                                                 </div>
