@@ -23,6 +23,7 @@ import {
 import { useI18n } from '@/contexts/I18nContext'
 import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
 import SmartDatePicker from '@/components/SmartDatePicker'
+import Image from 'next/image'
 
 interface GrowthRecord {
     id: string
@@ -105,7 +106,7 @@ export default function GrowthStatsPage() {
             } else {
                 setError(t('stats.error.load'))
             }
-        } catch (err) {
+        } catch (_err) {
             setError(t('settings.errorNetwork'))
         } finally {
             setLoading(false)
@@ -129,8 +130,8 @@ export default function GrowthStatsPage() {
                 setGrowthTotal(data.pagination.total)
                 setGrowthPage(data.pagination.page)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setGrowthLoading(false)
         }
@@ -152,8 +153,8 @@ export default function GrowthStatsPage() {
                 setHistoryTotal(data.pagination.total)
                 setHistoryPage(data.pagination.page)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setHistoryLoading(false)
         }
@@ -190,8 +191,8 @@ export default function GrowthStatsPage() {
                 fetchData()
                 fetchGrowthRecords(recordingChildId, 1) // Refresh to page 1
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 
@@ -203,8 +204,8 @@ export default function GrowthStatsPage() {
                 fetchData()
                 if (currentChild) fetchGrowthRecords(currentChild.id, growthPage)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 
@@ -288,7 +289,7 @@ export default function GrowthStatsPage() {
                                 onClick={() => setActiveChildIdx(idx)}
                                 className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${activeChildIdx === idx ? 'border-purple-500 scale-105 shadow-md' : 'border-white opacity-50 grayscale hover:grayscale-0 hover:opacity-100'}`}
                             >
-                                <img src={child.avatarUrl || "/dog.svg"} alt={child.name} className="w-full h-full object-cover" />
+                                <Image src={child.avatarUrl || "/dog.svg"} width={40} height={40} alt={child.name} className="w-full h-full object-cover" />
                             </button>
                         ))}
                     </div>
@@ -301,7 +302,7 @@ export default function GrowthStatsPage() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full translate-x-32 -translate-y-32 -z-0" />
 
                     <div className="relative z-10 w-32 h-32 md:w-40 md:h-40 rounded-[40px] overflow-hidden border-4 border-white shadow-2xl skew-y-2">
-                        <img src={currentChild.avatarUrl || "/dog.svg"} alt={currentChild.name} className="w-full h-full object-cover" />
+                        <Image src={currentChild.avatarUrl || "/dog.svg"} width={160} height={160} alt={currentChild.name} className="w-full h-full object-cover" />
                     </div>
 
                     <div className="relative z-10 flex-1 text-center md:text-left">
