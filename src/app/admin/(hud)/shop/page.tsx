@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Store, Coins, ShoppingBag, CheckCircle2, AlertCircle, Plus, Sparkles, Clock, X, Package, Heart, History, ClipboardList } from 'lucide-react'
+import { ChevronLeft, Store, Coins, CheckCircle2, AlertCircle, Plus, Sparkles, X, Package } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
-import { format } from 'date-fns'
 import EmojiPicker from '@/components/EmojiPicker'
 
 type ShopItem = {
@@ -18,23 +18,7 @@ type ShopItem = {
     stock: number
 }
 
-type Order = {
-    id: string
-    itemName: string
-    itemIcon: string | null
-    costCoins: number
-    status: string
-    createdAt: string
-}
 
-type Wish = {
-    id: string
-    name: string
-    description: string | null
-    imageUrl: string | null
-    status: 'PENDING' | 'APPROVED' | 'CANCELED'
-    createdAt: string
-}
 
 export default function ShopPage() {
     const [items, setItems] = useState<ShopItem[]>([])
@@ -65,8 +49,8 @@ export default function ShopPage() {
                 const data = await res.json()
                 setIsParent(data.isParent || false)
             }
-        } catch (e) {
-            console.error(e)
+        } catch (_e) {
+            console.error(_e)
         }
     }
 
@@ -75,8 +59,8 @@ export default function ShopPage() {
             const res = await fetch('/api/shop')
             const data = await res.json()
             setItems(data || [])
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -103,7 +87,7 @@ export default function ShopPage() {
             } else {
                 setMessage({ text: result.error || t('shop.buyError'), type: 'error' })
             }
-        } catch (err) {
+        } catch {
             setMessage({ text: t('login.error.network'), type: 'error' })
         } finally {
             setPurchasingId(null)
@@ -128,8 +112,8 @@ export default function ShopPage() {
                 setMessage({ text: t('shop.wish.submitted'), type: 'success' })
                 setTimeout(() => setMessage(null), 4000)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 
@@ -217,7 +201,13 @@ export default function ShopPage() {
                             >
                                 <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-500 w-24 h-24 flex items-center justify-center">
                                     {item.iconUrl?.startsWith('http') || item.iconUrl?.startsWith('/') ? (
-                                        <img src={item.iconUrl} alt={item.name} className="w-full h-full object-cover rounded-2xl shadow-sm border-2 border-amber-100" />
+                                        <Image 
+                                            src={item.iconUrl} 
+                                            alt={item.name} 
+                                            width={96}
+                                            height={96}
+                                            className="w-full h-full object-cover rounded-2xl shadow-sm border-2 border-amber-100" 
+                                        />
                                     ) : (
                                         item.iconUrl || '🎁'
                                     )}
@@ -273,9 +263,15 @@ export default function ShopPage() {
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="p-8 flex flex-col items-center text-center gap-5">
-                                <div className="w-24 h-24 flex items-center justify-center text-6xl bg-amber-50 border-2 border-amber-200 rounded-[24px] shadow-inner">
+                                <div className="w-24 h-24 flex items-center justify-center text-6xl bg-amber-50 border-2 border-amber-200 rounded-[24px] shadow-inner overflow-hidden">
                                     {confirmItem.iconUrl?.startsWith('http') || confirmItem.iconUrl?.startsWith('/') ? (
-                                        <img src={confirmItem.iconUrl} className="w-full h-full object-cover rounded-[22px]" />
+                                        <Image 
+                                            src={confirmItem.iconUrl} 
+                                            width={96}
+                                            height={96}
+                                            alt={confirmItem.name}
+                                            className="w-full h-full object-cover" 
+                                        />
                                     ) : (
                                         confirmItem.iconUrl || '🎁'
                                     )}
@@ -338,11 +334,17 @@ export default function ShopPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowEmojiPicker(v => !v)}
-                                                    className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-4xl sm:text-5xl bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-[20px] shadow-inner transition-all active:scale-95"
+                                                    className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-4xl sm:text-5xl bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-[20px] shadow-inner transition-all active:scale-95 overflow-hidden"
                                                     title="Click to pick an emoji"
                                                 >
                                                     {newEmoji.startsWith('http') || newEmoji.startsWith('/') ? (
-                                                        <img src={newEmoji} className="w-full h-full object-cover rounded-[18px]" />
+                                                        <Image 
+                                                            src={newEmoji} 
+                                                            width={80}
+                                                            height={80}
+                                                            alt="Emoji"
+                                                            className="w-full h-full object-cover" 
+                                                        />
                                                     ) : (
                                                         newEmoji
                                                     )}
