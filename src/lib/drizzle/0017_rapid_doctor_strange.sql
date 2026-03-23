@@ -1,1 +1,0 @@
-ALTER TABLE `SystemSettings` ADD `hideFamilyLogin` integer DEFAULT 0 NOT NULL;

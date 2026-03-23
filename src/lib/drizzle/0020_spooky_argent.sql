@@ -1,1 +1,0 @@
-ALTER TABLE `Artwork` ADD `isFeatured` integer DEFAULT false NOT NULL;
