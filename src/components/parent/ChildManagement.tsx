@@ -1,7 +1,13 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash2, Archive, History, Camera, X, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, Coins, UserCheck, Shield, Lock, User, Info, Check, ShieldAlert } from 'lucide-react'
+import { 
+    Users, UserCheck, UserX, Search, MessageSquare, Plus, Trash2, Archive, History, 
+    Globe, Mail, Phone, Clock, AlertTriangle, ShoppingBag, X, 
+    LayoutDashboard, Gift, Receipt, LogOut, Settings, Camera, Palette, 
+    ChevronRight, Zap, Database, Terminal, Signal, Shield, Activity, BarChart3,
+    ArrowUpRight, Disc, RefreshCw, ClipboardList, Layers, Star, Edit2, ArrowRight, Save, Coins, Lock, User, Info, Check, ShieldAlert
+} from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
@@ -62,7 +68,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
     const [processing, setProcessing] = useState(false)
     const [nicknameTouched, setNicknameTouched] = useState(false)
     const [editNicknameTouched, setEditNicknameTouched] = useState(false)
-    const [stats, setStats] = useState({
+    const [_stats, setStats] = useState({
         totalBalance: 0,
         totalChildren: 0,
         activeTasks: 0
@@ -93,7 +99,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
     }
 
     useEffect(() => {
-        fetchChildren()
+        fetchData()
     }, [])
 
     const handleSave = async (data: Partial<Child>) => {
