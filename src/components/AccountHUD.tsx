@@ -10,19 +10,16 @@ import {
     Star,
     Plus,
     ChevronRight,
-    Trophy,
-    TrendingUp,
     Settings,
     LogOut,
     Check,
     X,
-    CreditCard,
     Ruler,
     Power,
     LayoutGrid,
-    CalendarDays,
     AlertCircle
 } from 'lucide-react'
+import Image from 'next/image'
 import { useI18n, Locale } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
 import SmartDatePicker from '@/components/SmartDatePicker'
@@ -73,8 +70,8 @@ export default function AccountHUD() {
         try {
             await fetch('/api/auth/logout', { method: 'POST' })
             window.location.href = '/admin/login'
-        } catch (error) {
-            console.error('Logout failed:', error)
+        } catch (_error) {
+            console.error('Logout failed:', _error)
             window.location.href = '/admin/login'
         }
     }
@@ -118,7 +115,7 @@ export default function AccountHUD() {
         } catch (err) {
             console.error("AccountHUD: Fetch failed", err)
         }
-    }, [])
+    }, [locale])
 
     useEffect(() => {
         setMounted(true)
@@ -201,21 +198,12 @@ export default function AccountHUD() {
                         >
                             <div className="w-8 h-8 rounded-full bg-slate-100 shadow-sm overflow-hidden flex items-center justify-center border border-black/[0.03]">
                                 {stats.avatar && stats.avatar.length > 2 ? (
-                                    <img
+                                    <Image
                                         src={stats.avatar}
                                         alt={stats.name}
+                                        width={32}
+                                        height={32}
                                         className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.style.display = 'none';
-                                            const parent = target.parentElement;
-                                            if (parent) {
-                                                const span = document.createElement('span');
-                                                span.className = "text-[13px] font-black text-slate-400";
-                                                span.innerText = stats.name?.[0]?.toUpperCase() || 'U';
-                                                parent.appendChild(span);
-                                            }
-                                        }}
                                     />
                                 ) : (
                                     <span className="text-[13px] font-black text-slate-400">{stats.name?.[0]?.toUpperCase() || 'U'}</span>
@@ -344,7 +332,7 @@ export default function AccountHUD() {
                                                     )}
                                                 >
                                                     <div className="w-6 h-6 rounded-full bg-emerald-200 overflow-hidden">
-                                                        {child.avatarUrl && <img src={child.avatarUrl} alt={child.name} className="w-full h-full object-cover" />}
+                                                        {child.avatarUrl && <Image src={child.avatarUrl} width={24} height={24} alt={child.name} className="w-full h-full object-cover" />}
                                                     </div>
                                                     <span className="text-xs font-black text-slate-700">{child.name}</span>
                                                 </button>
