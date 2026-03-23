@@ -104,8 +104,8 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
                     </div>
                 </header>
 
-                <div className="flex flex-col lg:flex-row flex-1 px-8 md:px-12 pb-8 gap-8">
-                    <div className="flex-1 min-h-[320px] relative rounded-2xl overflow-hidden group border-4 border-[#DADBD4] shadow-well bg-slate-950">
+                <div className="flex flex-col md:flex-row flex-1 px-8 md:px-12 pb-8 gap-8">
+                    <div className="flex-1 min-h-[240px] md:min-h-[320px] relative rounded-2xl overflow-hidden group border-4 border-[#DADBD4] shadow-well bg-slate-950">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={currentIndex}
@@ -139,7 +139,7 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
                         )}
                     </div>
 
-                    <div className="w-full lg:w-96 flex flex-col gap-6 py-2">
+                    <div className="w-full md:w-96 flex flex-col gap-6 py-2">
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <h1 className="text-3xl font-black text-slate-900 tracking-tighter">{systemName}</h1>
