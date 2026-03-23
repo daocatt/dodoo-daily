@@ -6,6 +6,7 @@ import { Wallet, Landmark, Plus, X as XIcon, Loader2, BarChart3, ReceiptText, Ch
 import { format, subMonths, addMonths, startOfMonth } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
+import Image from 'next/image'
 interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; relatedUser?: { id: string; name: string; avatarUrl: string; }; }
 interface Category { id: string; type: string; name: string; emoji: string; }
 interface ChartData { fullDate: string; day: string; income: number; expense: number; }
@@ -74,8 +75,8 @@ export default function LedgerPage() {
             if (Array.isArray(membersData)) {
                 setMembers(membersData)
             }
-        } catch (e) {
-            console.error('Failed to fetch ledger data', e)
+        } catch (_error) {
+            console.error('Failed to fetch ledger data', _error)
         }
         setLoading(false)
     }
@@ -87,8 +88,8 @@ export default function LedgerPage() {
             const res = await fetch(`/api/ledger/stats?month=${monthStr}`)
             const data = await res.json()
             setStatsData(data)
-        } catch (e) {
-            console.error('Failed to fetch stats', e)
+        } catch (_error) {
+            console.error('Failed to fetch stats', _error)
         }
         setStatsLoading(false)
     }
@@ -130,8 +131,8 @@ export default function LedgerPage() {
             } else {
                 alert(data.error || 'Failed to add record')
             }
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
         }
         setSubmitting(false)
     }
@@ -160,8 +161,8 @@ export default function LedgerPage() {
             } else {
                 alert(data.error || '转账失败')
             }
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
         }
         setSubmitting(false)
     }
@@ -294,10 +295,12 @@ export default function LedgerPage() {
                                             </div>
                                             {record.relatedUser && (
                                                 <div className="flex -space-x-2 absolute -right-2 top-0">
-                                                    <img 
+                                                    <Image 
                                                         src={record.relatedUser.avatarUrl || "/dog.svg"} 
+                                                        width={20}
+                                                        height={20}
+                                                        alt={record.relatedUser.name}
                                                         className="w-5 h-5 rounded-full border border-white shadow-sm"
-                                                        title={record.relatedUser.name}
                                                     />
                                                 </div>
                                             )}
@@ -651,7 +654,7 @@ export default function LedgerPage() {
                                             >
                                                 <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-200">
                                                     {member.avatarUrl ? (
-                                                        <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" />
+                                                        <Image src={member.avatarUrl} width={40} height={40} alt={member.name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-500 font-bold text-xs uppercase">
                                                             {(member.nickname || member.name)[0]}

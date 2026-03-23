@@ -3,7 +3,6 @@
 import React from 'react'
 import FamilyNoteBoard from '@/components/FamilyNoteBoard'
 import NatureBackground from '@/components/NatureBackground'
-import { motion } from 'motion/react'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
