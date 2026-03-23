@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { visitor, systemSettings, ipBlacklist } from '@/lib/schema'
 import { eq, or } from 'drizzle-orm'
+import { cookies } from 'next/headers'
+import { signVisitorJWT } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
     try {
@@ -58,6 +60,18 @@ export async function POST(req: NextRequest) {
             status,
             lastIp: ip,
         }).returning()
+
+        // Set session cookie
+        const cookieStore = await cookies()
+        const token = await signVisitorJWT(newVisitor.id)
+        
+        cookieStore.set('dodoo_visitor_session', token, {
+            maxAge: 60 * 60 * 24 * 30, // 30 days
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        })
 
         return NextResponse.json(newVisitor)
     } catch (e) {

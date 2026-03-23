@@ -11,11 +11,34 @@ const JWT_SECRET = new TextEncoder().encode(
  * Sign a JWT for a user session
  */
 export async function signSessionJWT(userId: string, role: string) {
-    return await new SignJWT({ userId, role })
+    return await new SignJWT({ userId, role, type: 'FAMILY' })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
-        .setExpirationTime('365d') // Long-lived session as per user preference
+        .setExpirationTime('365d') 
         .sign(JWT_SECRET)
+}
+
+/**
+ * Sign a JWT for a visitor session
+ */
+export async function signVisitorJWT(visitorId: string) {
+    return await new SignJWT({ visitorId, type: 'VISITOR' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('30d')
+        .sign(JWT_SECRET)
+}
+
+/**
+ * Lightweight verification for Proxy/Middleware
+ */
+export async function verifyJWT(token: string) {
+    try {
+        const { payload } = await jwtVerify(token, JWT_SECRET)
+        return payload
+    } catch (e) {
+        return null
+    }
 }
 
 import { db } from './db'

@@ -70,7 +70,7 @@ export default function PublicProfileHome() {
     const [msgText, setMsgText] = useState('')
     const [sending, setSending] = useState(false)
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null)
-    const { user: member, visitor } = useAuthSession()
+    const { user: member, visitor, logout } = useAuthSession()
     const [showVisitorPanel, setShowVisitorPanel] = useState(false)
 
     const slug = params?.slug as string
@@ -517,10 +517,8 @@ export default function PublicProfileHome() {
                                         {showVisitorPanel && visitor ? (
                                             <VisitorCenter 
                                                 visitor={visitor} 
-                                                onLogout={() => { 
-                                                    localStorage.removeItem('visitor_data')
-                                                    document.cookie = 'dodoo_visitor_id=; path=/; max-age=0'
-                                                    window.dispatchEvent(new Event('storage'))
+                                                onLogout={async () => { 
+                                                    await logout()
                                                     setShowVisitorPanel(false) 
                                                 }} 
                                                 onUpdateCurrency={() => { 

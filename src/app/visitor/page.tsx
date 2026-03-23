@@ -46,8 +46,8 @@ export default function VisitorPage() {
                                 email: visitor.email,
                                 phone: visitor.phone
                             }} 
-                            onLogout={() => {
-                                logout()
+                            onLogout={async () => {
+                                await logout()
                                 router.push('/')
                             }} 
                             onUpdateCurrency={(newVal) => refresh()}

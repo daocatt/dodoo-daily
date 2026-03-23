@@ -34,34 +34,14 @@ export function useAuthSession() {
     const fetchSession = useCallback(async () => {
         setLoading(true)
         try {
-            // 1. Check Family Member Session
-            const statsRes = await fetch('/api/public/session')
-            if (statsRes.ok) {
-                const data = await statsRes.json()
-                if (data && (data.id || data.userId)) {
-                    setUser({
-                        id: data.id || data.userId,
-                        name: data.name,
-                        nickname: data.nickname,
-                        avatarUrl: data.avatarUrl,
-                        role: data.role,
-                        slug: data.slug
-                    })
-                }
+            // Check Unified Session API
+            const res = await fetch('/api/public/session')
+            if (res.ok) {
+                const data = await res.json()
+                setUser(data.user || null)
+                setVisitor(data.visitor || null)
             } else {
                 setUser(null)
-            }
-
-            // 2. Check Visitor Session
-            const storedVisitor = localStorage.getItem('visitor_data')
-            if (storedVisitor) {
-                try {
-                    const vData = JSON.parse(storedVisitor)
-                    setVisitor(vData)
-                } catch {
-                    setVisitor(null)
-                }
-            } else {
                 setVisitor(null)
             }
         } catch (err) {
@@ -74,21 +54,32 @@ export function useAuthSession() {
     useEffect(() => {
         fetchSession()
         
-        // Listen for storage changes (visitor login/logout)
+        // Listen for storage changes as a fallback/trigger
         const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === 'visitor_data') fetchSession()
+            if (e.key === 'visitor_data' || e.key === 'dodoo_session_trigger') fetchSession()
         }
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
     }, [fetchSession])
 
-    const logout = useCallback(() => {
-        // Only clear visitor for now in public pages
-        // Family member logout usually happens via /api/auth/logout which clears cookies
+    const logout = useCallback(async () => {
+        try {
+            // 1. Call Server-side Logout (Crucial for HttpOnly cookies)
+            await fetch('/api/auth/logout', { method: 'POST' })
+        } catch (err) {
+            console.warn('[AuthSession] Server logout failed, falling back to client-only:', err)
+        }
+
+        // 2. Client-side explicit cleanup (fallback for non-HttpOnly)
+        document.cookie = 'dodoo_session=; path=/; max-age=0'
+        document.cookie = 'dodoo_visitor_session=; path=/; max-age=0'
+        
+        // 3. Storage cleanup
         localStorage.removeItem('visitor_data')
-        document.cookie = 'dodoo_visitor_id=; path=/; max-age=0'
+        
+        // 4. Update state
+        setUser(null)
         setVisitor(null)
-        // If they want to logout family member, redirect to logout endpoint
     }, [])
 
     return {
