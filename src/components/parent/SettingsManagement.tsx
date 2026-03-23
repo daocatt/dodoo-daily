@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Camera, Check, X, Loader2, Save, Lock, Shield, Image as ImageIcon } from 'lucide-react'
+import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import { motion } from 'framer-motion'
 import PushSubscriptionManager from '@/components/PushSubscriptionManager'
@@ -112,12 +113,19 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                             {uploading ? (
                                 <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
                             ) : (
-                                <img
-                                    src={`${avatarUrl || '/dog.svg'}?v=5`}
-                                    alt="Avatar"
-                                    className={`w-full h-full object-cover ${!avatarUrl ? 'p-5' : ''}`}
-                                    onError={(_e) => { e.currentTarget.src = '/dog.svg'; e.currentTarget.className = 'w-full h-full object-contain p-5' }}
-                                />
+                                <div className="relative w-full h-full">
+                                    <Image
+                                        src={`${avatarUrl || '/dog.svg'}?v=5`}
+                                        alt="Avatar"
+                                        fill
+                                        className={`object-cover ${!avatarUrl ? 'p-5' : ''}`}
+                                        onError={(e) => { 
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = '/dog.svg'; 
+                                            target.className = 'object-contain p-5';
+                                        }}
+                                    />
+                                </div>
                             )}
                         </div>
                         <label className="absolute -bottom-2 -right-2 w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white cursor-pointer hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-90">

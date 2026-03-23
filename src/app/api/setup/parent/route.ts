@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, needsSetup: true })
 
     } catch (_e) {
-        console.error('Parent setup error', e)
+        console.error('Parent setup error', _e)
         return NextResponse.json({ error: 'Setup failed' }, { status: 500 })
     }
 }

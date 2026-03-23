@@ -39,7 +39,7 @@ export default function MyGalleryWidget() {
                     if (oRes.ok) setOrders(await oRes.json())
                 }
             } catch (_e) {
-                console.error('Gallery widget fetch error:', _error)
+                console.error('Gallery widget fetch error:', _e)
             } finally {
                 setLoading(false)
             }

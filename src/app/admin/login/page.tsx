@@ -71,7 +71,7 @@ export default function LoginPage() {
     }, [])
 
     const handleLogin = async (e?: React.FormEvent) => {
-        if (_e) e.preventDefault()
+        if (e) e.preventDefault()
         if (!selectedUser) return
         setLoading(true)
         setError('')

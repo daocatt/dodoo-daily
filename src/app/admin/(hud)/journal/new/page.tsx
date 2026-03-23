@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, Camera, X, Milestone as MilestoneIcon, Calendar, BookOpen, Loader2 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
+import Image from 'next/image'
 import SmartDatePicker from '@/components/SmartDatePicker'
 
 const formatDate = (date: string | number | Date) => {
@@ -126,19 +127,18 @@ export default function NewJournalPage() {
                                     <span className="text-[10px] font-black text-slate-400 mt-2 uppercase tracking-widest">Add Photo</span>
                                     <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                                 </label>
-
-                                {imagePreviews.map((prev, i) => (
-                                    <div key={i} className="relative aspect-square rounded-2xl overflow-hidden shadow-md group border-2 border-white">
-                                        <img src={prev} className="w-full h-full object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImage(i)}
-                                            className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                        >
-                                            <X className="w-8 h-8" />
-                                        </button>
-                                    </div>
-                                ))}
+                                    {imagePreviews.map((prev, i) => (
+                                        <div key={i} className="relative aspect-square rounded-2xl overflow-hidden shadow-md group border-2 border-white">
+                                            <Image src={prev} alt="Preview" fill className="object-cover" unoptimized />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeImage(i)}
+                                                className="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                            >
+                                                <X className="w-8 h-8" />
+                                            </button>
+                                        </div>
+                                    ))}
                             </div>
                         </div>
 

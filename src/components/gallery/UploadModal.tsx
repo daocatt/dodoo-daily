@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { motion } from 'motion/react'
 import { Upload, X, Camera, Sparkles, Star } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 type Album = {
     id: string
@@ -146,7 +147,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
 
                                 {uploadPreviews.map((prev, i) => (
                                     <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden shadow-md group border-2 border-white">
-                                        <img src={prev} className="w-full h-full object-cover" alt="Preview" />
+                                        <Image src={prev} alt="Preview" fill className="object-cover" unoptimized />
                                         <button
                                             type="button"
                                             onClick={() => {

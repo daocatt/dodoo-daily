@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import Lightbox from '@/components/Lightbox'
 import SmartDatePicker from '@/components/SmartDatePicker'
+import Image from 'next/image'
 
 type JournalEntry = {
     id: string
@@ -100,7 +101,7 @@ export default function JournalDetailPage() {
                     router.push('/journal')
                 }
             } catch (_error) {
-                console.error('Failed to fetch journal detail:', error)
+                console.error('Failed to fetch journal detail:', _error)
             } finally {
                 setLoading(false)
             }
@@ -159,7 +160,7 @@ export default function JournalDetailPage() {
                 alert(`Failed to save: ${error.error || 'Unknown error'}`)
             }
         } catch (_error) {
-            console.error('Failed to update journal:', error)
+            console.error('Failed to update journal:', _error)
             alert('Failed to update journal. Please try again.')
         } finally {
             setSaving(false)
@@ -228,10 +229,11 @@ export default function JournalDetailPage() {
                                                 className="w-full h-full cursor-pointer"
                                                 onClick={() => setLightbox({ images: entryImages, index: activeIndex })}
                                             >
-                                                <img
+                                                <Image
                                                     src={entryImages[activeIndex]}
                                                     alt=""
-                                                    className="w-full h-full object-cover"
+                                                    fill
+                                                    className="object-cover"
                                                 />
                                             </motion.div>
                                         </AnimatePresence>
@@ -241,7 +243,7 @@ export default function JournalDetailPage() {
                                             <>
                                                 <div className="absolute inset-y-0 left-0 w-1/4 flex items-center justify-start pl-4 pointer-events-none">
                                                     <button
-                                                        onClick={(_e) => {
+                                                        onClick={(e) => {
                                                             e.stopPropagation()
                                                             setActiveIndex((activeIndex - 1 + entryImages.length) % entryImages.length)
                                                         }}
@@ -252,7 +254,7 @@ export default function JournalDetailPage() {
                                                 </div>
                                                 <div className="absolute inset-y-0 right-0 w-1/4 flex items-center justify-end pr-4 pointer-events-none">
                                                     <button
-                                                        onClick={(_e) => {
+                                                        onClick={(e) => {
                                                             e.stopPropagation()
                                                             setActiveIndex((activeIndex + 1) % entryImages.length)
                                                         }}
@@ -270,7 +272,7 @@ export default function JournalDetailPage() {
                                                 {entryImages.map((_, i) => (
                                                     <button
                                                         key={i}
-                                                        onClick={(_e) => {
+                                                        onClick={(e) => {
                                                             e.stopPropagation()
                                                             setActiveIndex(i)
                                                         }}
@@ -293,9 +295,9 @@ export default function JournalDetailPage() {
                                     {/* Author & Header */}
                                     <div className="flex items-center justify-between pb-6 border-b border-slate-50">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-100 shadow-sm shrink-0">
+                                            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-100 shadow-sm shrink-0 relative">
                                                 {entry.authorAvatar ? (
-                                                    <img src={entry.authorAvatar} alt="" className="w-full h-full object-cover" />
+                                                    <Image src={entry.authorAvatar} alt="" fill className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full bg-slate-50 flex items-center justify-center text-slate-300">
                                                         <UserRound className="w-6 h-6" />
@@ -354,10 +356,9 @@ export default function JournalDetailPage() {
                                         <Camera className="w-8 h-8 text-slate-400 group-hover:scale-110 transition-transform" />
                                         <input type="file" multiple accept="image/*" onChange={handleImageChange} className="hidden" />
                                     </label>
-
                                     {editExistingImages.map((img, i) => (
                                         <div key={`exist-${i}`} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm group border-2 border-white">
-                                            <img src={img} className="w-full h-full object-cover" />
+                                            <Image src={img} alt="" fill className="object-cover" />
                                             <button
                                                 type="button"
                                                 onClick={() => setEditExistingImages(editExistingImages.filter((_, idx) => idx !== i))}
@@ -370,7 +371,7 @@ export default function JournalDetailPage() {
 
                                     {newPreviews.map((prev, i) => (
                                         <div key={`new-${i}`} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm group border-2 border-white">
-                                            <img src={prev} className="w-full h-full object-cover" />
+                                            <Image src={prev} alt="" fill className="object-cover" unoptimized />
                                             <button
                                                 type="button"
                                                 onClick={() => {

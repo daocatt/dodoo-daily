@@ -8,7 +8,7 @@ export async function GET(
     { params: _params }: { params: Promise<{ slug: string }> }
 ) {
     try {
-        const { slug } = await params
+        const { slug } = await _params
 
         // 1. Find user by slug (Force numeric 8-digit profile check)
         const results = await db.select({ id: users.id, slug: users.slug })
@@ -56,7 +56,7 @@ export async function GET(
 
         return NextResponse.json(publicArtworks)
     } catch (_e) {
-        console.error('Public artworks fetch error:', e)
+        console.error('Public artworks fetch error:', _e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

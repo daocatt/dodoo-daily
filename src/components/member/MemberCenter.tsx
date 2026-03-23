@@ -22,6 +22,7 @@ import {
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface MemberData {
     id: string
@@ -122,7 +123,7 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
             if (ordersRes.ok) setOrders(await ordersRes.json())
             if (likesRes.ok) setLikes(await likesRes.json())
         } catch (_err) {
-            console.error('Failed to fetch member data', err)
+            console.error('Failed to fetch member data', _err)
         }
     }
 
@@ -134,7 +135,7 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                 setMessages(await res.json())
             }
         } catch (_err) {
-            console.error('Failed to fetch messages', err)
+            console.error('Failed to fetch messages', _err)
         } finally {
             setMessageLoading(false)
         }
@@ -274,9 +275,9 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                                     <div className="flex-1 hardware-well rounded-xl bg-[#C8C4B0] p-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] border-b border-white/30">
                                         <div className="bg-[#FAF9F6]/90 rounded-[0.7rem] p-4 flex items-center gap-4 border border-[#C8C4B0] h-full relative overflow-hidden group shadow-inner">
                                             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1.5px,transparent_1.5px)] bg-[length:4px_4px]" />
-                                            <div className="w-14 h-14 bg-[#2C2A20] rounded-lg shadow-lg border-t-2 border-white/10 flex items-center justify-center font-black text-indigo-400 text-xl shrink-0 overflow-hidden">
+                                            <div className="w-14 h-14 bg-[#2C2A20] rounded-lg shadow-lg border-t-2 border-white/10 flex items-center justify-center font-black text-indigo-400 text-xl shrink-0 overflow-hidden relative">
                                                 {member.avatar ? (
-                                                    <img src={member.avatar} alt={displayName} className="w-full h-full object-cover" />
+                                                    <Image src={member.avatar} alt={displayName} fill className="object-cover" />
                                                 ) : (
                                                     <span>{member.name[0].toUpperCase()}</span>
                                                 )}
@@ -376,8 +377,8 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                         <motion.div key="orders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pb-8">
                             {orders.filter(o => o.status === 'PENDING_CONFIRM').map(order => (
                                 <div key={order.id} className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                                        {order.artworkImage && <img src={order.artworkImage} alt={order.artworkTitle} className="w-full h-full object-cover" />}
+                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200 relative">
+                                        {order.artworkImage && <Image src={order.artworkImage} alt={order.artworkTitle} fill className="object-cover" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{order.artworkTitle}</h4>
@@ -393,14 +394,14 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                             {activeTab === 'COLLECTIONS' ? orders.filter(o => o.status !== 'PENDING_CONFIRM').map(order => (
                                 <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-[#CFCBBA] flex flex-col gap-4 shadow-sm group">
                                     <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
-                                        {order.artworkImage && <img src={order.artworkImage} alt={order.artworkTitle} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />}
+                                        {order.artworkImage && <Image src={order.artworkImage} alt={order.artworkTitle} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />}
                                     </div>
                                     <h4 className="font-black text-slate-800 uppercase tracking-tight text-xs truncate px-1">{order.artworkTitle}</h4>
                                 </div>
                             )) : likes.map(like => (
                                 <Link key={like.id} href={`/u/${member.id}/exhibition/${like.artworkId}`} className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm hover:border-indigo-200 transition-colors">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                                        {like.artworkImage && <img src={like.artworkImage} alt={like.artworkTitle} className="w-full h-full object-cover" />}
+                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200 relative">
+                                        {like.artworkImage && <Image src={like.artworkImage} alt={like.artworkTitle} fill className="object-cover" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{like.artworkTitle}</h4>

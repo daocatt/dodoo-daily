@@ -113,7 +113,7 @@ export default function AccountHUD() {
                 handleLogout()
             }
         } catch (_err) {
-            console.error("AccountHUD: Fetch failed", err)
+            console.error("AccountHUD: Fetch failed", _err)
         }
     }, [locale])
 
@@ -204,6 +204,7 @@ export default function AccountHUD() {
                                         width={32}
                                         height={32}
                                         className="w-full h-full object-cover"
+                                        priority
                                     />
                                 ) : (
                                     <span className="text-[13px] font-black text-slate-400">{stats.name?.[0]?.toUpperCase() || 'U'}</span>

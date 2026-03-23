@@ -8,7 +8,7 @@ export async function GET(
     { params: _params }: { params: Promise<{ slug: string }> }
 ) {
     try {
-        const { slug } = await params
+        const { slug } = await _params
 
         const results = await db.select({
             id: users.id,
@@ -61,7 +61,7 @@ export async function GET(
             totalViews: Number(artStats.totalViews || 0)
         })
     } catch (_e) {
-        console.error('Public profile fetch error:', e)
+        console.error('Public profile fetch error:', _e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

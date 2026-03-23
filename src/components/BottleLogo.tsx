@@ -2,10 +2,11 @@
 
 import React from 'react'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 /**
  * Drift Bottle Logo — renders the bottle-logo.svg at the given size.
- * Uses <img> so the SVG is treated as a static image (no CSS clash risk).
+ * Optimized with Next.js Image component.
  */
 export default function BottleLogo({
     size = 40,
@@ -21,12 +22,12 @@ export default function BottleLogo({
     const svgHeight = size
     const svgWidth = size * (63 / 183)
     return (
-        <img
-            src="/bottle-logo.svg"
-            alt={t('common.logo')}
-            width={svgWidth}
-            height={svgHeight}
-            style={{ opacity, display: 'block', ...style }}
-        />
+        <div style={{ width: svgWidth, height: svgHeight, opacity, display: 'block', ...style, position: 'relative' }}>
+            <Image
+                src="/bottle-logo.svg"
+                alt={t('common.logo')}
+                fill
+            />
+        </div>
     )
 }

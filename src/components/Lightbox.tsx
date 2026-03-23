@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react'
+import Image from 'next/image'
 
 interface LightboxProps {
     images: string[]
@@ -58,15 +59,22 @@ export default function Lightbox({ images, initialIndex, onClose }: LightboxProp
 
                 <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
                     <AnimatePresence mode="wait">
-                        <motion.img
+                        <motion.div
                             key={index}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 1.1 }}
-                            src={images[index]}
-                            className="max-w-full max-h-full object-contain shadow-2xl rounded-lg pointer-events-auto"
-                            onClick={(_e) => e.stopPropagation()}
-                        />
+                            className="relative w-full h-full pointer-events-auto"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Image
+                                src={images[index]}
+                                alt=""
+                                fill
+                                className="object-contain"
+                                priority
+                            />
+                        </motion.div>
                     </AnimatePresence>
                 </div>
 
@@ -74,10 +82,10 @@ export default function Lightbox({ images, initialIndex, onClose }: LightboxProp
                     {images.map((img, i) => (
                         <button
                             key={i}
-                            onClick={(_e) => { e.stopPropagation(); setIndex(i); }}
-                            className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${i === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                            onClick={(e) => { e.stopPropagation(); setIndex(i); }}
+                            className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 relative ${i === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
                         >
-                            <img src={img} className="w-full h-full object-cover" />
+                            <Image src={img} alt="" fill className="object-cover" />
                         </button>
                     ))}
                 </div>

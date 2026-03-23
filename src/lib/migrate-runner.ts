@@ -12,7 +12,7 @@ export async function runMigrations() {
         });
         console.log('✅ Migrations completed successfully.');
     } catch (_error) {
-        console.error('❌ Migration failed:', error);
+        console.error('❌ Migration failed:', _error);
         process.exit(1);
     }
 }

@@ -62,7 +62,7 @@ export async function sendPushNotification(userId: string, payload: Notification
 
         return { success: true, results }
     } catch (_error) {
-        console.error('Failed to send push notification:', error)
+        console.error('Failed to send push notification:', _error)
         return { success: false, error }
     }
 }
@@ -85,7 +85,7 @@ export async function notifyParents(payload: NotificationPayload) {
 
         return { success: true, results }
     } catch (_error) {
-        console.error('Failed to notify parents:', error)
+        console.error('Failed to notify parents:', _error)
         return { success: false, error }
     }
 }

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface ShopItem {
     id: string
@@ -254,9 +255,9 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
 
                             <div className="p-5 flex gap-4">
                                 {/* Image */}
-                                <div className="w-20 h-20 rounded-xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 shadow-inner">
+                                <div className="w-20 h-20 rounded-xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 shadow-inner relative">
                                     {item.iconUrl?.startsWith('/') || item.iconUrl?.startsWith('http') ? (
-                                        <img src={item.iconUrl} alt={item.name} className="w-full h-full object-cover" />
+                                        <Image src={item.iconUrl} alt={item.name} fill className="object-cover" />
                                     ) : item.iconUrl ? (
                                         <div className="w-full h-full flex items-center justify-center text-4xl">{item.iconUrl}</div>
                                     ) : (
@@ -350,9 +351,9 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
                                     <div key={wish.id} className={`bg-white rounded-xl border transition-all ${isPending ? 'border-amber-200 shadow-sm' : 'border-slate-100 opacity-70'}`}>
                                         <div className="p-5 flex items-center gap-4">
                                             {/* Wish image */}
-                                            <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center text-3xl">
+                                            <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden shrink-0 flex items-center justify-center text-3xl relative">
                                                 {wish.imageUrl?.startsWith('/') || wish.imageUrl?.startsWith('http') ? (
-                                                    <img src={wish.imageUrl} className="w-full h-full object-cover" alt={wish.name} />
+                                                    <Image src={wish.imageUrl} fill className="object-cover" alt={wish.name} />
                                                 ) : wish.imageUrl ? wish.imageUrl : '🎁'}
                                             </div>
 
@@ -379,7 +380,9 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
                                                 <p className="text-xs text-slate-400 mb-1.5 line-clamp-1">{wish.description || '—'}</p>
                                                 <div className="flex items-center gap-2">
                                                     {wish.user.avatarUrl && (
-                                                        <img src={wish.user.avatarUrl} className="w-4 h-4 rounded-full border border-slate-200" />
+                                                        <div className="relative w-4 h-4 rounded-full border border-slate-200 overflow-hidden">
+                                                            <Image src={wish.user.avatarUrl} alt="" fill className="object-cover" />
+                                                        </div>
                                                     )}
                                                     <span className="text-[10px] font-bold text-slate-400">{wish.user.name}</span>
                                                     <span className="text-[10px] text-slate-300">·</span>
@@ -470,7 +473,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
                                                         <Loader2 className="w-6 h-6 animate-spin text-white" />
                                                     </div>
                                                 ) : formData.iconUrl?.startsWith('/') || formData.iconUrl?.startsWith('http') ? (
-                                                    <img src={formData.iconUrl} className="w-full h-full object-cover" />
+                                                    <Image src={formData.iconUrl} fill alt="" className="object-cover" />
                                                 ) : formData.iconUrl ? (
                                                     <div className="w-full h-full flex items-center justify-center text-3xl">{formData.iconUrl}</div>
                                                 ) : (

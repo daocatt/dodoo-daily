@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Shield, Clock, Hash, Smartphone, Globe, Loader2, User, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface LoginLogEntry {
     id: string
@@ -31,7 +32,7 @@ export default function LoginLog({ userId }: { userId?: string }) {
                 if (Array.isArray(data)) setLogs(data)
                 setLoading(false)
             })
-            .catch(err => {
+            .catch(_err => {
                 console.error(_err)
                 setLoading(false)
             })
@@ -73,8 +74,8 @@ export default function LoginLog({ userId }: { userId?: string }) {
                     >
                         {/* Avatar Cell */}
                         <div className="relative shrink-0">
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100">
-                                <img src={log.userAvatar || '/dog.svg'} alt={log.userName} className="w-full h-full object-cover" />
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100 relative">
+                                <Image src={log.userAvatar || '/dog.svg'} alt={log.userName} fill className="object-cover" />
                             </div>
                             <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${log.status === 'SUCCESS' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                         </div>

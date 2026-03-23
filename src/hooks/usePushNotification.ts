@@ -38,7 +38,7 @@ export function usePushNotification() {
                 setIsSubscribed(!!sub)
                 setSubscription(sub)
             } catch (_error) {
-                console.error('Error checking push subscription:', error)
+                console.error('Error checking push subscription:', _error)
             } finally {
                 setLoading(false)
             }
@@ -84,7 +84,7 @@ export function usePushNotification() {
             }
             return false
         } catch (_error) {
-            console.error('Error subscribing to push:', error)
+            console.error('Error subscribing to push:', _error)
             return false
         } finally {
             setLoading(false)
@@ -106,7 +106,7 @@ export function usePushNotification() {
             setSubscription(null)
             return true
         } catch (_error) {
-            console.error('Error unsubscribing from push:', error)
+            console.error('Error unsubscribing from push:', _error)
             return false
         } finally {
             setLoading(false)

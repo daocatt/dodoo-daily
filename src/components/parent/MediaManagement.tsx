@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 type MediaRecord = {
     id: string
@@ -54,7 +55,7 @@ export default function MediaManagement() {
                 setMedia(data)
             }
         } catch (_err) {
-            console.error('Failed to fetch media:', err)
+            console.error('Failed to fetch media:', _err)
         } finally {
             setLoading(false)
         }
@@ -87,7 +88,7 @@ export default function MediaManagement() {
                 fetchMedia()
             }
         } catch (_err) {
-            console.error('Upload failed:', err)
+            console.error('Upload failed:', _err)
         } finally {
             setUploading(false)
         }
@@ -152,7 +153,7 @@ export default function MediaManagement() {
                 <div className="flex items-center gap-3">
                     <select
                         value={uploadType}
-                        onChange={(_e) => setUploadType(e.target.value as MediaRecord['fileType'])}
+                        onChange={(e) => setUploadType(e.target.value as MediaRecord['fileType'])}
                         className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
                         {TYPE_FILTERS.filter(f => f.value !== 'ALL').map(f => (
@@ -177,7 +178,7 @@ export default function MediaManagement() {
                             type="text"
                             placeholder={t('parent.media.search')}
                             value={search}
-                            onChange={(_e) => setSearch(e.target.value)}
+                            onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
                         />
                     </div>
@@ -227,7 +228,7 @@ export default function MediaManagement() {
                                 {/* Preview / Thumbnail Area */}
                                 <div className="aspect-video bg-slate-50 relative flex items-center justify-center group-hover:bg-slate-100/50 transition-colors">
                                     {item.fileType === 'IMAGE' || item.fileType === 'GALLERY' ? (
-                                        <img src={item.path} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        <Image src={item.path} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
                                     ) : (
                                         <div className="p-8 rounded-full bg-white shadow-sm text-slate-400">
                                             {getIcon(item.fileType)}

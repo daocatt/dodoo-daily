@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Plus, X, Pin, PinOff, Trash2, Send, MessageSquareHeart } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface Note {
     id: string
@@ -42,7 +43,7 @@ export default function FamilyNoteBoard() {
                 setNotes(data)
             }
         } catch (_error) {
-            console.error('Failed to fetch notes:', error)
+            console.error('Failed to fetch notes:', _error)
         } finally {
             setLoading(false)
         }
@@ -56,7 +57,7 @@ export default function FamilyNoteBoard() {
                 setCurrentUser({ userId: data.userId, isParent: data.isParent })
             }
         } catch (_e) {
-            console.error('Failed to fetch user:', e)
+            console.error('Failed to fetch user:', _e)
         }
     }
 
@@ -88,7 +89,7 @@ export default function FamilyNoteBoard() {
                 setNotes(prev => prev.filter(n => n.id !== id))
             }
         } catch (_error) {
-            console.error('Failed to delete note:', error)
+            console.error('Failed to delete note:', _error)
         }
     }
 
@@ -103,7 +104,7 @@ export default function FamilyNoteBoard() {
                 fetchNotes()
             }
         } catch (_error) {
-            console.error('Failed to pin note:', error)
+            console.error('Failed to pin note:', _error)
         }
     }
 
@@ -167,8 +168,8 @@ export default function FamilyNoteBoard() {
                             {/* Footer */}
                             <div className="mt-4 pt-4 border-t border-black/5 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-white/40">
-                                        <img src={note.authorAvatar || "/dog.svg"} alt={note.authorName} className="w-full h-full object-cover" />
+                                    <div className="w-8 h-8 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-white/40 relative">
+                                        <Image src={note.authorAvatar || "/dog.svg"} alt={note.authorName} fill className="object-cover" />
                                     </div>
                                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{note.authorName}</span>
                                 </div>
@@ -228,7 +229,7 @@ export default function FamilyNoteBoard() {
                                         <textarea
                                             autoFocus
                                             value={newText}
-                                            onChange={(_e) => setNewText(e.target.value)}
+                                            onChange={(e) => setNewText(e.target.value)}
                                             placeholder={t('board.placeholder')}
                                             className="w-full h-40 bg-transparent border-none outline-none resize-none font-bold text-slate-800 placeholder:text-slate-400 text-lg leading-relaxed"
                                             maxLength={200}

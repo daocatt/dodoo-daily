@@ -5,6 +5,7 @@ import * as htmlToImage from 'html-to-image'
 import { QRCodeSVG } from 'qrcode.react'
 import { motion, AnimatePresence } from 'motion/react'
 import { X, Download, Image as ImageIcon, Sparkles, RefreshCw } from 'lucide-react'
+import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 
 type PosterProps = {
@@ -49,7 +50,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
             })
             setPosterImageUrl(dataUrl)
         } catch (_error) {
-            console.error('Poster generation failed:', error)
+            console.error('Poster generation failed:', _error)
         } finally {
             setGenerating(false)
         }
@@ -112,16 +113,14 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                                         <p className="text-[10px] font-bold text-[#a89880]">DoDoo Daily</p>
                                     </div>
 
-                                    {/* Image */}
-                                    <div className="mx-4 rounded-xl overflow-hidden bg-[#f5f0e8] aspect-square">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
+                                    <div className="mx-4 rounded-xl overflow-hidden bg-[#f5f0e8] aspect-square relative">
+                                        <Image
                                             src={proxiedImageUrl}
                                             alt={artwork.title}
-                                            className="w-full h-full object-cover"
-                                            crossOrigin="anonymous"
+                                            fill
+                                            className="object-cover"
                                             onLoad={() => setImgLoaded(true)}
-                                            onError={() => setImgLoaded(true)}
+                                            unoptimized // Poster generation often requires unoptimized to avoid proxy/CORS issues
                                         />
                                     </div>
 
@@ -174,10 +173,14 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                             >
                                 <p className="text-center font-black text-[#2c2416] text-sm shrink-0">{t('poster.ready')} 🎉</p>
 
-                                {/* Generated image — fills available space without scroll */}
-                                <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-xl border-2 border-white">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={posterImageUrl} alt="Generated Poster" className="w-full h-full object-contain" />
+                                <div className="flex-1 min-h-0 rounded-2xl overflow-hidden shadow-xl border-2 border-white relative">
+                                    <Image 
+                                        src={posterImageUrl} 
+                                        alt="Generated Poster" 
+                                        fill
+                                        className="object-contain" 
+                                        unoptimized
+                                    />
                                 </div>
 
                                 <button
