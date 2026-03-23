@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus, Camera, Image as ImageIcon, ChevronLeft, Archive, Sparkles, Store } from 'lucide-react'
+import { Plus, Camera, Image as ImageIcon, ChevronLeft, Archive, Sparkles, Store, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
@@ -42,7 +42,6 @@ export default function GalleryPage() {
     const [showNewAlbumModal, setShowNewAlbumModal] = useState(false)
     const [, setIsParent] = useState(false)
     const [selectedChildId] = useState<string | null>(null)
-    const [children] = useState<Child[]>([])
 
     const router = useRouter()
 
@@ -123,6 +122,13 @@ export default function GalleryPage() {
                         title={t('gallery.newAlbum')}
                     >
                         <Plus className="w-5 h-5" />
+                    </button>
+                    <button
+                        onClick={() => window.open('/admin/gallery/messages', '_blank')}
+                        className="flex items-center justify-center p-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-600 backdrop-blur-md transition-colors text-white shadow-sm border border-indigo-400 aspect-square"
+                        title="Moderate Signals"
+                    >
+                        <MessageSquare className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => router.push('/admin/gallery/exhibition')}
