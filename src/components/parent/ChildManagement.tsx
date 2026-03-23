@@ -62,14 +62,31 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
     const [processing, setProcessing] = useState(false)
     const [nicknameTouched, setNicknameTouched] = useState(false)
     const [editNicknameTouched, setEditNicknameTouched] = useState(false)
+    const [stats, setStats] = useState({
+        totalBalance: 0,
+        totalChildren: 0,
+        activeTasks: 0
+    })
 
-    const fetchChildren = async () => {
+    const fetchData = async () => {
         try {
             const res = await fetch('/api/parent/children')
-            const data = await res.json()
-            setChildren(data)
-        } catch (e) {
-            console.error('Failed to fetch children:', e)
+            if (res.ok) {
+                const data = await res.json()
+                if (Array.isArray(data)) {
+                    setChildren(data)
+                    const active = data.filter((c: Child) => !c.isDeleted && !c.isArchived)
+                    setStats({
+                        totalBalance: active.reduce((sum: number, c: Child) => sum + (c.balance || 0), 0),
+                        totalChildren: active.length,
+                        activeTasks: 0 // This would need to be fetched separately or calculated if available
+                    })
+                }
+            } else if (res.status === 401) {
+                console.warn('Unauthorized access to children data')
+            }
+        } catch (_err) {
+            console.error('Failed to fetch children:', _err)
         } finally {
             setLoading(false)
         }
@@ -206,7 +223,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
 
     if (loading) return <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('common.loading')}</div>
 
-    const activeChildren = children.filter(c => !c.isDeleted && !c.isArchived)
+    const activeChildren = Array.isArray(children) ? children.filter(c => !c.isDeleted && !c.isArchived) : []
     const renderMemberForm = (member: Partial<Child>, onChange: (val: Partial<Child>) => void) => {
         const genderEmojis = {
             MALE: '♂',

@@ -6,7 +6,8 @@ import { getSessionUser } from '@/lib/auth'
 
 async function checkIsAdmin() {
     const user = await getSessionUser()
-    return user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
+    if (!user) return false
+    return user.permissionRole === 'SUPERADMIN' || user.permissionRole === 'ADMIN' || user.role === 'PARENT'
 }
 
 async function getPermissionContext() {
@@ -14,7 +15,7 @@ async function getPermissionContext() {
     return {
         id: user?.id,
         isSuperAdmin: user?.permissionRole === 'SUPERADMIN',
-        isAdmin: user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
+        isAdmin: user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN' || user?.role === 'PARENT'
     }
 }
 
