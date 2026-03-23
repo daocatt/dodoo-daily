@@ -16,6 +16,7 @@ import PhotoWidget from '@/components/widgets/PhotoWidget'
 import MilestoneWidget from '@/components/widgets/MilestoneWidget'
 import LedgerWidget from '@/components/widgets/LedgerWidget'
 import StorageWidget from '@/components/widgets/StorageWidget'
+import MyGalleryWidget from '@/components/widgets/MyGalleryWidget'
 
 type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
 
@@ -512,6 +513,7 @@ export default function Home() {
         STORAGE: '/admin/storage'
       }
       if (routes[w.type]) router.push(routes[w.type])
+      if (w.type === 'MYGALLERY') router.push('/member')
     }
 
     // ICON Mode: Compact icon-only tile that never overflows 1×1 cell
@@ -526,6 +528,7 @@ export default function Home() {
         MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('parent.milestone') },
         LEDGER:    { Icon: Wallet,        bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
         STORAGE:   { Icon: Package,       bg: 'bg-amber-600',  glow: 'shadow-amber-600/30', label: t('storage.title') || '物资' },
+        MYGALLERY: { Icon: Sparkles,      bg: 'bg-emerald-500', glow: 'shadow-emerald-500/30', label: t('widget.myGallery.title') },
       }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
       const { Icon, bg, glow, label } = config
@@ -567,6 +570,7 @@ export default function Home() {
         case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
         case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
         case 'STORAGE': return <StorageWidget size={w.size} cellSize={cellSize} />
+        case 'MYGALLERY': return <MyGalleryWidget />
         default:
           return (
             <div className="w-full h-full bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400" style={{ fontSize: cellSize * 0.1 }}>
@@ -696,7 +700,8 @@ export default function Home() {
                   { type: 'SHOP', Icon: ShoppingBag },
                   { type: 'MILESTONE', Icon: Trophy },
                   { type: 'LEDGER', Icon: Wallet },
-                  { type: 'STORAGE', Icon: Package }
+                  { type: 'STORAGE', Icon: Package },
+                  { type: 'MYGALLERY', Icon: Sparkles }
                 ].map(({ type, Icon }) => {
                   return (
                     <button

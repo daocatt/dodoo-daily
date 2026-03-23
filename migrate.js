@@ -11,13 +11,20 @@ async function seedIfNeeded(sqlite) {
     const { randomUUID } = require('crypto');
 
     // Check if parent exists
-    const rows = sqlite.prepare("SELECT id FROM Users WHERE role = 'PARENT' LIMIT 1").all();
-    if (rows.length === 0) {
-        const id = randomUUID();
-        sqlite.prepare(
-            "INSERT INTO Users (id, name, role, pin, avatarUrl, isArchived, isDeleted) VALUES (?, ?, 'PARENT', '1234', '/parent_avatar.png', 0, 0)"
-        ).run(id, 'Parent');
-        console.log('✅ Created default Parent account (PIN: 1234)');
+    const adminRows = sqlite.prepare("SELECT id FROM Users WHERE permissionRole = 'SUPERADMIN' LIMIT 1").all();
+    if (adminRows.length === 0) {
+        // Check if 'Parent' already exists but isn't superadmin
+        const parentRows = sqlite.prepare("SELECT id FROM Users WHERE name = 'Parent' LIMIT 1").all();
+        if (parentRows.length > 0) {
+            sqlite.prepare("UPDATE Users SET permissionRole = 'SUPERADMIN', isLocked = 1 WHERE id = ?").run(parentRows[0].id);
+            console.log('✅ Promoted existing Parent account to Superadmin');
+        } else {
+            const id = randomUUID();
+            sqlite.prepare(
+                "INSERT INTO Users (id, name, role, pin, avatarUrl, isArchived, isDeleted, isLocked, permissionRole) VALUES (?, ?, 'PARENT', '1234', '/parent_avatar.png', 0, 0, 1, 'SUPERADMIN')"
+            ).run(id, 'Parent');
+            console.log('✅ Created initial Superadmin account (PIN: 1234)');
+        }
     }
 
     // Check if system settings exist

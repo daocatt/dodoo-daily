@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, guest } from '@/lib/schema'
+import { users, visitor } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Invalid locale' }, { status: 400 })
         }
 
-        if (user.isGuest) {
-            // For guests, we only use localStorage.
+        if (user.isVisitor) {
+            // For visitors, we only use localStorage.
             return NextResponse.json({ success: true, skipDb: true })
         } else {
             await db.update(users).set({ locale }).where(eq(users.id, user.id))

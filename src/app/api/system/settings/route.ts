@@ -44,7 +44,7 @@ export async function GET() {
                 disableVisitorLogin: settings.disableVisitorLogin,
                 disableVisitorRegistration: settings.disableVisitorRegistration,
                 defaultLocale: settings.defaultLocale,
-                // Do NOT include guestInvitationCode or financial ratios for non-parents
+                // Do NOT include visitorInvitationCode or financial ratios for non-parents
             }
             return NextResponse.json(publicSettings)
         }
@@ -76,9 +76,9 @@ export async function PATCH(req: NextRequest) {
         if (body.systemName !== undefined) updates.systemName = body.systemName
         if (body.systemSubtitle !== undefined) updates.systemSubtitle = body.systemSubtitle
         if (typeof body.showAllAvatars === 'boolean') updates.showAllAvatars = body.showAllAvatars
-        if (typeof body.requireGuestApproval === 'boolean') updates.requireGuestApproval = body.requireGuestApproval
+        if (typeof body.requireVisitorApproval === 'boolean') updates.requireVisitorApproval = body.requireVisitorApproval
         if (typeof body.requireInvitationCode === 'boolean') updates.requireInvitationCode = body.requireInvitationCode
-        if (body.guestInvitationCode !== undefined) updates.guestInvitationCode = body.guestInvitationCode
+        if (body.visitorInvitationCode !== undefined) updates.visitorInvitationCode = body.visitorInvitationCode
         if (typeof body.disableVisitorLogin === 'boolean') updates.disableVisitorLogin = body.disableVisitorLogin
         if (typeof body.disableVisitorRegistration === 'boolean') updates.disableVisitorRegistration = body.disableVisitorRegistration
         if (body.homepageImages !== undefined) updates.homepageImages = body.homepageImages

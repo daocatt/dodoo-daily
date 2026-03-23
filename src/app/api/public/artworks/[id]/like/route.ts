@@ -10,7 +10,7 @@ export async function POST(
     try {
         const { id } = await params
         const body = await req.json().catch(() => ({}))
-        const { guestId, memberId } = body
+        const { visitorId, memberId } = body
         const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1'
 
         // Check if already liked by this identity
@@ -19,8 +19,8 @@ export async function POST(
                 eq(artworkLike.artworkId, id),
                 or(
                     memberId ? eq(artworkLike.memberId, memberId) : undefined,
-                    guestId ? eq(artworkLike.guestId, guestId) : undefined,
-                    (!memberId && !guestId) ? eq(artworkLike.ip, ip) : undefined
+                    visitorId ? eq(artworkLike.visitorId, visitorId) : undefined,
+                    (!memberId && !visitorId) ? eq(artworkLike.ip, ip) : undefined
                 )
             )
         ).get()
@@ -33,9 +33,9 @@ export async function POST(
         // Record the like
         await db.insert(artworkLike).values({
             artworkId: id,
-            guestId: guestId || null,
+            visitorId: visitorId || null,
             memberId: memberId || null,
-            ip: (!guestId && !memberId) ? ip : null
+            ip: (!visitorId && !memberId) ? ip : null
         })
 
         // Increment total count

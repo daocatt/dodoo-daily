@@ -86,7 +86,7 @@ export function useAuthSession() {
         // Only clear visitor for now in public pages
         // Family member logout usually happens via /api/auth/logout which clears cookies
         localStorage.removeItem('visitor_data')
-        document.cookie = 'dodoo_guest_id=; path=/; max-age=0'
+        document.cookie = 'dodoo_visitor_id=; path=/; max-age=0'
         setVisitor(null)
         // If they want to logout family member, redirect to logout endpoint
     }, [])

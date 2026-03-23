@@ -24,6 +24,8 @@ export const users = sqliteTable("Users", {
     chineseZodiac: text("chineseZodiac"),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
+    isLocked: integer("isLocked", { mode: "boolean" }).default(false).notNull(), // Cannot be deleted
+    permissionRole: text("permissionRole", { enum: ["SUPERADMIN", "ADMIN", "USER"] }).default("USER").notNull(),
     lastLoginAt: integer("lastLoginAt", { mode: "timestamp_ms" }),
     locale: text("locale").default("en").notNull(),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
@@ -84,7 +86,7 @@ export const purpleStarLog = sqliteTable("PurpleStarLog", {
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
-export const guest = sqliteTable("Guest", {
+export const visitor = sqliteTable("Visitor", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text("name").notNull(),
     email: text("email"),
@@ -103,14 +105,15 @@ export const rechargeCode = sqliteTable("RechargeCode", {
     code: text("code").notNull().unique(),
     amount: integer("amount").notNull(),
     isUsed: integer("isUsed", { mode: "boolean" }).default(false).notNull(),
-    usedByGuestId: text("usedByGuestId").references(() => guest.id),
+    usedByVisitorId: text("usedByVisitorId").references(() => visitor.id),
+    usedByMemberId: text("usedByMemberId").references(() => users.id),
     usedAt: integer("usedAt", { mode: "timestamp_ms" }),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
-export const guestCurrencyLog = sqliteTable("GuestCurrencyLog", {
+export const visitorCurrencyLog = sqliteTable("VisitorCurrencyLog", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    guestId: text("guestId").notNull().references(() => guest.id),
+    visitorId: text("visitorId").notNull().references(() => visitor.id),
     amount: integer("amount").notNull(),
     balance: integer("balance").notNull(),
     reason: text("reason").notNull(), // 'RECHARGE', 'PURCHASE', 'MANUAL_ADJUST'
@@ -184,7 +187,7 @@ export const artwork = sqliteTable("Artwork", {
     albumId: text("albumId").references(() => album.id),
     isSold: integer("isSold", { mode: "boolean" }).default(false).notNull(),
     isFeatured: integer("isFeatured", { mode: "boolean" }).default(false).notNull(),
-    buyerId: text("buyerId").references(() => guest.id),
+    buyerId: text("buyerId").references(() => visitor.id),
     buyerMemberId: text("buyerMemberId").references(() => users.id),
     isArchived: integer("isArchived", { mode: "boolean" }).default(false).notNull(),
     isPublic: integer("isPublic", { mode: "boolean" }).default(false).notNull(),
@@ -198,7 +201,7 @@ export const artwork = sqliteTable("Artwork", {
 export const order = sqliteTable("Order", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     artworkId: text("artworkId").notNull().references(() => artwork.id),
-    guestId: text("guestId").references(() => guest.id),
+    visitorId: text("visitorId").references(() => visitor.id),
     memberId: text("memberId").references(() => users.id),
     amountRMB: real("amountRMB").default(0).notNull(),
     amountCoins: integer("amountCoins").default(0).notNull(),
@@ -218,7 +221,7 @@ export const order = sqliteTable("Order", {
 export const artworkLike = sqliteTable("ArtworkLike", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     artworkId: text("artworkId").notNull().references(() => artwork.id),
-    guestId: text("guestId").references(() => guest.id),
+    visitorId: text("visitorId").references(() => visitor.id),
     memberId: text("memberId").references(() => users.id),
     ip: text("ip"),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
@@ -315,9 +318,9 @@ export const systemSettings = sqliteTable("SystemSettings", {
     systemName: text("systemName").default("DoDoo Family").notNull(),
     systemSubtitle: text("systemSubtitle"),
     showAllAvatars: integer("showAllAvatars", { mode: "boolean" }).default(true).notNull(),
-    requireGuestApproval: integer("requireGuestApproval", { mode: "boolean" }).default(true).notNull(),
+    requireVisitorApproval: integer("requireVisitorApproval", { mode: "boolean" }).default(true).notNull(),
     requireInvitationCode: integer("requireInvitationCode", { mode: "boolean" }).default(false).notNull(),
-    guestInvitationCode: text("guestInvitationCode"),
+    visitorInvitationCode: text("visitorInvitationCode"),
     disableVisitorLogin: integer("disableVisitorLogin", { mode: "boolean" }).default(false).notNull(),
     disableVisitorRegistration: integer("disableVisitorRegistration", { mode: "boolean" }).default(false).notNull(),
     hideFamilyLogin: integer("hideFamilyLogin", { mode: "boolean" }).default(false).notNull(),
@@ -326,9 +329,9 @@ export const systemSettings = sqliteTable("SystemSettings", {
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 
-export const guestMessage = sqliteTable("GuestMessage", {
+export const visitorMessage = sqliteTable("VisitorMessage", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    guestId: text("guestId").references(() => guest.id),
+    visitorId: text("visitorId").references(() => visitor.id),
     memberId: text("memberId").references(() => users.id),
     targetUserId: text("targetUserId").notNull().references(() => users.id),
     text: text("text").notNull(),

@@ -12,7 +12,7 @@ import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
 import AuthGate from '@/components/public/AuthGate'
 import VisitorCenter from '@/components/public/VisitorCenter'
-import GuestAuth from '@/components/public/GuestAuth'
+import VisitorAuth from '@/components/public/VisitorAuth'
 import { useAuthSession } from '@/hooks/useAuthSession'
 
 type ArtworkDetail = {
@@ -142,7 +142,7 @@ export default function ArtworkDetailPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    guestId: visitor?.id,
+                    visitorId: visitor?.id,
                     memberId: member?.id
                 })
             })
@@ -172,10 +172,10 @@ export default function ArtworkDetailPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     artworkId: id,
-                    guestId: visitor?.id,
+                    visitorId: visitor?.id,
                     memberId: member?.id,
-                    guestName: member?.name || visitor?.name || contactName.trim(),
-                    guestPhone: visitor?.phone || contactPhone.trim(),
+                    visitorName: member?.name || visitor?.name || contactName.trim(),
+                    visitorPhone: visitor?.phone || contactPhone.trim(),
                     paymentType: (visitor || member) ? 'COINS' : 'RMB',
                     contactName: contactName.trim() || member?.name || visitor?.name,
                     contactPhone: contactPhone.trim(),
@@ -512,7 +512,7 @@ export default function ArtworkDetailPage() {
                             <AuthGate 
                                 mode="ANY"
                                 fallback={
-                                    <GuestAuth 
+                                    <VisitorAuth 
                                         asTerminal={true}
                                         onSuccess={(data) => {
                                             localStorage.setItem('visitor_data', JSON.stringify(data))

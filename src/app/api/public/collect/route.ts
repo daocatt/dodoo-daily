@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { artwork, guest, order, guestCurrencyLog, accountStats, accountStatsLog } from '@/lib/schema'
+import { artwork, visitor, order, visitorCurrencyLog, accountStats, accountStatsLog } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { artworkId, guestId, memberId, guestName, guestPhone, paymentType, contactName, contactPhone, contactEmail, shippingAddress } = body
+        const { artworkId, visitorId, memberId, visitorName, visitorPhone, paymentType, contactName, contactPhone, contactEmail, shippingAddress } = body
 
         if (!artworkId) {
             return NextResponse.json({ error: 'Missing artwork ID' }, { status: 400 })
         }
 
-        if (!memberId && (!guestName || (!contactEmail && !contactPhone && !guestPhone))) {
+        if (!memberId && (!visitorName || (!contactEmail && !contactPhone && !visitorPhone))) {
             return NextResponse.json({ error: 'Incomplete information. Email or phone is required for visitors.' }, { status: 400 })
         }
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Artwork not available' }, { status: 404 })
         }
 
-        let currentGuestId = guestId
+        let currentVisitorId = visitorId
         let newBalance = undefined
 
         const result = await db.transaction(async (tx) => {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
                     amountCoins: art.priceCoins || 0,
                     paymentType: paymentType || 'COINS',
                     status: 'CONFIRMED', // Family orders are auto-confirmed usually? Or PENDING_CONFIRM
-                    contactName: contactName || guestName || 'Family Member',
+                    contactName: contactName || visitorName || 'Family Member',
                     shippingAddress: shippingAddress || 'INTERNAL_FAMILY'
                 }).returning().get()
 
@@ -70,29 +70,29 @@ export async function POST(req: NextRequest) {
                 return { orderId: newOrder.id, newBalance }
             } 
             
-            // Case B: Guest
-            if (!currentGuestId) {
-                const newG = tx.insert(guest).values({
-                    name: guestName,
-                    phone: guestPhone,
+            // Case B: Visitor
+            if (!currentVisitorId) {
+                const newG = tx.insert(visitor).values({
+                    name: visitorName,
+                    phone: visitorPhone,
                     status: 'APPROVED'
                 }).returning().get()
-                currentGuestId = newG.id
+                currentVisitorId = newG.id
             }
 
             if (paymentType === 'COINS') {
-                const currentGuest = tx.select().from(guest).where(eq(guest.id, currentGuestId)).get()
-                if (!currentGuest) throw new Error('Guest not found')
+                const currentVisitor = tx.select().from(visitor).where(eq(visitor.id, currentVisitorId)).get()
+                if (!currentVisitor) throw new Error('Visitor not found')
                 
-                if (currentGuest.currency < art.priceCoins) {
+                if (currentVisitor.currency < art.priceCoins) {
                     throw new Error('Insufficient coins balance')
                 }
 
-                newBalance = currentGuest.currency - art.priceCoins
-                tx.update(guest).set({ currency: newBalance }).where(eq(guest.id, currentGuestId)).run()
+                newBalance = currentVisitor.currency - art.priceCoins
+                tx.update(visitor).set({ currency: newBalance }).where(eq(visitor.id, currentVisitorId)).run()
                 
-                tx.insert(guestCurrencyLog).values({
-                    guestId: currentGuestId,
+                tx.insert(visitorCurrencyLog).values({
+                    visitorId: currentVisitorId,
                     amount: -art.priceCoins,
                     balance: newBalance,
                     reason: 'PURCHASE'
@@ -101,18 +101,18 @@ export async function POST(req: NextRequest) {
 
             const newOrder = tx.insert(order).values({
                 artworkId: art.id,
-                guestId: currentGuestId!,
+                visitorId: currentVisitorId!,
                 amountRMB: art.priceRMB || 0,
                 amountCoins: art.priceCoins || 0,
                 paymentType: paymentType || 'COINS',
                 status: 'PENDING_CONFIRM',
-                contactName: contactName || guestName,
-                contactPhone: contactPhone || guestPhone,
+                contactName: contactName || visitorName,
+                contactPhone: contactPhone || visitorPhone,
                 contactEmail: contactEmail || null,
                 shippingAddress: shippingAddress || null
             }).returning().get()
 
-            tx.update(artwork).set({ isSold: true, buyerId: currentGuestId! }).where(eq(artwork.id, art.id)).run()
+            tx.update(artwork).set({ isSold: true, buyerId: currentVisitorId! }).where(eq(artwork.id, art.id)).run()
 
             return { orderId: newOrder.id, newBalance }
         })

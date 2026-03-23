@@ -225,7 +225,7 @@ export default function ExhibitionSettingsPage() {
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                                                        {m.memberId ? (m.memberNickname || m.memberName) : m.guestName || 'Guest'}
+                                                        {m.memberId ? (m.memberNickname || m.memberName) : m.visitorName || 'Visitor'}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400">
                                                         {new Date(m.createdAt).toLocaleString()}

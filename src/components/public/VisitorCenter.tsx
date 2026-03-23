@@ -7,13 +7,14 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 
-interface GuestData {
+interface VisitorData {
     id: string
     name: string
     currency: number
     phone?: string
     email?: string
     address?: string | null
+    isMember?: boolean
 }
 
 interface CurrencyLog {
@@ -45,7 +46,7 @@ const ModalHeader = ({ title, id }: { title: string, id: string }) => (
     </div>
 )
 
-export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { guest: GuestData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
+export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: { visitor: VisitorData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
     const { t } = useI18n()
     const params = useParams()
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'ADDRESS' | 'PROFILE'>('OVERVIEW')
@@ -56,25 +57,34 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
     const [loading, setLoading] = useState(false)
     const [rechargeLoading, setRechargeLoading] = useState(false)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
-    const [addressInput, setAddressInput] = useState(guest.address || '')
+    const [addressInput, setAddressInput] = useState(visitor.address || '')
     const [savingAddress, setSavingAddress] = useState(false)
-    const [profileName, setProfileName] = useState(guest.name || '')
-    const [profileEmail, setProfileEmail] = useState(guest.email || '')
-    const [profilePhone, setProfilePhone] = useState(guest.phone || '')
+    const [profileName, setProfileName] = useState(visitor.name || '')
+    const [profileEmail, setProfileEmail] = useState(visitor.email || '')
+    const [profilePhone, setProfilePhone] = useState(visitor.phone || '')
     const [profilePassword, setProfilePassword] = useState('')
     const [savingProfile, setSavingProfile] = useState(false)
 
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [lRes, oRes, fRes] = await Promise.all([
-                fetch(`/api/guest/logs?guestId=${guest.id}`),
-                fetch(`/api/guest/orders?guestId=${guest.id}`),
-                fetch(`/api/guest/likes?guestId=${guest.id}`)
+            const idParam = visitor.isMember ? `memberId=${visitor.id}` : `visitorId=${visitor.id}`
+            const balanceApi = visitor.isMember ? `/api/stats` : `/api/visitor/profile?visitorId=${visitor.id}`
+            
+            const [lRes, oRes, fRes, bRes] = await Promise.all([
+                fetch(`/api/visitor/logs?${idParam}`),
+                fetch(`/api/visitor/orders?${idParam}`),
+                fetch(`/api/visitor/likes?${idParam}`),
+                fetch(balanceApi)
             ])
+            
             if (lRes.ok) setLogs(await lRes.json())
             if (oRes.ok) setOrders(await oRes.json())
             if (fRes.ok) setLikes(await fRes.json())
+            if (bRes.ok) {
+                const bData = await bRes.json()
+                onUpdateCurrency(visitor.isMember ? (bData.stats?.currency ?? 0) : (bData.currency ?? 0))
+            }
         } finally {
             setLoading(false)
         }
@@ -91,10 +101,11 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
         setRechargeLoading(true)
         setMessage(null)
         try {
-            const res = await fetch('/api/guest/recharge', {
+            const idKey = visitor.isMember ? 'memberId' : 'visitorId'
+            const res = await fetch('/api/visitor/recharge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ guestId: guest.id, code: rechargeCode })
+                body: JSON.stringify({ [idKey]: visitor.id, code: rechargeCode })
             })
             const data = await res.json()
             if (res.ok) {
@@ -117,7 +128,7 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
             const res = await fetch('/api/open/visitor/address', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ guestId: guest.id, address: addressInput })
+                body: JSON.stringify({ visitorId: visitor.id, address: addressInput })
             })
             if (res.ok) {
                 setMessage({ text: 'Address packet saved!', type: 'success' })
@@ -134,11 +145,12 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
         setSavingProfile(true)
         setMessage(null)
         try {
-            const res = await fetch('/api/guest/profile', {
+            const idKey = visitor.isMember ? 'memberId' : 'visitorId'
+            const res = await fetch('/api/visitor/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    guestId: guest.id, 
+                    [idKey]: visitor.id, 
                     name: profileName, 
                     email: profileEmail, 
                     phone: profilePhone, 
@@ -169,18 +181,18 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
             <div className="flex justify-between items-center mb-8 bg-[#F4F4F2] p-4 rounded-2xl border border-[#C8C4B0] shadow-well">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-[#2C2A20] rounded-xl flex items-center justify-center font-black text-indigo-400 text-xl shadow-lg">
-                        {guest.name[0].toUpperCase()}
+                        {visitor.name[0].toUpperCase()}
                     </div>
                     <div>
-                        <h3 className="text-base font-black text-slate-800 uppercase tracking-tight">{guest.name}</h3>
+                        <h3 className="text-base font-black text-slate-800 uppercase tracking-tight">{visitor.name}</h3>
                         <div className="flex items-center gap-3">
-                            {guest.phone && <div className="flex items-center gap-1 opacity-40"><Smartphone className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{guest.phone}</span></div>}
-                            {guest.email && <div className="flex items-center gap-1 opacity-40"><Mail className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{guest.email}</span></div>}
+                            {visitor.phone && <div className="flex items-center gap-1 opacity-40"><Smartphone className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{visitor.phone}</span></div>}
+                            {visitor.email && <div className="flex items-center gap-1 opacity-40"><Mail className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{visitor.email}</span></div>}
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link href="/guest/family" title="Family Exhibition" className="flex items-center gap-2 p-3 text-indigo-500 hover:text-white hover:bg-indigo-500 rounded-xl transition-all border border-transparent hover:border-indigo-600 bg-indigo-50">
+                    <Link href="/visitor/family" title="Family Exhibition" className="flex items-center gap-2 p-3 text-indigo-500 hover:text-white hover:bg-indigo-500 rounded-xl transition-all border border-transparent hover:border-indigo-600 bg-indigo-50">
                         <Users className="w-5 h-5" />
                         <span className="text-[10px] font-black uppercase hidden sm:block">Family</span>
                     </Link>
@@ -198,7 +210,7 @@ export default function VisitorCenter({ guest, onLogout, onUpdateCurrency }: { g
                 <div className="relative z-10">
                     <p className="label-mono text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-1">Balance Available</p>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-black tracking-tighter text-white">{guest.currency}</span>
+                        <span className="text-4xl font-black tracking-tighter text-white">{visitor.currency}</span>
                         <span className="text-indigo-400 font-bold uppercase tracking-widest text-[9px]">Units</span>
                     </div>
                 </div>

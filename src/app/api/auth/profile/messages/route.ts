@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { guestMessage, guest, users } from '@/lib/schema'
+import { visitorMessage, visitor, users } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
 import { eq, and, desc } from 'drizzle-orm'
 
@@ -11,19 +11,19 @@ export async function GET() {
 
         // 1. Fetch all messages targeted to this user
         const messages = await db.select({
-            id: guestMessage.id,
-            text: guestMessage.text,
-            isPublic: guestMessage.isPublic,
-            createdAt: guestMessage.createdAt,
-            guestName: guest.name,
+            id: visitorMessage.id,
+            text: visitorMessage.text,
+            isPublic: visitorMessage.isPublic,
+            createdAt: visitorMessage.createdAt,
+            visitorName: visitor.name,
             memberName: users.name,
             memberNickname: users.nickname
         })
-        .from(guestMessage)
-        .leftJoin(guest, eq(guestMessage.guestId, guest.id))
-        .leftJoin(users, eq(guestMessage.memberId, users.id))
-        .where(eq(guestMessage.targetUserId, user.id))
-        .orderBy(desc(guestMessage.createdAt))
+        .from(visitorMessage)
+        .leftJoin(visitor, eq(visitorMessage.visitorId, visitor.id))
+        .leftJoin(users, eq(visitorMessage.memberId, users.id))
+        .where(eq(visitorMessage.targetUserId, user.id))
+        .orderBy(desc(visitorMessage.createdAt))
 
         return NextResponse.json(messages)
     } catch (e) {
@@ -39,9 +39,9 @@ export async function PATCH(req: NextRequest) {
         const { id, isPublic } = await req.json()
         if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
-        const result = await db.update(guestMessage)
+        const result = await db.update(visitorMessage)
             .set({ isPublic })
-            .where(and(eq(guestMessage.id, id), eq(guestMessage.targetUserId, user.id)))
+            .where(and(eq(visitorMessage.id, id), eq(visitorMessage.targetUserId, user.id)))
             .returning()
 
         return NextResponse.json(result[0])
@@ -59,8 +59,8 @@ export async function DELETE(req: NextRequest) {
         const id = searchParams.get('id')
         if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
-        await db.delete(guestMessage)
-            .where(and(eq(guestMessage.id, id), eq(guestMessage.targetUserId, user.id)))
+        await db.delete(visitorMessage)
+            .where(and(eq(visitorMessage.id, id), eq(visitorMessage.targetUserId, user.id)))
 
         return NextResponse.json({ success: true })
     } catch (e) {

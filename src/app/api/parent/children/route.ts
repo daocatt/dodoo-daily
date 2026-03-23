@@ -4,13 +4,22 @@ import { users, accountStats, systemSettings } from '@/lib/schema'
 import { eq, and, not, or } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-async function checkIsParent() {
+async function checkIsAdmin() {
     const user = await getSessionUser()
-    return user?.role === 'PARENT'
+    return user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
+}
+
+async function getPermissionContext() {
+    const user = await getSessionUser()
+    return {
+        id: user?.id,
+        isSuperAdmin: user?.permissionRole === 'SUPERADMIN',
+        isAdmin: user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
+    }
 }
 
 export async function GET() {
-    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await checkIsAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const children = await db.select({
@@ -27,6 +36,8 @@ export async function GET() {
             role: users.role,
             isArchived: users.isArchived,
             isDeleted: users.isDeleted,
+            isLocked: users.isLocked,
+            permissionRole: users.permissionRole,
             createdAt: users.createdAt,
             stats: {
                 currency: accountStats.currency,
@@ -37,7 +48,7 @@ export async function GET() {
         })
             .from(users)
             .leftJoin(accountStats, eq(users.id, accountStats.userId))
-            .where(not(eq(users.role, 'PARENT')))
+            .where(not(eq(users.permissionRole, 'SUPERADMIN')))
             .all()
 
         const formattedChildren = children.map(child => {
@@ -63,7 +74,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await checkIsAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const body = await req.json()
@@ -152,13 +163,22 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await getPermissionContext()
+    if (!auth.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const body = await req.json()
-        const { id, name, nickname, slug, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted, exhibitionEnabled } = body
-        let { zodiac, chineseZodiac } = body
+        const { id, name, nickname, slug, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted, exhibitionEnabled, permissionRole } = body
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+        
+        // Safety check: Cannot modify SUPERADMIN unless you ARE the SUPERADMIN (and even then, limited)
+        const target = await db.select().from(users).where(eq(users.id, id)).get()
+        if (target?.permissionRole === 'SUPERADMIN' && !auth.isSuperAdmin) {
+            return NextResponse.json({ error: 'Cannot modify Superadmin' }, { status: 403 })
+        }
+        if (target?.isLocked && !auth.isSuperAdmin) {
+            return NextResponse.json({ error: 'Account is locked' }, { status: 403 })
+        }
 
         if (birthDate !== undefined) {
             const { getZodiac, getChineseZodiac } = await import('@/lib/utils');
@@ -212,6 +232,11 @@ export async function PATCH(req: NextRequest) {
         if (isDeleted !== undefined) updateData.isDeleted = isDeleted
         if (exhibitionEnabled !== undefined) updateData.exhibitionEnabled = exhibitionEnabled
         if (validatedSlug !== undefined) updateData.slug = validatedSlug
+        
+        // ONLY Superadmin can change permissionRole
+        if (permissionRole !== undefined && auth.isSuperAdmin) {
+            updateData.permissionRole = permissionRole
+        }
         else if (nickname !== undefined || name !== undefined) {
              // Optionally auto-update slug if name changes and it wasn't specified? 
              // Better only if it doesn't already have one.
@@ -230,11 +255,20 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await getPermissionContext()
+    if (!auth.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const { id } = await req.json()
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+
+        const target = await db.select().from(users).where(eq(users.id, id)).get()
+        if (target?.isLocked) {
+            return NextResponse.json({ error: 'Cannot delete locked account' }, { status: 403 })
+        }
+        if (target?.permissionRole === 'SUPERADMIN') {
+            return NextResponse.json({ error: 'Cannot delete Superadmin' }, { status: 403 })
+        }
 
         await db.update(users)
             .set({ isDeleted: true })

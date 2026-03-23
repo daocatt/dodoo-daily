@@ -7,10 +7,10 @@ CREATE TABLE `IpBlacklist` (
 --> statement-breakpoint
 CREATE UNIQUE INDEX `IpBlacklist_ip_unique` ON `IpBlacklist` (`ip`);--> statement-breakpoint
 ALTER TABLE `Artwork` ADD `isApproved` integer DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE `Guest` ADD `email` text;--> statement-breakpoint
-ALTER TABLE `Guest` ADD `status` text DEFAULT 'PENDING' NOT NULL;--> statement-breakpoint
-ALTER TABLE `Guest` ADD `lastIp` text;--> statement-breakpoint
+ALTER TABLE `Visitor` ADD `email` text;--> statement-breakpoint
+ALTER TABLE `Visitor` ADD `status` text DEFAULT 'PENDING' NOT NULL;--> statement-breakpoint
+ALTER TABLE `Visitor` ADD `lastIp` text;--> statement-breakpoint
 ALTER TABLE `SystemSettings` ADD `systemSubtitle` text;--> statement-breakpoint
-ALTER TABLE `SystemSettings` ADD `requireGuestApproval` integer DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE `SystemSettings` ADD `requireVisitorApproval` integer DEFAULT true NOT NULL;--> statement-breakpoint
 ALTER TABLE `SystemSettings` ADD `requireInvitationCode` integer DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE `SystemSettings` ADD `guestInvitationCode` text;
+ALTER TABLE `SystemSettings` ADD `visitorInvitationCode` text;

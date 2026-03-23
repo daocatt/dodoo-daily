@@ -47,7 +47,7 @@ export function proxy(request: NextRequest) {
         pathname.startsWith('/admin/login') || 
         pathname.startsWith('/u/') || 
         pathname.startsWith('/buy/') ||
-        pathname.startsWith('/guest/') ||
+        pathname.startsWith('/visitor/') ||
         pathname.startsWith('/admin/setup') 
 
     if (!hasSession && !isOpenPage) {

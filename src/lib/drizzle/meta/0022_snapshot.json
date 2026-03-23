@@ -419,10 +419,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Artwork_buyerId_Guest_id_fk": {
-          "name": "Artwork_buyerId_Guest_id_fk",
+        "Artwork_buyerId_Visitor_id_fk": {
+          "name": "Artwork_buyerId_Visitor_id_fk",
           "tableFrom": "Artwork",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
             "buyerId"
           ],
@@ -467,8 +467,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -512,12 +512,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "ArtworkLike_guestId_Guest_id_fk": {
-          "name": "ArtworkLike_guestId_Guest_id_fk",
+        "ArtworkLike_visitorId_Visitor_id_fk": {
+          "name": "ArtworkLike_visitorId_Visitor_id_fk",
           "tableFrom": "ArtworkLike",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"
@@ -922,8 +922,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Guest": {
-      "name": "Guest",
+    "Visitor": {
+      "name": "Visitor",
       "columns": {
         "id": {
           "name": "id",
@@ -1013,8 +1013,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "GuestCurrencyLog": {
-      "name": "GuestCurrencyLog",
+    "VisitorCurrencyLog": {
+      "name": "VisitorCurrencyLog",
       "columns": {
         "id": {
           "name": "id",
@@ -1023,8 +1023,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1062,12 +1062,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "GuestCurrencyLog_guestId_Guest_id_fk": {
-          "name": "GuestCurrencyLog_guestId_Guest_id_fk",
-          "tableFrom": "GuestCurrencyLog",
-          "tableTo": "Guest",
+        "VisitorCurrencyLog_visitorId_Visitor_id_fk": {
+          "name": "VisitorCurrencyLog_visitorId_Visitor_id_fk",
+          "tableFrom": "VisitorCurrencyLog",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"
@@ -1080,8 +1080,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "GuestMessage": {
-      "name": "GuestMessage",
+    "VisitorMessage": {
+      "name": "VisitorMessage",
       "columns": {
         "id": {
           "name": "id",
@@ -1090,8 +1090,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1137,12 +1137,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "GuestMessage_guestId_Guest_id_fk": {
-          "name": "GuestMessage_guestId_Guest_id_fk",
-          "tableFrom": "GuestMessage",
-          "tableTo": "Guest",
+        "VisitorMessage_visitorId_Visitor_id_fk": {
+          "name": "VisitorMessage_visitorId_Visitor_id_fk",
+          "tableFrom": "VisitorMessage",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"
@@ -1150,9 +1150,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "GuestMessage_memberId_Users_id_fk": {
-          "name": "GuestMessage_memberId_Users_id_fk",
-          "tableFrom": "GuestMessage",
+        "VisitorMessage_memberId_Users_id_fk": {
+          "name": "VisitorMessage_memberId_Users_id_fk",
+          "tableFrom": "VisitorMessage",
           "tableTo": "Users",
           "columnsFrom": [
             "memberId"
@@ -1163,9 +1163,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "GuestMessage_targetUserId_Users_id_fk": {
-          "name": "GuestMessage_targetUserId_Users_id_fk",
-          "tableFrom": "GuestMessage",
+        "VisitorMessage_targetUserId_Users_id_fk": {
+          "name": "VisitorMessage_targetUserId_Users_id_fk",
+          "tableFrom": "VisitorMessage",
           "tableTo": "Users",
           "columnsFrom": [
             "targetUserId"
@@ -1894,8 +1894,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -2013,12 +2013,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Order_guestId_Guest_id_fk": {
-          "name": "Order_guestId_Guest_id_fk",
+        "Order_visitorId_Visitor_id_fk": {
+          "name": "Order_visitorId_Visitor_id_fk",
           "tableFrom": "Order",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"
@@ -2361,8 +2361,8 @@
           "autoincrement": false,
           "default": false
         },
-        "usedByGuestId": {
-          "name": "usedByGuestId",
+        "usedByVisitorId": {
+          "name": "usedByVisitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -2394,12 +2394,12 @@
         }
       },
       "foreignKeys": {
-        "RechargeCode_usedByGuestId_Guest_id_fk": {
-          "name": "RechargeCode_usedByGuestId_Guest_id_fk",
+        "RechargeCode_usedByVisitorId_Visitor_id_fk": {
+          "name": "RechargeCode_usedByVisitorId_Visitor_id_fk",
           "tableFrom": "RechargeCode",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "usedByGuestId"
+            "usedByVisitorId"
           ],
           "columnsTo": [
             "id"
@@ -2796,8 +2796,8 @@
           "autoincrement": false,
           "default": true
         },
-        "requireGuestApproval": {
-          "name": "requireGuestApproval",
+        "requireVisitorApproval": {
+          "name": "requireVisitorApproval",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -2812,8 +2812,8 @@
           "autoincrement": false,
           "default": false
         },
-        "guestInvitationCode": {
-          "name": "guestInvitationCode",
+        "visitorInvitationCode": {
+          "name": "visitorInvitationCode",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

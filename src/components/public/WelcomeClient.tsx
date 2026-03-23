@@ -177,7 +177,7 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
                                             <span className="label-mono text-[10px]">Entry G-1</span>
                                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.5)]" />
                                         </div>
-                                        <Link href="/guest/login" className="hardware-btn group w-full block">
+                                        <Link href="/visitor/login" className="hardware-btn group w-full block">
                                             <div className="hardware-well h-20 w-full rounded-xl overflow-hidden relative">
                                                 <div className="hardware-cap absolute inset-2 bg-[#E8E8E4] rounded-lg flex items-center px-8 justify-between group-hover:bg-white transition-all shadow-sm">
                                                     <div className="flex items-center gap-4 min-w-0">

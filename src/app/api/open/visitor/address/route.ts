@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { guest } from '@/lib/schema'
+import { visitor } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 
 export async function PATCH(req: NextRequest) {
     try {
         const body = await req.json()
-        const { guestId, address } = body
+        const { visitorId, address } = body
 
-        if (!guestId) return NextResponse.json({ error: 'Missing guestId' }, { status: 400 })
+        if (!visitorId) return NextResponse.json({ error: 'Missing visitorId' }, { status: 400 })
 
-        await db.update(guest).set({ 
+        await db.update(visitor).set({ 
             address: address || null 
-        }).where(eq(guest.id, guestId))
+        }).where(eq(visitor.id, visitorId))
 
         return NextResponse.json({ success: true, address })
     } catch (error) {

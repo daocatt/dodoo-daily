@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Plus, Trash2, Archive, History, Camera, X, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, Coins, UserCheck } from 'lucide-react'
+import { Plus, Trash2, Archive, History, Camera, X, Edit2, Star, ArrowRight, Save, AlertTriangle, Users, Coins, UserCheck, Shield, Lock, User, Info, Check, ShieldAlert } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
@@ -30,6 +30,8 @@ interface Child {
         angerPenalties: number
         currency: number
     }
+    permissionRole?: 'SUPERADMIN' | 'ADMIN' | 'USER'
+    isLocked?: boolean
 }
 
 interface BalanceLog {
@@ -41,7 +43,10 @@ interface BalanceLog {
     createdAt: string
 }
 
-export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: string) => void }) {
+export default function ChildManagement({ onAssignTask, currentUser }: { 
+    onAssignTask?: (id: string) => void,
+    currentUser: { id: string; permissionRole: string }
+}) {
     const { t } = useI18n()
     const [children, setChildren] = useState<Child[]>([])
     const [loading, setLoading] = useState(true)
@@ -180,6 +185,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
     }
 
     const handleDelete = async (id: string) => {
+        const item = children.find(c => c.id === id)
+        if (item?.isLocked) {
+            alert('This account is locked and cannot be deleted.')
+            setConfirmModal(null)
+            return
+        }
         if (processing) return
         setProcessing(true)
         try {
@@ -360,6 +371,32 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                         </button>
                     </div>
                 </div>
+                
+                {/* Admin Role Toggle (Superadmin only) */}
+                {currentUser.permissionRole === 'SUPERADMIN' && member.id && member.id !== currentUser.id && (
+                    <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Shield className="w-4 h-4 text-indigo-500" />
+                                <span className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Admin Privileges</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => onChange({ 
+                                    ...member, 
+                                    permissionRole: member.permissionRole === 'ADMIN' ? 'USER' : 'ADMIN' 
+                                })}
+                                className={`hardware-cap px-4 py-1.5 rounded-lg text-[10px] font-black transition-all border ${member.permissionRole === 'ADMIN' ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-200' : 'bg-white text-indigo-400 border-indigo-100 hover:bg-white'}`}
+                            >
+                                {member.permissionRole === 'ADMIN' ? 'Revoke Admin' : 'Make Admin'}
+                            </button>
+                        </div>
+                        <p className="text-[9px] text-indigo-400 font-medium leading-relaxed italic">
+                            * Admins have full access to management and system controls, but cannot manage the Superadmin.
+                        </p>
+                    </div>
+                )}
+
                 <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')} / {t('parent.zodiac')}</label>
                         <div className="flex gap-2 py-2.5 px-3 bg-slate-100 rounded-xl">
@@ -436,6 +473,12 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                     </div>
                                 )}
                                 {child.isArchived && <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full uppercase tracking-tighter">{t('parent.archived')}</span>}
+                                {child.permissionRole === 'SUPERADMIN' && (
+                                    <span className="text-[10px] bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter font-black shadow-sm ring-2 ring-indigo-100 ring-offset-1">SUPERADMIN</span>
+                                )}
+                                {child.permissionRole === 'ADMIN' && (
+                                    <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full uppercase tracking-tighter font-black border border-indigo-200">ADMIN</span>
+                                )}
                             </div>
                             <div className="flex gap-2 flex-wrap mt-1">
                                 {(child.chineseZodiac || child.birthDate) && (
@@ -485,13 +528,14 @@ export default function ChildManagement({ onAssignTask }: { onAssignTask?: (id: 
                                 </button>
                             </>
                         )}
-                        <button
-                            onClick={() => setConfirmModal({ type: 'delete', childId: child.id })}
-                            className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-300 hover:text-red-500"
-                            title={t('button.delete')}
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                                <button
+                                    onClick={() => setConfirmModal({ type: 'delete', childId: child.id })}
+                                    className={`p-2 rounded-lg hover:bg-red-50 transition-colors ${child.isLocked ? 'opacity-20 cursor-not-allowed grayscale' : 'text-red-300 hover:text-red-500'}`}
+                                    title={child.isLocked ? 'Locked' : t('button.delete')}
+                                    disabled={child.isLocked}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                     </div>
                 </div>
 

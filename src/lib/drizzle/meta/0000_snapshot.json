@@ -357,10 +357,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Artwork_buyerId_Guest_id_fk": {
-          "name": "Artwork_buyerId_Guest_id_fk",
+        "Artwork_buyerId_Visitor_id_fk": {
+          "name": "Artwork_buyerId_Visitor_id_fk",
           "tableFrom": "Artwork",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
             "buyerId"
           ],
@@ -916,8 +916,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Guest": {
-      "name": "Guest",
+    "Visitor": {
+      "name": "Visitor",
       "columns": {
         "id": {
           "name": "id",
@@ -1261,8 +1261,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1321,12 +1321,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Order_guestId_Guest_id_fk": {
-          "name": "Order_guestId_Guest_id_fk",
+        "Order_visitorId_Visitor_id_fk": {
+          "name": "Order_visitorId_Visitor_id_fk",
           "tableFrom": "Order",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useAuthSession, AuthSession } from '@/hooks/useAuthSession'
-import GuestAuth from './GuestAuth'
+import VisitorAuth from './VisitorAuth'
 import { Loader2 } from 'lucide-react'
 
 interface AuthGateProps {
@@ -14,7 +14,7 @@ interface AuthGateProps {
     
     /**
      * Component to render when NOT authorized.
-     * Defaults to the GuestAuth (login/join) component.
+     * Defaults to the VisitorAuth (login/join) component.
      */
     fallback?: React.ReactNode;
 
@@ -22,7 +22,7 @@ interface AuthGateProps {
      * Requirement:
      * - 'ANY': Either family member OR visitor (default)
      * - 'FAMILY': Only family member
-     * - 'VISITOR': Only visitor (guest)
+     * - 'VISITOR': Only visitor (visitor)
      * - 'BOTH': Needs to be both (rare)
      */
     mode?: 'ANY' | 'FAMILY' | 'VISITOR' | 'BOTH';
@@ -70,9 +70,9 @@ export default function AuthGate({
     if (!isAuthorized) {
         if (fallback) return <>{fallback}</>
         
-        // Default fallback is the GuestAuth modal content
+        // Default fallback is the VisitorAuth modal content
         return (
-            <GuestAuth 
+            <VisitorAuth 
                 onSuccess={() => {
                     window.dispatchEvent(new Event('storage'))
                     session.refresh()

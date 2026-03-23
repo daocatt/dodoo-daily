@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { guestMessage, users, guest } from '@/lib/schema'
+import { visitorMessage, users, visitor } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
 import { eq, and, desc } from 'drizzle-orm'
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { targetUserId, text, guestId, isPublic } = body
+        const { targetUserId, text, visitorId, isPublic } = body
 
         if (!targetUserId || !text) {
             return NextResponse.json({ error: 'Missing target user or message text' }, { status: 400 })
@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
         const user = await getSessionUser()
         const memberId = user?.id
 
-        if (!memberId && !guestId) {
+        if (!memberId && !visitorId) {
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
         }
 
-        const newMessage = await db.insert(guestMessage).values({
-            guestId: guestId || null,
+        const newMessage = await db.insert(visitorMessage).values({
+            visitorId: visitorId || null,
             memberId: memberId || null,
             targetUserId: targetUserId,
             text: text,
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, message: newMessage })
     } catch (e: unknown) {
-        console.error('Guest message failed:', e)
+        console.error('Visitor message failed:', e)
         return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
     }
 }
@@ -54,25 +54,25 @@ export async function GET(req: NextRequest) {
         if (!userId) return NextResponse.json([])
 
         const messages = await db.select({
-            id: guestMessage.id,
-            text: guestMessage.text,
-            createdAt: guestMessage.createdAt,
-            guestId: guestMessage.guestId,
-            memberId: guestMessage.memberId,
-            guestName: guest.name,
+            id: visitorMessage.id,
+            text: visitorMessage.text,
+            createdAt: visitorMessage.createdAt,
+            visitorId: visitorMessage.visitorId,
+            memberId: visitorMessage.memberId,
+            visitorName: visitor.name,
             memberName: users.name,
             memberNickname: users.nickname
         })
-        .from(guestMessage)
-        .leftJoin(guest, eq(guestMessage.guestId, guest.id))
-        .leftJoin(users, eq(guestMessage.memberId, users.id))
+        .from(visitorMessage)
+        .leftJoin(visitor, eq(visitorMessage.visitorId, visitor.id))
+        .leftJoin(users, eq(visitorMessage.memberId, users.id))
         .where(
             and(
-                eq(guestMessage.targetUserId, userId as string), // Cast to string since userId check is above
-                eq(guestMessage.isPublic, true)
+                eq(visitorMessage.targetUserId, userId as string), // Cast to string since userId check is above
+                eq(visitorMessage.isPublic, true)
             )
         )
-        .orderBy(desc(guestMessage.createdAt))
+        .orderBy(desc(visitorMessage.createdAt))
         .limit(20)
 
         return NextResponse.json(messages)

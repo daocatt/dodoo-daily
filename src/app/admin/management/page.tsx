@@ -13,7 +13,7 @@ import ProfileManagement from '@/components/parent/SettingsManagement'
 import SystemSettings from '@/components/parent/SystemSettings'
 import MediaManagement from '@/components/parent/MediaManagement'
 import ExhibitionManagement from '@/components/parent/ExhibitionManagement'
-import GuestManagement from '@/components/parent/GuestManagement'
+import VisitorManagement from '@/components/parent/VisitorManagement'
 import LoginLog from '@/components/parent/LoginLog'
 
 interface ParentUser {
@@ -26,6 +26,8 @@ interface ParentUser {
     stars: number
     balance: number
     role: 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER'
+    permissionRole: 'SUPERADMIN' | 'ADMIN' | 'USER'
+    isLocked: boolean
 }
 
 export default function ParentDashboard() {
@@ -45,7 +47,7 @@ export default function ParentDashboard() {
                 return res.json()
             })
             .then(data => {
-                if (data && data.isParent) {
+                if (data && data.isAdmin) {
                     setLoading(false)
                     setUser({
                         id: data.userId || '',
@@ -56,7 +58,9 @@ export default function ParentDashboard() {
                         avatarUrl: data.avatarUrl,
                         stars: data.purpleStars || 0,
                         balance: data.currency || 0,
-                        role: 'PARENT'
+                        role: data.role as 'PARENT' | 'CHILD' | 'GRANDPARENT' | 'OTHER',
+                        permissionRole: data.permissionRole,
+                        isLocked: data.isLocked || false
                     })
                 }
                 else {
@@ -76,16 +80,16 @@ export default function ParentDashboard() {
 
     const renderView = () => {
         switch (view) {
-            case 'FAMILY': return <ChildManagement onAssignTask={(id) => {
+            case 'FAMILY': return user ? <ChildManagement currentUser={user} onAssignTask={(id) => {
                 router.push(`/admin/tasks?assignTo=${id}`)
-            }} />
+            }} /> : null
             case 'REWARDS': return <ShopManagement />
             case 'ORDERS': return <OrderManagement />
             case 'PROFILE': return user ? <ProfileManagement user={user} /> : null
             case 'SYSTEM': return <SystemSettings />
             case 'MEDIA': return <MediaManagement />
             case 'EXHIBITION': return <ExhibitionManagement />
-            case 'GUESTS': return <GuestManagement />
+            case 'GUESTS': return <VisitorManagement />
             case 'LOGS': return <LoginLog />
             default: return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
@@ -210,7 +214,7 @@ export default function ParentDashboard() {
                         </div>
                     </button>
 
-                    {/* Guest Management */}
+                    {/* Visitor Management */}
                     <button
                         onClick={() => setView('GUESTS')}
                         className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
@@ -219,8 +223,8 @@ export default function ParentDashboard() {
                             <Users className="w-7 h-7 text-emerald-500" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-slate-800">{t('parent.guests')}</h2>
-                            <p className="text-slate-500 text-sm mt-1">{t('parent.guestsDesc')}</p>
+                            <h2 className="text-xl font-black text-slate-800">{t('parent.visitors')}</h2>
+                            <p className="text-slate-500 text-sm mt-1">{t('parent.visitorsDesc')}</p>
                         </div>
                         <div className="mt-auto pt-4 text-emerald-600 font-bold flex items-center gap-1">
                             {t('button.manage')} <ArrowLeft className="w-4 h-4 rotate-180" />
@@ -270,7 +274,7 @@ export default function ParentDashboard() {
                                         view === 'SYSTEM' ? t('parent.settings') :
                                             view === 'MEDIA' ? t('parent.media') :
                                                 view === 'EXHIBITION' ? t('parent.exhibition') :
-                                                    view === 'GUESTS' ? t('parent.guests') :
+                                                    view === 'GUESTS' ? t('parent.visitors') :
                                                         view === 'LOGS' ? t('parent.securityLogs') :
                                                             view}
                         </h1>

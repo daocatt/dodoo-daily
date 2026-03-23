@@ -11,7 +11,7 @@ import ShareButton from '@/components/public/ShareButton'
 import NatureBackground from '@/components/NatureBackground'
 import PanelHeader from '@/components/PanelHeader'
 import VisitorCenter from '@/components/public/VisitorCenter'
-import GuestAuth from '@/components/public/GuestAuth'
+import VisitorAuth from '@/components/public/VisitorAuth'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
 import { AnimatePresence } from 'motion/react'
@@ -60,9 +60,9 @@ export default function PublicProfileHome() {
         id: string; 
         text: string; 
         createdAt: number; 
-        guestId?: string | null; 
+        visitorId?: string | null; 
         memberId?: string | null;
-        guestName?: string | null;
+        visitorName?: string | null;
         memberName?: string | null;
         memberNickname?: string | null;
     }[]>([])
@@ -128,7 +128,7 @@ export default function PublicProfileHome() {
                 body: JSON.stringify({
                     targetUserId: user!.id,
                     text: msgText.trim(),
-                    guestId: visitor?.id || null,
+                    visitorId: visitor?.id || null,
                     memberId: member?.id || null,
                     isPublic: false
                 })
@@ -423,7 +423,7 @@ export default function PublicProfileHome() {
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-2 h-2 rounded-full bg-[var(--accent-moss)] animate-pulse" />
                                                         <span className="label-mono text-[10px] font-black uppercase tracking-widest text-[#5C5A4D]">
-                                                            {`${(m.memberNickname || m.memberName || m.guestName || 'Guest')[0]}*`}
+                                                            {`${(m.memberNickname || m.memberName || m.visitorName || 'Visitor')[0]}*`}
                                                         </span>
                                                     </div>
                                                     <span className="label-mono text-[9px] opacity-40 font-bold">
@@ -497,7 +497,7 @@ export default function PublicProfileHome() {
                             <AuthGate 
                                 mode="ANY"
                                 fallback={
-                                    <GuestAuth 
+                                    <VisitorAuth 
                                         asTerminal={true}
                                         onSuccess={(data) => {
                                             localStorage.setItem('visitor_data', JSON.stringify(data))
@@ -516,10 +516,10 @@ export default function PublicProfileHome() {
                                 >
                                         {showVisitorPanel && visitor ? (
                                             <VisitorCenter 
-                                                guest={visitor} 
+                                                visitor={visitor} 
                                                 onLogout={() => { 
                                                     localStorage.removeItem('visitor_data')
-                                                    document.cookie = 'dodoo_guest_id=; path=/; max-age=0'
+                                                    document.cookie = 'dodoo_visitor_id=; path=/; max-age=0'
                                                     window.dispatchEvent(new Event('storage'))
                                                     setShowVisitorPanel(false) 
                                                 }} 
@@ -529,7 +529,7 @@ export default function PublicProfileHome() {
                                             />
                                         ) : (
                                             <form onSubmit={handleSendMessage} className="flex flex-col h-full">
-                                                {/* Hardware Header clipped by parent overflow-hidden - Sync with GuestAuth Standard */}
+                                                {/* Hardware Header clipped by parent overflow-hidden - Sync with VisitorAuth Standard */}
                                                 <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#E2DFD2] shrink-0 -mx-10 -mt-10 mb-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(79,70,229,0.5)] animate-pulse" />

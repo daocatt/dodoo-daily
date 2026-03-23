@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { order, artwork, users, guest } from '@/lib/schema'
+import { order, artwork, users, visitor } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
@@ -28,15 +28,15 @@ export async function GET() {
                 name: users.name,
                 nickname: users.nickname
             },
-            guest: {
-                name: guest.name,
-                phone: guest.phone
+            visitor: {
+                name: visitor.name,
+                phone: visitor.phone
             }
         })
         .from(order)
         .leftJoin(artwork, eq(order.artworkId, artwork.id))
         .leftJoin(users, eq(artwork.userId, users.id))
-        .leftJoin(guest, eq(order.guestId, guest.id))
+        .leftJoin(visitor, eq(order.visitorId, visitor.id))
         .orderBy(desc(order.createdAt))
         .all()
 
@@ -59,7 +59,7 @@ export async function PATCH(req: NextRequest) {
             const [orderData] = await db.select().from(order).where(eq(order.id, id)).limit(1)
             if (orderData) {
                 await db.update(artwork)
-                    .set({ isSold: true, buyerId: orderData.guestId })
+                    .set({ isSold: true, buyerId: orderData.visitorId })
                     .where(eq(artwork.id, orderData.artworkId))
             }
         }

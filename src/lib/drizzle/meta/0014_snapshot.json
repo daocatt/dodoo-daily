@@ -404,10 +404,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Artwork_buyerId_Guest_id_fk": {
-          "name": "Artwork_buyerId_Guest_id_fk",
+        "Artwork_buyerId_Visitor_id_fk": {
+          "name": "Artwork_buyerId_Visitor_id_fk",
           "tableFrom": "Artwork",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
             "buyerId"
           ],
@@ -801,8 +801,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "Guest": {
-      "name": "Guest",
+    "Visitor": {
+      "name": "Visitor",
       "columns": {
         "id": {
           "name": "id",
@@ -877,8 +877,8 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "GuestCurrencyLog": {
-      "name": "GuestCurrencyLog",
+    "VisitorCurrencyLog": {
+      "name": "VisitorCurrencyLog",
       "columns": {
         "id": {
           "name": "id",
@@ -887,8 +887,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -926,12 +926,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "GuestCurrencyLog_guestId_Guest_id_fk": {
-          "name": "GuestCurrencyLog_guestId_Guest_id_fk",
-          "tableFrom": "GuestCurrencyLog",
-          "tableTo": "Guest",
+        "VisitorCurrencyLog_visitorId_Visitor_id_fk": {
+          "name": "VisitorCurrencyLog_visitorId_Visitor_id_fk",
+          "tableFrom": "VisitorCurrencyLog",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"
@@ -1589,8 +1589,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "guestId": {
-          "name": "guestId",
+        "visitorId": {
+          "name": "visitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -1701,12 +1701,12 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Order_guestId_Guest_id_fk": {
-          "name": "Order_guestId_Guest_id_fk",
+        "Order_visitorId_Visitor_id_fk": {
+          "name": "Order_visitorId_Visitor_id_fk",
           "tableFrom": "Order",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "guestId"
+            "visitorId"
           ],
           "columnsTo": [
             "id"
@@ -2036,8 +2036,8 @@
           "autoincrement": false,
           "default": false
         },
-        "usedByGuestId": {
-          "name": "usedByGuestId",
+        "usedByVisitorId": {
+          "name": "usedByVisitorId",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -2069,12 +2069,12 @@
         }
       },
       "foreignKeys": {
-        "RechargeCode_usedByGuestId_Guest_id_fk": {
-          "name": "RechargeCode_usedByGuestId_Guest_id_fk",
+        "RechargeCode_usedByVisitorId_Visitor_id_fk": {
+          "name": "RechargeCode_usedByVisitorId_Visitor_id_fk",
           "tableFrom": "RechargeCode",
-          "tableTo": "Guest",
+          "tableTo": "Visitor",
           "columnsFrom": [
-            "usedByGuestId"
+            "usedByVisitorId"
           ],
           "columnsTo": [
             "id"
@@ -2351,8 +2351,8 @@
           "autoincrement": false,
           "default": true
         },
-        "requireGuestApproval": {
-          "name": "requireGuestApproval",
+        "requireVisitorApproval": {
+          "name": "requireVisitorApproval",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -2367,8 +2367,8 @@
           "autoincrement": false,
           "default": false
         },
-        "guestInvitationCode": {
-          "name": "guestInvitationCode",
+        "visitorInvitationCode": {
+          "name": "visitorInvitationCode",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

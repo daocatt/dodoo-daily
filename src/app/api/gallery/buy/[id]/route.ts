@@ -49,7 +49,7 @@ export async function POST(
         const updatedArt = await db.update(artwork)
             .set({
                 isSold: true,
-                buyerId: parentId // Using parentId here, though schema says guest.id, better-sqlite3 will allow it
+                buyerId: parentId // Using parentId here, though schema says visitor.id, better-sqlite3 will allow it
             })
             .where(eq(artwork.id, id))
             .returning()

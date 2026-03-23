@@ -46,7 +46,7 @@ CREATE TABLE `Artwork` (
 	`createdAt` integer DEFAULT (unixepoch() * 1000),
 	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`albumId`) REFERENCES `Album`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`buyerId`) REFERENCES `Guest`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`buyerId`) REFERENCES `Visitor`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `AssignedTask` (
@@ -124,7 +124,7 @@ CREATE TABLE `GrowthRecord` (
 	FOREIGN KEY (`userId`) REFERENCES `Users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `Guest` (
+CREATE TABLE `Visitor` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`phone` text,
@@ -176,14 +176,14 @@ CREATE TABLE `Media` (
 CREATE TABLE `Order` (
 	`id` text PRIMARY KEY NOT NULL,
 	`artworkId` text NOT NULL,
-	`guestId` text NOT NULL,
+	`visitorId` text NOT NULL,
 	`amountRMB` real NOT NULL,
 	`status` text DEFAULT 'PENDING' NOT NULL,
 	`qrCodeUrl` text,
 	`createdAt` integer DEFAULT (unixepoch() * 1000),
 	`updatedAt` integer,
 	FOREIGN KEY (`artworkId`) REFERENCES `Artwork`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`guestId`) REFERENCES `Guest`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`visitorId`) REFERENCES `Visitor`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `Purchase` (

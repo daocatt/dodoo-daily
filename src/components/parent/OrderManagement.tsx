@@ -31,7 +31,7 @@ interface GalleryOrder {
         name: string
         nickname: string | null
     }
-    guest: {
+    visitor: {
         name: string
         phone: string
     }
@@ -273,10 +273,10 @@ export default function OrderManagement() {
                                                     <User className="w-6 h-6" />
                                                 </div>
                                                 <div>
-                                                    <div className="font-black text-slate-800 text-lg tracking-tight uppercase">{order.guest.name}</div>
+                                                    <div className="font-black text-slate-800 text-lg tracking-tight uppercase">{order.visitor.name}</div>
                                                     <div className="text-xs text-indigo-600 font-bold flex items-center gap-1.5 mt-0.5">
                                                         <Phone className="w-3 h-3" />
-                                                        {order.guest.phone}
+                                                        {order.visitor.phone}
                                                     </div>
                                                 </div>
                                             </div>

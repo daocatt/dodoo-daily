@@ -1,0 +1,1 @@
+ALTER TABLE `RechargeCode` ADD `usedByMemberId` text REFERENCES Users(id);

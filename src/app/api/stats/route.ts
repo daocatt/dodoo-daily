@@ -53,7 +53,10 @@ export async function GET() {
 
         const responseData = {
             ...statsRecord,
-            isParent: currentUserRole === 'PARENT',
+            isAdmin: userRecord.permissionRole === 'SUPERADMIN' || userRecord.permissionRole === 'ADMIN',
+            isParent: userRecord.permissionRole === 'SUPERADMIN' || userRecord.permissionRole === 'ADMIN',
+            permissionRole: userRecord.permissionRole,
+            isLocked: userRecord.isLocked,
             role: userRecord.role,
             name: userRecord.name,
             nickname: userRecord.nickname,
