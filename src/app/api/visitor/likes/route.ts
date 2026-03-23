@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { artwork, artworkLike } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const visitorId = req.nextUrl.searchParams.get('visitorId')
         const memberId = req.nextUrl.searchParams.get('memberId')
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         .orderBy(desc(artworkLike.createdAt))
 
         return NextResponse.json(likes)
-    } catch (e) {
+    } catch (_e) {
         console.error('Fetch likes error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

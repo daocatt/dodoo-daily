@@ -487,7 +487,7 @@ function TasksPageContent() {
                                     >
                                         <div className="flex items-center gap-3 flex-1">
                                             <div
-                                                onClick={(e) => {
+                                                onClick={(_e) => {
                                                     e.stopPropagation();
                                                     // Allow toggle if:
                                                     // 1. It's a personal task
@@ -577,13 +577,13 @@ function TasksPageContent() {
                                                 {isAssignIGave && task.completed && task.confirmationStatus === 'PENDING' && (
                                                     <div className="flex">
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); resetTask(task); }}
+                                                            onClick={(_e) => { e.stopPropagation(); resetTask(task); }}
                                                             className="h-10 px-3 flex items-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors font-bold text-xs"
                                                         >
                                                             <RotateCcw className="w-4 h-4" /> {t('tasks.button.restart')}
                                                         </button>
                                                         <button
-                                                            onClick={(e) => { e.stopPropagation(); confirmReward(task); }}
+                                                            onClick={(_e) => { e.stopPropagation(); confirmReward(task); }}
                                                             className="h-10 px-3 flex items-center gap-1.5 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20 transition-all font-bold text-xs"
                                                         >
                                                             <CheckCheck className="w-4 h-4" /> {t('tasks.button.confirmReward')}
@@ -593,7 +593,7 @@ function TasksPageContent() {
                                                 {task.creatorId === currentUserId && (
                                                     <div className="flex items-center gap-1.5">
                                                         <button
-                                                            onClick={(e) => {
+                                                            onClick={(_e) => {
                                                                 e.stopPropagation();
                                                                 setEditingTask(task);
                                                                 setTitle(task.title);
@@ -611,7 +611,7 @@ function TasksPageContent() {
                                                             <Edit2 className="w-3.5 h-3.5" />
                                                         </button>
                                                         <button
-                                                            onClick={(e) => {
+                                                            onClick={(_e) => {
                                                                 e.stopPropagation();
                                                                 deleteTask(task);
                                                             }}
@@ -788,7 +788,7 @@ function TasksPageContent() {
                                                     type="checkbox"
                                                     id="isRep"
                                                     checked={isRepeating}
-                                                    onChange={(e) => {
+                                                    onChange={(_e) => {
                                                         setIsRepeating(e.target.checked);
                                                         if (e.target.checked) setIsMonthlyRepeating(false);
                                                     }}
@@ -801,7 +801,7 @@ function TasksPageContent() {
                                                     type="checkbox"
                                                     id="isMonthlyRep"
                                                     checked={isMonthlyRepeating}
-                                                    onChange={(e) => {
+                                                    onChange={(_e) => {
                                                         setIsMonthlyRepeating(e.target.checked);
                                                         if (e.target.checked) setIsRepeating(false);
                                                     }}

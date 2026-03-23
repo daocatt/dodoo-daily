@@ -46,7 +46,7 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
             if (stored) {
                 try {
                     setVisitor(JSON.parse(stored))
-                } catch (e) {
+                } catch (_e) {
                     console.error('Invalid visitor data', e)
                 }
             } else {
@@ -65,7 +65,7 @@ export default function WelcomeClient({ initialSettings }: WelcomeClientProps) {
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     setImages(parsed)
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.error('Failed to parse carousel images', e)
             }
         }

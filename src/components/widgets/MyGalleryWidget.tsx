@@ -37,7 +37,7 @@ export default function MyGalleryWidget() {
                     if (lRes.ok) setLikes(await lRes.json())
                     if (oRes.ok) setOrders(await oRes.json())
                 }
-            } catch (e) {
+            } catch (_e) {
                 console.error('Gallery widget fetch error:', e)
             } finally {
                 setLoading(false)

@@ -11,7 +11,7 @@ async function verifyToken(token: string | undefined) {
     try {
         const { payload } = await jwtVerify(token, JWT_SECRET)
         return payload
-    } catch (e) {
+    } catch (_e) {
         return null
     }
 }

@@ -30,8 +30,8 @@ export default function OrdersPage() {
         try {
             const res = await fetch('/api/shop/orders')
             if (res.ok) setOrders(await res.json())
-        } catch (e) {
-            console.error(e)
+        } catch (_e) {
+            console.error(_e)
         } finally {
             setLoading(false)
         }

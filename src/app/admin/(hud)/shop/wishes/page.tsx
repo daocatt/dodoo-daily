@@ -31,8 +31,8 @@ export default function WishesPage() {
         try {
             const res = await fetch('/api/shop/wishes')
             if (res.ok) setWishes(await res.json())
-        } catch (e) {
-            console.error(e)
+        } catch (_e) {
+            console.error(_e)
         } finally {
             setLoading(false)
         }

@@ -47,7 +47,7 @@ export function useAuthSession() {
                 setUser(null)
                 setVisitor(null)
             }
-        } catch (err) {
+        } catch (_err) {
             console.error('[AuthSession] Sync failed:', err)
         } finally {
             setLoading(false)
@@ -69,7 +69,7 @@ export function useAuthSession() {
         try {
             // 1. Call Server-side Logout (Crucial for HttpOnly cookies)
             await fetch('/api/auth/logout', { method: 'POST' })
-        } catch (err) {
+        } catch (_err) {
             console.warn('[AuthSession] Server logout failed, falling back to client-only:', err)
         }
 

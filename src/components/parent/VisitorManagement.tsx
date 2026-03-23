@@ -102,7 +102,7 @@ export default function VisitorManagement() {
                 setDisableVisitorLogin(sData.disableVisitorLogin ?? false)
                 setDisableVisitorRegistration(sData.disableVisitorRegistration ?? false)
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to fetch visitor management data:', e)
         } finally {
             setLoading(false)
@@ -243,7 +243,7 @@ export default function VisitorManagement() {
             } else {
                 showToast('Update failed!', 'error')
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to update visitor settings', e)
             showToast('Network error', 'error')
         } finally {
@@ -721,7 +721,7 @@ export default function VisitorManagement() {
                                         <input
                                             type="text"
                                             value={visitorInvitationCode}
-                                            onChange={(e) => setVisitorInvitationCode(e.target.value)}
+                                            onChange={(_e) => setVisitorInvitationCode(e.target.value)}
                                             className="flex-1 bg-white border-2 border-slate-100 rounded-2xl px-6 py-3 font-black text-slate-700 outline-none focus:border-indigo-500 transition-all tracking-wide"
                                             placeholder="Enter code..."
                                         />

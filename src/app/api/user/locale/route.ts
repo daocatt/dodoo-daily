@@ -4,7 +4,7 @@ import { users, visitor } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (_e) {
         console.error('[API user locale] Error:', e)
         return NextResponse.json({ error: 'Failed to update locale' }, { status: 500 })
     }

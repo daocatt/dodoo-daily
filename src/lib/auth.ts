@@ -36,7 +36,7 @@ export async function verifyJWT(token: string) {
     try {
         const { payload } = await jwtVerify(token, JWT_SECRET)
         return payload
-    } catch (e) {
+    } catch (_e) {
         return null
     }
 }
@@ -60,7 +60,7 @@ export async function getSessionUser() {
         try {
             const { payload } = await jwtVerify(token, JWT_SECRET)
             currentUserId = payload.userId as string
-        } catch (e) {
+        } catch (_e) {
             console.error('JWT verification failed:', e)
         }
     }

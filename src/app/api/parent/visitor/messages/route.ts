@@ -58,14 +58,14 @@ export async function GET() {
         }))
 
         return NextResponse.json(results)
-    } catch (e) {
+    } catch (_e) {
         console.error('Failed to fetch parent messages:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }
 
 // TOGGLE PUBLIC STATUS
-export async function PATCH(req: NextRequest) {
+export async function PATCH(_req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user || user.role !== 'PARENT') {
@@ -81,13 +81,13 @@ export async function PATCH(req: NextRequest) {
             .returning()
 
         return NextResponse.json(result[0])
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }
 
 // DELETE MESSAGE
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user || user.role !== 'PARENT') {
@@ -101,7 +101,7 @@ export async function DELETE(req: NextRequest) {
         await db.delete(visitorMessage).where(eq(visitorMessage.id, id))
 
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

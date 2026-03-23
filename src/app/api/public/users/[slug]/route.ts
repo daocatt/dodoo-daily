@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params: _params }: { params: Promise<{ slug: string }> }
 ) {
     try {
         const { slug } = await params
@@ -60,7 +60,7 @@ export async function GET(
             totalLikes: Number(artStats.totalLikes || 0),
             totalViews: Number(artStats.totalViews || 0)
         })
-    } catch (e) {
+    } catch (_e) {
         console.error('Public profile fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

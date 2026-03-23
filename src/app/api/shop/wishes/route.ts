@@ -6,7 +6,7 @@ import { cookies } from 'next/headers'
 import { notifyParents } from '@/lib/push'
 import { getSessionUser } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const cookieStore = await cookies()
         const currentUserId = (await getSessionUser())?.userId
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const cookieStore = await cookies()
         const currentUserId = (await getSessionUser())?.userId

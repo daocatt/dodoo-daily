@@ -4,7 +4,7 @@ import { visitor } from '@/lib/schema'
 import { desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
         const visitors = await db.select().from(visitor).orderBy(desc(visitor.createdAt))
         return NextResponse.json(visitors)
-    } catch (e) {
+    } catch (_e) {
         console.error('Fetch visitors error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

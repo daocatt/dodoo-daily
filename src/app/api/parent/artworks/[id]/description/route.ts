@@ -6,7 +6,7 @@ import { getSessionUser } from '@/lib/auth'
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -23,7 +23,7 @@ export async function PATCH(
             .where(eq(artwork.id, id))
 
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (_e) {
         console.error('Update artwork description error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

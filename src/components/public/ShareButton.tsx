@@ -37,7 +37,7 @@ export default function ShareButton({
                     title: title || 'Check out this exhibition!',
                     url: finalUrl
                 })
-            } catch (err) {
+            } catch (_err) {
                 console.error('Error sharing', err)
             }
         } else {

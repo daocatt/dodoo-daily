@@ -47,7 +47,7 @@ export async function sendPushNotification(userId: string, payload: Notification
                 try {
                     await webpush.sendNotification(pushSub, JSON.stringify(payload))
                     return { success: true, endpoint: sub.endpoint }
-                } catch (error) {
+                } catch (_error) {
                     const webPushError = error as { statusCode?: number }
                     // If subscription is expired or invalid, remove it
                     if (webPushError.statusCode === 404 || webPushError.statusCode === 410) {
@@ -61,7 +61,7 @@ export async function sendPushNotification(userId: string, payload: Notification
 
 
         return { success: true, results }
-    } catch (error) {
+    } catch (_error) {
         console.error('Failed to send push notification:', error)
         return { success: false, error }
     }
@@ -84,7 +84,7 @@ export async function notifyParents(payload: NotificationPayload) {
         )
 
         return { success: true, results }
-    } catch (error) {
+    } catch (_error) {
         console.error('Failed to notify parents:', error)
         return { success: false, error }
     }

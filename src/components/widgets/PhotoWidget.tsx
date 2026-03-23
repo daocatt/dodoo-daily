@@ -6,10 +6,11 @@ import { Images, Camera } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface PhotoEntry {
     id: string
-    imageUrl: string
+    url: string
     title: string
 }
 
@@ -77,12 +78,15 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                         onDragEnd={handleDragEnd}
                         className="absolute inset-0 z-0 touch-none"
                     >
-                        <img
-                            src={photos[currentIndex].imageUrl}
-                            className="w-full h-full object-cover select-none"
-                            alt={photos[currentIndex].title}
-                            draggable={false}
-                        />
+                        <div className="absolute inset-0 bg-slate-50 flex items-center justify-center pointer-events-none group-hover:scale-105 transition-transform duration-700">
+                            <Image
+                                src={photos[currentIndex].url}
+                                alt=""
+                                fill
+                                sizes="50vw"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
                         {/* Elegant Vignette Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
 
@@ -119,8 +123,8 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                     {photos.map((_, i) => (
                         <button
                             key={i}
-                            onClick={(e) => {
-                                e.stopPropagation();
+                            onClick={(_e) => {
+                                _e.stopPropagation();
                                 setCurrentIndex(i);
                             }}
                             className={clsx(

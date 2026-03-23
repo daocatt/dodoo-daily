@@ -75,8 +75,8 @@ export default function StoragePage() {
             const data = await res.json()
             setItems(data)
             setHasMore(data.length === 20)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -98,8 +98,8 @@ export default function StoragePage() {
             } else {
                 setHasMore(false)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -115,8 +115,8 @@ export default function StoragePage() {
             const data = await res.json()
             setItems(data)
             setHasMore(data.length === 20)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -134,8 +134,8 @@ export default function StoragePage() {
             const data = await res.json()
             setItems(data)
             setHasMore(data.length === 20)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -178,7 +178,7 @@ export default function StoragePage() {
                             type="text" 
                             placeholder={t('storage.searchPlaceholder')} 
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(_e) => setSearch(e.target.value)}
                             className="w-full bg-white/60 backdrop-blur rounded-2xl py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-amber-400 transition-all border border-white/50 placeholder:text-slate-400 font-medium"
                         />
                     </form>
@@ -242,7 +242,7 @@ export default function StoragePage() {
                                         {isParent && (
                                             <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button 
-                                                    onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowItemModal(true); }}
+                                                    onClick={(_e) => { e.stopPropagation(); setEditingItem(item); setShowItemModal(true); }}
                                                     className="p-2 bg-white/80 hover:bg-white backdrop-blur rounded-lg shadow-sm text-slate-600 transition-colors"
                                                 >
                                                     <Edit3 className="w-4 h-4" />
@@ -388,13 +388,13 @@ export default function StoragePage() {
                         
                         <div className="absolute bottom-10 flex gap-4">
                             <button 
-                                onClick={(e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! > 0 ? prev! - 1 : prev) }}
+                                onClick={(_e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! > 0 ? prev! - 1 : prev) }}
                                 className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white border border-white/10"
                             >
                                 <ChevronLeft className="w-8 h-8" />
                             </button>
                             <button 
-                                onClick={(e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! < items.length - 1 ? prev! + 1 : prev) }}
+                                onClick={(_e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! < items.length - 1 ? prev! + 1 : prev) }}
                                 className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white border border-white/10"
                             >
                                 <ChevronRight className="w-8 h-8" />
@@ -463,8 +463,8 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                 onSuccess()
                 onClose()
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -486,8 +486,8 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                 onSuccess()
                 onClose()
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -502,8 +502,8 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                 onSuccess()
                 onClose()
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -776,7 +776,7 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                            accept="image/*" 
                            id="file-capture" 
                            className="hidden" 
-                           onChange={async (e) => {
+                           onChange={async (_e) => {
                              const file = e.target.files?.[0]
                              if (file) {
                                // Upload logic

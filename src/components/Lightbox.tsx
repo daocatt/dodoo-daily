@@ -65,7 +65,7 @@ export default function Lightbox({ images, initialIndex, onClose }: LightboxProp
                             exit={{ opacity: 0, scale: 1.1 }}
                             src={images[index]}
                             className="max-w-full max-h-full object-contain shadow-2xl rounded-lg pointer-events-auto"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(_e) => e.stopPropagation()}
                         />
                     </AnimatePresence>
                 </div>
@@ -74,7 +74,7 @@ export default function Lightbox({ images, initialIndex, onClose }: LightboxProp
                     {images.map((img, i) => (
                         <button
                             key={i}
-                            onClick={(e) => { e.stopPropagation(); setIndex(i); }}
+                            onClick={(_e) => { e.stopPropagation(); setIndex(i); }}
                             className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 ${i === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
                         >
                             <img src={img} className="w-full h-full object-cover" />

@@ -5,9 +5,8 @@ import { useRouter } from 'next/navigation'
 import VisitorCenter from '@/components/public/VisitorCenter'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
-import NatureBackground from '@/components/NatureBackground'
-import { ArrowLeft } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import { ArrowLeft } from 'lucide-react'
 
 export default function VisitorPage() {
     const router = useRouter()
@@ -28,14 +27,18 @@ export default function VisitorPage() {
                          <div className="w-20 h-20 hardware-well rounded-full flex items-center justify-center mb-8 bg-[#D6D2C0] border-4 border-[#C8C4B0]">
                             <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]" />
                         </div>
-                        <h2 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Identity Required</h2>
-                        <p className="label-mono text-[10px] text-slate-500 mb-10 max-w-xs leading-relaxed uppercase tracking-widest">Access to terminal node restricted to authenticated visitor entities only.</p>
+                        <h2 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">
+                            {t('visitor.identityRequired')}
+                        </h2>
+                        <p className="label-mono text-[10px] text-slate-500 mb-10 max-w-xs leading-relaxed uppercase tracking-widest">
+                            {t('visitor.accessRestricted')}
+                        </p>
                         <button 
                             onClick={() => router.push('/visitor/login')} 
                             className="hardware-btn group w-full"
                         >
                             <div className="hardware-cap bg-white py-4 rounded-2xl font-black text-sm text-slate-800 border-2 border-[#C8C4B0] shadow-lg group-hover:bg-[#F4F4F2] transition-colors">
-                                RETRIEVE CREDENTIALS
+                                {t('visitor.retrieveCredentials')}
                             </div>
                         </button>
                     </div>

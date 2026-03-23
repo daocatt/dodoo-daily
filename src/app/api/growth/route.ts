@@ -4,7 +4,7 @@ import { growthRecord, users } from '@/lib/schema'
 import { eq, and, desc, gte, lte, sql } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     const { userId, role } = await getSessionUser()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -43,12 +43,12 @@ export async function GET(req: NextRequest) {
                 totalPages: Math.ceil(count / limit)
             }
         })
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     const { userId, role } = await getSessionUser()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         }).returning()
 
         return NextResponse.json(newRecord)
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed to create' }, { status: 500 })
     }
 }

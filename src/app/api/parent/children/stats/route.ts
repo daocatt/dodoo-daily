@@ -4,7 +4,7 @@ import { users, accountStats, task, purchase, accountStatsLog, growthRecord } fr
 import { eq, and, desc, gte, lte, or, sql, isNull, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     const { role, userId } = await getSessionUser()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

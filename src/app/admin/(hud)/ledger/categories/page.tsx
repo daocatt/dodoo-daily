@@ -44,7 +44,7 @@ export default function CategoryManagerPage() {
                 const res = await fetch('/api/ledger/categories')
                 const data = await res.json()
                 setCategories(data)
-            } catch (error) {
+            } catch (_error) {
                 console.error('Fetch error:', error)
             } finally {
                 setLoading(false)
@@ -68,8 +68,8 @@ export default function CategoryManagerPage() {
                 const updated = await fetch('/api/ledger/categories').then(r => r.json())
                 setCategories(updated)
             }
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
         }
         setSubmitting(false)
     }
@@ -85,8 +85,8 @@ export default function CategoryManagerPage() {
                 const data = await res.json()
                 alert(data.error || 'Action failed')
             }
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
         }
     }
 

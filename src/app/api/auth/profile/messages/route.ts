@@ -26,12 +26,12 @@ export async function GET() {
         .orderBy(desc(visitorMessage.createdAt))
 
         return NextResponse.json(messages)
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(_req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Auth required' }, { status: 401 })
@@ -45,12 +45,12 @@ export async function PATCH(req: NextRequest) {
             .returning()
 
         return NextResponse.json(result[0])
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Auth required' }, { status: 401 })
@@ -63,7 +63,7 @@ export async function DELETE(req: NextRequest) {
             .where(and(eq(visitorMessage.id, id), eq(visitorMessage.targetUserId, user.id)))
 
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

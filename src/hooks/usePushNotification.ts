@@ -37,7 +37,7 @@ export function usePushNotification() {
                 const sub = await registration.pushManager.getSubscription()
                 setIsSubscribed(!!sub)
                 setSubscription(sub)
-            } catch (error) {
+            } catch (_error) {
                 console.error('Error checking push subscription:', error)
             } finally {
                 setLoading(false)
@@ -83,7 +83,7 @@ export function usePushNotification() {
                 return true
             }
             return false
-        } catch (error) {
+        } catch (_error) {
             console.error('Error subscribing to push:', error)
             return false
         } finally {
@@ -105,7 +105,7 @@ export function usePushNotification() {
             setIsSubscribed(false)
             setSubscription(null)
             return true
-        } catch (error) {
+        } catch (_error) {
             console.error('Error unsubscribing from push:', error)
             return false
         } finally {

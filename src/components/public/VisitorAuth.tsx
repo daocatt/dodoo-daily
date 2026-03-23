@@ -70,7 +70,7 @@ export default function VisitorAuth({ onSuccess, disableRegistration, asTerminal
             } else {
                 setError(data.error || 'Authentication denied')
             }
-        } catch (err) {
+        } catch (_err) {
             console.error('Visitor Auth failed:', err)
             setError('Access signal interrupted')
         } finally {

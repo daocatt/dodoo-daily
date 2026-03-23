@@ -67,7 +67,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
         try {
             const res = await fetch('/api/shop')
             setItems(await res.json())
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setLoading(false) }
     }
 
@@ -76,7 +76,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
         try {
             const res = await fetch('/api/parent/wishes')
             setWishes(await res.json())
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setWishesLoading(false) }
     }
 
@@ -113,7 +113,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
             const res = await fetch('/api/media/upload', { method: 'POST', body: fd })
             const data = await res.json()
             if (data.path) setFormData(prev => ({ ...prev, iconUrl: data.path }))
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setUploading(false) }
     }
 
@@ -129,7 +129,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
                 body: JSON.stringify(body)
             })
             if (res.ok) { setShowItemModal(false); fetchItems() }
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setSaving(false) }
     }
 
@@ -153,7 +153,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
             })
             setDeleteTarget(null)
             fetchItems()
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setDeleting(false) }
     }
 
@@ -168,7 +168,7 @@ export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () =
             })
             fetchWishes()
             if (action === 'ADD_TO_SHOP') fetchItems()
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setWishBusy(null) }
     }
 

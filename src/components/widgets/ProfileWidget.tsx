@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion } from 'motion/react'
-import { Coins, Star, Trophy, User, ArrowUpRight, Scale, Ruler } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Coins, Star, Trophy, User, Scale, Ruler } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface UserStats {
     name: string
@@ -59,7 +60,13 @@ export default function ProfileWidget() {
                     <div className="relative">
                         <div className="w-16 h-16 rounded-3xl border-4 border-white shadow-xl overflow-hidden bg-slate-100 transition-transform group-hover:scale-110">
                             {stats.avatarUrl ? (
-                                <img src={stats.avatarUrl} alt={stats.name} className="w-full h-full object-cover" />
+                                <Image 
+                                    src={stats.avatarUrl} 
+                                    alt={stats.name} 
+                                    width={80} 
+                                    height={80} 
+                                    className="w-full h-full object-cover" 
+                                />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-slate-400">
                                     <User className="w-8 h-8" />

@@ -41,7 +41,7 @@ export default function FamilyNoteBoard() {
                 const data = await res.json()
                 setNotes(data)
             }
-        } catch (error) {
+        } catch (_error) {
             console.error('Failed to fetch notes:', error)
         } finally {
             setLoading(false)
@@ -55,7 +55,7 @@ export default function FamilyNoteBoard() {
                 const data = await res.json()
                 setCurrentUser({ userId: data.userId, isParent: data.isParent })
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to fetch user:', e)
         }
     }
@@ -87,7 +87,7 @@ export default function FamilyNoteBoard() {
             if (res.ok) {
                 setNotes(prev => prev.filter(n => n.id !== id))
             }
-        } catch (error) {
+        } catch (_error) {
             console.error('Failed to delete note:', error)
         }
     }
@@ -102,7 +102,7 @@ export default function FamilyNoteBoard() {
             if (res.ok) {
                 fetchNotes()
             }
-        } catch (error) {
+        } catch (_error) {
             console.error('Failed to pin note:', error)
         }
     }
@@ -228,7 +228,7 @@ export default function FamilyNoteBoard() {
                                         <textarea
                                             autoFocus
                                             value={newText}
-                                            onChange={(e) => setNewText(e.target.value)}
+                                            onChange={(_e) => setNewText(e.target.value)}
                                             placeholder={t('board.placeholder')}
                                             className="w-full h-40 bg-transparent border-none outline-none resize-none font-bold text-slate-800 placeholder:text-slate-400 text-lg leading-relaxed"
                                             maxLength={200}

@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const { userId, role } = await getSessionUser()
         if (role !== 'PARENT' || !userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true, balance: res.balance })
-    } catch (e) {
+    } catch (_e) {
         console.error('Recharge failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

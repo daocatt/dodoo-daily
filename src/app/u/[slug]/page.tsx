@@ -93,8 +93,8 @@ export default function PublicProfileHome() {
                 } else {
                     console.error('Failed to fetch public profile data')
                 }
-            } catch (err) {
-                console.error(err)
+            } catch (_err) {
+                console.error(_err)
             } finally {
                 setLoading(false)
             }
@@ -146,8 +146,8 @@ export default function PublicProfileHome() {
             } else {
                 setStatus({ type: 'error', message: t('public.modal.error.failed') })
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
             setStatus({ type: 'error', message: t('public.modal.error.failed') })
         } finally {
             setSending(false)

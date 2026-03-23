@@ -3,7 +3,7 @@ import { getSessionUser } from '@/lib/auth'
 import { addBalance, TransactionType } from '@/lib/economy'
 import { sendPushNotification } from '@/lib/push'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const { userId: parentId, role } = await getSessionUser()
         if (role !== 'PARENT' || !parentId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         }).catch(e => console.error('Distribute push failed:', e))
 
         return NextResponse.json({ success: true, balance: res.balance })
-    } catch (e) {
+    } catch (_e) {
         console.error('Manual distribution failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

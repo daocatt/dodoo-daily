@@ -7,7 +7,7 @@ export default async function WelcomePage() {
     let settings = null
     try {
         settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
-    } catch (error) {
+    } catch (_error) {
         console.error('Failed to fetch system settings on server:', error)
     }
 

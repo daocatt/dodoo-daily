@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -65,7 +65,7 @@ export async function GET(
             .where(eq(artwork.id, id))
 
         return NextResponse.json({ ...data, views: data.views + 1 })
-    } catch (e) {
+    } catch (_e) {
         console.error('Public artwork detail fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

@@ -4,7 +4,7 @@ import { visitorMessage, users, visitor } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
 import { eq, and, desc } from 'drizzle-orm'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const body = await req.json()
         const { targetUserId, text, visitorId, isPublic } = body
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url)
         const targetUserId = searchParams.get('userId')
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
         .offset(customOffset)
 
         return NextResponse.json(messages)
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
     }
 }

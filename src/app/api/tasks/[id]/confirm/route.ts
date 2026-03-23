@@ -13,7 +13,7 @@ async function checkParent() {
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -52,7 +52,7 @@ export async function POST(
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-    } catch (e) {
+    } catch (_e) {
         console.error('Confirmation failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

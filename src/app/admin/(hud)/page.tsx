@@ -232,10 +232,10 @@ export default function Home() {
         console.error("Home: widgetsData is not an array", widgetsData)
         setWidgets([])
       }
-    } catch (e) {
+    } catch (_e) {
       console.error("Home: Fetching process failed", e)
       // Redirect to login if unauthorized
-      const errorMsg = e instanceof Error ? e.message : String(e)
+      const errorMsg = e instanceof Error ? e.message : String(_e)
       if (errorMsg.includes('401')) {
         console.warn("Home: Unauthorized encounter, redirecting to welcoming...")
         window.location.href = '/'
@@ -497,7 +497,7 @@ export default function Home() {
         const errorText = await res.text()
         console.error("[Home] API error adding widget:", res.status, errorText)
       }
-    } catch (e) {
+    } catch (_e) {
       console.error("[Home] Network error adding widget:", e)
     }
   }
@@ -867,7 +867,7 @@ export default function Home() {
                       stiffness: 700,
                       damping: 38
                     }}
-                    onPointerDown={(e) => {
+                    onPointerDown={(_e) => {
                       if (isEditing) {
                         const rect = e.currentTarget.getBoundingClientRect()
                         audioRefStart.current?.play().catch(() => { })

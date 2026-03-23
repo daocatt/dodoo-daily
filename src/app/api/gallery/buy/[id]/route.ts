@@ -15,7 +15,7 @@ async function getAuth() {
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -55,7 +55,7 @@ export async function POST(
             .returning()
 
         return NextResponse.json({ success: true, artwork: updatedArt[0] })
-    } catch (e) {
+    } catch (_e) {
         console.error('Failed to buy artwork:', e)
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 })
     }

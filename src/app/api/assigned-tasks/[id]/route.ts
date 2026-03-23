@@ -8,7 +8,7 @@ import { notifyParents, sendPushNotification } from '@/lib/push'
 
 export async function PUT(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -97,7 +97,7 @@ export async function PUT(
                     data: { url: '/tasks' }
                 }).catch(e => console.error('Push failed:', e))
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Trigger notification error:', e)
         }
 
@@ -110,7 +110,7 @@ export async function PUT(
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params

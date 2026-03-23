@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     if (settings?.systemName) {
       systemName = settings.systemName
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to fetch system name for metadata:', error)
   }
 
@@ -53,7 +53,7 @@ export default async function RootLayout({
     if (settings?.defaultLocale) {
       defaultLocale = settings.defaultLocale
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('Failed to fetch default locale:', error)
   }
 
@@ -81,7 +81,7 @@ export default async function RootLayout({
                 }
                 navigator.serviceWorker.register('/sw.js').then(function(registration) {
                   console.log('PWA: ServiceWorker registration successful with scope: ', registration.scope);
-                }, function(err) {
+                }, function(_err) {
                   console.log('PWA: ServiceWorker registration failed: ', err);
                 });
               });

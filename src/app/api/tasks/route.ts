@@ -4,7 +4,7 @@ import { task, users } from '@/lib/schema'
 import { desc, eq, and, or, sql, isNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -32,19 +32,19 @@ export async function GET(req: NextRequest) {
             .orderBy(desc(task.createdAt))
 
         return NextResponse.json(personalTasks)
-    } catch (error) {
-        console.error('Failed to fetch personal tasks:', (error as Error).message, (error as Error).stack)
+    } catch (_error) {
+        console.error('Failed to fetch personal tasks:', (_error as Error).message, (_error as Error).stack)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         const { userId: id } = session
 
-        const body = await req.json()
+        const body = await _req.json()
         const { title, description, isRepeating, isMonthlyRepeating, plannedTime } = body
 
         if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 })
@@ -62,8 +62,8 @@ export async function POST(req: NextRequest) {
         }).returning()
 
         return NextResponse.json(newTask[0])
-    } catch (error) {
-        console.error('Failed to create personal task:', error)
+    } catch (_error) {
+        console.error('Failed to create personal task:', _error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

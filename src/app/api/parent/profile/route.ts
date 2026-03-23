@@ -77,7 +77,7 @@ export async function PATCH(req: Request) {
             .where(eq(users.id, session))
 
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 }

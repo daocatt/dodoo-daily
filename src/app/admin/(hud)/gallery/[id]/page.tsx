@@ -101,7 +101,7 @@ export default function AlbumDetailPage() {
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
-        } catch (err) {
+        } catch (_err) {
             console.error('Download failed', err)
             window.open(url, '_blank')
         }
@@ -144,8 +144,8 @@ export default function AlbumDetailPage() {
             } else {
                 console.error('Album not found')
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -173,8 +173,8 @@ export default function AlbumDetailPage() {
                 setEditingArtwork(null)
                 fetchAlbumDetail(params.id as string)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setUpdating(false)
         }
@@ -202,8 +202,8 @@ export default function AlbumDetailPage() {
                 setEditingArtwork(null)
                 fetchAlbumDetail(params.id as string)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setUpdating(false)
         }
@@ -224,8 +224,8 @@ export default function AlbumDetailPage() {
                 setEditingAlbumTitle(false)
                 fetchAlbumDetail(params.id as string)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setUpdating(false)
         }
@@ -257,8 +257,8 @@ export default function AlbumDetailPage() {
         try {
             const res = await fetch(`/api/albums/${params.id}`, { method: 'DELETE' })
             if (res.ok) router.push('/gallery')
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setUpdating(false)
         }
@@ -375,7 +375,7 @@ export default function AlbumDetailPage() {
                                             </div>
                                             {art.isPublic && (
                                                 <button
-                                                    onClick={(e) => {
+                                                    onClick={(_e) => {
                                                         e.stopPropagation()
                                                         setPosterArtwork(art)
                                                     }}
@@ -388,7 +388,7 @@ export default function AlbumDetailPage() {
                                     )}
 
                                     <button
-                                        onClick={(e) => {
+                                        onClick={(_e) => {
                                             e.stopPropagation()
                                             setEditTitle(art.title)
                                             setEditPriceRMB(art.priceRMB.toString())
@@ -627,7 +627,7 @@ export default function AlbumDetailPage() {
                             </div>
                             <div className="flex items-center gap-4">
                                 <button
-                                    onClick={(e) => {
+                                    onClick={(_e) => {
                                         e.stopPropagation()
                                         handleDownload(album.artworks[lightboxIndex].imageUrl, album.artworks[lightboxIndex].title)
                                     }}
@@ -648,7 +648,7 @@ export default function AlbumDetailPage() {
                         {/* Main Image Area */}
                         <div className="flex-1 relative flex items-center justify-center p-4 md:p-10 shrink-0 min-h-0">
                             <button
-                                onClick={(e) => {
+                                onClick={(_e) => {
                                     e.stopPropagation()
                                     prevImage()
                                 }}
@@ -663,7 +663,7 @@ export default function AlbumDetailPage() {
                                 animate={{ opacity: 1, scale: 1, x: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, x: -20 }}
                                 className="relative max-w-full max-h-full flex items-center justify-center shrink-0"
-                                onClick={(e) => e.stopPropagation()}
+                                onClick={(_e) => e.stopPropagation()}
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
@@ -674,7 +674,7 @@ export default function AlbumDetailPage() {
                             </motion.div>
 
                             <button
-                                onClick={(e) => {
+                                onClick={(_e) => {
                                     e.stopPropagation()
                                     nextImage()
                                 }}
@@ -689,7 +689,7 @@ export default function AlbumDetailPage() {
                             {album.artworks.map((art, idx) => (
                                 <div
                                     key={`thumb-${art.id}`}
-                                    onClick={(e) => {
+                                    onClick={(_e) => {
                                         e.stopPropagation()
                                         setLightboxIndex(idx)
                                     }}

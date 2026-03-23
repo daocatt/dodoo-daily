@@ -73,8 +73,8 @@ export default function ExhibitionPage() {
                     setAlbums(await albRes.json())
                     setUser(await userRes.json())
                 }
-            } catch (err) {
-                console.error(err)
+            } catch (_err) {
+                console.error(_err)
             } finally {
                 setLoading(false)
             }

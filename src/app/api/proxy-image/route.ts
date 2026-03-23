@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
  * Proxies an external image through the server so html-to-image can capture
  * it without CORS canvas taint issues.
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const imageUrl = searchParams.get('url')
 
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
                 'Access-Control-Allow-Origin': '*',
             },
         })
-    } catch (e) {
+    } catch (_e) {
         console.error('proxy-image error:', e)
         return NextResponse.json({ error: 'Proxy failed' }, { status: 500 })
     }

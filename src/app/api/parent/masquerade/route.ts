@@ -4,7 +4,7 @@ import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser, signSessionJWT } from '@/lib/auth'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         // Use JWT-aware auth, not raw cookie check
         const { role } = await getSessionUser()
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
 
         return res
-    } catch (e) {
+    } catch (_e) {
         console.error('Masquerade failed:', e)
         return NextResponse.json({ error: 'Masquerade failed' }, { status: 500 })
     }

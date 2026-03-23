@@ -59,7 +59,7 @@ export async function PATCH(req: Request) {
             .where(eq(users.id, session))
 
         return NextResponse.json({ success: true, ...updates })
-    } catch (e) {
+    } catch (_e) {
         console.error('Profile update error:', e)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }

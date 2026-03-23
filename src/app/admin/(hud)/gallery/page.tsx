@@ -61,8 +61,8 @@ export default function GalleryPage() {
             const res = await fetch(url)
             const data = await res.json()
             setAlbums(data)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -83,8 +83,8 @@ export default function GalleryPage() {
                 setNewAlbumName('')
                 fetchAlbums(selectedChildId)
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 

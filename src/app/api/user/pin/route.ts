@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const cookieStore = await cookies()
         const userId = (await getSessionUser())?.userId

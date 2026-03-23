@@ -121,7 +121,7 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
             if (logsRes.ok) setLogs(await logsRes.json())
             if (ordersRes.ok) setOrders(await ordersRes.json())
             if (likesRes.ok) setLikes(await likesRes.json())
-        } catch (err) {
+        } catch (_err) {
             console.error('Failed to fetch member data', err)
         }
     }
@@ -133,7 +133,7 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
             if (res.ok) {
                 setMessages(await res.json())
             }
-        } catch (err) {
+        } catch (_err) {
             console.error('Failed to fetch messages', err)
         } finally {
             setMessageLoading(false)

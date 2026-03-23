@@ -198,7 +198,7 @@ export default function AppFolder() {
                             <motion.div
                                 key={app.id}
                                 className="flex flex-col items-center"
-                                onClick={(e) => handleAppClick(e, app)}
+                                onClick={(_e) => handleAppClick(e, app)}
                                 style={{ cursor: isFullyOpen ? 'pointer' : 'default' }}
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={phase === 'open' || phase === 'opening'

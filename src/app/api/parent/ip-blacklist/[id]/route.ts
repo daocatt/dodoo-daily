@@ -6,7 +6,7 @@ import { getSessionUser } from '@/lib/auth'
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -17,7 +17,7 @@ export async function DELETE(
 
         await db.delete(ipBlacklist).where(eq(ipBlacklist.id, id))
         return NextResponse.json({ success: true })
-    } catch (e) {
+    } catch (_e) {
         console.error('Delete IP from blacklist error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

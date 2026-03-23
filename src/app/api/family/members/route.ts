@@ -21,7 +21,7 @@ export async function GET() {
         .all()
 
         return NextResponse.json(members)
-    } catch (e) {
+    } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

@@ -5,7 +5,7 @@ import { eq, or, and, not } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { uploadMedia } from '@/lib/storage'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const [settings] = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
         if (!settings?.needsSetup) {
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, needsSetup: true })
 
-    } catch (e) {
+    } catch (_e) {
         console.error('Parent setup error', e)
         return NextResponse.json({ error: 'Setup failed' }, { status: 500 })
     }

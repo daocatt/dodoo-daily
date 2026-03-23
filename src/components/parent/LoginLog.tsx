@@ -32,7 +32,7 @@ export default function LoginLog({ userId }: { userId?: string }) {
                 setLoading(false)
             })
             .catch(err => {
-                console.error(err)
+                console.error(_err)
                 setLoading(false)
             })
     }, [userId])

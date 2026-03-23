@@ -57,8 +57,8 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
 
                 setTasks(combined.slice(0, displayCount))
                 setLoading(false)
-            } catch (err) {
-                console.error(err)
+            } catch (_err) {
+                console.error(_err)
                 setLoading(false)
             }
         }

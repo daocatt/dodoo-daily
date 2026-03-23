@@ -92,7 +92,7 @@ export async function POST(req: Request) {
             user: { id: user.id, role: user.role },
             needsSetup,
         })
-    } catch (e) {
+    } catch (_e) {
         console.error('Login error', e)
         return NextResponse.json({ error: 'Failed to login' }, { status: 500 })
     }

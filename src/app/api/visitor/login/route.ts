@@ -5,7 +5,7 @@ import { eq, and, or } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { signVisitorJWT } from '@/lib/auth'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0'
         
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         })
 
         return NextResponse.json(currentVisitor)
-    } catch (e) {
+    } catch (_e) {
         console.error('Visitor login error:', e)
         return NextResponse.json({ error: 'Login failed' }, { status: 500 })
     }

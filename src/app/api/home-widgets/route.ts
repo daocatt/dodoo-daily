@@ -51,7 +51,7 @@ export async function GET() {
     }
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(_req: NextRequest) {
     const user = await getSessionUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { userId } = user
@@ -74,7 +74,7 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     const user = await getSessionUser()
     if (!user) {
         console.warn('[API widgets POST] Unauthorized - no session user')
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
     const user = await getSessionUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { userId } = user

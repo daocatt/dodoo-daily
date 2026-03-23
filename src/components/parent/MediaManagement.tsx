@@ -53,7 +53,7 @@ export default function MediaManagement() {
                 const data = await res.json()
                 setMedia(data)
             }
-        } catch (err) {
+        } catch (_err) {
             console.error('Failed to fetch media:', err)
         } finally {
             setLoading(false)
@@ -86,7 +86,7 @@ export default function MediaManagement() {
             if (res.ok) {
                 fetchMedia()
             }
-        } catch (err) {
+        } catch (_err) {
             console.error('Upload failed:', err)
         } finally {
             setUploading(false)
@@ -101,8 +101,8 @@ export default function MediaManagement() {
             if (res.ok) {
                 setMedia(media.filter(m => m.id !== id))
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 
@@ -117,8 +117,8 @@ export default function MediaManagement() {
                 setEditing(null)
                 fetchMedia()
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 
@@ -152,7 +152,7 @@ export default function MediaManagement() {
                 <div className="flex items-center gap-3">
                     <select
                         value={uploadType}
-                        onChange={(e) => setUploadType(e.target.value as MediaRecord['fileType'])}
+                        onChange={(_e) => setUploadType(e.target.value as MediaRecord['fileType'])}
                         className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     >
                         {TYPE_FILTERS.filter(f => f.value !== 'ALL').map(f => (
@@ -177,7 +177,7 @@ export default function MediaManagement() {
                             type="text"
                             placeholder={t('parent.media.search')}
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(_e) => setSearch(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
                         />
                     </div>

@@ -699,7 +699,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm"
-                        onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setEditingChild(null); } }}
+                        onClick={(_e) => { if (e.target === e.currentTarget) { setShowAdd(false); setEditingChild(null); } }}
                     >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 16 }}

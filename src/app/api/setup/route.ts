@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 // POST: Complete setup — create the child account and mark setup done
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     const session = await getSessionUser()
     if (session?.role !== 'PARENT') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

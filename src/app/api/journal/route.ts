@@ -6,7 +6,7 @@ import { getSessionUser } from '@/lib/auth'
 import { count } from 'drizzle-orm'
 import { notifyParents } from '@/lib/push'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

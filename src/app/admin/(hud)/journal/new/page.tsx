@@ -89,8 +89,8 @@ export default function NewJournalPage() {
             if (res.ok) {
                 router.push('/journal')
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setPosting(false)
         }

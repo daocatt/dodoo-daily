@@ -5,7 +5,7 @@ import fs from 'fs'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ path: string[] }> }
+    { params: _params }: { params: Promise<{ path: string[] }> }
 ) {
     try {
         const { path } = await params

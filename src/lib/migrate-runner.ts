@@ -11,7 +11,7 @@ export async function runMigrations() {
             migrationsFolder: path.join(process.cwd(), 'src', 'lib', 'drizzle')
         });
         console.log('✅ Migrations completed successfully.');
-    } catch (error) {
+    } catch (_error) {
         console.error('❌ Migration failed:', error);
         process.exit(1);
     }

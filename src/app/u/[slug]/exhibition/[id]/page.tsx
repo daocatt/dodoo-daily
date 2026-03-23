@@ -125,8 +125,8 @@ export default function ArtworkDetailPage() {
                         setHasLiked(true)
                     }
                 }
-            } catch (err) {
-                console.error(err)
+            } catch (_err) {
+                console.error(_err)
             } finally {
                 setLoading(false)
             }
@@ -154,8 +154,8 @@ export default function ArtworkDetailPage() {
                 // Persist like status in local storage for instant feedback
                 localStorage.setItem(`artwork_liked_${id}`, 'true')
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setIsLiking(false)
         }
@@ -202,8 +202,8 @@ export default function ArtworkDetailPage() {
                     alert('Collection failed (server communication error)')
                 }
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setSubmitting(false)
         }

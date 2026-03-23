@@ -22,8 +22,8 @@ export default function MessageModerationPage() {
             const res = await fetch('/api/auth/profile/messages')
             const data = await res.json()
             if (!data.error) setMessages(data)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
             setIsRefreshing(false)
@@ -42,8 +42,8 @@ export default function MessageModerationPage() {
                 body: JSON.stringify({ id, isPublic: !currentStatus }),
             })
             if (res.ok) fetchMessages(true)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 
@@ -54,8 +54,8 @@ export default function MessageModerationPage() {
                 method: 'DELETE',
             })
             if (res.ok) fetchMessages(true)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         }
     }
 

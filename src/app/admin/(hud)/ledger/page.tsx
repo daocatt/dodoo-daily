@@ -516,7 +516,7 @@ export default function LedgerPage() {
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                             className="bg-white rounded-t-3xl min-h-[70vh] w-full p-6 flex flex-col gap-6"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(_e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-black text-slate-800">{t('ledger.add.title')}</h2>
@@ -559,7 +559,7 @@ export default function LedgerPage() {
                                         type="number"
                                         step="0.01"
                                         value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
+                                        onChange={(_e) => setAmount(e.target.value)}
                                         placeholder="0.00"
                                         className="w-full text-5xl font-black font-number bg-transparent border-b-2 border-slate-100 focus:border-indigo-500 py-2 outline-none transition-colors"
                                         required
@@ -591,7 +591,7 @@ export default function LedgerPage() {
                                     <input
                                         type="text"
                                         value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
+                                        onChange={(_e) => setDescription(e.target.value)}
                                         placeholder={t('ledger.add.desc') + '...'}
                                         className="w-full bg-slate-50 text-slate-700 font-medium p-4 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-transparent focus:border-indigo-200"
                                         required
@@ -631,7 +631,7 @@ export default function LedgerPage() {
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                             className="bg-white rounded-t-3xl min-h-[85vh] w-full p-8 flex flex-col gap-8 shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(_e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('ledger.transfer.title')}</h2>
@@ -677,7 +677,7 @@ export default function LedgerPage() {
                                             type="number"
                                             step="0.01"
                                             value={transferAmount}
-                                            onChange={(e) => setTransferAmount(e.target.value)}
+                                            onChange={(_e) => setTransferAmount(e.target.value)}
                                             placeholder="0.00"
                                             className="w-full text-6xl font-black font-number bg-transparent border-b-4 border-slate-100 focus:border-indigo-500 pl-8 pb-4 outline-none transition-all placeholder:text-slate-50"
                                             required
@@ -694,7 +694,7 @@ export default function LedgerPage() {
                                     <input
                                         type="text"
                                         value={transferDesc}
-                                        onChange={(e) => setTransferDesc(e.target.value)}
+                                        onChange={(_e) => setTransferDesc(e.target.value)}
                                         placeholder={t('ledger.transfer.desc')}
                                         className="w-full bg-slate-50 text-slate-700 font-bold p-5 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-200"
                                     />

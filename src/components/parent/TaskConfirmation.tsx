@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Check, X, Star, Coins, User, Loader2, CheckCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface PendingTask {
     id: string
@@ -31,8 +32,8 @@ export default function TaskConfirmation() {
             // Filter only for tasks that are completed but NOT yet approved/rejected
             const pending = data.filter((t: PendingTask) => t.completed && t.confirmationStatus === 'PENDING')
             setTasks(pending)
-        } catch (e) {
-            console.error('Failed to fetch pending tasks:', e)
+        } catch (_e) {
+            console.error('Failed to fetch pending tasks:', _e)
         } finally {
             setLoading(false)
         }
@@ -57,8 +58,8 @@ export default function TaskConfirmation() {
             if (res.ok) {
                 setTasks(prev => prev.filter(t => t.id !== taskId))
             }
-        } catch (e) {
-            console.error(e)
+        } catch (_e) {
+            console.error(_e)
         } finally {
             setProcessing(null)
         }
@@ -99,7 +100,13 @@ export default function TaskConfirmation() {
                                     <div className="relative">
                                         <div className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-50 flex items-center justify-center">
                                             {task.assigneeAvatar ? (
-                                                <img src={task.assigneeAvatar} alt={task.assigneeNickname} className="w-full h-full object-cover" />
+                                                <Image 
+                                                    src={task.assigneeAvatar} 
+                                                    alt={task.assigneeNickname} 
+                                                    width={56}
+                                                    height={56}
+                                                    className="w-full h-full object-cover" 
+                                                />
                                             ) : (
                                                 <User className="w-6 h-6 text-slate-300" />
                                             )}

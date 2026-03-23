@@ -23,6 +23,7 @@ import {
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 
 interface VisitorData {
     id: string
@@ -118,8 +119,8 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
             if (logsRes.ok) setLogs(await logsRes.json())
             if (ordersRes.ok) setOrders(await ordersRes.json())
             if (likesRes.ok) setLikes(await likesRes.json())
-        } catch (err) {
-            console.error('Failed to fetch visitor data', err)
+        } catch (_err) {
+            console.error('Failed to fetch visitor data', _err)
         }
     }
 
@@ -146,7 +147,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
             } else {
                 setMessage({ text: data.error || t('public.visitor.rechargeError'), type: 'error' })
             }
-        } catch (err) {
+        } catch (_err) {
             setMessage({ text: t('public.visitor.rechargeError'), type: 'error' })
         } finally {
             setRechargeLoading(false)
@@ -421,7 +422,15 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                             {orders.filter(o => o.status === 'PENDING_CONFIRM').map(order => (
                                 <div key={order.id} className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm">
                                     <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                                        {order.artworkImage && <img src={order.artworkImage} alt={order.artworkTitle} className="w-full h-full object-cover" />}
+                                        {order.artworkImage && (
+                                            <Image 
+                                                src={order.artworkImage} 
+                                                alt={order.artworkTitle} 
+                                                width={48} 
+                                                height={48} 
+                                                className="w-full h-full object-cover" 
+                                            />
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{order.artworkTitle}</h4>
@@ -440,9 +449,11 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                                 <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-[#CFCBBA] flex flex-col gap-4 shadow-sm group hover:border-indigo-300 transition-all">
                                     <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
                                         {order.artworkImage && (
-                                            <img 
+                                            <Image 
                                                 src={order.artworkImage} 
                                                 alt={order.artworkTitle} 
+                                                width={300}
+                                                height={300}
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                                             />
                                         )}
@@ -484,7 +495,15 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                                     className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm hover:border-indigo-200 transition-colors"
                                 >
                                     <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                                        {like.artworkImage && <img src={like.artworkImage} alt={like.artworkTitle} className="w-full h-full object-cover" />}
+                                        {like.artworkImage && (
+                                            <Image 
+                                                src={like.artworkImage} 
+                                                alt={like.artworkTitle} 
+                                                width={48}
+                                                height={48}
+                                                className="w-full h-full object-cover" 
+                                            />
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{like.artworkTitle}</h4>

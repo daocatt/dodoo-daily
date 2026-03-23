@@ -16,7 +16,7 @@ async function checkAuth() {
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -67,7 +67,7 @@ export async function PATCH(
         }
 
         return NextResponse.json(result)
-    } catch (e) {
+    } catch (_e) {
         console.error('Update purchase failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

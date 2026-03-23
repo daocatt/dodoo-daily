@@ -53,7 +53,7 @@ export default function SetPinPage() {
                 setError(data.error || 'Failed to set PIN.')
                 setLoading(false)
             }
-        } catch (err) {
+        } catch (_err) {
             setError('Network error. Please try again.')
             setLoading(false)
         }

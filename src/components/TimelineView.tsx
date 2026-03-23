@@ -4,6 +4,7 @@ import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Milestone as MilestoneIcon, Star, Calendar, ChevronRight } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 interface TimelineEntry {
     id: string
@@ -85,8 +86,8 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                                 } else if (entry.imageUrl) {
                                     entryImages = [entry.imageUrl]
                                 }
-                            } catch (e) {
-                                console.error("Failed to parse timeline images", e)
+                            } catch (_e) {
+                                console.error("Failed to parse timeline images", _e)
                                 if (entry.imageUrl) entryImages = [entry.imageUrl]
                             }
 
@@ -113,7 +114,13 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                                                     <div className="flex items-center gap-2">
                                                         <div className={`w-8 h-8 rounded-full overflow-hidden border-2 shadow-sm ${isChild ? 'border-orange-200 bg-orange-50' : 'border-indigo-200 bg-indigo-50'}`}>
                                                             {entry.authorAvatar ? (
-                                                                <img src={entry.authorAvatar} alt="" className="w-full h-full object-cover" />
+                                                                <Image 
+                                                                    src={entry.authorAvatar} 
+                                                                    alt="" 
+                                                                    width={32}
+                                                                    height={32}
+                                                                    className="w-full h-full object-cover" 
+                                                                />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center">
                                                                     <Star className={`w-4 h-4 ${isChild ? 'text-orange-400' : 'text-indigo-400'}`} />
@@ -140,12 +147,18 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                                                 {entryImages.length > 0 && (
                                                     <div
                                                         className="w-20 h-20 rounded-xl overflow-hidden border border-slate-50 flex-shrink-0 relative"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
+                                                        onClick={(_e) => {
+                                                            _e.stopPropagation();
                                                             onImageClick(entryImages, 0);
                                                         }}
                                                     >
-                                                        <img src={entryImages[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                        <Image 
+                                                            src={entryImages[0]} 
+                                                            alt="" 
+                                                            width={80} 
+                                                            height={80}
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                                        />
                                                         {entryImages.length > 1 && (
                                                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
                                                                 <span className="text-white font-black text-[10px]">+{entryImages.length - 1}</span>

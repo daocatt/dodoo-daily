@@ -86,8 +86,8 @@ export default function UploadModal({ isOpen, onClose, onSuccess, albums, defaul
                 onSuccess()
                 onClose()
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setUploading(false)
         }

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { Plus, Star, User, Trash2, Clock } from 'lucide-react'
+import Image from 'next/image' // Added import for Image
 import { motion } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -51,7 +52,7 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
             setChildren(kids)
             const allTasks = await tRes.json()
             setTasks(allTasks)
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setLoading(false) }
     }
 
@@ -73,14 +74,14 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
                 setFormData({ title: '', description: '', rewardStars: 1, isRepeating: false, isMonthlyRepeating: false, plannedTime: new Date().toISOString().split('T')[0], assignedTo: '' })
                 fetchData()
             }
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
     }
 
     const handleDeleteTask = async (id: string) => {
         try {
             await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
             fetchData()
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
     }
 
     const filteredTasks = tasks.filter(task =>
@@ -119,7 +120,7 @@ export default function TaskManagement({ preSelectId }: { preSelectId?: string |
                         onClick={() => setSelectedChild(child.id)}
                         className={`px-6 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${selectedChild === child.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
                     >
-                        {child.avatarUrl && <img src={child.avatarUrl} alt={child.name} className="w-4 h-4 rounded-full object-cover" />}
+                        {child.avatarUrl && <Image src={child.avatarUrl} alt={child.name} width={16} height={16} className="w-4 h-4 rounded-full object-cover" />}
                         {child.name}
                     </button>
                 ))}

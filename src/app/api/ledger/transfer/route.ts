@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/auth'
 import { transferFiat } from '@/lib/economy'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     const session = await getSessionUser()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { id: userId } = session

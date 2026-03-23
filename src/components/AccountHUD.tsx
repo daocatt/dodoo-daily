@@ -112,7 +112,7 @@ export default function AccountHUD() {
                 console.warn(`[AccountHUD] Unauthorized (status: ${res.status}), logging out...`)
                 handleLogout()
             }
-        } catch (err) {
+        } catch (_err) {
             console.error("AccountHUD: Fetch failed", err)
         }
     }, [locale])

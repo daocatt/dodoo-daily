@@ -4,7 +4,7 @@ import { rechargeCode } from '@/lib/schema'
 import { desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
@@ -13,13 +13,13 @@ export async function GET(req: NextRequest) {
 
         const codes = await db.select().from(rechargeCode).orderBy(desc(rechargeCode.createdAt))
         return NextResponse.json(codes)
-    } catch (e) {
+    } catch (_e) {
         console.error('Fetch recharge codes error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         }).returning()
 
         return NextResponse.json(newCode)
-    } catch (e) {
+    } catch (_e) {
         console.error('Generate recharge code error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

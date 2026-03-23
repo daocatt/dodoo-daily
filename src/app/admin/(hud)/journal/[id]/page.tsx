@@ -81,7 +81,7 @@ export default function JournalDetailPage() {
                         try {
                             if (data.imageUrls) parsedImages = JSON.parse(data.imageUrls)
                             else if (data.imageUrl) parsedImages = [data.imageUrl]
-                        } catch (e) {
+                        } catch (_e) {
                             if (data.imageUrl) parsedImages = [data.imageUrl]
                         }
                     }
@@ -99,7 +99,7 @@ export default function JournalDetailPage() {
                 } else {
                     router.push('/journal')
                 }
-            } catch (error) {
+            } catch (_error) {
                 console.error('Failed to fetch journal detail:', error)
             } finally {
                 setLoading(false)
@@ -158,7 +158,7 @@ export default function JournalDetailPage() {
                 const error = await res.json()
                 alert(`Failed to save: ${error.error || 'Unknown error'}`)
             }
-        } catch (error) {
+        } catch (_error) {
             console.error('Failed to update journal:', error)
             alert('Failed to update journal. Please try again.')
         } finally {
@@ -187,7 +187,7 @@ export default function JournalDetailPage() {
             }
             if (Array.isArray(entry.imageUrls)) return entry.imageUrls
             return entry.imageUrl ? [entry.imageUrl] : []
-        } catch (e) {
+        } catch (_e) {
             return entry.imageUrl ? [entry.imageUrl] : []
         }
     })()
@@ -241,7 +241,7 @@ export default function JournalDetailPage() {
                                             <>
                                                 <div className="absolute inset-y-0 left-0 w-1/4 flex items-center justify-start pl-4 pointer-events-none">
                                                     <button
-                                                        onClick={(e) => {
+                                                        onClick={(_e) => {
                                                             e.stopPropagation()
                                                             setActiveIndex((activeIndex - 1 + entryImages.length) % entryImages.length)
                                                         }}
@@ -252,7 +252,7 @@ export default function JournalDetailPage() {
                                                 </div>
                                                 <div className="absolute inset-y-0 right-0 w-1/4 flex items-center justify-end pr-4 pointer-events-none">
                                                     <button
-                                                        onClick={(e) => {
+                                                        onClick={(_e) => {
                                                             e.stopPropagation()
                                                             setActiveIndex((activeIndex + 1) % entryImages.length)
                                                         }}
@@ -270,7 +270,7 @@ export default function JournalDetailPage() {
                                                 {entryImages.map((_, i) => (
                                                     <button
                                                         key={i}
-                                                        onClick={(e) => {
+                                                        onClick={(_e) => {
                                                             e.stopPropagation()
                                                             setActiveIndex(i)
                                                         }}

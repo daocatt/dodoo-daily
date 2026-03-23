@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Package, Search } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 import clsx from 'clsx'
 
 type StorageItem = {
@@ -17,7 +18,6 @@ export default function StorageWidget({ size, cellSize }: { size: string, cellSi
   const { t } = useI18n()
 
   const isWide = size === 'WIDE' || size === 'GIANT'
-  const isTall = size === 'TALL' || size === 'GIANT'
   
   useEffect(() => {
     // If wide, fetch more to fill the shelf
@@ -53,8 +53,13 @@ export default function StorageWidget({ size, cellSize }: { size: string, cellSi
         ) : (
           items.map(item => (
             <div key={item.id} className="relative rounded-xl overflow-hidden bg-slate-50 h-full border border-slate-100 shadow-sm group">
-               {/* eslint-disable-next-line @next/next/no-img-element */}
-               <img src={item.imageUrl} className="w-full h-full object-cover" alt="" />
+               <Image 
+                 src={item.imageUrl} 
+                 alt={item.name} 
+                 fill
+                 sizes="(max-width: 768px) 25vw, 15vw"
+                 className="w-full h-full object-cover" 
+               />
                <div className="absolute inset-x-0 bottom-0 bg-black/50 backdrop-blur-[2px] p-1 translate-y-full group-hover:translate-y-0 transition-transform">
                  <p className="text-[7px] text-white font-bold truncate text-center">{item.name}</p>
                </div>

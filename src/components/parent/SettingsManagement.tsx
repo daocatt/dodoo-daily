@@ -54,7 +54,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
             } else {
                 setError(t('settings.updateFailed') || 'Upload failed')
             }
-        } catch (e) { setError(t('settings.errorNetwork') || 'Network error') }
+        } catch (_e) { setError(t('settings.errorNetwork') || 'Network error') }
         finally { setUploading(false) }
     }
 
@@ -73,7 +73,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                 const data = await res.json()
                 setError(data.error || t('settings.updateFailed') || 'Failed')
             }
-        } catch (e) { setError(t('settings.errorNetwork') || 'Network error') }
+        } catch (_e) { setError(t('settings.errorNetwork') || 'Network error') }
         finally { setSaving(false) }
     }
 
@@ -88,7 +88,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
             })
             if (res.ok) { setPinMessage(t('settings.pinUpdateSuccess') || 'Password updated!'); setPin('') }
             else { setPinError(t('settings.updateFailed') || 'Failed') }
-        } catch (e) { setPinError(t('settings.errorNetwork') || 'Network error') }
+        } catch (_e) { setPinError(t('settings.errorNetwork') || 'Network error') }
         finally { setPinSaving(false) }
     }
 
@@ -116,7 +116,7 @@ export default function ProfileManagement({ user }: { user: UserProp }) {
                                     src={`${avatarUrl || '/dog.svg'}?v=5`}
                                     alt="Avatar"
                                     className={`w-full h-full object-cover ${!avatarUrl ? 'p-5' : ''}`}
-                                    onError={(e) => { e.currentTarget.src = '/dog.svg'; e.currentTarget.className = 'w-full h-full object-contain p-5' }}
+                                    onError={(_e) => { e.currentTarget.src = '/dog.svg'; e.currentTarget.className = 'w-full h-full object-contain p-5' }}
                                 />
                             )}
                         </div>

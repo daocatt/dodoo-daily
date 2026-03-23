@@ -91,7 +91,7 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
             ])
             if (shopRes.ok) setShopOrders(await shopRes.json())
             if (galleryRes.ok) setGalleryOrders(await galleryRes.json())
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setLoading(false) }
     }, [])
 
@@ -113,7 +113,7 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                 body: JSON.stringify({ id, ...data })
             })
             if (res.ok) await fetchData()
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setUpdating(null) }
     }
 
@@ -126,7 +126,7 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                 body: JSON.stringify({ id, status })
             })
             if (res.ok) await fetchData()
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) }
         finally { setUpdating(null) }
     }
 

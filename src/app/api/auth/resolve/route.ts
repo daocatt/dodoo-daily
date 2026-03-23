@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 /**
  * Resolve a nickname to its basic user info (needed when showAllAvatars is false)
  */
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const { nickname } = await req.json()
         if (!nickname) return NextResponse.json({ error: 'Nickname required' }, { status: 400 })
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
             avatarUrl: user.avatarUrl,
             hasPin: !!user.pin
         })
-    } catch (e) {
+    } catch (_e) {
         console.error('Resolve failed', e)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }

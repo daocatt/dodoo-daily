@@ -5,7 +5,7 @@ import { eq, and, desc } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params: _params }: { params: Promise<{ slug: string }> }
 ) {
     try {
         const { slug } = await params
@@ -55,7 +55,7 @@ export async function GET(
         .orderBy(desc(artwork.createdAt))
 
         return NextResponse.json(publicArtworks)
-    } catch (e) {
+    } catch (_e) {
         console.error('Public artworks fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

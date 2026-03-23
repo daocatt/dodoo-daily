@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { visitor, rechargeCode, visitorCurrencyLog, accountStats, currencyLog } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const body = await req.json()
         const { visitorId, memberId, code } = body

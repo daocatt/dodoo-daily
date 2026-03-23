@@ -39,7 +39,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
                 const data = await res.json()
                 setArtworks(data)
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to fetch exhibition artworks:', e)
         } finally {
             setLoading(false)
@@ -62,7 +62,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
             if (res.ok) {
                 setArtworks(prev => prev.filter(art => art.id !== id))
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to take down artwork:', e)
         } finally {
             setProcessingId(null)
@@ -81,7 +81,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
             if (res.ok) {
                 setArtworks(prev => prev.map(art => art.id === id ? { ...art, isApproved: true } : art))
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to approve artwork:', e)
         } finally {
             setProcessingId(null)
@@ -101,7 +101,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
                 setArtworks(prev => prev.map(art => art.id === id ? { ...art, exhibitionDescription: tempDescription } : art))
                 setEditingDescriptionId(null)
             }
-        } catch (e) {
+        } catch (_e) {
             console.error('Failed to save description:', e)
         } finally {
             setProcessingId(null)

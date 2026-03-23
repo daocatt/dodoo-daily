@@ -6,6 +6,7 @@ import pkg from '@/../package.json'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function SystemSettings() {
     const { t } = useI18n()
@@ -53,7 +54,7 @@ export default function SystemSettings() {
                 setHideFamilyLogin(data.hideFamilyLogin ?? false)
                 try {
                     setHomepageImages(data.homepageImages ? JSON.parse(data.homepageImages) : [])
-                } catch (e) { setHomepageImages([]) }
+                } catch (_e) { setHomepageImages([]) }
                 setDefaultLocale(data.defaultLocale || 'en')
                 setLoading(false)
             })
@@ -88,7 +89,7 @@ export default function SystemSettings() {
                 if (updates.disableVisitorRegistration !== undefined) setDisableVisitorRegistration(updates.disableVisitorRegistration as boolean)
                 if (updates.hideFamilyLogin !== undefined) setHideFamilyLogin(updates.hideFamilyLogin as boolean)
                 if (updates.homepageImages !== undefined) {
-                    try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (e) { }
+                    try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (_e) { }
                 }
                 if (updates.defaultLocale !== undefined) setDefaultLocale(updates.defaultLocale as 'en' | 'zh-CN')
                 showToast(t('settings.updateSuccess'))
@@ -96,8 +97,8 @@ export default function SystemSettings() {
             } else {
                 showToast(t('settings.updateFailed'), 'error')
             }
-        } catch (e) {
-            console.error('Failed to update settings', e)
+        } catch (_err) {
+            console.error('Failed to update settings', _err)
             showToast('Network error', 'error')
         } finally {
             setIsSaving(false)
@@ -249,7 +250,13 @@ export default function SystemSettings() {
                             <div className="grid grid-cols-5 gap-3">
                                 {homepageImages.map((url, idx) => (
                                     <div key={idx} className="relative aspect-square bg-slate-100 rounded-xl overflow-hidden group border border-slate-100">
-                                        <img src={url} className="w-full h-full object-cover" />
+                                        <Image 
+                                            src={url} 
+                                            alt="" 
+                                            width={100} 
+                                            height={100}
+                                            className="w-full h-full object-cover" 
+                                        />
                                         <button
                                             onClick={() => {
                                                 const next = homepageImages.filter((_, i) => i !== idx);
@@ -277,7 +284,7 @@ export default function SystemSettings() {
                                                     const next = [...homepageImages, data.url];
                                                     handleUpdateSettings({ homepageImages: JSON.stringify(next) });
                                                 }
-                                            } catch (e) { } finally { setUploading(false); }
+                                            } catch (_e) { } finally { setUploading(false); }
                                         }} />
                                     </label>
                                 )}
@@ -374,7 +381,13 @@ export default function SystemSettings() {
                 <div className="flex flex-col md:flex-row items-center gap-12 relative z-10">
                     <div className="relative group/logo">
                         <div className="w-32 h-32 rounded-[2.5rem] bg-indigo-50 flex items-center justify-center p-6 shadow-indigo-100 shadow-2xl transition-all group-hover/logo:scale-110 group-hover/logo:rotate-3">
-                            <img src="/dog.svg" alt="DoDoo Logo" className="w-full h-full object-contain" />
+                            <Image 
+                                src="/dog.svg" 
+                                alt="DoDoo Logo" 
+                                width={128} 
+                                height={128} 
+                                className="w-full h-full object-contain" 
+                            />
                         </div>
                         <div className="absolute -bottom-2 -right-2 bg-indigo-600 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border-2 border-white">
                             v{pkg.version}

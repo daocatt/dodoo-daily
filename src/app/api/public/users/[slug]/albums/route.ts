@@ -5,7 +5,7 @@ import { eq, and, desc, sql } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params: _params }: { params: Promise<{ slug: string }> }
 ) {
     try {
         const { slug } = await params
@@ -69,7 +69,7 @@ export async function GET(
         }))
 
         return NextResponse.json(albumsWithArt)
-    } catch (e) {
+    } catch (_e) {
         console.error('Public albums fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

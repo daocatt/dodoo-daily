@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { notifyParents } from '@/lib/push'
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     try {
         const { userId: childId } = await getSessionUser()
         if (!childId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

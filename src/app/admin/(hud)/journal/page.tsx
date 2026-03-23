@@ -97,7 +97,7 @@ export default function JournalPage() {
             } else if (entry.imageUrl) {
                 entryImages = [entry.imageUrl]
             }
-        } catch (e) {
+        } catch (_e) {
             console.error("Failed to parse journal images", e)
             if (entry.imageUrl) entryImages = [entry.imageUrl]
         }

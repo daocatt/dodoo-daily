@@ -56,8 +56,8 @@ export default function ExhibitionSettingsPage() {
                 // simple success feedback
                 alert('Saved successfully!')
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
             alert('Failed to save')
         } finally {
             setSaving(false)
@@ -108,7 +108,7 @@ export default function ExhibitionSettingsPage() {
                                             type="checkbox"
                                             className="sr-only"
                                             checked={settings.exhibitionEnabled}
-                                            onChange={(e) => setSettings({ ...settings, exhibitionEnabled: e.target.checked })}
+                                            onChange={(_e) => setSettings({ ...settings, exhibitionEnabled: e.target.checked })}
                                         />
                                         <div className={`block w-14 h-8 rounded-full ${settings.exhibitionEnabled ? 'bg-indigo-500' : 'bg-slate-300'} transition-colors`}></div>
                                         <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${settings.exhibitionEnabled ? 'transform translate-x-6' : ''}`}></div>

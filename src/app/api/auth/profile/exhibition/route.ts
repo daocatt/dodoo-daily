@@ -4,7 +4,7 @@ import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(_req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const userSession = await getSessionUser()
         if (!userSession) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

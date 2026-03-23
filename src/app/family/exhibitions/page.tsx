@@ -4,6 +4,7 @@ import { users } from '@/lib/schema'
 import { eq, desc, and, isNotNull } from 'drizzle-orm'
 import Link from 'next/link'
 import { ArrowLeft, Users, Monitor, ShieldCheck } from 'lucide-react'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,9 +96,11 @@ export default async function FamilyPage() {
                                         </div>
 
                                         {member.avatarUrl ? (
-                                            <img 
+                                            <Image 
                                                 src={member.avatarUrl} 
                                                 alt={member.name} 
+                                                width={112}
+                                                height={112}
                                                 className="w-full h-full object-cover brightness-[0.95] contrast-[1.05] group-hover:contrast-100 group-hover:brightness-100 transition-all duration-1000 scale-[1.08] group-hover:scale-100" 
                                             />
                                         ) : (

@@ -48,7 +48,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                 cacheBust: true,
             })
             setPosterImageUrl(dataUrl)
-        } catch (error) {
+        } catch (_error) {
             console.error('Poster generation failed:', error)
         } finally {
             setGenerating(false)

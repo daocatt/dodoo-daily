@@ -74,7 +74,7 @@ export async function GET() {
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
     if (!await checkIsAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(_req: NextRequest) {
     const auth = await getPermissionContext()
     if (!auth.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -255,7 +255,7 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
     const auth = await getPermissionContext()
     if (!auth.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
