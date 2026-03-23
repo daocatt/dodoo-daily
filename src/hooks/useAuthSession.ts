@@ -10,6 +10,9 @@ export interface AuthSession {
         avatarUrl?: string | null
         role: 'PARENT' | 'CHILD'
         slug: string
+        email?: string | null
+        phone?: string | null
+        address?: string | null
     } | null
     visitor: {
         id: string

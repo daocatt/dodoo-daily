@@ -28,6 +28,9 @@ export const users = sqliteTable("Users", {
     permissionRole: text("permissionRole", { enum: ["SUPERADMIN", "ADMIN", "USER"] }).default("USER").notNull(),
     lastLoginAt: integer("lastLoginAt", { mode: "timestamp_ms" }),
     locale: text("locale").default("en").notNull(),
+    email: text("email"),
+    phone: text("phone"),
+    address: text("address"),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     // Exhibition Settings
     exhibitionTitle: text("exhibitionTitle"),

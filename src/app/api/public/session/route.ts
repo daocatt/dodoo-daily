@@ -33,7 +33,10 @@ export async function GET() {
                 nickname: userRecord.nickname,
                 avatarUrl: userRecord.avatarUrl,
                 role: userRecord.role,
-                slug: userRecord.slug
+                slug: userRecord.slug,
+                email: userRecord.email,
+                phone: userRecord.phone,
+                address: userRecord.address
             } : null,
             visitor: visitorData ? {
                 id: visitorData.id,

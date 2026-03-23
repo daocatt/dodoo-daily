@@ -176,6 +176,13 @@
       "when": 1774234495194,
       "tag": "0024_condemned_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1774258052430,
+      "tag": "0025_light_titanium_man",
+      "breakpoints": true
     }
   ]
 }
