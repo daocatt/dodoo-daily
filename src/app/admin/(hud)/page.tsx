@@ -635,7 +635,7 @@ export default function Home() {
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => router.push(userRole === 'PARENT' ? '/admin/management' : '/admin/settings')}
+              onClick={() => router.push(userRole === 'PARENT' ? '/admin/console' : '/admin/profile')}
               className="p-2 rounded-xl bg-white border-2 border-slate-100 text-slate-500 shadow-sm flex items-center justify-center transition-all hover:border-indigo-200 hover:text-indigo-600"
               title={t('button.settings')}
             >

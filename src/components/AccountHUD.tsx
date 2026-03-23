@@ -197,7 +197,7 @@ export default function AccountHUD() {
                         <motion.div
                             whileTap={{ scale: 0.95 }}
                             className="relative cursor-pointer"
-                            onClick={() => (window.location.href = stats.isParent ? '/admin/management' : '/admin/settings')}
+                            onClick={() => (window.location.href = stats.isParent ? '/admin/console' : '/admin/profile')}
                         >
                             <div className="w-8 h-8 rounded-full bg-slate-100 shadow-sm overflow-hidden flex items-center justify-center border border-black/[0.03]">
                                 {stats.avatar && stats.avatar.length > 2 ? (
