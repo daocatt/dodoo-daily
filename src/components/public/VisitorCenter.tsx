@@ -307,7 +307,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                     {activeTab === 'OVERVIEW' ? (
                         <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 mt-2">
                             {/* Hardpoint Terminal Dashboard */}
-                            <div className="relative bg-[#D6D2C0] rounded-2xl p-6 shadow-[inset_0_4px_12px_rgba(0,0,0,0.1)] border-4 border-[#C8C4B0] overflow-hidden">
+                            <div className="relative bg-[#E2DFD2] rounded-2xl p-6 shadow-[inset_0_4px_12px_rgba(0,0,0,0.1)] border-4 border-[#C8C4B0] overflow-hidden">
                                 
                                 {/* Status Header */}
                                 <div className="flex justify-between items-center px-2 mb-6">
@@ -612,8 +612,15 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                     background: transparent;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #C8C4B0;
+                    background: #CFCBBA;
                     border-radius: 10px;
+                }
+                @keyframes pulse-slow {
+                    0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(129,140,248,0.5)); }
+                    50% { opacity: 0.8; filter: drop-shadow(0 0 2px rgba(129,140,248,0.2)); }
+                }
+                .animate-pulse-slow {
+                    animation: pulse-slow 4s ease-in-out infinite;
                 }
             `}</style>
         </div>
