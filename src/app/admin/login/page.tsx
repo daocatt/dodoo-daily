@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, User, Loader2, ArrowLeft, CheckCircle2, Upload, Terminal, Disc, ShieldCheck, Power, Activity } from 'lucide-react'
+import { Lock, User, Loader2, ArrowLeft, CheckCircle2, Terminal, Power, Activity } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -39,16 +39,17 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const { t } = useI18n()
-    const [showAllAvatars, setShowAllAvatars] = useState(true)
     const [systemName, setSystemName] = useState('DoDoo System')
-    const [nickname, setNickname] = useState('')
+    // const [nickname, setNickname] = useState('')
 
     // First Launch States
+    /* Future: First Launch Feature
     const [isFirstLaunch, setIsFirstLaunch] = useState(false)
     const [firstLaunchName, setFirstLaunchName] = useState('')
     const [firstLaunchAvatarPreview, setFirstLaunchAvatarPreview] = useState<string | null>(null)
     const [firstLaunchAvatarFile, setFirstLaunchAvatarFile] = useState<File | null>(null)
     const firstLaunchFileInputRef = useRef<HTMLInputElement>(null)
+    */
 
     useEffect(() => {
         Promise.all([
@@ -58,13 +59,13 @@ export default function LoginPage() {
             .then(([usersData, settingsData]) => {
                 setUsers(usersData)
                 if (settingsData.needsSetup && usersData.length === 1 && usersData[0].role === 'PARENT' && usersData[0].name === 'Parent') {
-                    setIsFirstLaunch(true)
+                    // setIsFirstLaunch(true)
                 }
-                setShowAllAvatars(settingsData.showAllAvatars ?? true)
+                // setShowAllAvatars(settingsData.showAllAvatars ?? true)
                 setSystemName(settingsData.systemName || 'DoDoo System')
                 setLoading(false)
             })
-            .catch(_err => {
+            .catch(() => {
                 setLoading(false)
             })
     }, [])
