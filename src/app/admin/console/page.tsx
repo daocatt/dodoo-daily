@@ -34,7 +34,15 @@ export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS' | 'SHOP_ORDERS' | 'GALLERY_ORDERS'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS' | 'SHOP_ORDERS' | 'GALLERY_ORDERS'>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            const qView = params.get('view') || ''
+            const views = ['HOME', 'FAMILY', 'REWARDS', 'PENALTIES', 'PROFILE', 'SYSTEM', 'MEDIA', 'EXHIBITION', 'VISITORS', 'LOGS', 'SHOP_ORDERS', 'GALLERY_ORDERS']
+            if (views.includes(qView)) return qView as 'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS' | 'SHOP_ORDERS' | 'GALLERY_ORDERS'
+        }
+        return 'HOME'
+    })
     const [user, setUser] = useState<ParentUser | null>(null)
 
     useEffect(() => {
