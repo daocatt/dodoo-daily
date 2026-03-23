@@ -17,8 +17,7 @@ import {
     Settings,
     ShieldCheck,
     Heart,
-    Package,
-    Monitor
+    Package
 } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -63,6 +62,7 @@ interface VisitorLike {
 interface SystemMessage {
     id: string
     text: string
+    isPublic: boolean
     createdAt: number
     visitorName?: string | null
     memberNickname?: string | null
@@ -243,10 +243,10 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                         </div>
                     </Link>
                     {/* Yellow Admin Redirect Button (Replaces Logout) */}
-                    <button onClick={() => router.push('/admin')} title="Go to Admin" className="hardware-btn block">
+                    <button onClick={() => router.push('/admin/profile')} title={t('parent.profile')} className="hardware-btn block">
                         <div className="hardware-well p-1 rounded-xl">
                             <div className="hardware-cap bg-amber-400 border border-amber-500/50 p-2.5 rounded-lg text-amber-900 flex items-center justify-center shadow-lg active:translate-y-0.5">
-                                <Monitor className="w-4 h-4" />
+                                <Settings className="w-4 h-4" />
                             </div>
                         </div>
                     </button>
@@ -298,35 +298,57 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                                 </div>
                             </div>
 
-                            {/* Message Carousel Component (Continuous Marquee) */}
                             <div className="space-y-4 pt-2 overflow-hidden">
-                                <div className="flex items-center gap-3 px-2">
-                                    <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-2 shrink-0">
-                                        <MessageSquare className="w-3.5 h-3.5 opacity-50" />
-                                        Signal Streams
-                                    </h4>
-                                    <div className="flex-1 h-px bg-slate-300" />
-                                </div>
-                                <div className="relative group">
-                                    <div className="flex whitespace-nowrap animate-marquee py-2">
-                                        {messages.length > 0 ? (
-                                            <>
-                                                {[...messages, ...messages].map((msg, idx) => (
-                                                    <div key={`${msg.id}-${idx}`} className="inline-flex items-center mx-4 bg-[#FAF9F6]/80 px-4 py-2.5 rounded-full border border-[#C8C4B0]/50 shadow-sm first:ml-0">
-                                                        <span className="text-[#2C2A20] text-[10px] font-bold italic mr-3 truncate max-w-[200px]">&ldquo;{msg.text}&rdquo;</span>
-                                                        <span className="label-mono text-[7px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
-                                                            {msg.memberNickname || msg.memberName || msg.visitorName || 'ANONYMOUS'}
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </>
-                                        ) : (
-                                            <div className="w-full text-center label-mono text-[8px] text-slate-400 opacity-50 py-4">NO COMMUNICATIONS LOGGED</div>
-                                        )}
+                                <div className="flex items-center justify-between px-2 mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-2 shrink-0">
+                                            <MessageSquare className="w-3.5 h-3.5 opacity-50" />
+                                            Signal Streams
+                                        </h4>
+                                        <div className="w-12 h-px bg-slate-300" />
                                     </div>
+                                    <button 
+                                        onClick={() => router.push('/admin/gallery/messages')}
+                                        className="label-mono text-[8px] font-black text-indigo-500 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1.5 transition-colors group/entry"
+                                    >
+                                        <span>Manage Backend</span>
+                                        <ArrowUpRight className="w-3 h-3 group-hover/entry:translate-x-0.5 group-hover/entry:-translate-y-0.5 transition-transform" />
+                                    </button>
+                                </div>
+                                <div className="relative space-y-2 py-4">
+                                    {[0, 1, 2].map((rowIndex) => {
+                                        const publicMessages = messages.filter(m => m.isPublic);
+                                        const rowMessages = publicMessages.filter((_, i) => i % 3 === rowIndex);
+                                        if (rowMessages.length === 0) return null;
+
+                                        return (
+                                            <div key={rowIndex} className="relative group/track overflow-hidden h-9">
+                                                <div 
+                                                    className={`flex whitespace-nowrap animate-marquee absolute inset-y-0 ${rowIndex === 1 ? 'marquee-reverse' : ''}`}
+                                                    style={{ animationDuration: `${20 + rowIndex * 5}s` }}
+                                                >
+                                                    {[...rowMessages, ...rowMessages, ...rowMessages].map((msg, idx) => (
+                                                        <div key={`${msg.id}-${idx}`} className="inline-flex items-center mx-2 bg-[#FAF9F6] px-4 py-2 rounded-full border border-[#C8C4B0]/40 shadow-sm shrink-0">
+                                                            <span className="text-[#2C2A20] text-[10px] font-bold italic mr-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">&ldquo;{msg.text}&rdquo;</span>
+                                                            <span className="label-mono text-[7px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50/50 px-2 py-0.5 rounded-full shrink-0">
+                                                                {msg.memberNickname || msg.memberName || msg.visitorName || 'ANONYMOUS'}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    
+                                    {messages.filter(m => m.isPublic).length === 0 && (
+                                        <div className="w-full text-center label-mono text-[8px] text-slate-400 opacity-50 py-10 border-2 border-dashed border-[#C8C4B0]/30 rounded-2xl">
+                                            NO COMMUNICATIONS LOGGED
+                                        </div>
+                                    )}
+
                                     {/* Gradients to hide edges */}
-                                    <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#D6D2C0] to-transparent z-10 pointer-events-none" />
-                                    <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#D6D2C0] to-transparent z-10 pointer-events-none" />
+                                    <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#D6D2C0] to-transparent z-10 pointer-events-none" />
+                                    <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#D6D2C0] to-transparent z-10 pointer-events-none" />
                                 </div>
                             </div>
                         </motion.div>
@@ -443,7 +465,10 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
                 }
                 @keyframes marquee {
                     0% { transform: translateX(0); }
-                    100% { transform: translateX(-50%); }
+                    100% { transform: translateX(-33.333%); }
+                }
+                .marquee-reverse {
+                    animation-direction: reverse;
                 }
                 .animate-marquee:hover {
                     animation-play-state: paused;

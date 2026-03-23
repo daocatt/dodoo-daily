@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "agent-skill-linter": {
+      "source": "William-Yeh/agent-skill-linter",
+      "sourceType": "github",
+      "computedHash": "3e09a45e93ad654de5a3daecb5806cad458fbe1ff7d158aa980e9a27ab87ef2d"
+    },
     "drag-and-drop": {
       "source": "wodsmith/thewodapp",
       "sourceType": "github",

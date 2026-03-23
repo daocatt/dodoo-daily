@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Users, UserCheck, UserX, Search, Loader2, Coins, Ticket, Plus, Trash2, ShieldAlert, Globe, MessageSquare, Mail, Phone, Clock, FileText, Check, AlertTriangle, ShoppingBag, X } from 'lucide-react'
+import { Users, UserCheck, UserX, Search, Loader2, Coins, Ticket, Plus, Trash2, ShieldAlert, Globe, MessageSquare, Mail, Phone, Clock, Check, AlertTriangle, ShoppingBag, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -37,15 +37,27 @@ interface IpBlacklist {
     createdAt: string
 }
 
+interface VisitorMessage {
+    id: string
+    text: string
+    isPublic: boolean
+    createdAt: string
+    visitorName: string | null
+    memberName: string | null
+    memberNickname: string | null
+    targetUserName: string
+}
+
 export default function VisitorManagement() {
     const { t } = useI18n()
     const [visitors, setVisitors] = useState<Visitor[]>([])
     const [rechargeCodes, setRechargeCodes] = useState<RechargeCode[]>([])
     const [ipBlacklist, setIpBlacklist] = useState<IpBlacklist[]>([])
+    const [messages, setMessages] = useState<VisitorMessage[]>([])
     
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState('')
-    const [activeTab, setActiveTab] = useState<'VISITORS' | 'CODES' | 'CONTROL' | 'IP'>('VISITORS')
+    const [activeTab, setActiveTab] = useState<'VISITORS' | 'CODES' | 'CONTROL' | 'IP' | 'MESSAGES'>('VISITORS')
     const [processingId, setProcessingId] = useState<string | null>(null)
     
     // Form states
@@ -71,15 +83,17 @@ export default function VisitorManagement() {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const [gRes, cRes, iRes, sRes] = await Promise.all([
+            const [gRes, cRes, iRes, sRes, mRes] = await Promise.all([
                 fetch('/api/parent/visitors'),
                 fetch('/api/parent/recharge-codes'),
                 fetch('/api/parent/ip-blacklist'),
-                fetch('/api/system/settings')
+                fetch('/api/system/settings'),
+                fetch('/api/parent/visitor/messages')
             ])
             if (gRes.ok) setVisitors(await gRes.json())
             if (cRes.ok) setRechargeCodes(await cRes.json())
             if (iRes.ok) setIpBlacklist(await iRes.json())
+            if (mRes.ok) setMessages(await mRes.json())
             if (sRes.ok) {
                 const sData = await sRes.json();
                 setRequireVisitorApproval(sData.requireVisitorApproval ?? true)
@@ -102,6 +116,13 @@ export default function VisitorManagement() {
 
     useEffect(() => {
         fetchData()
+        
+        // Handle direct tab access from URL
+        const params = new URLSearchParams(window.location.search)
+        const qTab = params.get('tab') as 'VISITORS' | 'CODES' | 'CONTROL' | 'IP' | 'MESSAGES' | null
+        if (qTab && ['VISITORS', 'CODES', 'CONTROL', 'IP', 'MESSAGES'].includes(qTab)) {
+            setActiveTab(qTab)
+        }
     }, [])
 
     const handleVisitorAction = async (id: string, action: 'APPROVE' | 'BAN' | 'DELETE') => {
@@ -230,6 +251,37 @@ export default function VisitorManagement() {
         }
     }
 
+    const handleToggleMessagePublic = async (id: string, current: boolean) => {
+        setProcessingId(id)
+        try {
+            const res = await fetch('/api/parent/visitor/messages', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, isPublic: !current })
+            })
+            if (res.ok) {
+                setMessages(prev => prev.map(m => m.id === id ? { ...m, isPublic: !current } : m))
+                showToast('Message visibility updated')
+            }
+        } finally {
+            setProcessingId(null)
+        }
+    }
+
+    const handleDeleteMessage = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this message?')) return
+        setProcessingId(id)
+        try {
+            const res = await fetch(`/api/parent/visitor/messages?id=${id}`, { method: 'DELETE' })
+            if (res.ok) {
+                setMessages(prev => prev.filter(m => m.id !== id))
+                showToast('Message deleted')
+            }
+        } finally {
+            setProcessingId(null)
+        }
+    }
+
     const filteredVisitors = visitors.filter(g => 
         g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         g.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -272,13 +324,13 @@ export default function VisitorManagement() {
                 </div>
 
                 <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto min-w-full md:min-w-0">
-                    {(['VISITORS', 'CODES', 'CONTROL', 'IP'] as const).map((tab) => (
+                    {(['VISITORS', 'MESSAGES', 'CODES', 'CONTROL', 'IP'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            {tab === 'VISITORS' ? t('visitors.tabs.visitors') : tab === 'CODES' ? t('visitors.tabs.codes') : tab === 'CONTROL' ? t('visitors.tabs.control') : t('visitors.tabs.ip')}
+                            {tab === 'VISITORS' ? t('visitors.tabs.visitors') : tab === 'MESSAGES' ? t('visitors.tabs.messages') || 'Messages' : tab === 'CODES' ? t('visitors.tabs.codes') : tab === 'CONTROL' ? t('visitors.tabs.control') : t('visitors.tabs.ip')}
                         </button>
                     ))}
                 </div>
@@ -406,6 +458,78 @@ export default function VisitorManagement() {
                             </div>
                         )}
                         </AnimatePresence>
+                    </div>
+                </div>
+            )}
+            {/* TAB: MESSAGES */}
+            {activeTab === 'MESSAGES' && (
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-100">
+                                    <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">Content</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">From</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">Target</th>
+                                    <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                                    <th className="px-6 py-5 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {messages.map(msg => (
+                                    <tr key={msg.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-8 py-6">
+                                            <p className="text-sm font-bold text-slate-700 leading-relaxed max-w-md italic">&ldquo;{msg.text}&rdquo;</p>
+                                            <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase tracking-tighter">{new Date(msg.createdAt).toLocaleString()}</p>
+                                        </td>
+                                        <td className="px-6 py-6">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-slate-600 uppercase tracking-tight">
+                                                    {msg.memberNickname || msg.memberName || msg.visitorName || 'ANONYMOUS'}
+                                                </span>
+                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                    {msg.visitorName ? 'Visitor' : 'Family'}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-6">
+                                            <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-default">
+                                                @{msg.targetUserName}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-6">
+                                            <button 
+                                                onClick={() => handleToggleMessagePublic(msg.id, msg.isPublic)}
+                                                disabled={processingId === msg.id}
+                                                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 transition-all ${msg.isPublic ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                            >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${msg.isPublic ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
+                                                {msg.isPublic ? 'Public' : 'Private'}
+                                            </button>
+                                        </td>
+                                        <td className="px-6 py-6 text-right">
+                                            <button 
+                                                onClick={() => handleDeleteMessage(msg.id)}
+                                                disabled={processingId === msg.id}
+                                                className="p-2.5 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-100 hover:text-rose-600 transition-all active:scale-95"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {messages.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="px-8 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3 opacity-30">
+                                                <MessageSquare className="w-12 h-12" />
+                                                <p className="label-mono text-[10px] font-black uppercase tracking-widest">No communications recorded</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

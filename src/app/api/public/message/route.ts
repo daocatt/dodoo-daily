@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
         const messages = await db.select({
             id: visitorMessage.id,
             text: visitorMessage.text,
+            isPublic: visitorMessage.isPublic,
             createdAt: visitorMessage.createdAt,
             visitorId: visitorMessage.visitorId,
             memberId: visitorMessage.memberId,

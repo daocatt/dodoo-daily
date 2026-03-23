@@ -402,12 +402,18 @@ export default function PublicProfileHome() {
                                             <MessageSquare className="w-5 h-5 text-[var(--warm-amber)]" />
                                             <h3 className="text-2xl font-black uppercase tracking-tighter">{t('public.signalBoard')}</h3>
                                         </div>
-                                        <button 
-                                            onClick={() => setShowMsgModal(true)}
-                                            className="px-4 py-2 bg-slate-900 text-white rounded-xl label-mono text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
-                                        >
-                                            {t('public.leaveMessage')}
-                                        </button>
+                                        {member?.id !== user.id ? (
+                                            <button 
+                                                onClick={() => setShowMsgModal(true)}
+                                                className="px-4 py-2 bg-slate-900 text-white rounded-xl label-mono text-[9px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                                            >
+                                                {t('public.leaveMessage')}
+                                            </button>
+                                        ) : (
+                                            <div className="px-4 py-2 bg-slate-100 text-slate-400 rounded-xl label-mono text-[9px] font-black uppercase tracking-widest cursor-default border border-slate-200">
+                                                My Signal Board
+                                            </div>
+                                        )}
                                     </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">

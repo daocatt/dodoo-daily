@@ -40,6 +40,7 @@ type ArtworkDetail = {
     thumbnailLarge?: string | null
     buyerId?: string | null
     buyerMemberId?: string | null
+    userId: string
 }
 
 export default function ArtworkDetailPage() {
@@ -362,24 +363,42 @@ export default function ArtworkDetailPage() {
                             <div className="flex flex-col gap-4">
                                 {/* Purchase Logic - NEW HARD-WELL DESIGN */}
                                 {!artwork.isSold ? (
-                                    <button 
-                                        onClick={() => {
-                                            if (visitor || member) {
-                                                setShowCollectModal(true)
-                                            } else {
-                                                setShowVisitorPanel(false)
-                                                setShowCollectModal(true)
-                                            }
-                                        }}
-                                        className="hardware-btn group w-full mb-6"
-                                    >
-                                        <div className="hard-well-well rounded-[32px] p-1.5 bg-slate-950 shadow-inner">
-                                            <div className="hard-well-cap bg-gradient-to-b from-slate-800 to-slate-900 text-white py-5 rounded-[28px] font-black tracking-[0.2em] uppercase text-sm flex items-center justify-center gap-4 border-t border-white/10 group-hover:from-indigo-900 group-hover:to-slate-900 transition-all shadow-lg active:translate-y-1">
-                                                <Disc className="w-5 h-5 animate-spin-slow text-indigo-400" />
-                                                {t('public.collect')} — {artwork.priceCoins}
+                                    member?.id === artwork.userId ? (
+                                        <div className="hardware-well bg-indigo-50 border-2 border-indigo-100 p-8 rounded-3xl flex flex-col items-center justify-center gap-3 shadow-well mb-10 text-center relative overflow-hidden group">
+                                            <div className="absolute inset-0 opacity-5 pointer-events-none app-bg-pattern" />
+                                            <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg mb-2">
+                                                <UserIcon className="w-6 h-6 text-white" />
+                                            </div>
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="label-mono text-[8px] font-black text-indigo-400 uppercase tracking-[0.3em]">Protocol: CREATOR_AUTH</span>
+                                                <p className="text-slate-800 font-black text-sm uppercase tracking-[0.15em] leading-tight">
+                                                    My Masterpiece
+                                                </p>
+                                                <p className="label-mono text-[9px] text-slate-400 font-bold mt-1">
+                                                    {locale === 'zh-CN' ? '这是你自己创作的作品，无法购买。' : "This is your own creation. Purchase is restricted."}
+                                                </p>
                                             </div>
                                         </div>
-                                    </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => {
+                                                if (visitor || member) {
+                                                    setShowCollectModal(true)
+                                                } else {
+                                                    setShowVisitorPanel(false)
+                                                    setShowCollectModal(true)
+                                                }
+                                            }}
+                                            className="hardware-btn group w-full mb-6"
+                                        >
+                                            <div className="hard-well-well rounded-[32px] p-1.5 bg-slate-950 shadow-inner">
+                                                <div className="hard-well-cap bg-gradient-to-b from-slate-800 to-slate-900 text-white py-5 rounded-[28px] font-black tracking-[0.2em] uppercase text-sm flex items-center justify-center gap-4 border-t border-white/10 group-hover:from-indigo-900 group-hover:to-slate-900 transition-all shadow-lg active:translate-y-1">
+                                                    <Disc className="w-5 h-5 animate-spin-slow text-indigo-400" />
+                                                    {t('public.collect')} — {artwork.priceCoins}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    )
                                 ) : (member?.id === artwork.buyerMemberId || (visitor && visitor.id === artwork.buyerId)) ? (
                                     <div className="text-center py-6 px-8 bg-emerald-50/50 rounded-2xl border-2 border-emerald-100 flex flex-col items-center justify-center gap-2 mb-8 shadow-inner">
                                         <div className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
