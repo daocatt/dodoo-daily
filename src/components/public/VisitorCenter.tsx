@@ -166,10 +166,16 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                 const existing = JSON.parse(localStorage.getItem('visitor_data') || '{}')
                 localStorage.setItem('visitor_data', JSON.stringify({ ...existing, address: addressInput }))
                 window.dispatchEvent(new Event('storage'))
+                setIsAddressModalOpen(false)
             }
         } finally {
             setSavingAddress(false)
         }
+    }
+
+    const openAddressModal = () => {
+        setAddressInput(visitor.address || '')
+        setIsAddressModalOpen(true)
     }
 
     const handleSaveProfile = async (e: React.FormEvent) => {
@@ -242,10 +248,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                                         </div>
                                     </button>
                                     <button 
-                                        onClick={(e) => {
-                                            handleSaveAddress(e);
-                                            setIsAddressModalOpen(false);
-                                        }} 
+                                        onClick={handleSaveAddress} 
                                         disabled={savingAddress} 
                                         className="flex-1 hardware-btn"
                                     >
@@ -571,12 +574,12 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                                 <div className="pt-4 border-t border-slate-200 space-y-3">
                                     <h5 className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                         <span>LOGISTICS BUFFER</span>
-                                        <button type="button" onClick={() => setIsAddressModalOpen(true)} className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors font-black">
+                                        <button type="button" onClick={openAddressModal} className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors font-black">
                                             <MapPin className="w-3 h-3" />
                                             <span>{t('public.visitor.configure')}</span>
                                         </button>
                                     </h5>
-                                    <div className="hardware-well rounded-lg p-4 bg-white/50 border border-slate-200 shadow-inner group cursor-pointer hover:bg-white transition-colors" onClick={() => setIsAddressModalOpen(true)}>
+                                    <div className="hardware-well rounded-lg p-4 bg-white/50 border border-slate-200 shadow-inner group cursor-pointer hover:bg-white transition-colors" onClick={openAddressModal}>
                                         <p className="text-[10px] font-bold text-slate-600 leading-relaxed line-clamp-2">
                                             {addressInput || t('public.visitor.logisticsEmpty')}
                                         </p>
