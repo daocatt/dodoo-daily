@@ -4,8 +4,9 @@ import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
+import bcrypt from 'bcryptjs'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
         const userId = (await getSessionUser())?.userId
@@ -16,8 +17,10 @@ export async function POST(_req: NextRequest) {
             return NextResponse.json({ error: 'PIN must be at least 4 characters' }, { status: 400 })
         }
 
+        const hashedPin = pin ? await bcrypt.hash(pin, 10) : null
+
         await db.update(users)
-            .set({ pin: pin || null })
+            .set({ pin: hashedPin })
             .where(eq(users.id, userId))
 
         return NextResponse.json({ success: true })

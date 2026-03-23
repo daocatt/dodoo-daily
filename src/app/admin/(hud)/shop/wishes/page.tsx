@@ -7,6 +7,7 @@ import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
 import { format } from 'date-fns'
+import Image from 'next/image'
 
 type Wish = {
     id: string
@@ -84,9 +85,14 @@ export default function WishesPage() {
                                 transition={{ delay: idx * 0.05 }}
                                 className="group bg-white rounded-[32px] border-2 border-transparent hover:border-purple-300 shadow-xl hover:shadow-2xl hover:shadow-purple-200/50 transition-all duration-300 overflow-hidden flex flex-col sm:flex-row items-center sm:items-stretch"
                             >
-                                <div className="sm:w-48 w-full h-48 sm:h-auto bg-purple-50 border-r border-purple-100 flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-500">
+                                <div className="sm:w-48 w-full h-48 sm:h-auto bg-purple-50 border-r border-purple-100 flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-500 overflow-hidden relative">
                                     {wish.imageUrl?.startsWith('http') || wish.imageUrl?.startsWith('/') ? (
-                                        <img src={wish.imageUrl} alt={wish.name} className="w-full h-full object-cover" />
+                                        <Image 
+                                            src={wish.imageUrl} 
+                                            alt={wish.name} 
+                                            fill
+                                            className="object-cover" 
+                                        />
                                     ) : (
                                         wish.imageUrl || '🎁'
                                     )}

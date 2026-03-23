@@ -19,8 +19,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
-import { useI18n } from '@/contexts/I18nContext'
 import SmartDatePicker from '@/components/SmartDatePicker'
+import Image from 'next/image'
 
 type StorageItem = {
     id: string
@@ -178,7 +178,7 @@ export default function StoragePage() {
                             type="text" 
                             placeholder={t('storage.searchPlaceholder')} 
                             value={search}
-                            onChange={(_e) => setSearch(e.target.value)}
+                            onChange={(e) => setSearch(e.target.value)}
                             className="w-full bg-white/60 backdrop-blur rounded-2xl py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-amber-400 transition-all border border-white/50 placeholder:text-slate-400 font-medium"
                         />
                     </form>
@@ -222,8 +222,13 @@ export default function StoragePage() {
                                         onClick={() => setActiveLightboxIndex(idx)}
                                         className="relative w-full aspect-square bg-white rounded-2xl shadow-[0_10px_20px_rgba(0,0,0,0.05),0_6px_6px_rgba(0,0,0,0.05)] overflow-hidden cursor-pointer hover:-translate-y-2 transition-transform duration-300 border-b-4 border-slate-200"
                                     >
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={item.imageUrl} className="w-full h-full object-cover" alt={item.name} />
+                                        <Image 
+                                            src={item.imageUrl} 
+                                            width={500}
+                                            height={500}
+                                            className="w-full h-full object-cover" 
+                                            alt={item.name} 
+                                        />
                                         
                                         {/* Transfer Status Badge */}
                                         <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -242,7 +247,7 @@ export default function StoragePage() {
                                         {isParent && (
                                             <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button 
-                                                    onClick={(_e) => { e.stopPropagation(); setEditingItem(item); setShowItemModal(true); }}
+                                                    onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowItemModal(true); }}
                                                     className="p-2 bg-white/80 hover:bg-white backdrop-blur rounded-lg shadow-sm text-slate-600 transition-colors"
                                                 >
                                                     <Edit3 className="w-4 h-4" />
@@ -312,11 +317,16 @@ export default function StoragePage() {
                                  layoutId={`item-${items[activeLightboxIndex].id}`}
                                  className="w-full lg:w-3/5 xl:w-2/3 max-h-[40vh] md:max-h-[60vh] lg:max-h-[80vh] flex items-center justify-center text-white"
                                >
-                                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                                   <img src={items[activeLightboxIndex].imageUrl} alt="preview" className="max-w-full max-h-full rounded-2xl md:rounded-[2.5rem] shadow-2xl object-contain border border-white/10" />
+                                    <Image 
+                                        src={items[activeLightboxIndex].imageUrl} 
+                                        alt="preview" 
+                                        width={1200}
+                                        height={800}
+                                        className="max-w-full max-h-full rounded-2xl md:rounded-[2.5rem] shadow-2xl object-contain border border-white/10" 
+                                    />
                               </motion.div>
                            
-                           <div className="w-full lg:w-2/5 xl:w-1/3 flex flex-col gap-4 md:gap-6 text-white overflow-y-auto max-h-[40vh] lg:max-h-full pr-2 md:pr-4 custom-scrollbar">
+                           <div className="w-full lg:w-2/5 xl:w-1/3 flex flex-col gap-4 md:gap-6 text-white overflow-y-auto max-h-[40vh] lg:max-h=full pr-2 md:pr-4 custom-scrollbar">
                                 <div className="flex flex-col gap-2">
                                     <h2 className="text-3xl font-black leading-tight">{items[activeLightboxIndex].name}</h2>
                                     <div className="flex items-center gap-2">
@@ -388,13 +398,13 @@ export default function StoragePage() {
                         
                         <div className="absolute bottom-10 flex gap-4">
                             <button 
-                                onClick={(_e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! > 0 ? prev! - 1 : prev) }}
+                                onClick={(e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! > 0 ? prev! - 1 : prev) }}
                                 className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white border border-white/10"
                             >
                                 <ChevronLeft className="w-8 h-8" />
                             </button>
                             <button 
-                                onClick={(_e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! < items.length - 1 ? prev! + 1 : prev) }}
+                                onClick={(e) => { e.stopPropagation(); setActiveLightboxIndex(prev => prev! < items.length - 1 ? prev! + 1 : prev) }}
                                 className="p-4 bg-white/5 hover:bg-white/10 rounded-full text-white border border-white/10"
                             >
                                 <ChevronRight className="w-8 h-8" />
@@ -532,13 +542,18 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                             onClick={() => setShowPhotoPicker(true)}
                         >
                             {imageUrl ? (
-                               // eslint-disable-next-line @next/next/no-img-element
-                               <img src={imageUrl} className="w-full h-full object-cover" alt="prev" />
+                               <Image 
+                                 src={imageUrl} 
+                                 width={600}
+                                 height={400}
+                                 className="w-full h-full object-cover" 
+                                 alt="prev" 
+                               />
                             ) : (
-                              <div className="flex flex-col items-center gap-2 text-slate-400">
-                                 <Camera className="w-10 h-10" />
-                                 <span className="text-xs font-bold uppercase tracking-widest">Snap or Pick Photo</span>
-                              </div>
+                               <div className="flex flex-col items-center gap-2 text-slate-400">
+                                  <Camera className="w-10 h-10" />
+                                  <span className="text-xs font-bold uppercase tracking-widest">Snap or Pick Photo</span>
+                               </div>
                             )}
                         </div>
 
@@ -685,8 +700,13 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                 ) : (
                     <form onSubmit={handleConfirmTransfer} className="p-6 flex flex-col gap-6">
                         <div className="p-4 bg-slate-50 rounded-2xl flex items-center gap-4">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={imageUrl} className="w-16 h-16 rounded-lg object-cover" alt="" />
+                            <Image 
+                                src={imageUrl} 
+                                width={64}
+                                height={64}
+                                className="w-16 h-16 rounded-lg object-cover" 
+                                alt="" 
+                            />
                             <div className="flex-1">
                                 <h4 className="font-bold text-slate-800">{name}</h4>
                                 <p className="text-xs text-slate-400">Recording final transaction details</p>
@@ -776,7 +796,7 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
                            accept="image/*" 
                            id="file-capture" 
                            className="hidden" 
-                           onChange={async (_e) => {
+                           onChange={async (e) => {
                              const file = e.target.files?.[0]
                              if (file) {
                                // Upload logic

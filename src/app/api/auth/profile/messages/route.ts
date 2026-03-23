@@ -31,7 +31,7 @@ export async function GET() {
     }
 }
 
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Auth required' }, { status: 401 })
@@ -50,7 +50,7 @@ export async function PATCH(_req: NextRequest) {
     }
 }
 
-export async function DELETE(_req: NextRequest) {
+export async function DELETE(req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Auth required' }, { status: 401 })

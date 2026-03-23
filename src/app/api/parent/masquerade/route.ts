@@ -4,7 +4,7 @@ import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser, signSessionJWT } from '@/lib/auth'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         // Use JWT-aware auth, not raw cookie check
         const { role } = await getSessionUser()

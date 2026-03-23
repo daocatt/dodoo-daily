@@ -4,7 +4,7 @@ import { task, users } from '@/lib/schema'
 import { desc, eq, and, or, sql, isNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -38,7 +38,7 @@ export async function GET(_req: NextRequest) {
     }
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

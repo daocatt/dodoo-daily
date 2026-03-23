@@ -5,7 +5,7 @@ import { desc, eq, and, sql, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { sendPushNotification } from '@/lib/push'
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const { userId: id, role } = await getSessionUser()
         if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -59,7 +59,7 @@ export async function GET(_req: NextRequest) {
     }
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { userId: id, role } = await getSessionUser()
         if (role !== 'PARENT' || !id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })

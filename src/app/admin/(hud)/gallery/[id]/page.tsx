@@ -9,6 +9,7 @@ import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
 import UploadModal from '@/components/gallery/UploadModal'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 type Artwork = {
     id: string
@@ -102,7 +103,7 @@ export default function AlbumDetailPage() {
             link.click()
             document.body.removeChild(link)
         } catch (_err) {
-            console.error('Download failed', err)
+            console.error('Download failed', _err)
             window.open(url, '_blank')
         }
     }
@@ -340,8 +341,12 @@ export default function AlbumDetailPage() {
                                 transition={{ delay: idx * 0.05, type: 'spring' }}
                                 className="group relative rounded-2xl overflow-hidden shadow-lg bg-white/60 backdrop-blur-md border border-white/50 aspect-square cursor-pointer"
                             >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={art.thumbnailMedium || art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <Image 
+                                    src={art.thumbnailMedium || art.imageUrl} 
+                                    alt={art.title} 
+                                    fill
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                                />
 
                                 {art.isPublic && (
                                     <div className="absolute top-2 left-2 px-2 py-1 bg-indigo-500/90 text-white text-[10px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">
@@ -375,7 +380,7 @@ export default function AlbumDetailPage() {
                                             </div>
                                             {art.isPublic && (
                                                 <button
-                                                    onClick={(_e) => {
+                                                onClick={(e) => {
                                                         e.stopPropagation()
                                                         setPosterArtwork(art)
                                                     }}
@@ -388,7 +393,7 @@ export default function AlbumDetailPage() {
                                     )}
 
                                     <button
-                                        onClick={(_e) => {
+                                        onClick={(e) => {
                                             e.stopPropagation()
                                             setEditTitle(art.title)
                                             setEditPriceRMB(art.priceRMB.toString())
@@ -627,7 +632,7 @@ export default function AlbumDetailPage() {
                             </div>
                             <div className="flex items-center gap-4">
                                 <button
-                                    onClick={(_e) => {
+                                    onClick={(e) => {
                                         e.stopPropagation()
                                         handleDownload(album.artworks[lightboxIndex].imageUrl, album.artworks[lightboxIndex].title)
                                     }}
@@ -648,7 +653,7 @@ export default function AlbumDetailPage() {
                         {/* Main Image Area */}
                         <div className="flex-1 relative flex items-center justify-center p-4 md:p-10 shrink-0 min-h-0">
                             <button
-                                onClick={(_e) => {
+                                onClick={(e) => {
                                     e.stopPropagation()
                                     prevImage()
                                 }}
@@ -665,16 +670,17 @@ export default function AlbumDetailPage() {
                                 className="relative max-w-full max-h-full flex items-center justify-center shrink-0"
                                 onClick={(_e) => e.stopPropagation()}
                             >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
+                                <Image
                                     src={album.artworks[lightboxIndex].imageUrl}
                                     alt={album.artworks[lightboxIndex].title}
+                                    width={1600}
+                                    height={1200}
                                     className="max-w-full max-h-full rounded-lg shadow-2xl object-contain border border-white/10"
                                 />
                             </motion.div>
 
                             <button
-                                onClick={(_e) => {
+                                onClick={(e) => {
                                     e.stopPropagation()
                                     nextImage()
                                 }}
@@ -687,17 +693,21 @@ export default function AlbumDetailPage() {
                         {/* Thumbnails Strip */}
                         <div className="h-24 px-6 py-2 bg-black/40 flex items-center gap-3 overflow-x-auto hide-scrollbar shrink-0 border-t border-white/5">
                             {album.artworks.map((art, idx) => (
-                                <div
-                                    key={`thumb-${art.id}`}
-                                    onClick={(_e) => {
-                                        e.stopPropagation()
-                                        setLightboxIndex(idx)
-                                    }}
-                                    className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${idx === lightboxIndex ? 'border-amber-500 scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                                >
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={art.thumbnailMedium || art.imageUrl} className="w-full h-full object-cover" alt="" />
-                                </div>
+                                    <div
+                                        key={`thumb-${art.id}`}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setLightboxIndex(idx)
+                                        }}
+                                        className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${idx === lightboxIndex ? 'border-amber-500 scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                                    >
+                                        <Image
+                                            src={art.thumbnailMedium || art.imageUrl}
+                                            alt={art.title}
+                                            fill
+                                            className="object-cover transition-transform group-hover:scale-105"
+                                        />
+                                    </div>
                             ))}
                         </div>
                     </motion.div>

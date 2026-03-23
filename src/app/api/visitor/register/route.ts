@@ -4,8 +4,9 @@ import { visitor, systemSettings, ipBlacklist } from '@/lib/schema'
 import { eq, or } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { signVisitorJWT } from '@/lib/auth'
+import bcrypt from 'bcryptjs'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0'
         
@@ -52,11 +53,14 @@ export async function POST(_req: NextRequest) {
         // 注册通过邀请码，直接 APPROVED
         const status = 'APPROVED'
 
+        // Hash password before store
+        const hashedPassword = await bcrypt.hash(password, 10)
+        
         const [newVisitor] = await db.insert(visitor).values({
             name,
             email,
             phone,
-            password, // Storing raw for now as placeholder, ideally bcrypt/jose
+            password: hashedPassword,
             status,
             lastIp: ip,
         }).returning()

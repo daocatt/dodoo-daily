@@ -7,6 +7,7 @@ import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
 import { format } from 'date-fns'
+import Image from 'next/image'
 
 type Order = {
     id: string
@@ -83,9 +84,14 @@ export default function OrdersPage() {
                                 transition={{ delay: idx * 0.05 }}
                                 className="group flex items-center gap-6 p-6 rounded-[32px] bg-white border border-slate-100 hover:border-amber-200 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300"
                             >
-                                <div className="w-20 h-20 shrink-0 flex items-center justify-center bg-slate-50 rounded-2xl text-4xl shadow-inner border border-slate-100 group-hover:scale-110 transition-transform">
+                                <div className="w-20 h-20 shrink-0 flex items-center justify-center bg-slate-50 rounded-2xl text-4xl shadow-inner border border-slate-100 group-hover:scale-110 transition-transform overflow-hidden relative">
                                     {order.itemIcon?.startsWith('http') || order.itemIcon?.startsWith('/') ? (
-                                        <img src={order.itemIcon} alt={order.itemName} className="w-full h-full object-cover rounded-2xl" />
+                                        <Image 
+                                            src={order.itemIcon} 
+                                            alt={order.itemName} 
+                                            fill
+                                            className="object-cover" 
+                                        />
                                     ) : (
                                         order.itemIcon || '🎁'
                                     )}

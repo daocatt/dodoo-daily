@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { media as mediaTable } from '@/lib/schema';
 import { desc, eq, and, like } from 'drizzle-orm';
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
         const type = searchParams.get('type');

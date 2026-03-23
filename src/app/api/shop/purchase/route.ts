@@ -5,10 +5,11 @@ import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { notifyParents } from '@/lib/push'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
-        const { userId: childId } = await getSessionUser()
-        if (!childId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const childId = session.id
 
         const body = await req.json()
         const { itemId } = body
@@ -16,8 +17,6 @@ export async function POST(_req: NextRequest) {
         if (!itemId) {
             return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
         }
-
-        if (!childId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         // 1. Fetch Item details
         const items = await db.select().from(shopItem).where(eq(shopItem.id, itemId))

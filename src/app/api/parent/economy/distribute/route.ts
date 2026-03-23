@@ -3,7 +3,7 @@ import { getSessionUser } from '@/lib/auth'
 import { addBalance, TransactionType } from '@/lib/economy'
 import { sendPushNotification } from '@/lib/push'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { userId: parentId, role } = await getSessionUser()
         if (role !== 'PARENT' || !parentId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })

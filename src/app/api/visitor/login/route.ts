@@ -4,8 +4,9 @@ import { users, visitor, ipBlacklist, systemSettings } from '@/lib/schema'
 import { eq, and, or } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { signVisitorJWT } from '@/lib/auth'
+import bcrypt from 'bcryptjs'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const ip = req.headers.get('x-forwarded-for') || req.ip || '0.0.0.0'
         
@@ -25,16 +26,19 @@ export async function POST(_req: NextRequest) {
         }
 
         const currentVisitor = await db.select().from(visitor).where(
-            and(
-                or(
-                    eq(visitor.phone, identifier),
-                    eq(visitor.email, identifier)
-                ),
-                eq(visitor.password, password)
+            or(
+                eq(visitor.phone, identifier),
+                eq(visitor.email, identifier)
             )
         ).get()
 
         if (!currentVisitor) {
+            return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+        }
+
+        // BCrypt Compare
+        const isMatch = await bcrypt.compare(password, currentVisitor.password)
+        if (!isMatch) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
         }
 
@@ -62,8 +66,8 @@ export async function POST(_req: NextRequest) {
         })
 
         return NextResponse.json(currentVisitor)
-    } catch (_e) {
-        console.error('Visitor login error:', e)
+    } catch (_error) {
+        console.error('Visitor login error:', _error)
         return NextResponse.json({ error: 'Login failed' }, { status: 500 })
     }
 }

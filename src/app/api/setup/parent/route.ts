@@ -5,7 +5,7 @@ import { eq, or, and, not } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { uploadMedia } from '@/lib/storage'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const [settings] = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
         if (!settings?.needsSetup) {

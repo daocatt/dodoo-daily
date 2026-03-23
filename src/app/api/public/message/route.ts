@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { visitorMessage, users, visitor } from '@/lib/schema'
-import { getSessionUser } from '@/lib/auth'
+import { getSessionUser, getVisitorSession } from '@/lib/auth'
 import { eq, and, desc } from 'drizzle-orm'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { targetUserId, text, visitorId, isPublic } = body
+        const { targetUserId, text, isPublic } = body // Removed visitorId from body
 
         if (!targetUserId || !text) {
             return NextResponse.json({ error: 'Missing target user or message text' }, { status: 400 })
@@ -15,6 +15,9 @@ export async function POST(_req: NextRequest) {
 
         const user = await getSessionUser()
         const memberId = user?.id
+
+        const visitorSession = await getVisitorSession()
+        const visitorId = visitorSession?.visitorId
 
         if (!memberId && !visitorId) {
             return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
@@ -35,7 +38,7 @@ export async function POST(_req: NextRequest) {
     }
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url)
         const targetUserId = searchParams.get('userId')

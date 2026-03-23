@@ -4,7 +4,7 @@ import { pushSubscription } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
 import { eq, and } from 'drizzle-orm'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -64,7 +64,7 @@ export async function POST(_req: NextRequest) {
     }
 }
 
-export async function DELETE(_req: NextRequest) {
+export async function DELETE(req: NextRequest) {
      try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

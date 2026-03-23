@@ -5,7 +5,7 @@ import { eq, and, desc, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     const cookieStore = await cookies()
     const currentUserId = (await getSessionUser())?.userId
     const role = (await getSessionUser())?.role

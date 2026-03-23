@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { users, systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import bcrypt from 'bcryptjs'
 
 export async function POST(req: Request) {
     try {
@@ -32,9 +33,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Account disabled' }, { status: 403 })
         }
 
-        if (user.pin && user.pin !== pin) {
-            // Log failed attempt if needed, but for now we focus on success
-            return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 })
+        if (user.pin) {
+            const isMatch = await bcrypt.compare(pin, user.pin)
+            if (!isMatch) {
+                return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 })
+            }
         }
 
         // Set session cookie
@@ -92,8 +95,8 @@ export async function POST(req: Request) {
             user: { id: user.id, role: user.role },
             needsSetup,
         })
-    } catch (_e) {
-        console.error('Login error', e)
+    } catch (_error) {
+        console.error('Login error', _error)
         return NextResponse.json({ error: 'Failed to login' }, { status: 500 })
     }
 }

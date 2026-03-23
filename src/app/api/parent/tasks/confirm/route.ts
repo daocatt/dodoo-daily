@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { userId: actorId, role } = await getSessionUser()
 

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 /**
  * Resolve a nickname to its basic user info (needed when showAllAvatars is false)
  */
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { nickname } = await req.json()
         if (!nickname) return NextResponse.json({ error: 'Nickname required' }, { status: 400 })

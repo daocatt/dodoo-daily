@@ -65,7 +65,7 @@ export async function GET() {
 }
 
 // TOGGLE PUBLIC STATUS
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user || user.role !== 'PARENT') {
@@ -87,7 +87,7 @@ export async function PATCH(_req: NextRequest) {
 }
 
 // DELETE MESSAGE
-export async function DELETE(_req: NextRequest) {
+export async function DELETE(req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user || user.role !== 'PARENT') {

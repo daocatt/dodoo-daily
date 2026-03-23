@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { visitor } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     try {
         const body = await req.json()
         const { visitorId, address } = body

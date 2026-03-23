@@ -3,7 +3,7 @@ import { uploadMedia } from '@/lib/storage'
 import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const cookieStore = await cookies()
         const currentUserId = (await getSessionUser())?.userId

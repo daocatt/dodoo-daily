@@ -12,7 +12,7 @@ async function getAuth() {
     return { userId, role }
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const { userId: currentUserId, role } = await getAuth()
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -59,7 +59,7 @@ export async function GET(_req: NextRequest) {
     }
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { userId, role } = await getAuth()
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

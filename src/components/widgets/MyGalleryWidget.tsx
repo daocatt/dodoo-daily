@@ -5,6 +5,7 @@ import { motion } from 'motion/react'
 import { Heart, ShoppingBag, ArrowUpRight, Loader2, Sparkles, Image as ImageIcon } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface GalleryItem {
     id: string
@@ -38,7 +39,7 @@ export default function MyGalleryWidget() {
                     if (oRes.ok) setOrders(await oRes.json())
                 }
             } catch (_e) {
-                console.error('Gallery widget fetch error:', e)
+                console.error('Gallery widget fetch error:', _error)
             } finally {
                 setLoading(false)
             }
@@ -80,7 +81,12 @@ export default function MyGalleryWidget() {
                 <div className="grid grid-cols-2 gap-3 flex-1">
                     {recentItems.map((item, idx) => (
                         <div key={`${item.id}-${idx}`} className="group/item relative aspect-square rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-100">
-                            <img src={item.artworkImage} alt={item.artworkTitle} className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-700" />
+                            <Image 
+                                src={item.artworkImage} 
+                                alt={item.artworkTitle} 
+                                fill
+                                className="object-cover transition-transform group-hover/item:scale-110 duration-700" 
+                            />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity" />
                             <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center opacity-0 group-hover/item:opacity-100 transition-all translate-y-2 group-hover/item:translate-y-0">
                                 <span className="text-[8px] font-black text-white truncate drop-shadow-md pr-2">{item.artworkTitle}</span>

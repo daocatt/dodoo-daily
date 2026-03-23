@@ -9,7 +9,7 @@ async function checkIsParent() {
     return role === 'PARENT'
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
@@ -30,7 +30,7 @@ export async function GET(_req: NextRequest) {
     }
 }
 
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     const { userId: actorId, role } = await getSessionUser()
     if (role !== 'PARENT' || !actorId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

@@ -4,7 +4,7 @@ import { artwork } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
 import { and, eq, desc } from 'drizzle-orm'
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

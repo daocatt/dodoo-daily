@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { visitor } from '@/lib/schema'
 import { eq, or, and, ne } from 'drizzle-orm'
+import { getVisitorSession } from '@/lib/auth'
+import bcrypt from 'bcryptjs'
 
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     try {
-        const body = await req.json()
-        const { visitorId, name, email, phone, password, currentPassword } = body
+        const session = await getVisitorSession()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const visitorId = session.visitorId
 
-        if (!visitorId) {
-            return NextResponse.json({ error: 'Visitor ID is required' }, { status: 400 })
-        }
+        const body = await req.json()
+        const { name, email, phone, password, currentPassword } = body
 
         const storedVisitor = await db.select().from(visitor).where(eq(visitor.id, visitorId)).get()
         if (!storedVisitor) {
@@ -19,7 +21,11 @@ export async function PATCH(_req: NextRequest) {
 
         // If password is being changed, we MUST verify currentPassword
         if (password && password.trim() !== '') {
-            if (!currentPassword || currentPassword !== storedVisitor.password) {
+            if (!currentPassword) {
+                return NextResponse.json({ error: 'Current password verification failed. Please check your credentials.' }, { status: 401 })
+            }
+            const isMatch = await bcrypt.compare(currentPassword, storedVisitor.password)
+            if (!isMatch) {
                 return NextResponse.json({ error: 'Current password verification failed. Please check your credentials.' }, { status: 401 })
             }
         }
@@ -46,7 +52,9 @@ export async function PATCH(_req: NextRequest) {
         if (name !== undefined) data.name = name
         if (email !== undefined) data.email = email
         if (phone !== undefined) data.phone = phone
-        if (password !== undefined && password.trim() !== '') data.password = password
+        if (password !== undefined && password.trim() !== '') {
+            data.password = await bcrypt.hash(password, 10)
+        }
 
         await db.update(visitor).set(data).where(eq(visitor.id, visitorId))
 
@@ -63,15 +71,16 @@ export async function PATCH(_req: NextRequest) {
         }
         
         return NextResponse.json({ success: true })
-    } catch (_e) {
-        console.error('Visitor profile update error:', e)
+    } catch (_error) {
+        console.error('Visitor profile update error:', _error)
         return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 }
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
-        const visitorId = req.nextUrl.searchParams.get('visitorId')
-        if (!visitorId) return NextResponse.json({ error: 'Missing visitorId' }, { status: 400 })
+        const session = await getVisitorSession()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const visitorId = session.visitorId
 
         const data = await db.select({
             id: visitor.id,

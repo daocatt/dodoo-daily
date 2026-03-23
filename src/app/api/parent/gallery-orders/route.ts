@@ -47,7 +47,7 @@ export async function GET() {
     }
 }
 
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {

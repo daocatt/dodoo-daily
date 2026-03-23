@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { User, SkipForward, Upload, Calendar, Terminal, ArrowRight, Loader2, Baby, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
 import PanelHeader from '@/components/PanelHeader'
 import { useI18n } from '@/contexts/I18nContext'
 import SmartDatePicker from '@/components/SmartDatePicker'
@@ -149,8 +150,13 @@ export default function SetupPage() {
                                             className="w-full h-full bg-white/90 rounded-xl border-2 border-transparent overflow-hidden group relative flex items-center justify-center focus:outline-none hover:border-[var(--accent-moss)] transition-colors shadow-inner"
                                         >
                                             {avatarPreview ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" />
+                                                <Image 
+                                                    src={avatarPreview} 
+                                                    alt="avatar" 
+                                                    width={200}
+                                                    height={200}
+                                                    className="w-full h-full object-cover group-hover:opacity-90 transition-opacity" 
+                                                />
                                             ) : (
                                                 <div className="flex flex-col items-center text-slate-400 group-hover:text-[var(--accent-moss)] transition-colors">
                                                     <Upload className="w-6 h-6 md:w-8 md:h-8 mb-1 opacity-50" />

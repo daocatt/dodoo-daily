@@ -42,7 +42,7 @@ export async function verifyJWT(token: string) {
 }
 
 import { db } from './db'
-import { users } from './schema'
+import { users, visitor } from './schema'
 import { eq, and } from 'drizzle-orm'
 
 /**
@@ -61,7 +61,7 @@ export async function getSessionUser() {
             const { payload } = await jwtVerify(token, JWT_SECRET)
             currentUserId = payload.userId as string
         } catch (_e) {
-            console.error('JWT verification failed:', e)
+            console.error('JWT verification failed:', _e)
         }
     }
 
@@ -89,6 +89,36 @@ export async function getSessionUser() {
         }
     } catch (dbError) {
         console.error('[Auth] Database check failed during session validation:', dbError)
+        return null
+    }
+}
+
+/**
+ * Get the current visitor session from JWT
+ */
+export async function getVisitorSession() {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('dodoo_visitor_session')?.value
+
+    if (!token) return null
+
+    try {
+        const { payload } = await jwtVerify(token, JWT_SECRET)
+        if (payload.type !== 'VISITOR' || !payload.visitorId) return null
+        
+        const currentVisitorId = payload.visitorId as string
+        
+        // Physical verification
+        const record = await db.select().from(visitor).where(eq(visitor.id, currentVisitorId)).get()
+        if (!record) return null
+
+        return {
+            id: record.id,
+            visitorId: record.id,
+            name: record.name,
+            status: record.status
+        }
+    } catch (_e) {
         return null
     }
 }

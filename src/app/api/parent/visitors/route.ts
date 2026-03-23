@@ -4,7 +4,7 @@ import { visitor } from '@/lib/schema'
 import { desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {

@@ -2,15 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { artwork, visitor, order, visitorCurrencyLog, accountStats, accountStatsLog } from '@/lib/schema'
 import { eq, and } from 'drizzle-orm'
-
-export async function POST(_req: NextRequest) {
+import { getSessionUser, getVisitorSession } from '@/lib/auth'
+export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const { artworkId, visitorId, memberId, visitorName, visitorPhone, paymentType, contactName, contactPhone, contactEmail, shippingAddress } = body
+        const { artworkId, visitorName, visitorPhone, paymentType, contactName, contactPhone, contactEmail, shippingAddress } = body
 
         if (!artworkId) {
             return NextResponse.json({ error: 'Missing artwork ID' }, { status: 400 })
         }
+
+        const familySession = await getSessionUser()
+        const memberId = familySession?.id
+
+        const visitorSession = await getVisitorSession()
+        const visitorId = visitorSession?.visitorId
 
         if (!memberId && (!visitorName || (!contactEmail && !contactPhone && !visitorPhone))) {
             return NextResponse.json({ error: 'Incomplete information. Email or phone is required for visitors.' }, { status: 400 })

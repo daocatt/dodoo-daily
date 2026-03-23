@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { users, accountStats, systemSettings } from '@/lib/schema'
 import { eq, and, not, or } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
+import bcrypt from 'bcryptjs'
 
 async function checkIsAdmin() {
     const user = await getSessionUser()
@@ -74,7 +75,7 @@ export async function GET() {
     }
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     if (!await checkIsAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
@@ -125,6 +126,8 @@ export async function POST(_req: NextRequest) {
             if (sameNick) return NextResponse.json({ error: 'Nickname already exists' }, { status: 400 });
         }
 
+        const hashedPin = pin ? await bcrypt.hash(pin, 10) : null
+
         const [newUser] = await db.insert(users).values({
             name,
             nickname: nickname || null,
@@ -133,7 +136,7 @@ export async function POST(_req: NextRequest) {
             birthDate: birthDate ? new Date(birthDate) : null,
             zodiac: zodiac || null,
             chineseZodiac: chineseZodiac || null,
-            pin: pin || null,
+            pin: hashedPin,
             avatarUrl: avatarUrl || null,
             role: role || 'CHILD',
             exhibitionEnabled: exhibitionEnabled !== undefined ? exhibitionEnabled : true
@@ -163,7 +166,7 @@ export async function POST(_req: NextRequest) {
     }
 }
 
-export async function PATCH(_req: NextRequest) {
+export async function PATCH(req: NextRequest) {
     const auth = await getPermissionContext()
     if (!auth.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -226,7 +229,9 @@ export async function PATCH(_req: NextRequest) {
         if (birthDate !== undefined) updateData.birthDate = birthDate ? new Date(birthDate) : null
         if (zodiac !== undefined) updateData.zodiac = zodiac
         if (chineseZodiac !== undefined) updateData.chineseZodiac = chineseZodiac
-        if (pin !== undefined) updateData.pin = pin
+        if (pin !== undefined) {
+            updateData.pin = pin ? await bcrypt.hash(pin, 10) : null
+        }
         if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl
         if (role !== undefined) updateData.role = role
         if (isArchived !== undefined) updateData.isArchived = isArchived
@@ -255,7 +260,7 @@ export async function PATCH(_req: NextRequest) {
     }
 }
 
-export async function DELETE(_req: NextRequest) {
+export async function DELETE(req: NextRequest) {
     const auth = await getPermissionContext()
     if (!auth.isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

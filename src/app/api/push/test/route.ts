@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendPushNotification } from '@/lib/push'
 import { getSessionUser } from '@/lib/auth'
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
         const { userId } = await getSessionUser()
         if (!userId) {

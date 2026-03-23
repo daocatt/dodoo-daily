@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import UploadModal from '@/components/gallery/UploadModal'
 import { useI18n } from '@/contexts/I18nContext'
+import Image from 'next/image'
 
 type Artwork = {
     id: string
@@ -180,8 +181,12 @@ export default function GalleryPage() {
                                                 }}
                                                 whileHover={{ scale: 1.05, rotate: 0, zIndex: 20 }}
                                             >
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={art.thumbnailMedium || art.imageUrl} alt={art.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                                                <Image 
+                                                    src={art.thumbnailMedium || art.imageUrl} 
+                                                    alt={art.title} 
+                                                    fill
+                                                    className="object-cover transition-transform group-hover:scale-105" 
+                                                />
 
                                                 {art.isPublic && (
                                                     <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-indigo-500/90 text-white text-[8px] font-black rounded-lg shadow-lg backdrop-blur-md z-10 flex items-center gap-1 border border-white/20">

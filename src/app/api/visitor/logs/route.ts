@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { visitorCurrencyLog, currencyLog } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
     try {
         const visitorId = req.nextUrl.searchParams.get('visitorId')
         const memberId = req.nextUrl.searchParams.get('memberId')
