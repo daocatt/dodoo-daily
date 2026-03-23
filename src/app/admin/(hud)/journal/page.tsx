@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    ChevronLeft, BookOpen, User, UserRound, Camera, X, Star,
-    Milestone as MilestoneIcon, Layers, History, Clock,
-    PlusCircle, Loader2, Calendar, Edit2
+    ChevronLeft, BookOpen, UserRound, Layers, History, Clock,
+    PlusCircle, Loader2, Star
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Lightbox from '@/components/Lightbox'
 import TimelineView from '@/components/TimelineView'
@@ -27,15 +27,6 @@ type JournalEntry = {
     updatedAt: string
 }
 
-const formatDate = (date: string | number | Date) => {
-    const d = new Date(date)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    const h = String(d.getHours()).padStart(2, '0')
-    const min = String(d.getMinutes()).padStart(2, '0')
-    return `${y}-${m}-${day} ${h}:${min}`
-}
 
 export default function JournalPage() {
     const { t } = useI18n()
@@ -72,8 +63,8 @@ export default function JournalPage() {
 
             setHasMore(newEntries.length === 10)
             setPage(p)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
             setLoadingMore(false)
@@ -123,9 +114,11 @@ export default function JournalPage() {
                 {/* Image Section - Large Thumbnail */}
                 {entryImages.length > 0 ? (
                     <div className="relative aspect-square w-full overflow-hidden bg-slate-50">
-                        <img
+                        <Image
                             src={entryImages[0]}
                             alt=""
+                            width={400}
+                            height={400}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
                         {entryImages.length > 1 && (
@@ -158,7 +151,7 @@ export default function JournalPage() {
                         <div className="flex items-center gap-2 overflow-hidden">
                             <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden border border-slate-100 flex-shrink-0">
                                 {entry.authorAvatar ? (
-                                    <img src={entry.authorAvatar} alt="" className="w-full h-full object-cover" />
+                                    <Image src={entry.authorAvatar} width={24} height={24} alt="" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
                                         <UserRound className="w-2.5 h-2.5" />

@@ -32,8 +32,8 @@ export default function EmotionsPage() {
             const res = await fetch('/api/emotions')
             const data = await res.json()
             setRecords(data || [])
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setLoading(false)
         }
@@ -53,8 +53,8 @@ export default function EmotionsPage() {
                 setNotes('')
                 fetchRecords()
             }
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setRecording(false)
         }
