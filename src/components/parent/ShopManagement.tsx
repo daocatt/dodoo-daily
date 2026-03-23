@@ -34,7 +34,7 @@ interface Wish {
 type View = 'ITEMS' | 'WISHES'
 type ModalMode = 'item' | 'addToShop' | 'deleteConfirm'
 
-export default function ShopManagement() {
+export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () => void }) {
     const { t } = useI18n()
     const [items, setItems] = useState<ShopItem[]>([])
     const [loading, setLoading] = useState(true)
@@ -211,6 +211,16 @@ export default function ShopManagement() {
                         )}
                     </button>
                 </div>
+
+                {onOrdersClick && (
+                    <button
+                        onClick={onOrdersClick}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-orange-50 text-orange-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-100 transition-all border border-orange-100 shadow-sm ml-auto mr-4"
+                    >
+                        <ShoppingBag className="w-4 h-4" />
+                        {t('parent.orders.shop')}
+                    </button>
+                )}
 
                 {view === 'ITEMS' && (
                     <button

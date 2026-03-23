@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Palette, XCircle, Search, Filter, Loader2, Image as ImageIcon, ExternalLink, Heart, Eye, CheckCircle, Edit, Save } from 'lucide-react'
+import { Palette, XCircle, Search, Filter, Loader2, Image as ImageIcon, ExternalLink, Heart, Eye, CheckCircle, Edit, Save, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
@@ -22,7 +22,7 @@ interface ExhibitionArtwork {
     createdAt: string
 }
 
-export default function ExhibitionManagement() {
+export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?: () => void }) {
     const { t } = useI18n()
     const [artworks, setArtworks] = useState<ExhibitionArtwork[]>([])
     const [loading, setLoading] = useState(true)
@@ -159,6 +159,15 @@ export default function ExhibitionManagement() {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    {onOrdersClick && (
+                        <button
+                            onClick={onOrdersClick}
+                            className="flex items-center gap-2 px-5 py-3 bg-indigo-50 text-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100 shadow-sm"
+                        >
+                            <ShoppingBag className="w-4 h-4" />
+                            {t('parent.orders.gallery')}
+                        </button>
+                    )}
                 </div>
             </div>
 

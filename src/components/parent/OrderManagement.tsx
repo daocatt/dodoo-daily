@@ -68,9 +68,9 @@ function ItemIcon({ iconUrl, name }: { iconUrl: string | null; name: string }) {
     )
 }
 
-export default function OrderManagement() {
+export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false }: { defaultTab?: 'SHOP' | 'GALLERY', hideTabs?: boolean }) {
     const { t } = useI18n()
-    const [tab, setTab] = useState<'SHOP' | 'GALLERY'>('SHOP')
+    const [tab, setTab] = useState<'SHOP' | 'GALLERY'>(defaultTab)
     const [shopOrders, setShopOrders] = useState<ShopOrder[]>([])
     const [galleryOrders, setGalleryOrders] = useState<GalleryOrder[]>([])
     const [loading, setLoading] = useState(true)
@@ -142,20 +142,22 @@ export default function OrderManagement() {
                     {t('parent.orders')}
                 </h2>
 
-                <div className="flex bg-slate-100 p-1 rounded-2xl">
-                    <button
-                        onClick={() => setTab('SHOP')}
-                        className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'SHOP' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        {t('parent.orders.shop')}
-                    </button>
-                    <button
-                        onClick={() => setTab('GALLERY')}
-                        className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'GALLERY' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                        {t('parent.orders.gallery')}
-                    </button>
-                </div>
+                {!hideTabs && (
+                    <div className="flex bg-slate-100 p-1 rounded-2xl">
+                        <button
+                            onClick={() => setTab('SHOP')}
+                            className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'SHOP' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            {t('parent.orders.shop')}
+                        </button>
+                        <button
+                            onClick={() => setTab('GALLERY')}
+                            className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'GALLERY' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            {t('parent.orders.gallery')}
+                        </button>
+                    </div>
+                )}
             </div>
 
             <AnimatePresence mode="wait">
