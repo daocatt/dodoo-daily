@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin, Heart, Users, User } from 'lucide-react'
+import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin, Heart, LayoutGrid, User, Activity, ExternalLink, Download, X } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -35,7 +35,7 @@ interface Order {
 }
 
 const ModalHeader = ({ title, id }: { title: string, id: string }) => (
-    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#D6D2C0] shrink-0 -mx-10 -mt-10 mb-8 rounded-t-[1.8rem]">
+    <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#D6D2C0] shrink-0 -mx-8 md:-mx-12 -mt-8 md:-mt-12 mb-8">
         <div className="flex items-center gap-3">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
             <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">{title}</span>
@@ -49,7 +49,7 @@ const ModalHeader = ({ title, id }: { title: string, id: string }) => (
 export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: { visitor: VisitorData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
     const { t } = useI18n()
     const params = useParams()
-    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'ADDRESS' | 'PROFILE'>('OVERVIEW')
+    const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'PROFILE'>('OVERVIEW')
     const [logs, setLogs] = useState<CurrencyLog[]>([])
     const [orders, setOrders] = useState<Order[]>([])
     const [likes, setLikes] = useState<Order[]>([])
@@ -63,7 +63,9 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
     const [profileEmail, setProfileEmail] = useState(visitor.email || '')
     const [profilePhone, setProfilePhone] = useState(visitor.phone || '')
     const [profilePassword, setProfilePassword] = useState('')
+    const [currentPassword, setCurrentPassword] = useState('')
     const [savingProfile, setSavingProfile] = useState(false)
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
 
     const fetchData = async () => {
         setLoading(true)
@@ -110,11 +112,11 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
             const data = await res.json()
             if (res.ok) {
                 onUpdateCurrency(data.balance)
-                setMessage({ text: `Success! Received ${data.amount} Coins`, type: 'success' })
+                setMessage({ text: t('public.visitor.rechargeSuccess', { amount: data.amount.toString() }), type: 'success' })
                 setRechargeCode('')
                 fetchData()
             } else {
-                setMessage({ text: data.error || 'Recharge failed', type: 'error' })
+                setMessage({ text: t('public.visitor.rechargeError'), type: 'error' })
             }
         } finally {
             setRechargeLoading(false)
@@ -131,9 +133,9 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                 body: JSON.stringify({ visitorId: visitor.id, address: addressInput })
             })
             if (res.ok) {
-                setMessage({ text: 'Address packet saved!', type: 'success' })
+                setMessage({ text: t('public.visitor.addressSaved'), type: 'success' })
             } else {
-                setMessage({ text: 'Buffer write error', type: 'error' })
+                setMessage({ text: t('public.visitor.addressError'), type: 'error' })
             }
         } finally {
             setSavingAddress(false)
@@ -154,12 +156,13 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                     name: profileName, 
                     email: profileEmail, 
                     phone: profilePhone, 
-                    password: profilePassword 
+                    password: profilePassword,
+                    currentPassword: currentPassword
                 })
             })
             const data = await res.json()
             if (res.ok) {
-                setMessage({ text: 'Profile identity updated.', type: 'success' })
+                setMessage({ text: t('public.visitor.profileUpdated'), type: 'success' })
                 setProfilePassword('')
                 // Update local storage
                 const existing = JSON.parse(localStorage.getItem('visitor_data') || '{}')
@@ -174,94 +177,179 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
+            <AnimatePresence>
+                {isAddressModalOpen && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} 
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-sm bg-[#D6D2C0] rounded-xl border-2 border-black/10 shadow-2xl overflow-hidden flex flex-col"
+                        >
+                            <div className="px-6 py-2.5 bg-[#B8B4A0]/20 border-b border-black/5 flex justify-between items-center">
+                                <span className="label-mono text-[9px] font-black uppercase tracking-widest text-[#2C2A20]/60">{t('public.visitor.logisticsHeader')}</span>
+                                <button onClick={() => setIsAddressModalOpen(false)} className="hardware-well p-1 rounded-lg bg-black/5 shadow-inner hover:bg-black/10 transition-colors text-[#2C2A20]">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-4 bg-[#D6D2C0]">
+                                <div className="hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
+                                    <textarea
+                                        value={addressInput}
+                                        onChange={e => setAddressInput(e.target.value)}
+                                        className="w-full px-5 py-4 bg-[#F4F4F2] rounded-lg outline-none text-xs h-32 resize-none font-bold tracking-tight shadow-inner"
+                                        placeholder={t('public.visitor.addressPlaceholder')}
+                                    />
+                                </div>
+                                <div className="flex gap-2 pt-2">
+                                    <button onClick={() => setIsAddressModalOpen(false)} className="flex-1 hardware-btn">
+                                        <div className="hardware-well p-1 rounded-xl w-full">
+                                            <div className="hardware-cap bg-[#E2DFC8] py-3 rounded-lg font-black uppercase tracking-widest text-[9px] text-slate-600 flex items-center justify-center">
+                                                CANCEL
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button 
+                                        onClick={(e) => {
+                                            handleSaveAddress(e);
+                                            setIsAddressModalOpen(false);
+                                        }} 
+                                        disabled={savingAddress} 
+                                        className="flex-1 hardware-btn"
+                                    >
+                                        <div className="hardware-well p-1 rounded-xl w-full">
+                                            <div className="hardware-cap bg-white py-3 rounded-lg font-black uppercase tracking-widest text-[9px] text-slate-900 flex items-center justify-center">
+                                                {savingAddress ? '...' : t('public.visitor.updateBtn')}
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
             <ModalHeader title="VISITOR TERMINAL" id="ACTIVE_NODE" />
 
-            {/* User Profile Micro-Header */}
-            <div className="flex justify-between items-center mb-8 bg-[#F4F4F2] p-4 rounded-2xl border border-[#C8C4B0] shadow-well">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#2C2A20] rounded-xl flex items-center justify-center font-black text-indigo-400 text-xl shadow-lg">
-                        {visitor.name[0].toUpperCase()}
-                    </div>
-                    <div>
-                        <h3 className="text-base font-black text-slate-800 uppercase tracking-tight">{visitor.name}</h3>
-                        <div className="flex items-center gap-3">
-                            {visitor.phone && <div className="flex items-center gap-1 opacity-40"><Smartphone className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{visitor.phone}</span></div>}
-                            {visitor.email && <div className="flex items-center gap-1 opacity-40"><Mail className="w-2.5 h-2.5" /><span className="text-[8px] font-bold">{visitor.email}</span></div>}
-                        </div>
-                    </div>
+            {/* Global Actions & Tabs Row */}
+            <div className="flex items-center gap-4 mb-8">
+                {/* Tabs - Hardware Switch Style (Matched with Exhibition Controls) */}
+                <div className="flex-1 flex bg-[#CFCBBA] p-1.5 rounded-2xl gap-1.5 shadow-inner border border-black/5 overflow-x-auto no-scrollbar">
+                    {(['OVERVIEW', 'HISTORY', 'ORDERS', 'COLLECTIONS', 'FAVORITES', 'PROFILE'] as const).map(tab => (
+                        <button 
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`flex-1 py-2 px-4 rounded-[10px] transition-all whitespace-nowrap label-mono text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 ${
+                                activeTab === tab 
+                                ? 'bg-white shadow-md text-slate-900 scale-[0.98]' 
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                        >
+                            {t(`public.visitor.${tab.toLowerCase()}`)}
+                        </button>
+                    ))}
                 </div>
-                <div className="flex items-center gap-2">
-                    <Link href="/visitor/family" title="Family Exhibition" className="flex items-center gap-2 p-3 text-indigo-500 hover:text-white hover:bg-indigo-500 rounded-xl transition-all border border-transparent hover:border-indigo-600 bg-indigo-50">
-                        <Users className="w-5 h-5" />
-                        <span className="text-[10px] font-black uppercase hidden sm:block">Family</span>
+
+                {/* Global Fast Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link href="/family/exhibitions" title="Family Exhibition" className="hardware-btn block">
+                        <div className="hardware-well p-1 rounded-xl">
+                            <div className="hardware-cap bg-white p-2.5 rounded-lg text-slate-600 flex items-center justify-center">
+                                <LayoutGrid className="w-4 h-4" />
+                            </div>
+                        </div>
                     </Link>
-                    <button onClick={onLogout} title="Logout" className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100">
-                        <LogOut className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Balance Card - Industrial Style */}
-            <div className="hardware-well rounded-3xl p-6 bg-slate-900 border-b-4 border-slate-950 flex justify-between items-center relative overflow-hidden group mb-8 shadow-well">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                    <Coins className="w-24 h-24 rotate-12" />
-                </div>
-                <div className="relative z-10">
-                    <p className="label-mono text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-1">Balance Available</p>
-                    <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-black tracking-tighter text-white">{visitor.currency}</span>
-                        <span className="text-indigo-400 font-bold uppercase tracking-widest text-[9px]">Units</span>
-                    </div>
-                </div>
-                <div className="relative z-10">
-                    <button onClick={() => setActiveTab('OVERVIEW')} className="hardware-btn group">
-                        <div className="hardware-cap bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-white border border-white/10">
-                            Recharge
+                    <button onClick={onLogout} title="Logout" className="hardware-btn block">
+                        <div className="hardware-well p-1 rounded-xl">
+                            <div className="hardware-cap bg-rose-500 border border-rose-600/50 p-2.5 rounded-lg text-white flex items-center justify-center shadow-lg">
+                                <LogOut className="w-4 h-4" />
+                            </div>
                         </div>
                     </button>
                 </div>
             </div>
 
-            {/* Tabs - Industrial Style */}
-            <div className="flex bg-[#CFCBBA] p-1 rounded-2xl gap-1 mb-8 shadow-inner border border-[#C8C4B0] overflow-x-auto no-scrollbar">
-                {(['OVERVIEW', 'HISTORY', 'ORDERS', 'COLLECTIONS', 'FAVORITES', 'ADDRESS', 'PROFILE'] as const).map(tab => (
-                    <button 
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`flex-1 py-2.5 px-3 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                        {t(`public.visitor.${tab.toLowerCase()}`)}
-                    </button>
-                ))}
-            </div>
-
-            {/* Tab Content */}
-            <div className="min-h-[250px] overflow-y-auto custom-scrollbar -mr-2 pr-2">
+            {/* Tab Content Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar -mr-2 pr-2">
                 <AnimatePresence mode="wait">
                     {activeTab === 'OVERVIEW' ? (
-                        <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                            <div className="space-y-4">
-                                <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <Ticket className="w-3.5 h-3.5" />
-                                    Access Code Exchange
-                                </h4>
+                        <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 mt-2">
+                            {/* Hardpoint Terminal Dashboard */}
+                            <div className="relative bg-[#D6D2C0] rounded-2xl p-6 shadow-[inset_0_4px_12px_rgba(0,0,0,0.1)] border-4 border-[#C8C4B0] overflow-hidden">
+                                
+                                {/* Status Header */}
+                                <div className="flex justify-between items-center px-2 mb-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
+                                        <span className="label-mono text-[9px] font-black uppercase tracking-[0.25em] text-slate-800">Profile</span>
+                                    </div>
+                                    <div className="flex gap-1.5 opacity-60">
+                                        <div className="w-1 h-3 bg-amber-500/30 rounded-full" />
+                                        <div className="w-1 h-3 bg-amber-500/80 rounded-full animate-pulse" />
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col md:flex-row gap-6 items-stretch">
+                                    {/* Identity Component (Deep Recessed) */}
+                                    <div className="flex-1 hardware-well rounded-xl bg-[#C8C4B0] p-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] border-b border-white/30 relative">
+                                        <div className="bg-[#FAF9F6]/90 rounded-[0.7rem] p-4 flex items-center gap-4 border border-[#C8C4B0] h-full relative overflow-hidden group shadow-inner">
+                                            {/* Micro Texture Background */}
+                                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] bg-[length:4px_4px]" />
+                                            
+                                            <div className="w-14 h-14 bg-[#2C2A20] rounded-lg shadow-lg border-t-2 border-white/10 flex items-center justify-center font-black text-indigo-400 text-xl shrink-0 relative transition-transform group-hover:scale-95 duration-500">
+                                                {visitor.name[0].toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight truncate leading-tight">{visitor.name}</h3>
+                                                <div className="flex flex-col gap-0.5 mt-1">
+                                                    {visitor.phone && <span className="text-[8px] font-bold text-slate-500 tracking-widest uppercase truncate">{visitor.phone}</span>}
+                                                    {visitor.email && <span className="text-[8px] font-bold text-slate-400 tracking-widest uppercase truncate opacity-70">{visitor.email}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Balance Component (Hard Recessed) */}
+                                    <div className="md:w-56 hardware-well rounded-xl bg-[#1A1C18] p-4 shadow-[inset_0_4px_10px_rgba(0,0,0,0.8)] border border-[#A8A490]/50 border-b-0 flex flex-col justify-center items-center text-center relative group">
+                                        <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <p className="label-mono text-[8px] font-black uppercase tracking-[0.2em] text-[#B88000]/60 mb-1">Coin Balance</p>
+                                        <div className="flex items-baseline justify-center gap-2 relative z-10">
+                                            <span className="text-4xl font-black tracking-tighter text-[#B88000]">
+                                                {visitor.currency}
+                                            </span>
+                                            <div className="w-1.5 h-1.5 rounded-sm bg-indigo-500/20 shadow-inner" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6 pt-2">
+                                <div className="flex items-center gap-3 px-2">
+                                    <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-2 shrink-0">
+                                        <Ticket className="w-3.5 h-3.5 opacity-50" />
+                                        {t('public.visitor.recharge')}
+                                    </h4>
+                                    <div className="flex-1 h-px bg-slate-300" />
+                                </div>
                                 <form onSubmit={handleRecharge} className="flex gap-2">
-                                    <div className="flex-1 hardware-well rounded-xl p-0.5 bg-[#C8C4B0]">
+                                    <div className="flex-1 hardware-well rounded-lg p-0.5 bg-[#C8C4B0]">
                                         <input 
                                             type="text" 
                                             value={rechargeCode}
                                             onChange={e => setRechargeCode(e.target.value)}
-                                            className="w-full px-4 py-3 bg-[#F4F4F2] rounded-lg outline-none font-black text-indigo-600 uppercase tracking-widest text-xs"
+                                            className="w-full px-4 py-3 bg-[#F4F4F2] rounded-md outline-none font-black text-slate-900 uppercase tracking-widest text-xs placeholder:text-slate-400"
                                             placeholder="XXXX-XXXX-XXXX"
                                         />
                                     </div>
                                     <button 
                                         disabled={rechargeLoading || !rechargeCode}
-                                        className="hardware-btn"
+                                        className="hardware-btn min-w-[100px]"
                                     >
-                                        <div className="hardware-cap bg-[#2C2A20] px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] text-white disabled:opacity-50 transition-all">
-                                            {rechargeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sync'}
+                                        <div className="hardware-well p-1 rounded-xl w-full">
+                                            <div className="hardware-cap bg-white py-3 rounded-lg font-black uppercase tracking-widest text-[9px] text-slate-900 disabled:opacity-50 transition-all flex items-center justify-center px-4">
+                                                {rechargeLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('public.visitor.rechargeBtn')}
+                                            </div>
                                         </div>
                                     </button>
                                 </form>
@@ -313,22 +401,45 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                             {orders.filter(o => o.status === 'PENDING_CONFIRM').length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO PENDING DATA</p>}
                         </motion.div>
                     ) : activeTab === 'COLLECTIONS' ? (
-                        <motion.div key="collections" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+                        <motion.div key="collections" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {orders.filter(o => o.status !== 'PENDING_CONFIRM').map(order => (
-                                <div key={order.id} className="bg-white p-3 rounded-2xl border-2 border-[#CFCBBA] flex gap-3 items-center shadow-sm">
-                                    <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                                        {order.artworkImage && <img src={order.artworkImage} alt={order.artworkTitle} className="w-full h-full object-cover" />}
+                                <div key={order.id} className="bg-white p-4 rounded-2xl border-2 border-[#CFCBBA] flex flex-col gap-4 shadow-sm group hover:border-indigo-300 transition-all">
+                                    <div className="aspect-square bg-slate-100 rounded-xl overflow-hidden border border-slate-200 relative">
+                                        {order.artworkImage && (
+                                            <img 
+                                                src={order.artworkImage} 
+                                                alt={order.artworkTitle} 
+                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                            />
+                                        )}
+                                        <div className="absolute top-3 right-3">
+                                            <div className={`px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest border shadow-sm ${order.status === 'SHIPPED' ? 'bg-emerald-500 text-white border-emerald-600' : 'bg-indigo-500 text-white border-indigo-600'}`}>
+                                                {order.status}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-[10px] mb-0.5 truncate">{order.artworkTitle}</h4>
-                                        <span className="text-[7px] text-slate-400 font-bold uppercase block">{new Date(order.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className={`px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest border ${order.status === 'SHIPPED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'} shrink-0`}>
-                                        {order.status}
+                                    <div className="px-1">
+                                        <h4 className="font-black text-slate-800 uppercase tracking-tight text-xs mb-1 truncate">{order.artworkTitle}</h4>
+                                        <div className="flex items-center justify-between mt-3">
+                                            <span className="text-[7px] text-slate-400 font-black uppercase tracking-[0.2em]">{new Date(order.createdAt).toLocaleDateString()}</span>
+                                            <div className="flex gap-2">
+                                                <a href={order.artworkImage} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors border border-slate-200" title="View Original">
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                </a>
+                                                <a href={order.artworkImage} download={`${order.artworkTitle}.jpg`} className="p-2 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-600 rounded-lg transition-all border border-indigo-100" title="Download Data">
+                                                    <Download className="w-3.5 h-3.5" />
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
-                            {orders.filter(o => o.status !== 'PENDING_CONFIRM').length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO COLLECTION DATA</p>}
+                            {orders.filter(o => o.status !== 'PENDING_CONFIRM').length === 0 && (
+                                <div className="col-span-full py-20 bg-slate-100/50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+                                    <History className="w-8 h-8 text-slate-300 mb-3 opacity-50" />
+                                    <p className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest">Archive empty. Orders will appear here after confirmation.</p>
+                                </div>
+                            )}
                         </motion.div>
                     ) : activeTab === 'FAVORITES' ? (
                         <motion.div key="favorites" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
@@ -352,78 +463,100 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                             ))}
                             {likes.length === 0 && <p className="text-center py-12 label-mono text-[9px] opacity-30">NO FAVORITES STORED</p>}
                         </motion.div>
-                    ) : activeTab === 'ADDRESS' ? (
-                        <motion.div key="address" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                            <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <MapPin className="w-3.5 h-3.5" />
-                                Shipping Destination
-                            </h4>
-                            <form onSubmit={handleSaveAddress} className="space-y-4">
-                                <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
-                                    <textarea
-                                        value={addressInput}
-                                        onChange={e => setAddressInput(e.target.value)}
-                                        className="w-full px-5 py-4 bg-[#F4F4F2] rounded-xl outline-none text-xs h-32 resize-none font-bold tracking-tight shadow-inner"
-                                        placeholder="Enter delivery logistics destination..."
-                                    />
-                                </div>
-                                <button type="submit" disabled={savingAddress} className="hardware-btn w-full">
-                                    <div className="hardware-cap bg-[#2C2A20] py-3 rounded-xl font-black uppercase tracking-widest text-[9px] text-white">
-                                        {savingAddress ? 'Syncing...' : 'Update Buffer'}
-                                    </div>
-                                </button>
-                            </form>
-                        </motion.div>
                     ) : (
                         <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                             <h4 className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <User className="w-3.5 h-3.5" />
-                                Identity Config
+                                {t('public.visitor.identityConfig')}
                             </h4>
                             <form onSubmit={handleSaveProfile} className="space-y-4">
                                 <div className="space-y-3">
-                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                    <div className="hardware-well rounded-lg p-0.5 bg-[#C8C4B0]">
                                         <input
                                             required
                                             value={profileName}
                                             onChange={e => setProfileName(e.target.value)}
-                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
-                                            placeholder="Nickname"
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-md outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder={t('public.visitor.nickname')}
                                         />
                                     </div>
-                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                    <div className="hardware-well rounded-lg p-0.5 bg-[#C8C4B0]">
                                         <input
                                             required={!profilePhone}
                                             type="email"
                                             value={profileEmail}
                                             onChange={e => setProfileEmail(e.target.value)}
-                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
-                                            placeholder="Email Address"
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-md outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder={t('public.visitor.email')}
                                         />
                                     </div>
-                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
+                                    <div className="hardware-well rounded-lg p-0.5 bg-[#C8C4B0]">
                                         <input
                                             required={!profileEmail}
                                             type="tel"
                                             value={profilePhone}
                                             onChange={e => setProfilePhone(e.target.value)}
-                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
-                                            placeholder="Phone Number"
+                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-md outline-none text-xs font-bold tracking-tight shadow-inner"
+                                            placeholder={t('public.visitor.phone')}
                                         />
                                     </div>
-                                    <div className="hardware-well rounded-2xl p-0.5 bg-[#C8C4B0]">
-                                        <input
-                                            type="password"
-                                            value={profilePassword}
-                                            onChange={e => setProfilePassword(e.target.value)}
-                                            className="w-full px-5 py-3 bg-[#F4F4F2] rounded-xl outline-none text-xs font-bold tracking-tight shadow-inner"
-                                            placeholder="New Password (Optional)"
-                                        />
+                                    
+                                    <div className="pt-2 border-t border-slate-200" />
+                                    
+                                    <div className="px-1">
+                                        <p className="label-mono text-[8px] text-slate-500 mb-2 uppercase tracking-widest">
+                                            {t('public.visitor.passwordTip')}
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="hardware-well rounded-lg p-0.5 bg-[#C8C4B0]">
+                                            <input
+                                                type="password"
+                                                value={profilePassword}
+                                                onChange={e => setProfilePassword(e.target.value)}
+                                                className="w-full px-5 py-3 bg-[#F4F4F2] rounded-md outline-none text-xs font-bold tracking-tight shadow-inner"
+                                                placeholder={t('public.visitor.newPassword')}
+                                            />
+                                        </div>
+                                        <div className={`hardware-well rounded-lg p-0.5 ${profilePassword ? 'bg-amber-400 animate-pulse' : 'bg-[#C8C4B0]'}`}>
+                                            <input
+                                                type="password"
+                                                required={!!profilePassword}
+                                                value={currentPassword}
+                                                onChange={e => setCurrentPassword(e.target.value)}
+                                                className="w-full px-5 py-3 bg-[#F4F4F2] rounded-md outline-none text-xs font-bold tracking-tight shadow-inner"
+                                                placeholder={profilePassword ? t('public.visitor.currentPassword') : t('public.visitor.passwordVerification')}
+                                            />
+                                        </div>
+                                    </div>
+                                    {profilePassword && (
+                                        <p className="text-[8px] text-amber-600 font-bold uppercase tracking-widest px-2">
+                                            {t('public.visitor.securityWarning')}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-200 space-y-3">
+                                    <h5 className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                                        <span>LOGISTICS BUFFER</span>
+                                        <button type="button" onClick={() => setIsAddressModalOpen(true)} className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors font-black">
+                                            <MapPin className="w-3 h-3" />
+                                            <span>{t('public.visitor.configure')}</span>
+                                        </button>
+                                    </h5>
+                                    <div className="hardware-well rounded-lg p-4 bg-white/50 border border-slate-200 shadow-inner group cursor-pointer hover:bg-white transition-colors" onClick={() => setIsAddressModalOpen(true)}>
+                                        <p className="text-[10px] font-bold text-slate-600 leading-relaxed line-clamp-2">
+                                            {addressInput || t('public.visitor.logisticsEmpty')}
+                                        </p>
                                     </div>
                                 </div>
-                                <button type="submit" disabled={savingProfile} className="hardware-btn w-full">
-                                    <div className="hardware-cap bg-indigo-600 hover:bg-indigo-700 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] text-white">
-                                        {savingProfile ? 'Patching Identity...' : 'Execute Profile Update'}
+
+                                <button type="submit" disabled={savingProfile} className="hardware-btn w-full mt-4">
+                                    <div className="hardware-well p-1 rounded-xl w-full">
+                                        <div className="hardware-cap bg-white py-3 rounded-lg font-black uppercase tracking-widest text-[9px] text-slate-900 flex items-center justify-center">
+                                            {savingProfile ? 'PATCHING...' : t('public.visitor.updateBtn')}
+                                        </div>
                                     </div>
                                 </button>
                             </form>
@@ -450,6 +583,13 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                 .custom-scrollbar::-webkit-scrollbar-thumb {
                     background: #CFCBBA;
                     border-radius: 10px;
+                }
+                @keyframes pulse-slow {
+                    0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(129,140,248,0.5)); }
+                    50% { opacity: 0.8; filter: drop-shadow(0 0 2px rgba(129,140,248,0.2)); }
+                }
+                .animate-pulse-slow {
+                    animation: pulse-slow 4s ease-in-out infinite;
                 }
             `}</style>
         </div>

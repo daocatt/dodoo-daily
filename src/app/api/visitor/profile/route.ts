@@ -6,10 +6,22 @@ import { eq, or, and, ne } from 'drizzle-orm'
 export async function PATCH(req: NextRequest) {
     try {
         const body = await req.json()
-        const { visitorId, name, email, phone, password } = body
+        const { visitorId, name, email, phone, password, currentPassword } = body
 
         if (!visitorId) {
             return NextResponse.json({ error: 'Visitor ID is required' }, { status: 400 })
+        }
+
+        const storedVisitor = await db.select().from(visitor).where(eq(visitor.id, visitorId)).get()
+        if (!storedVisitor) {
+            return NextResponse.json({ error: 'Visitor not found' }, { status: 404 })
+        }
+
+        // If password is being changed, we MUST verify currentPassword
+        if (password && password.trim() !== '') {
+            if (!currentPassword || currentPassword !== storedVisitor.password) {
+                return NextResponse.json({ error: 'Current password verification failed. Please check your credentials.' }, { status: 401 })
+            }
         }
 
         // Check uniqueness for email and phone

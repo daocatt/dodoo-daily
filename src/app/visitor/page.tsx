@@ -15,51 +15,58 @@ export default function VisitorPage() {
     const { visitor, logout, refresh } = useAuthSession()
 
     return (
-        <main className="min-h-dvh relative flex flex-col items-center justify-center p-6 bg-[#E2DFD2] app-bg-pattern overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none opacity-40" />
-            
-            <div className="absolute top-10 left-10 z-50">
-                <button 
-                    onClick={() => router.push('/')}
-                    className="hardware-btn group"
-                >
-                    <div className="hardware-cap bg-white px-6 py-3 rounded-2xl flex items-center gap-3 border border-black/5 shadow-sm active:translate-y-0.5 transition-all">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-slate-400 group-hover:text-indigo-500" />
-                        <span className="label-mono text-[11px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">{t?.('common.back') || 'Home'}</span>
-                    </div>
-                </button>
+        <main className="min-h-dvh relative flex flex-col items-center justify-center p-4 md:p-8 bg-[#C8C9C4] selection:bg-indigo-500/20 app-bg-pattern overflow-hidden">
+            {/* Ambient Background Elements */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-black/5 to-transparent" />
+                <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/5 to-transparent" />
             </div>
-
-            <div className="relative z-10 w-full max-w-2xl h-[85vh] flex flex-col pt-16">
+            
+            <div className="relative z-10 w-full max-w-2xl">
                 <AuthGate mode="VISITOR" fallback={
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <p className="text-slate-500 mb-4">{t('login.restricted') || 'Restricted Area'}</p>
-                        <button onClick={() => router.push('/visitor/login')} className="hardware-cap bg-white px-6 py-3 rounded-xl shadow-sm border border-slate-200 text-sm font-black text-slate-700">Go to Login</button>
+                    <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[3rem] p-12 shadow-[0_40px_100px_rgba(0,0,0,0.5)] border-4 border-[#C8C4B0] flex flex-col items-center text-center">
+                         <div className="w-20 h-20 hardware-well rounded-full flex items-center justify-center mb-8 bg-[#D6D2C0] border-4 border-[#C8C4B0]">
+                            <div className="w-3 h-3 rounded-full bg-rose-500 animate-pulse shadow-[0_0_15px_rgba(244,63,94,0.6)]" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">Identity Required</h2>
+                        <p className="label-mono text-[10px] text-slate-500 mb-10 max-w-xs leading-relaxed uppercase tracking-widest">Access to terminal node restricted to authenticated visitor entities only.</p>
+                        <button 
+                            onClick={() => router.push('/visitor/login')} 
+                            className="hardware-btn group w-full"
+                        >
+                            <div className="hardware-cap bg-white py-4 rounded-2xl font-black text-sm text-slate-800 border-2 border-[#C8C4B0] shadow-lg group-hover:bg-[#F4F4F2] transition-colors">
+                                RETRIEVE CREDENTIALS
+                            </div>
+                        </button>
                     </div>
                 }>
-                    {visitor && (
-                        <VisitorCenter 
-                            visitor={{
-                                id: visitor.id,
-                                name: visitor.name,
-                                currency: visitor.currency,
-                                email: visitor.email,
-                                phone: visitor.phone
-                            }} 
-                            onLogout={async () => {
-                                await logout()
-                                router.push('/')
-                            }} 
-                            onUpdateCurrency={(newVal) => refresh()}
-                        />
-                    )}
+                    <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[3rem] p-8 md:p-12 shadow-[0_40px_100px_rgba(0,0,0,0.5)] border-4 border-[#C8C4B0] relative overflow-hidden min-h-[70vh] flex flex-col">
+                        {visitor && (
+                            <VisitorCenter 
+                                visitor={{
+                                    id: visitor.id,
+                                    name: visitor.name,
+                                    currency: visitor.currency,
+                                    email: visitor.email,
+                                    phone: visitor.phone
+                                }} 
+                                onLogout={async () => {
+                                    await logout()
+                                    router.replace('/')
+                                }} 
+                                onUpdateCurrency={() => refresh()}
+                            />
+                        )}
+                    </div>
                 </AuthGate>
             </div>
 
             <style jsx global>{`
                 .app-bg-pattern {
-                    background-image: radial-gradient(rgba(0,0,0,0.15) 1.5px, transparent 1.5px);
-                    background-size: 32px 32px;
+                    background-image: 
+                        linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+                    background-size: 40px 40px;
                 }
             `}</style>
         </main>
