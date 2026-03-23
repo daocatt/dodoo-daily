@@ -2,11 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { 
-    Users, UserCheck, UserX, Search, MessageSquare, Plus, Trash2, Archive, History, 
-    Globe, Mail, Phone, Clock, AlertTriangle, ShoppingBag, X, 
-    LayoutDashboard, Gift, Receipt, LogOut, Settings, Camera, Palette, 
-    ChevronRight, Zap, Database, Terminal, Signal, Shield, Activity, BarChart3,
-    ArrowUpRight, Disc, RefreshCw, ClipboardList, Layers, Star, Edit2, ArrowRight, Save, Coins, Lock, User, Info, Check, ShieldAlert
+    Users, UserCheck, Plus, Trash2, Archive, History, 
+    X, Camera, Shield, AlertTriangle,
+    Star, Edit2, ArrowRight, Save, Coins
 } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -68,11 +66,6 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
     const [processing, setProcessing] = useState(false)
     const [nicknameTouched, setNicknameTouched] = useState(false)
     const [editNicknameTouched, setEditNicknameTouched] = useState(false)
-    const [_stats, setStats] = useState({
-        totalBalance: 0,
-        totalChildren: 0,
-        activeTasks: 0
-    })
 
     const fetchData = async () => {
         try {
@@ -81,12 +74,6 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                 const data = await res.json()
                 if (Array.isArray(data)) {
                     setChildren(data)
-                    const active = data.filter((c: Child) => !c.isDeleted && !c.isArchived)
-                    setStats({
-                        totalBalance: active.reduce((sum: number, c: Child) => sum + (c.balance || 0), 0),
-                        totalChildren: active.length,
-                        activeTasks: 0 // This would need to be fetched separately or calculated if available
-                    })
                 }
             } else if (res.status === 401) {
                 console.warn('Unauthorized access to children data')
@@ -121,8 +108,8 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
             setEditingChild(null)
             setNicknameTouched(false)
             setEditNicknameTouched(false)
-            fetchChildren()
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+            fetchData() 
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     const handleMasquerade = async (userId: string) => {
@@ -138,7 +125,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                 const data = await res.json()
                 window.location.href = data.redirect || '/admin'
             }
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     const handleAvatarUpload = async (id: string, file: File) => {
@@ -159,9 +146,9 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, avatarUrl: data.avatarUrl })
                 })
-                fetchChildren()
+                fetchData()
             }
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     const handleAdjust = async () => {
@@ -178,8 +165,8 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
             })
             setAdjusting(null)
             setAdjData({ type: 'CURRENCY', amount: 0, reason: '' })
-            fetchChildren()
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+            fetchData()
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     const fetchLogs = async (userId: string) => {
@@ -190,7 +177,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
             const data = await res.json()
             setLogs(data)
             setShowLogs(userId)
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     const handleArchive = async (id: string) => {
@@ -203,8 +190,8 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                 body: JSON.stringify({ id, isArchived: true })
             })
             setConfirmModal(null)
-            fetchChildren()
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+            fetchData()
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     const handleDelete = async (id: string) => {
@@ -223,8 +210,8 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                 body: JSON.stringify({ id })
             })
             setConfirmModal(null)
-            fetchChildren()
-        } catch (e) { console.error(e) } finally { setProcessing(false) }
+            fetchData()
+        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
     }
 
     if (loading) return <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">{t('common.loading')}</div>
