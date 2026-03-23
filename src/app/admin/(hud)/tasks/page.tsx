@@ -2,14 +2,15 @@
 
 import React, { useEffect, useState, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, Repeat, CalendarDays, Users, Edit2, User, Coins, Check, CheckCheck, RotateCcw, Trash2, X as XIcon } from 'lucide-react'
+import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, CalendarDays, Users, Edit2, Coins, Check, CheckCheck, RotateCcw, Trash2, X as XIcon } from 'lucide-react'
 import { getStartOfDayInTimezone, getTodayStringInTimezone } from '@/lib/utils'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
-import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
+import { format, startOfWeek, endOfWeek, isSameDay } from 'date-fns'
 import SmartDatePicker from '@/components/SmartDatePicker'
+import Image from 'next/image'
 
 type Task = {
     id: string
@@ -114,8 +115,8 @@ function TasksPageContent() {
                 setShowNewTaskModal(false)
                 setEditingTask(null)
             }
-        } catch (error) {
-            console.error('Failed to delete task:', error)
+        } catch (_error) {
+            console.error('Failed to delete task:', _error)
         }
     }
 
@@ -137,8 +138,8 @@ function TasksPageContent() {
             });
 
             setTasks(merged)
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
             setTasks([])
         } finally {
             setLoading(false)
@@ -159,8 +160,8 @@ function TasksPageContent() {
                 body: JSON.stringify({ completed: !task.completed })
             })
             fetchTasks(); // Refresh to get final status/rewards
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
             fetchTasks()
         }
     }
@@ -210,8 +211,8 @@ function TasksPageContent() {
             setIsRepeating(false)
             setIsMonthlyRepeating(false)
             fetchTasks()
-        } catch (err) {
-            console.error(err)
+        } catch (_err) {
+            console.error(_err)
         } finally {
             setIsSubmitting(false)
         }
@@ -226,8 +227,8 @@ function TasksPageContent() {
                 body: JSON.stringify({ action: 'CONFIRM_REWARD' })
             })
             if (res.ok) fetchTasks()
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
         }
     }
 
@@ -240,8 +241,8 @@ function TasksPageContent() {
                 body: JSON.stringify({ completed: false })
             })
             if (res.ok) fetchTasks()
-        } catch (error) {
-            console.error(error)
+        } catch (_error) {
+            console.error(_error)
         }
     }
 
@@ -374,7 +375,7 @@ function TasksPageContent() {
                                                     onClick={() => setAssignedChildId(child.id)}
                                                     className={`py-1.5 px-3 rounded-xl text-center md:text-left font-bold text-[11px] transition-all flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
                                                 >
-                                                    {child.avatarUrl && <img src={child.avatarUrl} className="w-3.5 h-3.5 rounded-full object-cover hidden md:block" />}
+                                                    {child.avatarUrl && <Image src={child.avatarUrl} width={14} height={14} className="w-3.5 h-3.5 rounded-full object-cover hidden md:block" alt={child.nickname || child.name} />}
                                                     {child.nickname || child.name}
                                                 </button>
                                             ))}
@@ -533,7 +534,7 @@ function TasksPageContent() {
                                                     {isAssignIGave && task.assigneeNickname && (
                                                         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
                                                             {task.assigneeAvatar ? (
-                                                                <img src={task.assigneeAvatar} className="w-4 h-4 rounded-full object-cover" />
+                                                                <Image src={task.assigneeAvatar} width={16} height={16} className="w-4 h-4 rounded-full object-cover" alt={task.assigneeNickname || ''} />
                                                             ) : (
                                                                 <Users className="w-3 h-3" />
                                                             )}
@@ -729,7 +730,7 @@ function TasksPageContent() {
                                                             >
                                                                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white bg-slate-200">
                                                                     {c.avatarUrl ? (
-                                                                        <img src={c.avatarUrl} alt={c.name} className="w-full h-full object-cover" />
+                                                                        <Image src={c.avatarUrl} width={32} height={32} alt={c.name} className="w-full h-full object-cover" />
                                                                     ) : (
                                                                         <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-500 font-bold text-xs uppercase">
                                                                             {c.nickname?.[0] || c.name[0]}

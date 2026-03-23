@@ -26,12 +26,6 @@ type Album = {
     totalArtworks?: number
 }
 
-type Child = {
-    id: string
-    name: string
-    avatarUrl: string | null
-}
-
 export default function GalleryPage() {
     const [albums, setAlbums] = useState<Album[]>([])
     const [loading, setLoading] = useState(true)
