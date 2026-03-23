@@ -53,6 +53,11 @@ export async function GET(req: NextRequest) {
 
         if (!userId) return NextResponse.json([])
 
+        const sessionUser = await getSessionUser()
+        const isSelf = sessionUser?.id === userId
+        const customLimit = parseInt(searchParams.get('limit') || '20')
+        const customOffset = parseInt(searchParams.get('offset') || '0')
+
         const messages = await db.select({
             id: visitorMessage.id,
             text: visitorMessage.text,
@@ -68,12 +73,13 @@ export async function GET(req: NextRequest) {
         .leftJoin(users, eq(visitorMessage.memberId, users.id))
         .where(
             and(
-                eq(visitorMessage.targetUserId, userId as string), // Cast to string since userId check is above
-                eq(visitorMessage.isPublic, true)
+                eq(visitorMessage.targetUserId, userId as string),
+                isSelf ? undefined : eq(visitorMessage.isPublic, true)
             )
         )
         .orderBy(desc(visitorMessage.createdAt))
-        .limit(20)
+        .limit(customLimit)
+        .offset(customOffset)
 
         return NextResponse.json(messages)
     } catch (e) {

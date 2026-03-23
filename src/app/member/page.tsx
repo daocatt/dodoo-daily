@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import VisitorCenter from '@/components/public/VisitorCenter'
+import MemberCenter from '@/components/member/MemberCenter'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
 import { ArrowLeft } from 'lucide-react'
@@ -37,18 +37,31 @@ export default function MemberPage() {
                     </div>
                 }>
                     {user && (
-                        <VisitorCenter 
-                            visitor={{
-                                id: user.id,
-                                name: user.nickname || user.name,
-                                currency: 0,
-                            }} 
-                            onLogout={() => {
-                                logout()
-                                router.push('/')
-                            }} 
-                            onUpdateCurrency={(newVal) => refresh()}
-                        />
+                        <div className="baustein-panel shadow-2xl overflow-hidden flex-1 flex flex-col bg-[#D6D2C0] rounded-[2.5rem] border-8 border-[#C8C4B0] p-8 md:p-12 relative">
+                             {/* Industrial Shell Decorative Screws */}
+                            <div className="absolute top-4 left-4 w-2 h-2 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+                            <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+                            <div className="absolute bottom-4 left-4 w-2 h-2 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+                            <div className="absolute bottom-4 right-4 w-2 h-2 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+
+                            <MemberCenter 
+                                member={{
+                                    id: user.id,
+                                    name: user.name,
+                                    nickname: user.nickname,
+                                    avatar: user.avatarUrl,
+                                    currency: user.currency ?? 0,
+                                    email: user.email,
+                                    phone: user.phone,
+                                    address: user.address
+                                }} 
+                                onLogout={() => {
+                                    logout()
+                                    router.push('/')
+                                }} 
+                                onUpdateCurrency={(newVal) => refresh()}
+                            />
+                        </div>
                     )}
                 </AuthGate>
             </div>
@@ -57,6 +70,12 @@ export default function MemberPage() {
                 .app-bg-pattern {
                     background-image: radial-gradient(rgba(0,0,0,0.15) 1.5px, transparent 1.5px);
                     background-size: 32px 32px;
+                }
+                .baustein-panel {
+                    box-shadow: 
+                        0 20px 50px -10px rgba(0,0,0,0.3),
+                        inset 0 2px 4px rgba(255,255,255,0.4),
+                        inset 0 -2px 4px rgba(0,0,0,0.2);
                 }
             `}</style>
         </main>
