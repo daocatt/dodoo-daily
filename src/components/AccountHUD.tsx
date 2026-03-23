@@ -19,7 +19,7 @@ import {
     CreditCard,
     Ruler,
     Power,
-    Palette,
+    LayoutGrid,
     CalendarDays,
     AlertCircle
 } from 'lucide-react'
@@ -269,18 +269,16 @@ export default function AccountHUD() {
                             </div>
                         )}
 
-                        {/* Exhibition Link */}
-                        {stats.slug && (
-                            <button
-                                onClick={() => {
-                                    if (stats.slug) window.open(`/u/${stats.slug}`, '_blank')
-                                }}
-                                className="flex items-center text-indigo-500 hover:text-indigo-600 transition-colors p-1"
-                                title={t('parent.viewPublicProfile')}
-                            >
-                                <Palette className="w-4 h-4" />
-                            </button>
-                        )}
+                        {/* Member Center Link */}
+                        <button
+                            onClick={() => {
+                                window.location.href = '/member'
+                            }}
+                            className="flex items-center text-indigo-500 hover:text-indigo-600 transition-colors p-1"
+                            title="Member Center"
+                        >
+                            <LayoutGrid className="w-4 h-4" />
+                        </button>
 
                         {/* Growth Record */}
                         <button
