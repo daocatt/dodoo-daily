@@ -44,7 +44,7 @@ next-env.d.ts
 database/dodoo.db
 /public/upload
 /database
-/dnd-example
+/docs/dnd-example
 .eslintcache
 /public/uploads
 

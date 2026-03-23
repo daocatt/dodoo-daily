@@ -534,7 +534,7 @@ export default function PublicProfileHome() {
                                                         <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">{t('public.modal.transmission')}</span>
                                                     </div>
                                                     <div className="px-3 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
-                                                        ID: {member?.nickname || member?.name || visitor?.name || 'GUEST'}
+                                                        ID: {member?.nickname || member?.name || visitor?.name || 'VISITOR'}
                                                     </div>
                                                 </div>
                                                 

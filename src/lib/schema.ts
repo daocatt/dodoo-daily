@@ -36,7 +36,7 @@ export const users = sqliteTable("Users", {
     exhibitionTitle: text("exhibitionTitle"),
     exhibitionSubtitle: text("exhibitionSubtitle"),
     exhibitionDescription: text("exhibitionDescription"), // For help/info page
-}) ;
+});
 
 export const accountStats = sqliteTable("AccountStats", {
     userId: text("userId").primaryKey().references(() => users.id),
@@ -428,7 +428,7 @@ export const ledgerCategory = sqliteTable("LedgerCategory", {
     name: text("name").notNull(),
     emoji: text("emoji").notNull(),
     type: text("type", { enum: ["INCOME", "EXPENSE"] }).notNull(),
-    isSystem: integer("isSystem", { mode: "boolean" }).default(false).notNull(), 
+    isSystem: integer("isSystem", { mode: "boolean" }).default(false).notNull(),
     creatorId: text("creatorId").references(() => users.id), // Null if system
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
@@ -452,19 +452,19 @@ export const storageItems = sqliteTable("storageItems", {
     name: text("name").notNull(),
     imageUrl: text("imageUrl").notNull(),
     notes: text("notes"),
-    tags: text("tags").default(sql`'[]'`), 
-    
+    tags: text("tags").default(sql`'[]'`),
+
     // Financial & Status
     purchasePrice: real("purchasePrice").default(0),
     resalePrice: real("resalePrice").default(0),
     purchaseDate: integer("purchaseDate", { mode: "timestamp_ms" }),
     isForSale: integer("isForSale", { mode: "boolean" }).default(false).notNull(),
-    
+
     // Sync & Internal
     isSynced: integer("isSynced", { mode: "boolean" }).default(false).notNull(),
     isDeleted: integer("isDeleted", { mode: "boolean" }).default(false).notNull(),
     version: integer("version").default(1),
-    
+
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });

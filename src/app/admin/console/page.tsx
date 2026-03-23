@@ -34,7 +34,7 @@ export default function ParentDashboard() {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'GUESTS' | 'LOGS'>('HOME')
+    const [view, setView] = useState<'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'ORDERS' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS'>('HOME')
     const [user, setUser] = useState<ParentUser | null>(null)
 
     useEffect(() => {
@@ -89,7 +89,7 @@ export default function ParentDashboard() {
             case 'SYSTEM': return <SystemSettings />
             case 'MEDIA': return <MediaManagement />
             case 'EXHIBITION': return <ExhibitionManagement />
-            case 'GUESTS': return <VisitorManagement />
+            case 'VISITORS': return <VisitorManagement />
             case 'LOGS': return <LoginLog />
             default: return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
@@ -216,7 +216,7 @@ export default function ParentDashboard() {
 
                     {/* Visitor Management */}
                     <button
-                        onClick={() => setView('GUESTS')}
+                        onClick={() => setView('VISITORS')}
                         className="bg-white p-6 rounded-lg shadow-sm border border-slate-100 flex flex-col items-start gap-4 hover:shadow-xl hover:border-emerald-200 transition-all text-left group"
                     >
                         <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
@@ -274,7 +274,7 @@ export default function ParentDashboard() {
                                         view === 'SYSTEM' ? t('parent.settings') :
                                             view === 'MEDIA' ? t('parent.media') :
                                                 view === 'EXHIBITION' ? t('parent.exhibition') :
-                                                    view === 'GUESTS' ? t('parent.visitors') :
+                                                    view === 'VISITORS' ? t('parent.visitors') :
                                                         view === 'LOGS' ? t('parent.securityLogs') :
                                                             view}
                         </h1>

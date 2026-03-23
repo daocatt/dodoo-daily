@@ -706,7 +706,7 @@ export default function VisitorManagement() {
                 )}
             </AnimatePresence>
 
-            {/* GUEST ORDERS MODAL */}
+            {/* VISITOR ORDERS MODAL */}
             <AnimatePresence>
                 {showOrdersModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">

@@ -362,7 +362,7 @@ const dictionaries: Dictionary = {
         'settings.realName': 'Real Name',
         'settings.nickname': 'Nickname',
         'settings.systemLanguage': 'System Default Language',
-        'settings.systemLanguageDesc': 'Default language for visitors and visitors.',
+        'settings.systemLanguageDesc': 'Default language for visitors and family members.',
         'settings.nicknameHint': 'Used for login when "Show All Avatars" is disabled (case insensitive)',
         'settings.nicknamePlaceholder': 'Your short nickname',
         'settings.nicknameSuccess': 'Nickname updated!',
