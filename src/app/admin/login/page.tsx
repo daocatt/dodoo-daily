@@ -64,8 +64,7 @@ export default function LoginPage() {
                 setSystemName(settingsData.systemName || 'DoDoo System')
                 setLoading(false)
             })
-            .catch(err => {
-                console.error(err)
+            .catch(_err => {
                 setLoading(false)
             })
     }, [])
@@ -207,7 +206,13 @@ export default function LoginPage() {
                                                     <div className="hardware-cap p-2.5 bg-white rounded-2xl flex flex-col items-center justify-center gap-2.5 border-2 border-black/5 group-hover:bg-[var(--surface-white)] transition-colors h-40">
                                                         <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden border-2 border-[var(--well-bg)] shadow-inner">
                                                             {u.avatarUrl ? (
-                                                                <img src={`${u.avatarUrl}?v=4`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-transform duration-500 group-hover:scale-110" alt="" />
+                                                                <Image 
+                                                                    src={`${u.avatarUrl}?v=4`} 
+                                                                    width={96}
+                                                                    height={96}
+                                                                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-transform duration-500 group-hover:scale-110" 
+                                                                    alt={u.nickname || u.name} 
+                                                                />
                                                             ) : (
                                                                 <div className="w-full h-full bg-slate-100 flex items-center justify-center"><User className="w-8 h-8 text-slate-300" /></div>
                                                             )}
@@ -258,7 +263,13 @@ export default function LoginPage() {
                                 <div className="flex-1 flex flex-col items-center justify-center gap-6">
                                     <div className="hardware-well w-32 h-32 rounded-3xl border-4 border-[#C8C4B0] overflow-hidden p-1 shadow-2xl">
                                         {selectedUser.avatarUrl ? (
-                                            <img src={`${selectedUser.avatarUrl}?v=4`} className="w-full h-full object-cover rounded-2xl" alt="" />
+                                            <Image 
+                                                src={`${selectedUser.avatarUrl}?v=4`} 
+                                                width={128}
+                                                height={128}
+                                                className="w-full h-full object-cover rounded-2xl" 
+                                                alt={selectedUser.nickname || selectedUser.name} 
+                                            />
                                         ) : (
                                             <div className="w-full h-full bg-white/20 flex items-center justify-center"><User className="w-12 h-12 text-black/20" /></div>
                                         )}

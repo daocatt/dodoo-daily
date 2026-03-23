@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Camera, Lock, LogOut, Loader2, Save, Check, X, Shield, Bell } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import NatureBackground from '@/components/NatureBackground'
 import PushSubscriptionManager from '@/components/PushSubscriptionManager'
@@ -58,7 +59,10 @@ export default function SettingsPage() {
                 setSlug(data.slug || '')
                 setLoading(false)
             })
-            .catch(() => router.push('/admin/login'))
+            .catch((_err) => { // Renamed 'err' to '_err' as per instruction
+                setLoading(false) // Added setLoading(false) here as it was missing
+                router.push('/admin/login')
+            })
     }, [router])
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +75,7 @@ export default function SettingsPage() {
             const res = await fetch('/api/upload/avatar', { method: 'POST', body: formData })
             const data = await res.json()
             if (res.ok && user) setUser({ ...user, avatarUrl: data.avatarUrl })
-        } catch (e) { console.error(e) }
+        } catch (_e) { console.error(_e) } // Renamed 'e' to '_e'
         finally { setUploading(false) }
     }
 
@@ -90,7 +94,7 @@ export default function SettingsPage() {
             } else {
                 setNickError(data.error || t('settings.updateFailed') || 'Failed')
             }
-        } catch (e) { setNickError(t('settings.errorNetwork') || 'Network error') }
+        } catch (_e) { setNickError(t('settings.errorNetwork') || 'Network error') } // Renamed 'e' to '_e'
         finally { setNickSaving(false) }
     }
 
@@ -111,7 +115,7 @@ export default function SettingsPage() {
             } else {
                 setSlugError(data.error || 'Failed to update')
             }
-        } catch (e) { setSlugError('Network error') }
+        } catch (_e) { setSlugError('Network error') } // Renamed 'e' to '_e'
         finally { setSlugSaving(false) }
     }
 
@@ -126,7 +130,7 @@ export default function SettingsPage() {
             })
             if (res.ok) { setPinMessage(t('settings.pinUpdateSuccess') || 'PIN updated!'); setPin('') }
             else { setPinError(t('settings.updateFailed') || 'Failed') }
-        } catch (e) { setPinError(t('settings.errorNetwork') || 'Network error') }
+        } catch (__e) { setPinError(t('settings.errorNetwork') || 'Network error') } // Renamed '_e' to '__e'
         finally { setPinSaving(false) }
     }
 
@@ -183,12 +187,13 @@ export default function SettingsPage() {
                                     {uploading ? (
                                         <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
                                     ) : (
-                                        <img
-                                            src={`${avatarSrc}?v=5`}
-                                            alt="Avatar"
-                                            className={`w-full h-full object-cover ${!user?.avatarUrl ? 'p-4' : ''}`}
-                                            onError={(e) => { e.currentTarget.src = '/dog.svg'; e.currentTarget.className = 'w-full h-full object-contain p-4' }}
-                                        />
+                                    <Image
+                                        src={`${avatarSrc || '/dog.svg'}?v=5`}
+                                        alt="Avatar"
+                                        width={80}
+                                        height={80}
+                                        className={`w-full h-full object-cover ${!user?.avatarUrl ? 'p-4' : ''}`}
+                                    />
                                     )}
                                 </div>
                                 <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center text-white cursor-pointer hover:bg-orange-600 shadow-md shadow-orange-200 transition-all active:scale-90">

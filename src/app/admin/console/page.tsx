@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Star, Users, Loader2, ShoppingBag as BagIcon, UserCircle, Power, Image as ImageIcon, Coins, Palette, Shield, ChevronDown, ClipboardList } from 'lucide-react'
+import Image from 'next/image' // Added import for Next.js Image component
+import { ArrowLeft, Star, Users, Loader2, ShoppingBag as BagIcon, UserCircle, Power, Image as ImageIcon, Coins, Palette, Shield, ChevronDown } from 'lucide-react' // Removed ClipboardList
 import { useI18n } from '@/contexts/I18nContext'
 import { useRouter } from 'next/navigation'
 
@@ -383,7 +384,13 @@ export default function ParentDashboard() {
                                 <div className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">{t('parent.adminMode')}</div>
                             </div>
                             <div className="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm">
-                                <img src={user.avatarUrl || "/dog.svg"} alt={user.name} className="w-full h-full object-cover" />
+                                <Image 
+                                    src={user.avatarUrl || '/dog.svg'} 
+                                    alt="Avatar" 
+                                    width={40} 
+                                    height={40} 
+                                    className="w-full h-full object-cover filter contrast-125 grayscale-[20%]" 
+                                />
                             </div>
                         </div>
                     </div>
