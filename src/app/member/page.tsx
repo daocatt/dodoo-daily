@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import VisitorCenter from '@/components/public/VisitorCenter'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
-import NatureBackground from '@/components/NatureBackground'
 import { ArrowLeft } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -23,8 +22,8 @@ export default function MemberPage() {
                     onClick={() => router.push('/')}
                     className="hardware-btn group"
                 >
-                    <div className="hardware-cap bg-white px-6 py-3 rounded-2xl flex items-center gap-3 border border-black/5 shadow-sm active:translate-y-0.5 transition-all">
-                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-slate-400 group-hover:text-indigo-500" />
+                    <div className="hardware-cap bg-white px-6 py-3 rounded-lg flex items-center gap-3 border border-black/5 shadow-sm active:translate-y-0.5 transition-all">
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform text-slate-400 group-hover:text-slate-900" />
                         <span className="label-mono text-[11px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">{t?.('common.back') || 'Home'}</span>
                     </div>
                 </button>
@@ -42,10 +41,7 @@ export default function MemberPage() {
                             visitor={{
                                 id: user.id,
                                 name: user.nickname || user.name,
-                                currency: 0, // This will be fetched via fetchData() anyway, or pass initial if known
-                                email: '', // Users don't necessarily have these in basic user object
-                                phone: '',
-                                isMember: true
+                                currency: 0,
                             }} 
                             onLogout={() => {
                                 logout()

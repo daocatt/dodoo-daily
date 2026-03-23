@@ -1,11 +1,28 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Coins, Ticket, History, LogOut, Loader2, ArrowUpRight, ArrowDownRight, CheckCircle, Smartphone, Mail, MapPin, Heart, LayoutGrid, User, Activity, ExternalLink, Download, X } from 'lucide-react'
-import { useParams } from 'next/navigation'
+import { 
+    User, 
+    Ticket, 
+    History, 
+    ShoppingBag, 
+    Heart, 
+    LogOut, 
+    ExternalLink, 
+    Download,
+    MapPin,
+    X,
+    Loader2,
+    Ticket as TicketIcon,
+    Package,
+    ArrowUpRight,
+    ArrowDownRight,
+    LayoutGrid
+} from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
+import { useParams } from 'next/navigation'
 
 interface VisitorData {
     id: string
@@ -17,107 +34,120 @@ interface VisitorData {
     isMember?: boolean
 }
 
-interface CurrencyLog {
+interface VisitorLog {
     id: string
     amount: number
-    balance: number
     reason: string
-    createdAt: string
+    createdAt: number
 }
 
-interface Order {
+interface VisitorOrder {
     id: string
+    artworkId: string
     artworkTitle: string
     artworkImage: string
-    artworkId: string
     status: string
-    createdAt: string
+    amount: number
+    createdAt: number
 }
 
-const ModalHeader = ({ title, id }: { title: string, id: string }) => (
+interface VisitorLike {
+    id: string
+    artworkId: string
+    artworkTitle: string
+    artworkImage: string
+    createdAt: number
+}
+
+const ModalHeader = ({ title, id, accentColor }: { title: string, id: string, accentColor?: string }) => (
     <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#B8B4A0] bg-[#D6D2C0] shrink-0 -mx-8 md:-mx-12 -mt-8 md:-mt-12 mb-8">
         <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-            <span className="font-black text-[10px] tracking-[0.2em] uppercase text-slate-700">{title}</span>
+            <div className={`w-2 h-2 rounded-full ${accentColor ? `bg-[${accentColor}]` : 'bg-indigo-500'} shadow-[0_0_8px_rgba(79,70,229,0.5)] animate-pulse`} />
+            <h2 className="font-black text-[10px] tracking-[0.25em] uppercase text-slate-700">{title}</h2>
         </div>
-        <div className="px-2.5 py-1 bg-black/5 rounded shadow-inner text-[8px] font-black uppercase tracking-widest text-slate-400">
-            ID: {id.slice(0, 8)}
+        <div className="flex items-center gap-3">
+            <div className="px-2 py-0.5 bg-black/5 rounded text-[7px] font-black uppercase tracking-widest text-slate-400 border border-black/5">
+                NODE_ID: {id}
+            </div>
+            <div className="w-1 h-3 bg-slate-400/20 rounded-full" />
+            <div className="w-1 h-3 bg-slate-400/40 rounded-full animate-pulse" />
         </div>
     </div>
 )
 
-export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: { visitor: VisitorData, onLogout: () => void, onUpdateCurrency: (newVal: number) => void }) {
+export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: { 
+    visitor: VisitorData, 
+    onLogout: () => void,
+    onUpdateCurrency?: (newVal: number) => void
+}) {
     const { t } = useI18n()
     const params = useParams()
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'PROFILE'>('OVERVIEW')
-    const [logs, setLogs] = useState<CurrencyLog[]>([])
-    const [orders, setOrders] = useState<Order[]>([])
-    const [likes, setLikes] = useState<Order[]>([])
+    const [logs, setLogs] = useState<VisitorLog[]>([])
+    const [orders, setOrders] = useState<VisitorOrder[]>([])
+    const [likes, setLikes] = useState<VisitorLike[]>([])
     const [rechargeCode, setRechargeCode] = useState('')
-    const [loading, setLoading] = useState(false)
     const [rechargeLoading, setRechargeLoading] = useState(false)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
-    const [addressInput, setAddressInput] = useState(visitor.address || '')
-    const [savingAddress, setSavingAddress] = useState(false)
-    const [profileName, setProfileName] = useState(visitor.name || '')
+    
+    // Profile Edit State
+    const [profileName, setProfileName] = useState(visitor.name)
     const [profileEmail, setProfileEmail] = useState(visitor.email || '')
     const [profilePhone, setProfilePhone] = useState(visitor.phone || '')
     const [profilePassword, setProfilePassword] = useState('')
     const [currentPassword, setCurrentPassword] = useState('')
     const [savingProfile, setSavingProfile] = useState(false)
+    
+    // Address State
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
-
-    const fetchData = async () => {
-        setLoading(true)
-        try {
-            const idParam = visitor.isMember ? `memberId=${visitor.id}` : `visitorId=${visitor.id}`
-            const balanceApi = visitor.isMember ? `/api/stats` : `/api/visitor/profile?visitorId=${visitor.id}`
-            
-            const [lRes, oRes, fRes, bRes] = await Promise.all([
-                fetch(`/api/visitor/logs?${idParam}`),
-                fetch(`/api/visitor/orders?${idParam}`),
-                fetch(`/api/visitor/likes?${idParam}`),
-                fetch(balanceApi)
-            ])
-            
-            if (lRes.ok) setLogs(await lRes.json())
-            if (oRes.ok) setOrders(await oRes.json())
-            if (fRes.ok) setLikes(await fRes.json())
-            if (bRes.ok) {
-                const bData = await bRes.json()
-                onUpdateCurrency(visitor.isMember ? (bData.stats?.currency ?? 0) : (bData.currency ?? 0))
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
+    const [addressInput, setAddressInput] = useState(visitor.address || '')
+    const [savingAddress, setSavingAddress] = useState(false)
 
     useEffect(() => {
         fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [visitor.id])
+
+    const fetchData = async () => {
+        try {
+            const [logsRes, ordersRes, likesRes] = await Promise.all([
+                fetch(`/api/public/visitor/logs?visitorId=${visitor.id}`),
+                fetch(`/api/public/visitor/orders?visitorId=${visitor.id}`),
+                fetch(`/api/public/visitor/likes?visitorId=${visitor.id}`)
+            ])
+            
+            if (logsRes.ok) setLogs(await logsRes.json())
+            if (ordersRes.ok) setOrders(await ordersRes.json())
+            if (likesRes.ok) setLikes(await likesRes.json())
+        } catch (err) {
+            console.error('Failed to fetch visitor data', err)
+        }
+    }
 
     const handleRecharge = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!rechargeCode) return
+        
         setRechargeLoading(true)
         setMessage(null)
+        
         try {
-            const idKey = visitor.isMember ? 'memberId' : 'visitorId'
-            const res = await fetch('/api/visitor/recharge', {
+            const res = await fetch('/api/public/visitor/recharge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ [idKey]: visitor.id, code: rechargeCode })
+                body: JSON.stringify({ visitorId: visitor.id, code: rechargeCode })
             })
+            
             const data = await res.json()
             if (res.ok) {
-                onUpdateCurrency(data.balance)
-                setMessage({ text: t('public.visitor.rechargeSuccess', { amount: data.amount.toString() }), type: 'success' })
+                setMessage({ text: t('public.visitor.rechargeSuccess'), type: 'success' })
                 setRechargeCode('')
+                onUpdateCurrency?.(data.newBalance)
                 fetchData()
             } else {
-                setMessage({ text: t('public.visitor.rechargeError'), type: 'error' })
+                setMessage({ text: data.error || t('public.visitor.rechargeError'), type: 'error' })
             }
+        } catch (err) {
+            setMessage({ text: t('public.visitor.rechargeError'), type: 'error' })
         } finally {
             setRechargeLoading(false)
         }
@@ -127,15 +157,15 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
         e.preventDefault()
         setSavingAddress(true)
         try {
-            const res = await fetch('/api/open/visitor/address', {
+            const res = await fetch('/api/public/visitor/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ visitorId: visitor.id, address: addressInput })
             })
             if (res.ok) {
-                setMessage({ text: t('public.visitor.addressSaved'), type: 'success' })
-            } else {
-                setMessage({ text: t('public.visitor.addressError'), type: 'error' })
+                const existing = JSON.parse(localStorage.getItem('visitor_data') || '{}')
+                localStorage.setItem('visitor_data', JSON.stringify({ ...existing, address: addressInput }))
+                window.dispatchEvent(new Event('storage'))
             }
         } finally {
             setSavingAddress(false)
@@ -147,24 +177,25 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
         setSavingProfile(true)
         setMessage(null)
         try {
-            const idKey = visitor.isMember ? 'memberId' : 'visitorId'
-            const res = await fetch('/api/visitor/profile', {
+            const res = await fetch('/api/public/visitor/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    [idKey]: visitor.id, 
-                    name: profileName, 
-                    email: profileEmail, 
-                    phone: profilePhone, 
+                    visitorId: visitor.id, 
+                    name: profileName,
+                    email: profileEmail,
+                    phone: profilePhone,
                     password: profilePassword,
                     currentPassword: currentPassword
                 })
             })
+            
             const data = await res.json()
             if (res.ok) {
-                setMessage({ text: t('public.visitor.profileUpdated'), type: 'success' })
+                setMessage({ text: 'Profile updated successfully', type: 'success' })
                 setProfilePassword('')
-                // Update local storage
+                setCurrentPassword('')
+                // Update local storage for immediate UI reflect
                 const existing = JSON.parse(localStorage.getItem('visitor_data') || '{}')
                 localStorage.setItem('visitor_data', JSON.stringify({ ...existing, ...data }))
                 window.dispatchEvent(new Event('storage'))
@@ -581,15 +612,8 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                     background: transparent;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #CFCBBA;
+                    background: #C8C4B0;
                     border-radius: 10px;
-                }
-                @keyframes pulse-slow {
-                    0%, 100% { opacity: 1; filter: drop-shadow(0 0 5px rgba(129,140,248,0.5)); }
-                    50% { opacity: 0.8; filter: drop-shadow(0 0 2px rgba(129,140,248,0.2)); }
-                }
-                .animate-pulse-slow {
-                    animation: pulse-slow 4s ease-in-out infinite;
                 }
             `}</style>
         </div>
