@@ -123,17 +123,27 @@ async function main() {
         }).returning().get();
     }
 
+    let totalBalance = 0;
     for (let i = 0; i < 20; i++) {
         const isIncome = i % 4 === 0;
+        const amount = isIncome ? (Math.random() * 20000 + 5000) : (Math.random() * 1000 + 100);
         await db.insert(schema.ledgerRecord).values({
             userId: userId,
             categoryId: isIncome ? incomeCat.id : expenseCat.id,
             type: isIncome ? 'INCOME' : 'EXPENSE',
-            amount: isIncome ? (Math.random() * 20000 + 5000) : (Math.random() * 1000 + 100),
+            amount: amount,
             date: new Date(Date.now() - i * 86400000),
             description: isIncome ? `Monthly Payout ${i}` : `Expenditure Reference ${i}`
         });
+        totalBalance += isIncome ? amount : -amount;
     }
+
+    // Update the actual stats table so the dashboard shows the correct total
+    await db.update(schema.accountStats)
+        .set({ fiatBalance: totalBalance })
+        .where(eq(schema.accountStats.userId, userId));
+
+    console.log(`Updated balance for Superadmin: ${totalBalance.toFixed(2)}`);
 
     // 5. Mock 10 Household items
     console.log('Generating 10 Storage Items...');
