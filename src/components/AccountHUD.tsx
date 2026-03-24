@@ -11,7 +11,10 @@ import {
     Ruler,
     Power,
     LayoutGrid,
-    AlertCircle
+    AlertCircle,
+    IdCard,
+    SquareActivity,
+    Fan
 } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n, Locale } from '@/contexts/I18nContext'
@@ -56,8 +59,13 @@ export default function AccountHUD() {
     const [rechargeType, setRechargeType] = useState<'CURRENCY' | 'GOLD_STAR'>('CURRENCY')
     const [recordDate, setRecordDate] = useState<Date>(new Date())
     const [mounted, setMounted] = useState(false)
-
+    const [currentTime, setCurrentTime] = useState(new Date())
     const { t, locale } = useI18n()
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+        return () => clearInterval(timer)
+    }, [])
     const [isMobile, setIsMobile] = useState(false)
     const handleLogout = async () => {
         try {
@@ -171,108 +179,99 @@ export default function AccountHUD() {
 
     return (
         <>
-            <div
-                className={clsx(
-                    "fixed left-1/2 -translate-x-1/2 z-[1000] pointer-events-none w-auto max-w-[95vw] px-2 transition-all duration-500",
-                    isMobile ? "bottom-6" : "top-6"
-                )}
-            >
+            <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[2000] pointer-events-none w-auto max-w-[90vw] px-2 flex items-center justify-center h-[56px]">
                 <motion.div
-                    initial={{ y: isMobile ? 100 : -100, opacity: 0 }}
+                    initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="bg-white/80 backdrop-blur-2xl px-4 py-2 rounded-full border border-white/80 shadow-[0_12px_40px_rgba(0,0,0,0.12)] flex items-center gap-3 sm:gap-4 pointer-events-auto ring-1 ring-black/[0.05]"
+                    className="h-10 bg-[var(--surface-warm)] border-2 border-black/20 shadow-[0_15px_40px_rgba(0,0,0,0.15)] rounded-xl flex items-center gap-4 px-4 pointer-events-auto relative active-panel overflow-hidden"
                 >
-                    {/* Profile Section */}
-                    <div className="flex items-center gap-3 pr-4 border-r border-black/[0.05]">
-                        <motion.div
-                            whileTap={{ scale: 0.95 }}
-                            className="relative cursor-pointer"
-                            onClick={() => (window.location.href = stats.isParent ? '/admin/console' : '/admin/profile')}
-                        >
-                            <div className="w-8 h-8 rounded-full bg-slate-100 shadow-sm overflow-hidden flex items-center justify-center border border-black/[0.03]">
-                                {stats.avatar && stats.avatar.length > 2 ? (
-                                    <Image
-                                        src={stats.avatar}
-                                        alt={stats.name}
-                                        width={32}
-                                        height={32}
-                                        className="w-full h-full object-cover"
-                                        priority
-                                    />
-                                ) : (
-                                    <span className="text-[13px] font-black text-slate-400">{stats.name?.[0]?.toUpperCase() || 'U'}</span>
-                                )}
-                            </div>
-                        </motion.div>
-                        <div className="flex flex-col">
-                            <span className="text-[11px] font-black text-slate-800 leading-none">{stats.nickname || stats.name}</span>
+                    {/* Industrial Panel Texture & Decorative Screws */}
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[radial-gradient(circle_at_center,black_1px,transparent_1px)] bg-[length:12px_12px]" />
+                    <div className="absolute top-0.5 left-1 w-0.5 h-0.5 rounded-full bg-black/10" />
+                    <div className="absolute top-0.5 right-1 w-0.5 h-0.5 rounded-full bg-black/10" />
+
+                    {/* Left: VFD Terminal (Clock) */}
+                    <div className="flex items-center gap-2 relative z-10 shrink-0 pr-3 border-r border-black/5">
+                        <div className="px-2.5 py-1 bg-black/95 rounded shadow-inner border border-white/10 flex flex-col min-w-[60px] overflow-hidden relative">
+                            {/* CRT Glow & Scanlines Overlay */}
+                            <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0)_50%,rgba(16,185,129,0.05)_50%)] bg-[length:100%_2px] pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
+                            <span className="label-mono text-[10px] font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] relative z-10 text-center tracking-wider">
+                                {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}
+                            </span>
                         </div>
                     </div>
 
-                    {/* Children Section (Parent only) - Hidden on extreme mobile to save space */}
-                    {stats.isParent && children.length > 0 && (
-                        <Link href="/admin/stats" className="hidden sm:flex items-center gap-1.5 px-1 hover:opacity-70 transition-opacity">
-                            <UsersRound className="w-4 h-4 text-slate-400 fill-slate-400 shrink-0" />
-                            <span className="text-[13px] font-medium text-slate-600">{children.length}</span>
-                        </Link>
-                    )}
-
-                    {/* Economy Section */}
-                    <div className="flex items-center gap-2 sm:gap-4">
-                        {/* Coins */}
-                        {stats.isParent ? (
-                            <button
-                                onClick={() => { setRechargeType('CURRENCY'); setShowRechargeModal(true); }}
-                                className="flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-transform"
-                            >
-                                <Coins className="w-4 h-4 text-amber-500 fill-amber-500" />
-                                <span className="text-[13px] font-medium text-slate-600">{stats.coins ?? 0}</span>
-                            </button>
-                        ) : (
-                            <div className="flex items-center gap-1.5">
-                                <Coins className="w-4 h-4 text-amber-500 fill-amber-500" />
-                                <span className="text-[13px] font-medium text-slate-600">{stats.coins ?? 0}</span>
+                    {/* Center: Curated Asset Wells */}
+                    <div className="flex items-center gap-3 z-10 px-0.5">
+                        <div className="flex items-center gap-1.5 group/asset">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 hardware-well rounded-lg bg-[var(--well-bg)] border-b border-white/40">
+                                <Coins className="w-3.5 h-3.5 text-amber-500 fill-amber-500 group-hover/asset:rotate-12 transition-transform" />
+                                <span className="label-mono text-[13px] font-black text-slate-900 tracking-tighter">{stats.coins ?? 0}</span>
                             </div>
-                        )}
+                        </div>
 
-                        {/* Stars */}
-                        {stats.isParent ? (
-                            <button
-                                onClick={() => { setRechargeType('GOLD_STAR'); setShowRechargeModal(true); }}
-                                className="flex items-center gap-1.5 hover:scale-105 active:scale-95 transition-transform"
-                            >
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                <span className="text-[13px] font-medium text-slate-600">{stats.goldStars ?? 0}</span>
-                            </button>
-                        ) : (
-                            <div className="flex items-center gap-1.5">
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                                <span className="text-[13px] font-medium text-slate-600">{stats.goldStars ?? 0}</span>
+                        <div className="flex items-center gap-1.5 group/asset">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 hardware-well rounded-lg bg-[var(--well-bg)] border-b border-white/40">
+                                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 group-hover/asset:scale-110 transition-transform" />
+                                <span className="label-mono text-[13px] font-black text-slate-900 tracking-tighter">{stats.goldStars ?? 0}</span>
                             </div>
-                        )}
-
-                        {/* Member Center Link */}
-                        <button
-                            onClick={() => {
-                                window.location.href = '/member'
-                            }}
-                            className="flex items-center text-indigo-500 hover:text-indigo-600 transition-colors p-1"
-                            title="Member Center"
-                        >
-                            <LayoutGrid className="w-4 h-4" />
-                        </button>
-
-                        {/* Growth Record */}
-                        <button
-                            onClick={() => setShowGrowthModal(true)}
-                            className="flex items-center text-emerald-600 hover:text-emerald-700 transition-colors p-1"
-                            title={t('parent.growth')}
-                        >
-                            <Ruler className="w-4 h-4" />
-                        </button>
+                            {stats.isParent && (
+                                <button
+                                    onClick={() => { setRechargeType('GOLD_STAR'); setShowRechargeModal(true); }}
+                                    className="hardware-btn group"
+                                >
+                                    <div className="w-4 h-4 hardware-well rounded-md bg-amber-500 shadow-cap flex items-center justify-center text-white active:translate-y-px hover:brightness-110">
+                                        <span className="text-[9px] font-black">+</span>
+                                    </div>
+                                </button>
+                            )}
+                        </div>
                     </div>
 
+                    {/* Right: Operations & Switches */}
+                    <div className="flex items-center gap-3 relative z-10 shrink-0 pl-1 border-l border-black/5">
+                        {/* Member Center Switch */}
+                        <button
+                            onClick={() => window.location.href = '/member'}
+                            className="hardware-btn group relative"
+                            title="Member Center"
+                        >
+                            <div className="w-7 h-7 hardware-well rounded-lg flex items-center justify-center bg-indigo-50/50">
+                                <div className="hardware-cap absolute inset-0.5 bg-indigo-600 text-white rounded-md flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap">
+                                    <IdCard className="w-4 h-4" />
+                                </div>
+                            </div>
+                        </button>
 
+                        <div className="flex items-center gap-2 px-1.5 py-1 bg-black/[0.03] rounded-lg">
+                            {/* Growth Switch */}
+                            <button
+                                onClick={() => setShowGrowthModal(true)}
+                                className="hardware-btn group relative"
+                                title="Growth Record"
+                            >
+                                <div className="w-7 h-7 hardware-well rounded-lg flex items-center justify-center bg-emerald-50/50">
+                                    <div className="hardware-cap absolute inset-0.5 bg-emerald-600 text-white rounded-md flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap">
+                                        <Ruler className="w-3.5 h-3.5" />
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Stats Switch */}
+                            <Link
+                                href="/admin/stats"
+                                className="hardware-btn group relative"
+                                title="Statistics"
+                            >
+                                <div className="w-7 h-7 hardware-well rounded-lg flex items-center justify-center bg-amber-50/50">
+                                    <div className="hardware-cap absolute inset-0.5 bg-amber-600 text-white rounded-md flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap">
+                                        <SquareActivity className="w-3.5 h-3.5" />
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
                 </motion.div>
             </div>
 

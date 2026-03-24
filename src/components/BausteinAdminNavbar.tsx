@@ -7,7 +7,8 @@ import {
     Power,
     LayoutGrid,
     Settings,
-    Cpu
+    Cpu,
+    Blocks
 } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
@@ -28,7 +29,7 @@ interface Stats {
     systemName: string
 }
 
-export default function BausteinAdminNavbar() {
+export default function BausteinAdminNavbar({ isEditing, onToggleEdit }: { isEditing?: boolean, onToggleEdit?: () => void }) {
     const { locale, setLocale } = useI18n()
     const [stats, setStats] = useState<Stats | null>(null)
     const [status, setStatus] = useState('NOMINAL')
@@ -70,7 +71,7 @@ export default function BausteinAdminNavbar() {
     if (!stats) return null
 
     return (
-        <header className="sticky top-0 z-[100] w-full bg-transparent p-6 md:p-10 flex items-center justify-between font-sans select-none h-[100px] pointer-events-none">
+        <header className="sticky top-0 z-[100] w-full bg-transparent px-6 md:px-10 flex items-center justify-between font-sans select-none h-[56px] pointer-events-none">
             {/* Elements inside will need pointer-events-auto */}
             
             {/* Left Section: System Brand & Status */}
@@ -129,6 +130,22 @@ export default function BausteinAdminNavbar() {
                 )}
 
                 <div className="flex items-center gap-3">
+                    {/* Widget Adjustment Toggle */}
+                    <button 
+                        onClick={onToggleEdit}
+                        className="hardware-btn group"
+                        title="Adjust Widgets"
+                    >
+                        <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[#DADBD4] shadow-well overflow-hidden relative">
+                            <div className={clsx(
+                                "hardware-cap absolute inset-1.5 bg-white rounded-lg flex items-center justify-center transition-all shadow-cap active:translate-y-0.5 group/blocks",
+                                isEditing ? "bg-indigo-600 text-white" : "group-hover:bg-slate-50 text-slate-400"
+                            )}>
+                                <Blocks className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
+                            </div>
+                        </div>
+                    </button>
+
                     {/* User Profile Trigger */}
                     <button 
                         onClick={() => window.location.href = stats.isParent ? '/admin/console?view=PROFILE' : '/admin/profile'}

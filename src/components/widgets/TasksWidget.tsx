@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { CheckCircle2, Circle, Star } from 'lucide-react'
+import { Check, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -15,6 +15,37 @@ interface Task {
     isAssigned?: boolean
     plannedTime?: string | number | null
     createdAt?: string | number | null
+}
+
+const getRelativeTimeLabel = (dateStr: string | number | null | undefined) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    const now = new Date();
+    
+    // Reset hours to compare dates only
+    const dDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const dNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffDays = Math.round((dDate.getTime() - dNow.getTime()) / (1000 * 3600 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tom';
+    
+    // Check if within this week
+    const startOfW = new Date(dNow);
+    startOfW.setDate(dNow.getDate() - dNow.getDay());
+    const endOfW = new Date(startOfW);
+    endOfW.setDate(startOfW.getDate() + 6);
+    
+    if (dDate >= startOfW && dDate <= endOfW) return 'Week';
+    
+    // Check if within this month
+    if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) return 'M';
+    
+    // Year
+    if (date.getFullYear() === now.getFullYear()) return 'Y';
+    
+    return null;
 }
 
 export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: string, cellSize?: number }) {
@@ -67,45 +98,57 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
         >
             <div className="flex-1 space-y-2 overflow-hidden">
                     {tasks.length > 0 ? (
-                        tasks.map((task) => (
-                            <div
-                                key={task.id}
-                                className="flex items-center justify-between p-2.5 bg-white border border-black/5 rounded-lg shadow-sm group-hover:bg-slate-50 transition-colors min-w-0"
-                            >
-                                <div className="flex items-center gap-3 overflow-hidden min-w-0">
-                                    {task.completed ? (
-                                        <CheckCircle2
-                                            className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : "text-indigo-500"}
-                                            style={{ width: cellSize * 0.16, height: cellSize * 0.16 }}
-                                        />
-                                    ) : (
-                                        <Circle
-                                            className="text-slate-300 shrink-0"
-                                            style={{ width: cellSize * 0.16, height: cellSize * 0.16 }}
-                                        />
-                                    )}
-                                    <span
-                                        className={`font-black text-slate-800 truncate tracking-tight ${task.completed ? 'line-through opacity-30 font-medium' : ''}`}
-                                        style={{ fontSize: Math.max(9, cellSize * 0.11) }}
-                                    >
-                                        {task.title}
-                                    </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-2 shrink-0 ml-auto pl-2">
-                                    {(size !== 'SQUARE' && size !== 'SMALL') && (task.rewardStars > 0 || task.rewardCoins > 0) && (
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            {task.rewardStars > 0 && (
-                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-50 rounded-md border border-yellow-100">
-                                                    <Star style={{ width: cellSize * 0.08, height: cellSize * 0.08 }} className="text-yellow-500 fill-yellow-500" />
-                                                    <span style={{ fontSize: Math.max(8, cellSize * 0.08) }} className="label-mono text-yellow-700">{task.rewardStars}</span>
-                                                </div>
+                        tasks.map((task) => {
+                            const timeLabel = getRelativeTimeLabel(task.plannedTime);
+                            return (
+                                <div
+                                    key={task.id}
+                                    className={`flex items-center justify-between p-2 px-3 rounded-lg border transition-all group/task relative min-w-0 ${
+                                        task.completed 
+                                        ? 'bg-black/[0.02] border-black/[0.02] opacity-40 shadow-none scale-[0.98]' 
+                                        : 'bg-[var(--well-bg)]/40 border-black/5 shadow-inner hover:bg-black/[0.05]'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                                        {/* Industrial Optimized Checkbox */}
+                                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-all ${task.completed ? 'bg-emerald-500/10 border-emerald-500/20 shadow-inner' : 'bg-white/40 border-black/5 shadow-cap'}`}>
+                                            {task.completed && (
+                                                <Check
+                                                    className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : "text-emerald-500"}
+                                                    style={{ width: cellSize * 0.1, height: cellSize * 0.1 }}
+                                                />
                                             )}
                                         </div>
-                                    )}
+                                        <span
+                                            className={`font-medium tracking-tight truncate uppercase ${task.completed ? 'text-slate-400 line-through opacity-50' : 'text-slate-800'}`}
+                                            style={{ fontSize: Math.max(8, cellSize * 0.08) }}
+                                        >
+                                            {task.title}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2 shrink-0 ml-auto pl-2">
+                                        {/* Relative Time Label */}
+                                        {timeLabel && !task.completed && (
+                                            <span className="label-mono text-[7px] text-slate-400 opacity-60 uppercase tracking-widest bg-black/[0.03] px-1.5 py-0.5 rounded-sm">
+                                                {timeLabel}
+                                            </span>
+                                        )}
+                                        
+                                        {(size !== 'SQUARE' && size !== 'SMALL') && (task.rewardStars > 0 || task.rewardCoins > 0) && (
+                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                {task.rewardStars > 0 && (
+                                                    <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-500/10 rounded-md border border-yellow-500/20">
+                                                        <Star style={{ width: cellSize * 0.08, height: cellSize * 0.08 }} className="text-yellow-600 fill-yellow-600" />
+                                                        <span style={{ fontSize: Math.max(7, cellSize * 0.07) }} className="label-mono text-yellow-700">{task.rewardStars}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            )
+                        })
                     ) : (
                         size !== 'ICON' && (
                             <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-60">

@@ -46,20 +46,20 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                     notes.map((note) => (
                         <div
                             key={note.id}
-                            className="flex items-center justify-between p-2.5 bg-white border border-black/5 rounded-lg shadow-sm group-hover:bg-slate-50 transition-colors"
+                            className="flex items-center justify-between p-2 px-3 rounded-lg shadow-inner border border-black/5 transition-all group/note min-w-0 hover:brightness-[0.98] active:scale-[0.99]"
+                            style={{ backgroundColor: note.color ? `${note.color}40` : '#FEF3C740' }}
                         >
-                            <div className="flex items-center gap-2 flex-1 overflow-hidden">
-                                <div className="w-2 h-2 rounded-full shrink-0 shadow-inner" style={{ backgroundColor: note.color || '#FEF3C7' }} />
+                            <div className="flex items-center gap-3 flex-1 overflow-hidden">
                                 <p
-                                    className="font-black text-slate-800 tracking-tight truncate"
-                                    style={{ fontSize: Math.max(9, cellSize * 0.11) }}
+                                    className="font-medium text-slate-800/80 tracking-tight truncate uppercase"
+                                    style={{ fontSize: Math.max(8, cellSize * 0.08) }}
                                 >
                                     {note.text}
                                 </p>
                             </div>
                             {note.isPinned && (
                                 <Pin
-                                    className="text-amber-500 fill-amber-500 shrink-0 ml-1"
+                                    className="text-amber-500 fill-amber-500 shrink-0 ml-2 opacity-60"
                                     style={{ width: cellSize * 0.1, height: cellSize * 0.1 }}
                                 />
                             )}

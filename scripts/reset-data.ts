@@ -57,6 +57,9 @@ async function main() {
     if (answer.toLowerCase() === 'y') {
         process.stdout.write('Executing Reset Operation...\n');
         
+        // Disable foreign keys for reset
+        sqlite.exec('PRAGMA foreign_keys = OFF');
+        
         const tablesToClear = [
             'familyNote', 'task', 'ledgerRecord', 'storageItems', 'growthRecord',
             'journal', 'journalMedia', 'accountStatsLog', 'currencyLog',

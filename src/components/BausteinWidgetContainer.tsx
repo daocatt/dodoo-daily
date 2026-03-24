@@ -12,6 +12,7 @@ interface BausteinWidgetContainerProps {
   icon?: React.ReactNode
   accentColor?: string
   className?: string
+  isIconOnly?: boolean
 }
 
 export default function BausteinWidgetContainer({
@@ -21,7 +22,8 @@ export default function BausteinWidgetContainer({
   label,
   icon,
   accentColor = 'bg-slate-500',
-  className
+  className,
+  isIconOnly = false
 }: BausteinWidgetContainerProps) {
   return (
     <div className={clsx(
@@ -43,7 +45,8 @@ export default function BausteinWidgetContainer({
         whileTap={!isEditing ? { scale: 0.98, y: 3 } : undefined}
         onClick={onClick}
         className={clsx(
-          "w-full h-full bg-[#F4F4F2] rounded-xl overflow-hidden border-2 border-black/5 shadow-cap transition-all relative",
+          "w-full h-full overflow-hidden transition-all relative rounded-xl border-2 border-black/5 shadow-cap",
+          isIconOnly ? accentColor : "bg-[#F4F4F2]",
           !isEditing && "cursor-pointer active:translate-y-1 hover:brightness-[1.02] hover:shadow-lg"
         )}
       >

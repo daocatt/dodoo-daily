@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { 
     MessageSquare, 
@@ -12,7 +12,8 @@ import {
     ExternalLink as ExternalLinkIcon,
     Settings,
     Heart,
-    Package
+    Package,
+    Fan
 } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -99,10 +100,6 @@ export default function MemberCenter({ member, onUpdateCurrency }: {
     const [addressInput, setAddressInput] = useState(member.address || '')
     const [savingAddress, setSavingAddress] = useState(false)
 
-    useEffect(() => {
-        fetchData()
-        fetchMessages()
-    }, [fetchData, fetchMessages])
     const fetchData = useCallback(async () => {
         try {
             const [logsRes, ordersRes, likesRes] = await Promise.all([
@@ -129,6 +126,11 @@ export default function MemberCenter({ member, onUpdateCurrency }: {
             console.error('Failed to fetch messages', _err)
         }
     }, [member.id])
+
+    useEffect(() => {
+        fetchData()
+        fetchMessages()
+    }, [fetchData, fetchMessages])
 
     const handleSaveAddress = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -228,7 +230,7 @@ export default function MemberCenter({ member, onUpdateCurrency }: {
                     <Link href="/family/exhibitions" title="Family Exhibition" className="hardware-btn block">
                         <div className="hardware-well p-1 rounded-xl">
                             <div className="hardware-cap bg-white p-2.5 rounded-lg text-slate-600 flex items-center justify-center">
-                                <LayoutGrid className="w-4 h-4" />
+                                <Fan className="w-4 h-4 text-slate-600 animate-spin-slow" />
                             </div>
                         </div>
                     </Link>

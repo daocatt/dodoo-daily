@@ -11,7 +11,8 @@ import {
     Power, 
     Image as ImageIcon, 
     Palette, 
-    Shield 
+    Shield,
+    Fan
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
@@ -212,7 +213,7 @@ export default function ParentDashboard() {
                                     <div className="hardware-well h-48 rounded-2xl bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative">
                                         <div className="hardware-cap absolute inset-2 bg-white rounded-xl p-6 flex flex-col items-start gap-4 group-hover:bg-slate-50 transition-all shadow-cap">
                                             <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100 shrink-0 shadow-inner">
-                                                <Palette className="w-6 h-6 text-indigo-500" />
+                                                <Fan className="w-6 h-6 text-indigo-500 animate-spin-slow" />
                                             </div>
                                             <div>
                                                 <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase">{t('parent.exhibition')}</h2>

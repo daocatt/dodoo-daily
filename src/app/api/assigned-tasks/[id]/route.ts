@@ -8,7 +8,7 @@ import { notifyParents, sendPushNotification } from '@/lib/push'
 
 export async function PUT(
     req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -110,10 +110,10 @@ export async function PUT(
 
 export async function DELETE(
     _req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await _params
+        const { id } = await params
         const { userId: currentUserId, role } = await getSessionUser()
         const [t] = await db.select().from(task).where(and(eq(task.id, id), isNotNull(task.assignerId)))
 

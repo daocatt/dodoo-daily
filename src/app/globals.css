@@ -434,3 +434,44 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
 }
+/* ─────────────────────────────────────────────────────────
+   HUD Interface Overlays
+───────────────────────────────────────────────────────── */
+.hud-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  background: 
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.01));
+  background-size: 100% 4px, 3px 100%;
+  opacity: 0.3;
+}
+
+.hud-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5000;
+  box-shadow: inset 0 0 100px rgba(0,0,0,0.1);
+  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.03) 100%);
+}
+
+.hud-border {
+  position: fixed;
+  inset: 12px;
+  pointer-events: none;
+  z-index: 4000;
+  border: 1px solid rgba(0,0,0,0.03);
+  border-radius: 32px;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}

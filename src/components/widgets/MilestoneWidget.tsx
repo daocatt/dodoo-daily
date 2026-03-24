@@ -44,13 +44,12 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
     if (size === 'ICON') return null
 
     return (
-        <motion.div
-            whileHover={{ scale: 1.01 }}
+        <div
             onClick={() => router.push('/journal?filter=milestone')}
-            className="w-full h-full bg-orange-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border-2 border-orange-100 hover:border-orange-400 shadow-xl shadow-orange-200/10 flex flex-col group overflow-hidden relative cursor-pointer transition-all duration-300"
+            className="w-full h-full px-4 pt-3 pb-4 md:px-5 md:pt-3 md:pb-5 flex flex-col group overflow-hidden relative cursor-pointer bg-orange-50/10"
         >
-            <div className={`flex items-center justify-end ${size === 'ICON' ? '' : 'mb-2'}`}>
-                <ChevronRight style={{ width: cellSize * 0.15, height: cellSize * 0.15 }} className="text-orange-300 group-hover:translate-x-1 transition-transform" />
+            <div className={`flex items-center justify-end ${size === 'ICON' ? '' : 'mb-0.5 z-10'}`}>
+                <ChevronRight style={{ width: cellSize * 0.08, height: cellSize * 0.08 }} className="text-orange-300/40 group-hover:translate-x-1 transition-transform" />
             </div>
 
             <div className="flex-1 flex flex-col justify-center relative min-h-[140px]">
@@ -81,7 +80,7 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
                                             isTop ? "mb-auto pb-2" : "mt-auto pt-2"
                                         )}>
                                             <span
-                                                className="font-black text-orange-500 uppercase tracking-tight mb-0.5 bg-orange-50 px-1.5 py-0.5 rounded-md"
+                                                className="font-black text-orange-500 uppercase tracking-tight mb-0.5 bg-orange-50 px-1.5 py-0.5 rounded-sm"
                                                 style={{ fontSize: Math.max(6, cellSize * 0.05) }}
                                             >
                                                 {d.toLocaleDateString(undefined, { year: '2-digit', month: '2-digit', day: '2-digit' })}
@@ -119,6 +118,6 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
                     </div>
                 )}
             </div>
-        </motion.div>
+        </div>
     )
 }

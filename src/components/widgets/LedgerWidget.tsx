@@ -1,8 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion } from 'motion/react'
-import { Wallet } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -49,24 +47,22 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
     }
 
     return (
-        <motion.div
-            whileHover={{ scale: 1.01 }}
-            onClick={() => router.push('/ledger')}
-            className={`w-full h-full bg-indigo-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-indigo-100/50 shadow-xl shadow-indigo-200/20 flex flex-col group overflow-hidden relative cursor-pointer`}
+        <div
+            onClick={() => router.push('/admin/ledger')}
+            className="w-full h-full px-4 pt-10 pb-4 md:px-5 md:pt-10 md:pb-5 flex flex-col group overflow-hidden relative cursor-pointer"
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2 z-10'}`}>
-                <div />
-                {/* Total Balance right aligned */}
-                {size !== 'ICON' && (
-                    <div
-                        className="px-2 py-0.5 bg-indigo-100/80 rounded-full font-black text-indigo-700 uppercase tracking-widest leading-none flex items-center gap-1 shadow-sm border border-indigo-200/50"
-                        style={{ fontSize: Math.max(9, cellSize * 0.08) }}
-                    >
-                        <span className="opacity-70">¥</span>
-                        {formatCompactNumber(balance)}
+            {/* Total Balance Well — Absolute positioned to align with the industrial header */}
+            {size !== 'ICON' && (
+                <div className="absolute top-3 right-4 z-20 flex items-center pointer-events-none">
+                    <div className="px-2 py-0.5 hardware-well rounded-md flex items-center gap-1.5 shadow-inner border border-black/5 opacity-50 bg-black/[0.02]">
+                        <span className="label-mono text-[7px] text-slate-400 uppercase tracking-wider">Total</span>
+                        <div className="flex items-center gap-0.5">
+                            <span className="text-[7.5px] font-medium text-indigo-500">¥</span>
+                            <span className="label-mono text-[8.5px] font-medium text-slate-800">{formatCompactNumber(balance)}</span>
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             <div className="flex-1 space-y-2.5 overflow-hidden z-10 flex flex-col justify-center">
                 {records.length > 0 ? (
@@ -75,41 +71,36 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
                         return (
                             <div
                                 key={record.id}
-                                className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-indigo-200 transition-colors shadow-sm min-w-0"
+                                className="flex items-center justify-between p-2 px-3 rounded-lg shadow-inner border border-black/5 transition-all group/note min-w-0 hover:brightness-[0.98] active:scale-[0.99]"
                             >
-                                <div className="flex items-center gap-2 overflow-hidden min-w-0">
-                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 ${isIncome ? 'bg-emerald-50' : 'bg-orange-50'}`}>
+                                <div className="flex items-center gap-3 overflow-hidden min-w-0">
+                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] shrink-0 shadow-inner border border-black/5 ${isIncome ? 'bg-red-500/10 border-red-500/10' : 'bg-emerald-500/10 border-emerald-500/10'}`}>
                                         {record.category?.emoji || '💰'}
                                     </div>
                                     <span
-                                        className="font-bold text-slate-700 truncate min-w-0"
-                                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                                        className="font-medium text-slate-800 truncate min-w-0 tracking-tight uppercase"
+                                        style={{ fontSize: Math.max(8, cellSize * 0.08) }}
                                     >
                                         {record.description || record.category?.name}
                                     </span>
                                 </div>
                                 <div 
-                                    className={`shrink-0 font-black font-number flex items-center gap-0.5 ${isIncome ? 'text-emerald-500' : 'text-slate-600'}`}
-                                    style={{ fontSize: Math.max(8, cellSize * 0.09) }}
+                                    className={`shrink-0 font-medium label-mono flex items-center gap-0.5 ${isIncome ? 'text-red-500' : 'text-emerald-600'}`}
+                                    style={{ fontSize: Math.max(8, cellSize * 0.08) }}
                                 >
-                                    {isIncome ? '+' : '-'}{record.amount.toFixed(2)}
+                                    {isIncome ? '+' : '-'}{record.amount.toFixed(0)}
                                 </div>
                             </div>
                         )
                     })
                 ) : (
                     size !== 'ICON' && (
-                        <div className="h-full flex flex-col items-center justify-center text-indigo-300 opacity-40 italic font-medium" style={{ fontSize: Math.max(8, cellSize * 0.09) }}>
-                            <span>{t('ledger.noRecords')}</span>
+                        <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-60">
+                             <span className="label-mono text-[9px] uppercase tracking-widest">{t('ledger.noRecords')}</span>
                         </div>
                     )
                 )}
             </div>
-
-            {/* Background decorative Icon */}
-            {size !== 'ICON' && (
-                <Wallet className="absolute -right-4 -bottom-4 w-32 h-32 text-indigo-500 opacity-[0.03] rotate-[-15deg] group-hover:rotate-0 transition-transform duration-700 pointer-events-none" />
-            )}
-        </motion.div>
+        </div>
     )
 }

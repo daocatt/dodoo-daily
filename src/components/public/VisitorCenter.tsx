@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { 
     User, 
@@ -15,7 +15,8 @@ import {
     Loader2,
     ArrowUpRight,
     ArrowDownRight,
-    LayoutGrid
+    LayoutGrid,
+    Fan
 } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
@@ -288,7 +289,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
                     <Link href="/family/exhibitions" title="Family Exhibition" className="hardware-btn block">
                         <div className="hardware-well p-1 rounded-xl">
                             <div className="hardware-cap bg-white p-2.5 rounded-lg text-slate-600 flex items-center justify-center">
-                                <LayoutGrid className="w-4 h-4" />
+                                <Fan className="w-4 h-4 text-slate-600 animate-spin-slow" />
                             </div>
                         </div>
                     </Link>

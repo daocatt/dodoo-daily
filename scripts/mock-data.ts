@@ -86,6 +86,14 @@ async function main() {
         "Schedule dentist appointment"
     ];
     for (let i = 0; i < 10; i++) {
+        const now = new Date();
+        let plannedTime;
+        if (i === 0) plannedTime = new Date(now); // Today
+        else if (i === 1) plannedTime = new Date(now.setDate(now.getDate() + 1)); // Tomorrow
+        else if (i === 2) plannedTime = new Date(now.setDate(now.getDate() + 3)); // This week
+        else if (i === 3) plannedTime = new Date(now.setMonth(now.getMonth() + 1)); // Next month (M)
+        else plannedTime = new Date(now.setFullYear(now.getFullYear() + 1)); // Next year (Y)
+
         await db.insert(schema.task).values({
             creatorId: userId,
             assignerId: userId,
@@ -94,8 +102,8 @@ async function main() {
             description: "Automatically generated mock task description.",
             rewardStars: Math.floor(Math.random() * 5) + 1,
             rewardCoins: Math.floor(Math.random() * 10),
-            completed: i % 3 === 0,
-            plannedTime: new Date(Date.now() + (i - 5) * 86400000) // Some past, some future
+            completed: i % 2 === 0, // 50% completed
+            plannedTime: plannedTime
         });
     }
 
@@ -169,23 +177,23 @@ async function main() {
         });
     }
 
-    // 7. Mock Milestone Timeline (Birth to University)
-    console.log('Generating Milestone Timeline...');
+    // 7. Mock Milestone Timeline (Birth to University) - 18 years span
+    console.log('Generating Milestone Timeline (18 Years)...');
     const milestones = [
-        { title: "Hello World! (Birth)", years: -20, desc: "A star is born! Welcome to the family." },
-        { title: "First Steps", years: -19, desc: "Taking the first tiny steps into the big world." },
-        { title: "Started Kindergarten", years: -16, desc: "The beginning of the educational journey." },
-        { title: "Elementary Graduation", years: -14, desc: "Finished the first long mile of school." },
-        { title: "Middle School Explorer", years: -11, desc: "Discovering new interests and friendships." },
-        { title: "High School Entry", years: -7, desc: "Entering the final stage of youth education." },
-        { title: "High School Graduation", years: -3, desc: "A big milestone! Ready for the next adventure." },
-        { title: "University Enrollment", years: -2, desc: "Moving to the campus. Opening a new chapter." },
-        { title: "University Life - Year 3", years: 0, desc: "Exploring deep academic fields and life skills." }
+        { title: "Hello World! (Birth)", date: "2008-01-01", desc: "A star is born! Welcome to the family." },
+        { title: "First Steps", date: "2009-03-15", desc: "Taking the first tiny steps into the big world." },
+        { title: "Kindergarten Entry", date: "2011-09-01", desc: "Starting the social journey with new friends." },
+        { title: "Primary School Entry", date: "2015-09-01", desc: "Entering the gates of formal education!" },
+        { title: "Art Excellence Award", date: "2017-05-01", desc: "Won the Painting Excellence Award! A creative spark." },
+        { title: "Primary School Graduation", date: "2020-06-20", desc: "Finished the first long mile of school with honors." },
+        { title: "Middle School Entry", date: "2020-09-01", desc: "Moving up to the next big challenge." },
+        { title: "Middle School Graduation", date: "2023-06-25", desc: "Youth is blooming. Ready for High School." },
+        { title: "High School Entry", date: "2023-09-01", desc: "Entering the final stage of youth education." },
+        { title: "University Entry", date: "2026-09-01", desc: "Opening a new chapter! Moving to campus life." }
     ];
 
     for (const m of milestones) {
-        const date = new Date();
-        date.setFullYear(date.getFullYear() + m.years);
+        const date = new Date(m.date);
         await db.insert(schema.journal).values({
             authorId: userId,
             authorRole: superadmin.role,

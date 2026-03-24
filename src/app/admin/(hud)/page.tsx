@@ -16,7 +16,6 @@ import PhotoWidget from '@/components/widgets/PhotoWidget'
 import MilestoneWidget from '@/components/widgets/MilestoneWidget'
 import LedgerWidget from '@/components/widgets/LedgerWidget'
 import StorageWidget from '@/components/widgets/StorageWidget'
-import MyGalleryWidget from '@/components/widgets/MyGalleryWidget'
 import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
 import BausteinWidgetContainer from '@/components/BausteinWidgetContainer'
 
@@ -501,7 +500,6 @@ export default function Home() {
         STORAGE: '/admin/storage'
       }
       if (routes[w.type]) router.push(routes[w.type])
-      if (w.type === 'MYGALLERY') router.push('/member')
     }
 
     const config = {
@@ -513,7 +511,6 @@ export default function Home() {
         MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('parent.milestone') },
         LEDGER:    { Icon: Wallet,        bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
         STORAGE:   { Icon: Package,       bg: 'bg-amber-600',  glow: 'shadow-amber-600/30', label: t('storage.title') || '物资' },
-        MYGALLERY: { Icon: Sparkles,      bg: 'bg-emerald-500', glow: 'shadow-emerald-500/30', label: t('widget.myGallery.title') },
     }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
     const isIconOnly = w.size === 'ICON' || ICON_ONLY_WIDGETS.includes(w.type)
@@ -522,16 +519,17 @@ export default function Home() {
       <BausteinWidgetContainer
         onClick={handleWidgetClick}
         isEditing={isEditing}
+        isIconOnly={isIconOnly}
         label={!isIconOnly ? config.label : undefined}
         icon={!isIconOnly ? <config.Icon className="w-2 h-2" /> : undefined}
         accentColor={config.bg}
       >
         {isIconOnly ? (
-            <div className={clsx("w-full h-full flex flex-col items-center justify-center gap-2", config.bg, "text-white")}>
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shadow-inner backdrop-blur-sm">
-                    <config.Icon className="w-6 h-6" />
-                </div>
-                <span className="font-black text-[10px] uppercase tracking-widest">{config.label}</span>
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 group/icon relative shadow-[inset_0_2px_12px_rgba(0,0,0,0.3)] transition-all active:scale-[0.98]">
+                <config.Icon className="w-8 h-8 text-white drop-shadow-md transition-transform group-hover/icon:scale-110" />
+                <span className="label-mono text-[11px] font-black text-white uppercase tracking-[0.15em] drop-shadow-sm select-none opacity-80 group-hover/icon:opacity-100 transition-opacity">
+                    {config.label}
+                </span>
             </div>
         ) : (
             (() => {
@@ -543,7 +541,6 @@ export default function Home() {
                     case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
                     case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
                     case 'STORAGE': return <StorageWidget size={w.size} cellSize={cellSize} />
-                    case 'MYGALLERY': return <MyGalleryWidget />
                     default: return <div>Unknown {w.type}</div>
                 }
             })()
@@ -563,7 +560,10 @@ export default function Home() {
   return (
     <div className="h-dvh w-full flex flex-col relative overflow-hidden app-bg-pattern">
       {/* ─── Integrated Navbar & HUD ─── */}
-      <BausteinAdminNavbar />
+      <BausteinAdminNavbar 
+        isEditing={isEditing} 
+        onToggleEdit={() => setIsEditing(!isEditing)} 
+      />
       
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,var(--surface-warm)_0%,transparent_100%)] z-0" />
       <NatureBackground />
@@ -573,14 +573,11 @@ export default function Home() {
       <AnimatePresence>
         {isEditing && (
           <motion.div
-            initial={{ y: gridCols < 8 ? 100 : -100, opacity: 0 }}
+            initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: gridCols < 8 ? 100 : -100, opacity: 0 }}
+            exit={{ y: 100, opacity: 0 }}
             className={clsx(
-              "fixed left-0 right-0 z-[1000] flex items-center justify-between border-black/20 text-slate-800 shadow-[0_40px_80px_rgba(0,0,0,0.4)] transition-all font-sans overflow-hidden",
-              gridCols < 8
-                ? "bottom-0 h-[84px] px-4 bg-[#E6E2D1] border-t-4 pb-[env(safe-area-inset-bottom)]"
-                : "top-0 h-[72px] px-8 bg-[#E6E2D1] border-b-4"
+              "fixed left-0 right-0 bottom-0 z-[1000] flex items-center justify-between border-t-4 border-black/20 text-slate-800 shadow-[0_-10px_40px_rgba(0,0,0,0.4)] transition-all font-sans overflow-hidden bg-[#E6E2D1] h-[84px] px-8 pb-[env(safe-area-inset-bottom)]",
             )}
           >
             {/* Panel Texture & Screws */}
@@ -627,8 +624,7 @@ export default function Home() {
                   { type: 'SHOP', Icon: ShoppingBag, color: 'text-amber-500' },
                   { type: 'MILESTONE', Icon: Trophy, color: 'text-orange-600' },
                   { type: 'LEDGER', Icon: Wallet, color: 'text-indigo-500' },
-                  { type: 'STORAGE', Icon: Package, color: 'text-amber-700' },
-                  { type: 'MYGALLERY', Icon: Sparkles, color: 'text-emerald-500' }
+                  { type: 'STORAGE', Icon: Package, color: 'text-amber-700' }
                 ].map(({ type, Icon, color }) => {
                   return (
                     <button
@@ -670,11 +666,11 @@ export default function Home() {
               <button
                 onClick={() => setIsEditing(false)}
                 className="hardware-btn group"
+                title={t('parent.done')}
               >
-                <div className="hardware-well h-12 px-6 rounded-xl flex items-center gap-3 bg-[var(--accent-moss)]/10">
-                    <div className="hardware-cap absolute inset-1.5 bg-[var(--accent-moss)] rounded-lg flex items-center justify-center gap-2 group-hover:brightness-110 active:translate-y-0.5 shadow-cap text-white">
-                        <Check className="w-5 h-5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{t('parent.done')}</span>
+                <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--accent-moss)]/10 p-1.5">
+                    <div className="hardware-cap w-full h-full bg-[var(--accent-moss)] rounded-lg flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap text-white">
+                        <Check className="w-5 h-5 shadow-[0_1px_4px_rgba(0,0,0,0.3)]" />
                     </div>
                 </div>
               </button>
@@ -686,7 +682,10 @@ export default function Home() {
       {/* ─── Bento Stage ─── */}
       <main
         ref={stageRef}
-        className="relative flex-1 z-10 w-full h-full flex justify-center no-scrollbar transition-all duration-300 items-center overflow-hidden"
+        className={clsx(
+          "relative flex-1 z-10 w-full h-full flex justify-center no-scrollbar transition-all duration-300 items-center overflow-hidden",
+          isEditing && "pb-[84px]"
+        )}
         style={{
           // @ts-expect-error custom property
           '--cell-size': `${cellSize}px`
@@ -701,25 +700,6 @@ export default function Home() {
         />
         {/* Scrolling Grid Area */}
         <div className="w-full h-full relative overflow-hidden">
-          {/* Decorative Corner Instruments (Static) */}
-          <div className="absolute bottom-10 left-10 pointer-events-none z-[150] flex flex-col gap-2">
-            <div className="label-mono text-[9px] font-black text-slate-400 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              HUD_STAGE_ACTIVE [0.0.3]
-            </div>
-            <div className="w-48 h-[2px] bg-black/[0.05] relative overflow-hidden" />
-          </div>
-
-          <div className="absolute bottom-10 right-10 pointer-events-none z-[150] flex flex-col items-end gap-2 text-right">
-            <div className="label-mono text-[8px] font-black text-slate-400 opacity-30 uppercase tracking-[0.2em]">
-              Precision Grid Bed // Rev. 4.2
-            </div>
-            <div className="flex gap-1">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="w-2 h-0.5 bg-black/10" />
-              ))}
-            </div>
-          </div>
 
           <motion.div
             id="grid-stage"
@@ -830,7 +810,7 @@ export default function Home() {
                       stiffness: 700,
                       damping: 38
                     }}
-                    onPointerDown={(_e) => {
+                    onPointerDown={(e) => {
                       if (isEditing) {
                         const rect = e.currentTarget.getBoundingClientRect()
                         audioRefStart.current?.play().catch(() => { })
@@ -999,13 +979,13 @@ export default function Home() {
       {/* ─── Pagination Dots (iOS Style) ─── */}
       {
         !isEditing && pageCount > 1 && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[150] flex gap-2.5 px-4 py-2 rounded-full bg-black/5 backdrop-blur-sm">
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] flex gap-2.5">
             {Array.from({ length: pageCount }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentPage(i)}
                 className={clsx(
-                  "w-2 h-2 rounded-full transition-all duration-300",
+                  "w-1.5 h-1.5 rounded-full transition-all duration-300",
                   currentPage === i ? "bg-slate-800 scale-125 shadow-sm" : "bg-slate-800/20"
                 )}
               />
