@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { familyNote } from '@/lib/schema'
-import { eq, and, or } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function DELETE(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const { userId, role } = await getSessionUser()
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -35,7 +35,7 @@ export async function PATCH(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const { userId, role } = await getSessionUser()
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

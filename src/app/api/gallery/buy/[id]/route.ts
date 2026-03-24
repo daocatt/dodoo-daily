@@ -2,23 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { artwork, accountStats } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
 import { getSessionUser } from '@/lib/auth';
 
 async function getAuth() {
-    const cookieStore = await cookies()
-    const role = (await getSessionUser())?.role
-    const id = (await getSessionUser())?.userId
-    return { role, id }
+    const session = await getSessionUser()
+    return { role: session?.role, id: session?.userId }
 }
 
 export async function POST(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const { role, id: parentId } = await getAuth()
 
         if (role !== 'PARENT' || !parentId) {
@@ -55,7 +52,7 @@ export async function POST(
             .returning()
 
         return NextResponse.json({ success: true, artwork: updatedArt[0] })
-    } catch (_e) {
+    } catch (e) {
         console.error('Failed to buy artwork:', e)
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 })
     }

@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     try {
         const user = await getSessionUser()
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        const { id: currentUserId, role: currentUserRole } = user
+        const { id: currentUserId } = user
 
         const { searchParams } = new URL(req.url)
         const limit = parseInt(searchParams.get('limit') || '20')

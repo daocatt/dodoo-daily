@@ -97,7 +97,7 @@ export async function PUT(
                     data: { url: '/tasks' }
                 }).catch(e => console.error('Push failed:', e))
             }
-        } catch (_e) {
+        } catch (e) {
             console.error('Trigger notification error:', e)
         }
 
@@ -109,11 +109,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const { userId: currentUserId, role } = await getSessionUser()
         const [t] = await db.select().from(task).where(and(eq(task.id, id), isNotNull(task.assignerId)))
 

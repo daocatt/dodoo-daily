@@ -8,7 +8,7 @@ export async function PUT(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const body = await req.json()
         const { title, albumId, priceRMB, priceCoins, isArchived, isPublic, isFeatured } = body
         
@@ -39,11 +39,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
 
         const currentArtwork = await db.select().from(artwork).where(eq(artwork.id, id))
         if (currentArtwork.length === 0) {

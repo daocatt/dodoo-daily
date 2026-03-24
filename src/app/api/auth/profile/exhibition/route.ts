@@ -27,7 +27,7 @@ export async function PATCH(req: NextRequest) {
     }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const userSession = await getSessionUser()
         if (!userSession) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

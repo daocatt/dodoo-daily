@@ -4,11 +4,11 @@ import { readFile } from 'fs/promises'
 import fs from 'fs'
 
 export async function GET(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ path: string[] }> }
 ) {
     try {
-        const { path } = await params
+        const { path } = await _params
         const filePath = path.join('/')
         // In Docker standalone, process.cwd() is /app. Uploads are in /app/uploads.
         const fullPath = join(process.cwd(), 'uploads', 'images', filePath)

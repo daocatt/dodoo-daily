@@ -2,22 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { growthRecord } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
 
 async function getAuth() {
-    const cookieStore = await cookies()
-    const userId = (await getSessionUser())?.userId
-    const role = (await getSessionUser())?.role
-    return { userId, role }
+    const session = await getSessionUser()
+    return { userId: session?.userId, role: session?.role }
 }
 
 export async function DELETE(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     const { userId, role } = await getAuth()
-    const { id } = await params
+    const { id } = await _params
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {

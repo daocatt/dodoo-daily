@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { album, artwork, users, media } from '@/lib/schema'
+import { album, artwork, media } from '@/lib/schema'
 import { desc, eq, and } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { getSessionUser } from '@/lib/auth';
 
 async function getAuth() {
-    const cookieStore = await cookies()
-    const userId = (await getSessionUser())?.userId
-    const role = (await getSessionUser())?.role
-    return { userId, role }
+    const session = await getSessionUser()
+    return { userId: session?.userId, role: session?.role }
 }
 
 export async function GET(req: NextRequest) {
