@@ -1,8 +1,15 @@
 'use client'
 
+import Image from 'next/image'
+import versionData from '../../../../version.json'
+
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag, Heart, StickyNote, CheckCircle2, Trophy, Images, Layout, Sparkles, Wallet, Package } from 'lucide-react'
+import {
+  Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag,
+  StickyNote, Images, Layout, Sparkles, Wallet, WalletCards,
+  Refrigerator, SquareCheckBig, Fan, SquareStar, CircleStar
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
 import { useI18n } from '@/contexts/I18nContext'
@@ -18,6 +25,23 @@ import LedgerWidget from '@/components/widgets/LedgerWidget'
 import StorageWidget from '@/components/widgets/StorageWidget'
 import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
 import BausteinWidgetContainer from '@/components/BausteinWidgetContainer'
+
+const JournalIconFixed = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg 
+    {...props} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    {/* DRAW RECT FIRST SO IT'S THE BACKGROUND */}
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    {/* THEN DRAW THE STAR ON TOP */}
+    <path d="M11.035 7.69a1 1 0 0 1 1.909.024l.737 1.452a1 1 0 0 0 .737.535l1.634.256a1 1 0 0 1 .588 1.806l-1.172 1.168a1 1 0 0 0-.282.866l.259 1.613a1 1 0 0 1-1.541 1.134l-1.465-.75a1 1 0 0 0-.912 0l-1.465.75a1 1 0 0 1-1.539-1.133l.258-1.613a1 1 0 0 0-.282-.866l-1.156-1.153a1 1 0 0 1 .572-1.822l1.633-.256a1 1 0 0 0 .737-.535z" />
+  </svg>
+)
 
 type WidgetSize = 'ICON' | 'SQUARE' | 'WIDE' | 'TALL' | 'GIANT'
 
@@ -139,7 +163,7 @@ export default function Home() {
     const currentPad = stageW < 1024 ? (stageW * 0.04) : 60
 
     const availableWidth = stageW - (currentPad * 2)
-    const availableHeight = stageH - 120 
+    const availableHeight = stageH - 120
 
     const cw = (availableWidth - (currentCols - 1) * currentGap) / currentCols
     const ch = (availableHeight - (currentMaxRows - 1) * currentGap) / currentMaxRows
@@ -152,7 +176,7 @@ export default function Home() {
     const gridHeight = currentMaxRows * cellSize + (currentMaxRows - 1) * currentGap
 
     const pageOffsetX = (stageW - gridWidth) / 2
-    const pageOffsetY = (stageH - 60 - gridHeight) / 2 
+    const pageOffsetY = (stageH - 60 - gridHeight) / 2
 
     return { cellSize, gridCols: currentCols, maxRows: currentMaxRows, gridWidth, gridHeight, currentGap, pageOffsetX, pageOffsetY, isDesktop, isMid }
   }, [stageW, stageH])
@@ -191,15 +215,15 @@ export default function Home() {
         fetch('/api/home-widgets'),
         fetch('/api/stats'),
       ])
-      
+
       console.log(`Home: Response status - settings: ${settingsRes.status}, widgets: ${widgetsRes.status}`)
-      
+
       if (!settingsRes.ok) {
         const text = await settingsRes.text()
         console.error("Home: Settings fetch failed with status", settingsRes.status, text.substring(0, 100))
         throw new Error(`Settings fetch failed: ${settingsRes.status}`)
       }
-      
+
       if (!widgetsRes.ok) {
         const text = await widgetsRes.text()
         console.error("Home: Widgets fetch failed with status", widgetsRes.status, text.substring(0, 100))
@@ -210,7 +234,7 @@ export default function Home() {
       const widgetsData = await widgetsRes.json()
       const statsData = statsRes.ok ? await statsRes.json() : null
       console.log("Home: Data received:", { settings, widgetsData, statsData })
-      
+
       setSysSettings(settings)
       if (statsData) setUserRole(statsData.role)
       if (Array.isArray(widgetsData)) {
@@ -503,15 +527,15 @@ export default function Home() {
     }
 
     const config = {
-        TASKS:     { Icon: CheckCircle2,  bg: 'bg-blue-500',   glow: 'shadow-blue-500/30', label: t('menu.tasks') },
-        NOTES:     { Icon: StickyNote,    bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('pinned') || 'Pinned' },
-        JOURNAL:   { Icon: Heart,         bg: 'bg-[#f54900]',  glow: 'shadow-[#f54900]/30', label: t('menu.journal') },
-        PHOTOS:    { Icon: Images,        bg: 'bg-purple-500', glow: 'shadow-purple-500/30', label: t('menu.gallery') },
-        SHOP:      { Icon: ShoppingBag,   bg: 'bg-amber-400',  glow: 'shadow-amber-500/30', label: t('menu.shop') },
-        MILESTONE: { Icon: Trophy,        bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('parent.milestone') },
-        LEDGER:    { Icon: Wallet,        bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
-        STORAGE:   { Icon: Package,       bg: 'bg-amber-600',  glow: 'shadow-amber-600/30', label: t('storage.title') || '物资' },
-    }[w.type] || { Icon: ListTodo, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
+      TASKS: { Icon: SquareCheckBig, bg: 'bg-blue-500', glow: 'shadow-blue-500/30', label: t('menu.tasks') },
+      NOTES: { Icon: StickyNote, bg: 'bg-orange-500', glow: 'shadow-orange-500/30', label: t('pinned') || 'Pinned' },
+      JOURNAL: { Icon: JournalIconFixed, bg: 'bg-rose-600', glow: 'shadow-rose-600/30', label: t('menu.journal') },
+      PHOTOS: { Icon: Fan, bg: 'bg-purple-500', glow: 'shadow-purple-500/30', label: t('menu.gallery') },
+      SHOP: { Icon: ShoppingBag, bg: 'bg-amber-400', glow: 'shadow-amber-500/30', label: t('menu.shop') },
+      MILESTONE: { Icon: CircleStar, bg: 'bg-rose-600', glow: 'shadow-rose-600/30', label: t('parent.milestone') },
+      LEDGER: { Icon: WalletCards, bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
+      STORAGE: { Icon: Refrigerator, bg: 'bg-emerald-600', glow: 'shadow-emerald-600/30', label: t('storage.title') || '物资' },
+    }[w.type] || { Icon: Layout, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
     const isIconOnly = w.size === 'ICON' || ICON_ONLY_WIDGETS.includes(w.type)
 
@@ -521,29 +545,76 @@ export default function Home() {
         isEditing={isEditing}
         isIconOnly={isIconOnly}
         label={!isIconOnly ? config.label : undefined}
-        icon={!isIconOnly ? <config.Icon className="w-2 h-2" /> : undefined}
+        icon={!isIconOnly ? (
+          <config.Icon
+            className="w-5 h-5 transition-transform"
+            {...(w.type === 'NOTES'
+              ? {
+                stroke: "#f8b15eff", // 琥珀黄-600 (参考 Pin 图标的色系)
+                fill: "#ffe4a0ff",   // 琥珀黄-400 (明亮填充层)
+                strokeWidth: 2.2
+              }
+              : w.type === 'TASKS'
+              ? {
+                stroke: "#6ea1ffff", // 柔和生动蓝 (蓝-500级)
+                fill: "#c6daffff",   // 云朵淡蓝 (蓝-100级)
+                strokeWidth: 2.2
+              }
+              : w.type === 'LEDGER'
+              ? {
+                stroke: "#8a94ffff", // 活力淀蓝
+                fill: "#ced3ffff",   // 柔薰衣草蓝
+                strokeWidth: 2.2
+              }
+              : w.type === 'STORAGE'
+              ? {
+                stroke: "#10b981ff", // 活力翡翠 (绿-500级)
+                fill: "#d1fae5ff",   // 薄荷嫩绿 (绿-100级)
+                strokeWidth: 2.2
+              }
+              : w.type === 'MILESTONE'
+              ? {
+                stroke: "#be123cff", // 蔷薇红 (星标大事件)
+                fill: "#ffe4e6ff",   // 樱花粉
+                strokeWidth: 2.2
+              }
+              : w.type === 'JOURNAL'
+              ? {
+                stroke: "#ff2442ff", // 小红书红 (日志专色)
+                fill: "#fff1f2ff",   // 极淡红
+                strokeWidth: 2.2
+              }
+              : w.type === 'PHOTOS'
+              ? {
+                stroke: "#7e22ceff", // 丁香紫 (紫-700级)
+                fill: "#f3e8ffff",   // 薰衣草淡紫 (紫-100级)
+                strokeWidth: 2.2
+              }
+              : { strokeWidth: 2 })}
+          />
+        ) : undefined}
         accentColor={config.bg}
       >
         {isIconOnly ? (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2 group/icon relative shadow-[inset_0_2px_12px_rgba(0,0,0,0.3)] transition-all active:scale-[0.98]">
-                <config.Icon className="w-8 h-8 text-white drop-shadow-md transition-transform group-hover/icon:scale-110" />
-                <span className="label-mono text-[11px] font-black text-white uppercase tracking-[0.15em] drop-shadow-sm select-none opacity-80 group-hover/icon:opacity-100 transition-opacity">
-                    {config.label}
-                </span>
-            </div>
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 group/icon relative shadow-[inset_0_2px_12px_rgba(0,0,0,0.3)] transition-all active:scale-[0.98]">
+            <config.Icon className="w-8 h-8 text-white drop-shadow-md transition-transform group-hover/icon:scale-110" />
+            <span className="label-mono text-[11px] font-black text-white uppercase tracking-[0.15em] drop-shadow-sm select-none opacity-80 group-hover/icon:opacity-100 transition-opacity">
+              {config.label}
+            </span>
+          </div>
         ) : (
-            (() => {
-                switch (w.type) {
-                    case 'TASKS': return <TasksWidget size={w.size} cellSize={cellSize} />
-                    case 'NOTES': return <NotesWidget size={w.size} cellSize={cellSize} />
-                    case 'JOURNAL': return <JournalWidget size={w.size} cellSize={cellSize} />
-                    case 'PHOTOS': return <PhotoWidget size={w.size} cellSize={cellSize} />
-                    case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
-                    case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
-                    case 'STORAGE': return <StorageWidget size={w.size} cellSize={cellSize} />
-                    default: return <div>Unknown {w.type}</div>
-                }
-            })()
+          (() => {
+            switch (w.type) {
+              case 'TASKS': return <TasksWidget size={w.size} cellSize={cellSize} />
+              case 'NOTES': return <NotesWidget size={w.size} cellSize={cellSize} />
+              case 'JOURNAL': return <JournalWidget size={w.size} cellSize={cellSize} />
+              case 'PHOTOS': return <PhotoWidget size={w.size} cellSize={cellSize} />
+              case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
+              case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
+              case 'STORAGE': return <StorageWidget size={w.size} cellSize={cellSize} />
+              default: return <div>Unknown {w.type}</div>
+            }
+          })()
         )}
       </BausteinWidgetContainer>
     )
@@ -551,8 +622,65 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="h-dvh flex items-center justify-center bg-slate-50">
-        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin" />
+      <div className="h-dvh flex items-center justify-center bg-[#E5E5E0] relative overflow-hidden app-bg-pattern p-6">
+        {/* Subtle Industrial Background Noise */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[radial-gradient(circle_at_center,black_1px,transparent_1px)] bg-[length:24px_24px]" />
+
+        <div className="hardware-well w-full max-w-sm rounded-[32px] p-8 flex flex-col items-center gap-8 relative shadow-well bg-[#DADBD4] border border-black/5">
+          {/* Corner Screws */}
+          <div className="absolute top-4 left-4 w-1.5 h-1.5 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+          <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+          <div className="absolute bottom-4 left-4 w-1.5 h-1.5 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+          <div className="absolute bottom-4 right-4 w-1.5 h-1.5 rounded-full bg-black/10 border border-white/20 shadow-inner" />
+
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-white shadow-cap flex items-center justify-center relative overflow-hidden group">
+              <Image src="/dog.svg" alt="DoDoo" width={40} height={40} className="contrast-125 animate-pulse" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-ping" />
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="label-mono text-[11px] font-black text-slate-900 tracking-[.4em] uppercase opacity-80">
+              System Boot Sequence
+            </h1>
+            <span className="label-mono text-[8px] text-slate-400 uppercase tracking-widest leading-none">
+              Dodoo Core Engine v{versionData.version}
+            </span>
+          </div>
+
+          <div className="w-full space-y-3">
+            {/* Progress Well */}
+            <div className="h-1.5 w-full bg-black/5 rounded-full overflow-hidden p-[1px] shadow-inner border border-black/5">
+              <motion.div
+                className="h-full bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 1.5, ease: "easeInOut" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 px-1">
+              {[
+                "Syncing kernel state...",
+                "Calibrating HUD modules...",
+                "Establishing secure link..."
+              ].map((msg, i) => (
+                <div key={i} className="flex items-center gap-2 overflow-hidden h-3">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                    className="w-1 h-1 bg-indigo-400 rotate-45 shrink-0"
+                  />
+                  <p className="label-mono text-[7px] text-slate-500 uppercase tracking-wider truncate">
+                    {msg}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -560,11 +688,11 @@ export default function Home() {
   return (
     <div className="h-dvh w-full flex flex-col relative overflow-hidden app-bg-pattern">
       {/* ─── Integrated Navbar & HUD ─── */}
-      <BausteinAdminNavbar 
-        isEditing={isEditing} 
-        onToggleEdit={() => setIsEditing(!isEditing)} 
+      <BausteinAdminNavbar
+        isEditing={isEditing}
+        onToggleEdit={() => setIsEditing(!isEditing)}
       />
-      
+
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,var(--surface-warm)_0%,transparent_100%)] z-0" />
       <NatureBackground />
       <Confetti config={confetti} />
@@ -603,8 +731,8 @@ export default function Home() {
                     onClick={() => setCurrentPage(i)}
                     className={clsx(
                       "px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all shrink-0",
-                      currentPage === i 
-                        ? "bg-white text-indigo-600 shadow-cap translate-y-[-1px]" 
+                      currentPage === i
+                        ? "bg-white text-indigo-600 shadow-cap translate-y-[-1px]"
                         : "text-slate-400 hover:text-slate-600 hover:bg-white/40"
                     )}
                   >
@@ -617,14 +745,14 @@ export default function Home() {
 
               <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-1 flex-1">
                 {[
-                  { type: 'TASKS', Icon: CheckCircle2, color: 'text-blue-500' },
+                  { type: 'TASKS', Icon: SquareCheckBig, color: 'text-blue-500' },
                   { type: 'NOTES', Icon: StickyNote, color: 'text-orange-500' },
-                  { type: 'JOURNAL', Icon: Heart, color: 'text-[#f54900]' },
-                  { type: 'PHOTOS', Icon: Images, color: 'text-purple-500' },
+                  { type: 'JOURNAL', Icon: SquareStar, color: 'text-rose-600' },
+                  { type: 'PHOTOS', Icon: Fan, color: 'text-purple-500' },
                   { type: 'SHOP', Icon: ShoppingBag, color: 'text-amber-500' },
-                  { type: 'MILESTONE', Icon: Trophy, color: 'text-orange-600' },
+                  { type: 'MILESTONE', Icon: CircleStar, color: 'text-rose-600' },
                   { type: 'LEDGER', Icon: Wallet, color: 'text-indigo-500' },
-                  { type: 'STORAGE', Icon: Package, color: 'text-amber-700' }
+                  { type: 'STORAGE', Icon: Refrigerator, color: 'text-emerald-600' }
                 ].map(({ type, Icon, color }) => {
                   return (
                     <button
@@ -665,13 +793,13 @@ export default function Home() {
               <div className="h-6 w-[2px] bg-black/10" />
               <button
                 onClick={() => setIsEditing(false)}
-                className="hardware-btn group"
+                className="hardware-btn group shrink-0"
                 title={t('parent.done')}
               >
-                <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[var(--accent-moss)]/10 p-1.5">
-                    <div className="hardware-cap w-full h-full bg-[var(--accent-moss)] rounded-lg flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap text-white">
-                        <Check className="w-5 h-5 shadow-[0_1px_4px_rgba(0,0,0,0.3)]" />
-                    </div>
+                <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[#D9D5C4] p-1">
+                  <div className="hardware-cap w-full h-full bg-[var(--accent-moss)] rounded-lg flex items-center justify-center group-hover:brightness-110 text-white">
+                    <Check className="w-5 h-5 drop-shadow-md" />
+                  </div>
                 </div>
               </button>
             </div>
@@ -724,7 +852,7 @@ export default function Home() {
               {Array.from({ length: pageCount }).map((_, pIdx) => (
                 <div key={`page-bed-${pIdx}`} className="absolute top-0 h-full" style={{ left: pIdx * stageW, width: stageW }}>
                   {/* Visual Center Point */}
-                  <div 
+                  <div
                     className="absolute rounded-full border border-black/[0.03]"
                     style={{
                       left: pageOffsetX - 40,
@@ -733,7 +861,7 @@ export default function Home() {
                       height: maxRows * (cellSize + currentGap) + 80,
                     }}
                   />
-                  
+
                   {Array.from({ length: gridCols * maxRows }).map((_, i) => {
                     const x = i % gridCols
                     const y = Math.floor(i / gridCols)
@@ -754,24 +882,24 @@ export default function Home() {
               ))}
             </div>
 
-              {/* 2. Drag Preview (Ghost Slot) */}
-              <AnimatePresence>
-                {isEditing && dragPreview && activeId && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      left: toLeft(dragPreview.x),
-                      top: toTop(dragPreview.y),
-                      width: dragPreview.w * cellSize + (dragPreview.w - 1) * currentGap,
-                      height: dragPreview.h * cellSize + (dragPreview.h - 1) * currentGap
-                    }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute rounded-3xl bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 z-20"
-                  />
-                )}
-              </AnimatePresence>
+            {/* 2. Drag Preview (Ghost Slot) */}
+            <AnimatePresence>
+              {isEditing && dragPreview && activeId && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    left: toLeft(dragPreview.x),
+                    top: toTop(dragPreview.y),
+                    width: dragPreview.w * cellSize + (dragPreview.w - 1) * currentGap,
+                    height: dragPreview.h * cellSize + (dragPreview.h - 1) * currentGap
+                  }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute rounded-3xl bg-indigo-500/10 border-2 border-dashed border-indigo-500/30 z-20"
+                />
+              )}
+            </AnimatePresence>
 
             {displayWidgets.length > 0 ? (
               displayWidgets.map(w => {
@@ -974,7 +1102,7 @@ export default function Home() {
             )}
           </motion.div>
         </div>
-    </main>
+      </main>
 
       {/* ─── Pagination Dots (iOS Style) ─── */}
       {

@@ -20,7 +20,7 @@ export default function JournalWidget({ size = 'ICON', cellSize = 100 }: { size?
 
     useEffect(() => {
         if (size === 'ICON') return
-        const limit = size === 'SQUARE' ? 2 : 5
+        const limit = size === 'SQUARE' ? 4 : size === 'LARGE' ? 6 : 8
         fetch(`/api/journal?limit=${limit}&excludeMilestones=true`)
             .then(res => res.json())
             .then(data => {

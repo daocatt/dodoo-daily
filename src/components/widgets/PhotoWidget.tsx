@@ -59,7 +59,7 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     return (
         <motion.div
             whileHover={{ scale: 1.01 }}
-            className="w-full h-full bg-slate-900 rounded-3xl shadow-2xl flex flex-col group overflow-hidden relative cursor-pointer"
+            className="w-full h-full bg-slate-900 flex flex-col group overflow-hidden relative cursor-pointer"
         >
             <AnimatePresence mode="popLayout" initial={false}>
                 {photos.length > 0 ? (
@@ -136,15 +136,6 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 </div>
             )}
 
-            {/* Top Navigation Overlay */}
-            <div className="absolute inset-0 z-10 pointer-events-none" onClick={() => router.push('/gallery')}>
-                {/* Brand Tag */}
-                <div className="absolute top-4 left-4 flex items-center gap-2 pointer-events-auto">
-                    <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30 shadow-lg">
-                        <Images className="w-4 h-4" />
-                    </div>
-                </div>
-            </div>
         </motion.div>
     )
 }

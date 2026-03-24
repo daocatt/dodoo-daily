@@ -25,11 +25,12 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
 
     useEffect(() => {
         if (size === 'ICON') return
+        const limit = size === 'SQUARE' ? 4 : 8
         fetch('/api/ledger')
             .then(res => res.json())
             .then(data => {
                 setBalance(data.balance || 0)
-                setRecords(data.records?.slice(0, 2) || [])
+                setRecords(data.records?.slice(0, limit) || [])
                 setLoading(false)
             })
             .catch(() => setLoading(false))

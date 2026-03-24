@@ -46,14 +46,18 @@ export default function BausteinWidgetContainer({
         onClick={onClick}
         className={clsx(
           "w-full h-full overflow-hidden transition-all relative rounded-xl border-2 border-black/5 shadow-cap",
-          isIconOnly ? accentColor : "bg-[#F4F4F2]",
+          isIconOnly ? accentColor : "bg-white",
           !isEditing && "cursor-pointer active:translate-y-1 hover:brightness-[1.02] hover:shadow-lg"
         )}
       >
         {/* Dynamic Label Header (Industrial Style) */}
         {label && (
           <div className="absolute top-3 left-4 flex items-center gap-2.5 z-10 pointer-events-none pr-4">
-            {icon && <div className={clsx("w-3 h-3 rounded-sm rotate-45 flex items-center justify-center border border-black/5", accentColor)} />}
+            {icon && (
+              <div className={clsx("w-5 h-5 flex items-center justify-center shrink-0", accentColor.replace('bg-', 'text-'))}>
+                {icon}
+              </div>
+            )}
             <span className="label-mono text-[9px] font-black text-slate-800 opacity-30 uppercase tracking-[0.2em] leading-none">{label}</span>
           </div>
         )}
