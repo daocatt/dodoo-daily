@@ -86,7 +86,9 @@ export async function getSessionUser() {
             id: userRecord.id,
             userId: userRecord.id,
             role: userRecord.role,
-            permissionRole: userRecord.permissionRole
+            permissionRole: userRecord.permissionRole,
+            nickname: userRecord.nickname,
+            name: userRecord.name
         }
     } catch (dbError) {
         console.error('[Auth] Database check failed during session validation:', dbError)

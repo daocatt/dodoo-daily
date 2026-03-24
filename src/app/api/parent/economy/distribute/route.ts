@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
         }
 
-        const res = await addBalance(targetUserId, type as TransactionType, amount, reason || 'Manual adjustment by Parent', parentId)
+        const res = await addBalance(targetUserId, type as TransactionType, amount, reason || `Manual adjustment by ${session.nickname || session.name || session.id}`, parentId)
         
         if (!res || !res.success) {
             return NextResponse.json({ error: res?.error || 'Transaction failed' }, { status: 400 })

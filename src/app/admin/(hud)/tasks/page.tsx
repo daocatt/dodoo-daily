@@ -27,6 +27,10 @@ type Task = {
     confirmationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
     assigneeId?: string // From AssignedTask
     assignerId?: string // From AssignedTask
+    assigneeNickname?: string
+    assigneeAvatar?: string
+    assignerNickname?: string
+    assignerAvatar?: string
     creatorId: string // From Task
     isAssigned?: boolean // Locally flag to distinguish
 }
@@ -46,7 +50,7 @@ function TasksPageContent() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
-    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'planned' | 'assigns'>('today')
+    const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'planned' | 'assigned' | 'assigns'>('today')
     const [isAdmin, setIsAdmin] = useState(false)
     const [children, setChildren] = useState<Child[]>([])
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
@@ -157,7 +161,6 @@ function TasksPageContent() {
     useEffect(() => {
         if (assignTo.length === 0 || (assignTo.length === 1 && assignTo[0] === currentUserId)) {
             setRewardStars(1)
-            setRewardCoins(0)
         }
     }, [assignTo, currentUserId])
 
@@ -181,7 +184,7 @@ function TasksPageContent() {
                     body: JSON.stringify({
                         title,
                         rewardStars: isAssigned ? rewardStars : 1,
-                        rewardCoins: isAssigned ? rewardCoins : 0,
+                        rewardCoins: 0,
                         isRepeating,
                         isMonthlyRepeating,
                         plannedTime: plannedDate ? plannedDate.toISOString() : new Date().toISOString(),
@@ -276,7 +279,7 @@ function TasksPageContent() {
                                 setEditingTask(null)
                                 setTitle('')
                                 setRewardStars(1)
-                                setRewardCoins(0)
+                                setRewardStars(1)
                                 setIsRepeating(false)
                                 setIsMonthlyRepeating(false)
                                 setPlannedDate(new Date())
@@ -284,7 +287,7 @@ function TasksPageContent() {
                                 if (assignedChildId !== 'ALL') {
                                     setAssignTo([assignedChildId])
                                 } else {
-                                    setAssignTo(assignToParam ? [assignToParam] : [children[0]?.id].filter(Boolean))
+                                    setAssignTo(assignToParam ? [assignToParam] : [])
                                 }
                                 setModalMode('ASSIGN')
                                 setShowNewTaskModal(true)
@@ -303,74 +306,76 @@ function TasksPageContent() {
                 {/* Left Sidebar (Tabs) */}
                 <aside className="w-full md:w-[180px] flex flex-col gap-4 md:sticky md:top-8 flex-shrink-0 z-20">
                     <div className="flex md:flex-col overflow-x-auto p-1.5 md:p-3 bg-white/40 backdrop-blur-xl rounded-2xl md:rounded-3xl w-full border border-white/50 shadow-xl shadow-blue-500/5 hide-scrollbar relative">
-                        {/* Status Tabs + Assign (flat flex, fixes alignment on mobile/pad) */}
+                        {/* Time-based Filters (Original) */}
+                        <div className="flex md:flex-col gap-1.5 md:gap-2 border-b md:border-b-0 md:border-r border-white/20 pb-1.5 md:pb-0 md:pr-2 mr-1.5 md:mr-0 md:mb-2">
                             <button
                                 onClick={() => setActiveTab('today')}
-                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'today' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'today' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
                             >
-                                <Sun className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'today' ? 'scale-110 rotate-12' : ''}`} />
+                                <Sun className="w-4 h-4" />
                                 <span className="hidden md:inline whitespace-nowrap">{t('tasks.today')}</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('tomorrow')}
-                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'tomorrow' ? 'bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-lg shadow-blue-400/25 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'tomorrow' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
                             >
-                                <Sunrise className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'tomorrow' ? 'scale-110' : ''}`} />
+                                <Sunrise className="w-4 h-4" />
                                 <span className="hidden md:inline whitespace-nowrap">{t('tasks.tomorrow')}</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('week')}
-                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'week' ? 'bg-gradient-to-r from-teal-400 to-emerald-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'week' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/25' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
                             >
-                                <Calendar className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'week' ? 'scale-110 shadow-emerald-200' : ''}`} />
-                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.thisWeek')}</span>
+                                <CalendarDays className="w-4 h-4" />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.week')}</span>
                             </button>
                             <button
                                 onClick={() => setActiveTab('planned')}
-                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'planned' ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg shadow-indigo-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'planned' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
                             >
-                                <CalendarDays className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'planned' ? 'scale-110' : ''}`} />
-                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.planned')}</span>
+                                <Calendar className="w-4 h-4" />
+                                <span className="hidden md:inline">{t('tasks.planned')}</span>
                             </button>
-                            {!isAdmin ? (
-                                <button
-                                    onClick={() => setActiveTab('assigns')}
-                                    className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
-                                >
-                                    <Users className="w-4 h-4 flex-shrink-0" />
-                                    <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
-                                </button>
-                            ) : (
-                                <>
+                        </div>
+
+                        {/* Status Tabs + Assign (flat flex, fixes alignment on mobile/pad) */}
+                        <div className="flex md:flex-col gap-1.5 md:gap-2">
+                            <button
+                                onClick={() => setActiveTab('assigned')}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigned' ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/25 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                            >
+                                <CheckSquare className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'assigned' ? 'scale-110' : ''}`} />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigned')}</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('assigns')}
+                                className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
+                            >
+                                <Users className="w-4 h-4 flex-shrink-0" />
+                                <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
+                            </button>
+
+                            {activeTab === 'assigns' && isAdmin && children.length > 0 && (
+                                <div className="hidden md:flex flex-col gap-1 pl-8 mt-2 w-full animate-in slide-in-from-top-2">
                                     <button
-                                        onClick={() => setActiveTab('assigns')}
-                                        className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'} md:mt-4 md:pt-4 md:border-t md:border-slate-200/50`}
+                                        onClick={() => setAssignedChildId('ALL')}
+                                        className={`py-2 px-3 rounded-xl text-left font-bold text-[11px] transition-all ${assignedChildId === 'ALL' ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
                                     >
-                                        <CheckSquare className="w-4 h-4 flex-shrink-0" />
-                                        <span className="hidden md:inline whitespace-nowrap">{t('tasks.assigns')}</span>
+                                        {t('tasks.allChildren')}
                                     </button>
-                                    {activeTab === 'assigns' && children.length > 1 && (
-                                        <div className="flex md:flex-col gap-1 md:pl-8 mt-2 w-full flex-shrink-0">
-                                            <button
-                                                onClick={() => setAssignedChildId('ALL')}
-                                                className={`py-2 px-3 rounded-xl text-center md:text-left font-bold text-[11px] transition-all ${assignedChildId === 'ALL' ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
-                                            >
-                                                {t('tasks.allChildren')}
-                                            </button>
-                                            {children.map(child => (
-                                                <button
-                                                    key={child.id}
-                                                    onClick={() => setAssignedChildId(child.id)}
-                                                    className={`py-1.5 px-3 rounded-xl text-center md:text-left font-bold text-[11px] transition-all flex items-center justify-center md:justify-start gap-2 ${assignedChildId === child.id ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
-                                                >
-                                                    {child.avatarUrl && <Image src={child.avatarUrl} width={14} height={14} className="w-3.5 h-3.5 rounded-full object-cover hidden md:block" alt={child.nickname || child.name} />}
-                                                    {child.nickname || child.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </>
+                                    {children.map(child => (
+                                        <button
+                                            key={child.id}
+                                            onClick={() => setAssignedChildId(child.id)}
+                                            className={`py-1.5 px-3 rounded-xl text-left font-bold text-[11px] transition-all flex items-center gap-2 ${assignedChildId === child.id ? 'bg-blue-100/50 text-blue-600 shadow-sm' : 'text-slate-500 hover:bg-white/50'}`}
+                                        >
+                                            {child.avatarUrl && <Image src={child.avatarUrl} width={14} height={14} className="w-3.5 h-3.5 rounded-full object-cover" alt={child.nickname || child.name} />}
+                                            {child.nickname || child.name}
+                                        </button>
+                                    ))}
+                                </div>
                             )}
+                        </div>
                     </div>
                 </aside>
 
@@ -389,64 +394,25 @@ function TasksPageContent() {
                     ) : (
                         <div className="flex gap-4 flex-col pb-24">
                             {tasks.filter(task => {
-                                // Updated logic with split tables:
                                 const isAssignIGave = task.isAssigned && task.assignerId === currentUserId;
                                 const isAssignIReceived = task.isAssigned && task.assigneeId === currentUserId;
                                 const isMyOwnTask = !task.isAssigned;
 
-                                if (activeTab === 'planned') {
-                                    return !!task.plannedTime;
-                                }
-
-                                if (activeTab === 'today') {
-                                    const todayStr = getTodayStringInTimezone(systemTimezone);
-                                    if (task.plannedTime) {
-                                        return task.plannedTime.startsWith(todayStr);
-                                    }
-                                    return false;
-                                }
-
-                                if (activeTab === 'tomorrow') {
-                                    const tomorrow = new Date();
-                                    tomorrow.setDate(tomorrow.getDate() + 1);
-                                    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-                                    if (task.plannedTime) {
-                                        return task.plannedTime.startsWith(tomorrowStr);
-                                    }
-                                    return false;
-                                }
-
-                                if (activeTab === 'week') {
-                                    if (!task.plannedTime) return false;
-                                    const date = new Date(task.plannedTime);
-                                    const now = new Date();
-                                    const weekEnd = endOfWeek(now);
-                                    const weekStart = startOfWeek(now);
-                                    return date >= weekStart && date <= weekEnd;
-                                }
-
                                 if (activeTab === 'assigns') {
-                                    // In "Assigns" tab:
-                                    // - If Parent: show tasks I gave to others
-                                    // - If Child: show tasks I received from parent
-                                    if (isAdmin) {
-                                        if (!isAssignIGave) return false;
-                                        if (assignedChildId !== 'ALL') return task.assigneeId === assignedChildId;
-                                    } else {
-                                        if (!isAssignIReceived) return false;
-                                    }
+                                    if (!isAssignIGave) return false;
+                                    if (assignedChildId !== 'ALL') return task.assigneeId === assignedChildId;
                                     return true;
                                 }
 
-                                // In other tabs, we ONLY show personal tasks created by self
+                                if (activeTab === 'assigned') {
+                                    return isAssignIReceived;
+                                }
+
+                                // In other tabs, we ONLY show personal tasks
                                 if (!isMyOwnTask) return false;
 
-                                // Frequency filters
-                                if (activeTab === 'daily') return task.isRepeating && !task.isMonthlyRepeating;
-                                if (activeTab === 'monthly') return task.isMonthlyRepeating;
-
-                                // If looking for one-off tasks (Today/Tomorrow/Week)
-                                if (task.isRepeating || task.isMonthlyRepeating) return false;
+                                // Frequency filters for repeating tasks can be handled here or just show them in time categories
+                                if (activeTab === 'planned') return !!task.plannedTime;
 
                                 const pt = task.plannedTime ? getStartOfDayInTimezone(systemTimezone, 0, new Date(task.plannedTime)) : getStartOfDayInTimezone(systemTimezone);
                                 const today = getStartOfDayInTimezone(systemTimezone);
@@ -539,9 +505,16 @@ function TasksPageContent() {
                                                         </span>
                                                     )}
                                                     {!task.completed && isAssignIReceived && (
-                                                        <span className="text-[10px] uppercase tracking-wider bg-emerald-100/50 text-emerald-700 font-black px-2 py-0.5 rounded-lg">
-                                                            {t('tasks.assignedByParent')}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                                            {task.assignerAvatar ? (
+                                                                <Image src={task.assignerAvatar} width={16} height={16} className="w-4 h-4 rounded-full object-cover" alt={task.assignerNickname || ''} />
+                                                            ) : (
+                                                                <Users className="w-3 h-3" />
+                                                            )}
+                                                            <span className="text-[10px] font-black uppercase tracking-wider">
+                                                                {t('tasks.status.assignedBy', { name: task.assignerNickname || '??' })}
+                                                            </span>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -553,12 +526,6 @@ function TasksPageContent() {
                                                     <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-400" />
                                                     <span className="font-black text-yellow-700 text-xs md:text-sm">+{task.rewardStars}</span>
                                                 </div>
-                                                {task.rewardCoins > 0 && (
-                                                    <div className="flex items-center gap-1 bg-amber-100 px-2 py-1 rounded-full shadow-inner border border-amber-200">
-                                                        <Coins className="w-3.5 h-3.5 text-amber-500" />
-                                                        <span className="font-black text-amber-700 text-xs md:text-sm">+{task.rewardCoins}</span>
-                                                    </div>
-                                                )}
                                             </div>
 
                                             <div className="flex items-center gap-2">
@@ -586,7 +553,6 @@ function TasksPageContent() {
                                                                 setEditingTask(task);
                                                                 setTitle(task.title);
                                                                 setRewardStars(task.rewardStars);
-                                                                setRewardCoins(task.rewardCoins || 0);
                                                                 setIsRepeating(task.isRepeating);
                                                                 setIsMonthlyRepeating(task.isMonthlyRepeating);
                                                                 setPlannedDate(task.plannedTime ? new Date(task.plannedTime) : new Date());
@@ -737,23 +703,12 @@ function TasksPageContent() {
                                         {/* Rewards - Show if assignment is selected (at least one child) */}
                                         {assignTo.length > 0 && !assignTo.includes(currentUserId) && (
                                             <>
-                                                <div className="flex items-center justify-between bg-yellow-50/50 p-3 md:p-4 rounded-xl border border-yellow-100/50">
+                                                <div className="flex items-center justify-between bg-yellow-50/50 p-3 md:p-4 rounded-xl border border-yellow-100/50 col-span-2">
                                                     <label className="text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.rewardLabel')}</label>
                                                     <div className="flex items-center gap-2">
                                                         <button type="button" onClick={() => setRewardStars(Math.max(1, rewardStars - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-[#6b5c45] shadow-sm hover:shadow-md transition-shadow">-</button>
                                                         <span className="font-black text-yellow-600 text-lg md:text-xl w-6 text-center">{rewardStars}</span>
                                                         <button type="button" onClick={() => setRewardStars(rewardStars + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-[#6b5c45] shadow-sm hover:shadow-md transition-shadow">+</button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between bg-amber-50/50 p-3 md:p-4 rounded-xl border border-amber-100/50">
-                                                    <label className="text-xs md:text-sm font-bold text-[#6b5c45]">{t('tasks.form.bonusCoins')}</label>
-                                                    <div className="flex items-center gap-2">
-                                                        <button type="button" onClick={() => setRewardCoins(Math.max(0, rewardCoins - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-[#6b5c45] shadow-sm hover:shadow-md transition-shadow">-</button>
-                                                        <div className="flex items-center gap-1 justify-center w-12 text-center">
-                                                            <span className="font-black text-amber-600 text-lg md:text-xl">{rewardCoins}</span>
-                                                        </div>
-                                                        <button type="button" onClick={() => setRewardCoins(rewardCoins + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-[#6b5c45] shadow-sm hover:shadow-md transition-shadow">+</button>
                                                     </div>
                                                 </div>
                                             </>

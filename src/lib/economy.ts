@@ -21,10 +21,9 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
         stats = newStats[0]
     }
 
-    // 2. Handle 10-star daily limit for GOLD_STAR (if not from assigned task or parent)
-    // We'll pass a special flag in reason or a separate param if we want to enforce this strictly.
-    // For now, let's assume the caller handles the logic or we check the reason.
-    if (type === 'GOLD_STAR' && amount > 0 && !reason.includes('Assigned Task') && !reason.includes('Parent')) {
+    // 2. Handle 10-star daily limit for GOLD_STAR (if not from assigned task or admin/system)
+    const isAuthorized = reason.includes('Assigned Task') || reason.includes('System') || reason.includes('Admin');
+    if (type === 'GOLD_STAR' && amount > 0 && !isAuthorized) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(startOfDay);
@@ -38,6 +37,8 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
                 gte(accountStatsLog.createdAt, startOfDay),
                 lte(accountStatsLog.createdAt, endOfDay),
                 sql`reason NOT LIKE '%Assigned Task%'`,
+                sql`reason NOT LIKE '%Admin%'`,
+                sql`reason NOT LIKE '%System%'`,
                 sql`amount > 0`
             )).get();
 
@@ -228,11 +229,17 @@ export async function transferFiat(senderId: string, receiverId: string, amount:
     if (senderId === receiverId) return { success: false, error: '无法给自己转账' }
 
     try {
+        const [senderUser] = await db.select().from(users).where(eq(users.id, senderId)).all()
+        const [receiverUser] = await db.select().from(users).where(eq(users.id, receiverId)).all()
+
+        if (!senderUser) return { success: false, error: '发送方数据不存在' }
+        if (!receiverUser) return { success: false, error: '接收方数据不存在' }
+
+        const senderName = senderUser.nickname || senderUser.name || senderId;
+        const receiverName = receiverUser.nickname || receiverUser.name || receiverId;
+
         const senderStats = await db.select().from(accountStats).where(eq(accountStats.userId, senderId)).get()
         const receiverStats = await db.select().from(accountStats).where(eq(accountStats.userId, receiverId)).get()
-
-        if (!senderStats) return { success: false, error: '发送方数据不存在' }
-        if (!receiverStats) return { success: false, error: '接收方数据不存在' }
 
         const currentSenderBalance = senderStats.fiatBalance || 0
         if (currentSenderBalance < amount) return { success: false, error: '余额不足' }
@@ -275,7 +282,7 @@ export async function transferFiat(senderId: string, receiverId: string, amount:
                 type: 'EXPENSE',
                 amount: amount,
                 date: new Date(),
-                description: `转账给 ${receiverStats.userId}: ${description}`,
+                description: `转账给 ${receiverName}: ${description}`,
                 relatedUserId: receiverId
             }).run()
 
@@ -286,7 +293,7 @@ export async function transferFiat(senderId: string, receiverId: string, amount:
                 type: 'INCOME',
                 amount: amount,
                 date: new Date(),
-                description: `来自 ${senderStats.userId} 的转账: ${description}`,
+                description: `来自 ${senderName} 的转账: ${description}`,
                 relatedUserId: senderId
             }).run()
         })

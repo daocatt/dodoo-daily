@@ -12,7 +12,8 @@ export async function PUT(
 ) {
     try {
         const { id } = await params
-        const { userId: currentUserId, role } = await getSessionUser()
+        const { userId: currentUserId, permissionRole } = await getSessionUser()
+        const isAdmin = permissionRole === 'SUPERADMIN' || permissionRole === 'ADMIN'
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const body = await req.json()
@@ -29,12 +30,12 @@ export async function PUT(
             updateData.completed = completed
             if (completed && !currentTask.completed) {
                 updateData.completedById = currentUserId
-                // If Parent (assigner) marks it, approve immediately
-                if (role === 'PARENT' && currentTask.assignerId === currentUserId) {
+                // If Assigner marks it, approve immediately (unilateral completion)
+                if (currentTask.assignerId === currentUserId) {
                     updateData.confirmationStatus = 'APPROVED'
-                    await addBalance(currentTask.assigneeId, 'GOLD_STAR', currentTask.rewardStars, `Reward: ${currentTask.title}`, currentUserId)
+                    await addBalance(currentTask.assigneeId!, 'GOLD_STAR', currentTask.rewardStars, `Reward: ${currentTask.title}`, currentUserId)
                     if (currentTask.rewardCoins > 0) {
-                        await addBalance(currentTask.assigneeId, 'CURRENCY', currentTask.rewardCoins, `Reward: ${currentTask.title}`, currentUserId)
+                        await addBalance(currentTask.assigneeId!, 'CURRENCY', currentTask.rewardCoins, `Reward: ${currentTask.title}`, currentUserId)
                     }
                 } else {
                     updateData.confirmationStatus = 'PENDING'
@@ -43,28 +44,28 @@ export async function PUT(
                 updateData.completedById = null
                 // Deduct if approved
                 if (currentTask.confirmationStatus === 'APPROVED') {
-                    await addBalance(currentTask.assigneeId, 'GOLD_STAR', -currentTask.rewardStars, `Unmarked: ${currentTask.title}`, currentUserId)
+                    await addBalance(currentTask.assigneeId!, 'GOLD_STAR', -currentTask.rewardStars, `Unmarked: ${currentTask.title}`, currentUserId)
                     if (currentTask.rewardCoins > 0) {
-                        await addBalance(currentTask.assigneeId, 'CURRENCY', -currentTask.rewardCoins, `Unmarked: ${currentTask.title}`, currentUserId)
+                        await addBalance(currentTask.assigneeId!, 'CURRENCY', -currentTask.rewardCoins, `Unmarked: ${currentTask.title}`, currentUserId)
                     }
                 }
                 updateData.confirmationStatus = 'PENDING'
             }
         }
 
-        // Parent approval
-        if (action === 'CONFIRM_REWARD' && role === 'PARENT' && currentTask.assignerId === currentUserId) {
+        // Assigner approval
+        if (action === 'CONFIRM_REWARD' && currentTask.assignerId === currentUserId) {
             if (currentTask.completed && currentTask.confirmationStatus === 'PENDING') {
                 updateData.confirmationStatus = 'APPROVED'
-                await addBalance(currentTask.assigneeId, 'GOLD_STAR', currentTask.rewardStars, `Approved: ${currentTask.title}`, currentUserId)
+                await addBalance(currentTask.assigneeId!, 'GOLD_STAR', currentTask.rewardStars, `Approved: ${currentTask.title}`, currentUserId)
                 if (currentTask.rewardCoins > 0) {
-                    await addBalance(currentTask.assigneeId, 'CURRENCY', currentTask.rewardCoins, `Approved: ${currentTask.title}`, currentUserId)
+                    await addBalance(currentTask.assigneeId!, 'CURRENCY', currentTask.rewardCoins, `Approved: ${currentTask.title}`, currentUserId)
                 }
             }
         }
 
-        // Metadata updates (Parents only)
-        if (role === 'PARENT' && currentTask.assignerId === currentUserId) {
+        // Metadata updates (Assigner or Admin only)
+        if (currentTask.assignerId === currentUserId || isAdmin) {
             if (title !== undefined) updateData.title = title
             if (description !== undefined) updateData.description = description
             if (rewardStars !== undefined) updateData.rewardStars = rewardStars
@@ -81,16 +82,16 @@ export async function PUT(
 
         // Async Push Notifications
         try {
-            // Case 1: Child marks task as complete -> Notify Parent
-            if (completed === true && role === 'CHILD' && currentTask.assignerId) {
+            // Case 1: Child marks task as complete -> Notify Assigner
+            if (completed === true && currentUserId !== currentTask.assignerId && currentTask.assignerId) {
                 notifyParents({
                     title: 'Task Completed! ✅',
                     body: `Completed: ${currentTask.title}`,
                     data: { url: '/parent/tasks' }
                 }).catch(e => console.error('Push failed:', e))
             }
-            // Case 2: Parent approves task -> Notify Child
-            if ((action === 'CONFIRM_REWARD' || (role === 'PARENT' && completed === true)) && currentTask.assigneeId) {
+            // Case 2: Assigner approves task -> Notify Child
+            if ((action === 'CONFIRM_REWARD' || (currentUserId === currentTask.assignerId && completed === true)) && currentTask.assigneeId) {
                 sendPushNotification(currentTask.assigneeId, {
                     title: 'Reward Confirmed! ✨',
                     body: `Gained stars for: ${currentTask.title}`,
@@ -114,10 +115,11 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params
-        const { userId: currentUserId, role } = await getSessionUser()
+        const { userId: currentUserId, permissionRole } = await getSessionUser()
+        const isAdmin = permissionRole === 'SUPERADMIN' || permissionRole === 'ADMIN'
         const [t] = await db.select().from(task).where(and(eq(task.id, id), isNotNull(task.assignerId)))
 
-        if (!t || (role !== 'PARENT' && t.assignerId !== currentUserId)) {
+        if (!t || (t.assignerId !== currentUserId && !isAdmin)) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
         // Use targetUserId if provided (for parent to child), otherwise default to current user
         const finalUserId = targetUserId || userId
 
-        const res = await addBalance(finalUserId, type || 'CURRENCY', amount, 'Manual Recharge by Parent')
+        const res = await addBalance(finalUserId, type || 'CURRENCY', amount, `Manual Recharge by ${session.nickname || session.name || session.id}`)
 
         if (!res || !res.success) {
             return NextResponse.json({ error: res?.error || 'Transaction failed' }, { status: 400 })

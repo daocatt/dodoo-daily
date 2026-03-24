@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { task } from '@/lib/schema'
+import { task, accountStats, goldStarLog } from '@/lib/schema'
 import { desc, eq, and, sql, isNotNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { sendPushNotification } from '@/lib/push'
@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
             createdAt: task.createdAt,
             assigneeNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = Task.assigneeId)`,
             assigneeAvatar: sql<string>`(SELECT avatarUrl FROM Users WHERE id = Task.assigneeId)`,
+            assignerNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = Task.assignerId)`,
+            assignerAvatar: sql<string>`(SELECT avatarUrl FROM Users WHERE id = Task.assignerId)`,
             completedByNickname: sql<string>`(SELECT COALESCE(nickname, name) FROM Users WHERE id = Task.completedById)`,
         })
             .from(task)
@@ -61,28 +63,50 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId: id, role } = await getSessionUser()
-        if (role !== 'PARENT' || !id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const { userId: id } = await getSessionUser()
+        if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const body = await req.json()
-        const { title, description, rewardStars, rewardCoins, assignedTo, plannedTime, isRepeating, isMonthlyRepeating } = body
+        const { title, description, rewardStars, assignedTo, plannedTime, isRepeating, isMonthlyRepeating } = body
 
         if (!title || !assignedTo) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        const stars = Math.max(0, parseInt(rewardStars?.toString() || '0'))
 
-        const [newTask] = await db.insert(task).values({
-            assignerId: id,
-            assigneeId: assignedTo,
-            creatorId: id,
-            title,
-            description,
-            rewardStars: rewardStars || 1,
-            rewardCoins: rewardCoins || 0,
-            plannedTime: plannedTime ? new Date(plannedTime) : null,
-            confirmationStatus: 'PENDING',
-            isRepeating: isRepeating || false,
-            isMonthlyRepeating: isMonthlyRepeating || false,
-            completed: false
-        }).returning()
+        // Verify and Deduct Stars from Assigner (P2P logic)
+        const [stats] = await db.select().from(accountStats).where(eq(accountStats.userId, id))
+        if (!stats || stats.goldStars < stars) {
+            return NextResponse.json({ error: 'Insufficient Gold Stars' }, { status: 400 })
+        }
+
+        const [newTask] = await db.transaction(async (tx) => {
+            // Deduct Stars
+            await tx.update(accountStats)
+                .set({ goldStars: sql`goldStars - ${stars}` })
+                .where(eq(accountStats.userId, id))
+
+            await tx.insert(goldStarLog).values({
+                userId: id,
+                amount: -stars,
+                balance: stats.goldStars - stars,
+                reason: `Assigned Task: ${title}`,
+                actorId: id
+            })
+
+            return tx.insert(task).values({
+                assignerId: id,
+                assigneeId: assignedTo,
+                creatorId: id,
+                title,
+                description,
+                rewardStars: stars,
+                rewardCoins: 0, // Enforce 0 as per new rules
+                plannedTime: plannedTime ? new Date(plannedTime) : null,
+                confirmationStatus: 'PENDING',
+                isRepeating: isRepeating || false,
+                isMonthlyRepeating: isMonthlyRepeating || false,
+                completed: false
+            }).returning()
+        })
 
         // Send Push Notification to child asynchronously
         try {
