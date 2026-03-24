@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { visitor, visitorCurrencyLog } from '@/lib/schema'
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function POST(
@@ -9,7 +9,7 @@ export async function POST(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -43,7 +43,7 @@ export async function POST(
 
         return NextResponse.json({ success: true, balance: newBalance })
     } catch (_e) {
-        console.error('Adjust visitor coins error:', e)
+        console.error('Adjust visitor coins error:', _e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

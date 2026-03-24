@@ -13,7 +13,7 @@ export async function GET() {
             console.warn('[API stats] No session user found')
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
-        const { id: currentUserId, role: currentUserRole } = user
+        const currentUserId = user.id
 
         console.log('[API stats] Fetching stats for user:', currentUserId)
 
@@ -71,10 +71,10 @@ export async function GET() {
 
         return NextResponse.json(responseData)
     } catch (error) {
-        console.error('[API stats] Critical error:', error.message, error.stack)
+        console.error('[API stats] Critical error:', error)
         return NextResponse.json({
             error: 'Failed to fetch account stats',
-            details: error.message
+            details: 'Account service unavailable'
         }, { status: 500 })
     }
 }

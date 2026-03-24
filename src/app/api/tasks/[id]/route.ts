@@ -7,7 +7,7 @@ import { addBalance } from '@/lib/economy'
 
 export async function PUT(
     req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -52,11 +52,12 @@ export async function PUT(
 }
 
 export async function DELETE(
-    req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { userId: currentUserId } = await getSessionUser()
+        const session = await getSessionUser()
+        const currentUserId = session?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const { id } = await params

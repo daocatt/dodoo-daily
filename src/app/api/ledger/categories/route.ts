@@ -1,7 +1,6 @@
 import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ledgerCategory } from "@/lib/schema";
-import { or, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {

@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
     }
 }
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getVisitorSession()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -94,7 +94,8 @@ export async function GET(req: NextRequest) {
         if (!data) return NextResponse.json({ error: 'Visitor not found' }, { status: 404 })
 
         return NextResponse.json(data)
-    } catch (_e) {
+    } catch (e) {
+        console.error('Visitor profile fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

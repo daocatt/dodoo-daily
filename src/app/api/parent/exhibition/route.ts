@@ -4,7 +4,7 @@ import { artwork, album, users } from '@/lib/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         .orderBy(desc(artwork.createdAt))
 
         return NextResponse.json(exhibitionArtworks)
-    } catch (_e) {
+    } catch (e) {
         console.error('Exhibition management fetch error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

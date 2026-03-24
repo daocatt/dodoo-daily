@@ -1,10 +1,9 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles, Camera, X, ChevronRight, Download } from 'lucide-react'
-import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import PosterGenerator from '@/components/PosterGenerator'
 import UploadModal from '@/components/gallery/UploadModal'
@@ -45,14 +44,12 @@ export default function AlbumDetailPage() {
     const [album, setAlbum] = useState<AlbumDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [posterArtwork, setPosterArtwork] = useState<Artwork | null>(null)
-    const [isParent, setIsParent] = useState(false)
     const [showUploadModal, setShowUploadModal] = useState(false)
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
 
     // Edit State
     const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null)
     const [editTitle, setEditTitle] = useState('')
-    const [editPriceRMB, setEditPriceRMB] = useState('')
     const [editPriceCoins, setEditPriceCoins] = useState('')
     const [editAlbumId, setEditAlbumId] = useState('')
     const [editIsPublic, setEditIsPublic] = useState(false)
@@ -71,6 +68,16 @@ export default function AlbumDetailPage() {
 
     const { t } = useI18n()
 
+    const nextImage = useCallback(() => {
+        if (!album || lightboxIndex === null) return
+        setLightboxIndex((prev) => (prev! + 1) % album.artworks.length)
+    }, [album, lightboxIndex])
+
+    const prevImage = useCallback(() => {
+        if (!album || lightboxIndex === null) return
+        setLightboxIndex((prev) => (prev! - 1 + album.artworks.length) % album.artworks.length)
+    }, [album, lightboxIndex])
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (lightboxIndex === null) return
@@ -80,17 +87,7 @@ export default function AlbumDetailPage() {
         }
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [lightboxIndex, album?.artworks])
-
-    const nextImage = () => {
-        if (!album || lightboxIndex === null) return
-        setLightboxIndex((prev) => (prev! + 1) % album.artworks.length)
-    }
-
-    const prevImage = () => {
-        if (!album || lightboxIndex === null) return
-        setLightboxIndex((prev) => (prev! - 1 + album.artworks.length) % album.artworks.length)
-    }
+    }, [lightboxIndex, nextImage, prevImage])
 
     const handleDownload = async (url: string, title: string) => {
         try {
@@ -117,9 +114,8 @@ export default function AlbumDetailPage() {
             .then(data => {
                 const searchParams = new URLSearchParams(window.location.search)
                 const targetId = searchParams.get('userId')
-                
+
                 if (data.isParent) {
-                    setIsParent(true)
                     if (targetId) setSelectedChildId(targetId)
                 }
 
@@ -341,11 +337,11 @@ export default function AlbumDetailPage() {
                                 transition={{ delay: idx * 0.05, type: 'spring' }}
                                 className="group relative rounded-2xl overflow-hidden shadow-lg bg-white/60 backdrop-blur-md border border-white/50 aspect-square cursor-pointer"
                             >
-                                <Image 
-                                    src={art.thumbnailMedium || art.imageUrl} 
-                                    alt={art.title} 
+                                <Image
+                                    src={art.thumbnailMedium || art.imageUrl}
+                                    alt={art.title}
                                     fill
-                                    className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
                                 />
 
                                 {art.isPublic && (
@@ -362,7 +358,7 @@ export default function AlbumDetailPage() {
                                     </div>
                                 )}
 
-                                <div 
+                                <div
                                     onClick={() => setLightboxIndex(idx)}
                                     className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent ${art.isSold ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-300 flex flex-col justify-end p-4`}
                                 >
@@ -380,7 +376,7 @@ export default function AlbumDetailPage() {
                                             </div>
                                             {art.isPublic && (
                                                 <button
-                                                onClick={(e) => {
+                                                    onClick={(e) => {
                                                         e.stopPropagation()
                                                         setPosterArtwork(art)
                                                     }}
@@ -396,7 +392,6 @@ export default function AlbumDetailPage() {
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             setEditTitle(art.title)
-                                            setEditPriceRMB(art.priceRMB.toString())
                                             setEditPriceCoins(art.priceCoins.toString())
                                             setEditAlbumId(art.albumId || 'archive')
                                             setEditIsPublic(art.isPublic || false)
@@ -693,21 +688,21 @@ export default function AlbumDetailPage() {
                         {/* Thumbnails Strip */}
                         <div className="h-24 px-6 py-2 bg-black/40 flex items-center gap-3 overflow-x-auto hide-scrollbar shrink-0 border-t border-white/5">
                             {album.artworks.map((art, idx) => (
-                                    <div
-                                        key={`thumb-${art.id}`}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            setLightboxIndex(idx)
-                                        }}
-                                        className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${idx === lightboxIndex ? 'border-amber-500 scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                                    >
-                                        <Image
-                                            src={art.thumbnailMedium || art.imageUrl}
-                                            alt={art.title}
-                                            fill
-                                            className="object-cover transition-transform group-hover:scale-105"
-                                        />
-                                    </div>
+                                <div
+                                    key={`thumb-${art.id}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setLightboxIndex(idx)
+                                    }}
+                                    className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 cursor-pointer transition-all border-2 ${idx === lightboxIndex ? 'border-amber-500 scale-105 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                                >
+                                    <Image
+                                        src={art.thumbnailMedium || art.imageUrl}
+                                        alt={art.title}
+                                        fill
+                                        className="object-cover transition-transform group-hover:scale-105"
+                                    />
+                                </div>
                             ))}
                         </div>
                     </motion.div>

@@ -14,8 +14,7 @@ import {
   X,
   ChevronRight,
   Filter,
-  Check,
-  CalendarDays
+  Check
 } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
@@ -450,7 +449,6 @@ function ItemModal({ item, onClose, onSuccess }: { item: StorageItem | null, onC
 
     const [loading, setLoading] = useState(false)
     const [showPhotoPicker, setShowPhotoPicker] = useState(false)
-    const { } = useI18n()
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()

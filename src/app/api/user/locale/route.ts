@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, visitor } from '@/lib/schema'
+import { users } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true })
-    } catch (_e) {
+    } catch (e) {
         console.error('[API user locale] Error:', e)
         return NextResponse.json({ error: 'Failed to update locale' }, { status: 500 })
     }

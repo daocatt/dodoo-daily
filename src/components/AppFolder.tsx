@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
     motion,
@@ -56,7 +56,7 @@ export default function AppFolder() {
 
     const isOpen = phase === 'open' || phase === 'opening' || phase === 'closing'
 
-    const handleOpen = () => {
+    const handleOpen = useCallback(() => {
         if (phase !== 'closed') return
         setPhase('opening')
         setIsFullyOpen(false)
@@ -67,9 +67,9 @@ export default function AppFolder() {
                 setIsFullyOpen(true)
             },
         })
-    }
+    }, [phase, progress])
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         if (phase !== 'open') return
         setPhase('closing')
         setIsFullyOpen(false)
@@ -77,7 +77,7 @@ export default function AppFolder() {
             type: 'spring', ...SPRING,
             onComplete: () => setPhase('closed'),
         })
-    }
+    }, [phase, progress])
 
     useEffect(() => {
         const onOutside = (e: MouseEvent) => {
@@ -87,7 +87,7 @@ export default function AppFolder() {
         }
         document.addEventListener('mousedown', onOutside)
         return () => document.removeEventListener('mousedown', onOutside)
-    }, [phase])
+    }, [phase, handleClose])
 
     const handleAppClick = (e: React.MouseEvent, app: AppItem) => {
         if (!isFullyOpen) {
@@ -198,7 +198,7 @@ export default function AppFolder() {
                             <motion.div
                                 key={app.id}
                                 className="flex flex-col items-center"
-                                onClick={(_e) => handleAppClick(e, app)}
+                                onClick={(e) => handleAppClick(e, app)}
                                 style={{ cursor: isFullyOpen ? 'pointer' : 'default' }}
                                 initial={{ opacity: 0, y: 12 }}
                                 animate={phase === 'open' || phase === 'opening'

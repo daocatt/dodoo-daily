@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { wish } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { notifyParents } from '@/lib/push'
 import { getSessionUser } from '@/lib/auth';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
-        const cookieStore = await cookies()
         const currentUserId = (await getSessionUser())?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -27,7 +25,6 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     try {
-        const cookieStore = await cookies()
         const currentUserId = (await getSessionUser())?.userId
         if (!currentUserId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

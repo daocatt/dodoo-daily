@@ -4,15 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import {
-    Users,
     UsersRound,
     Coins,
     Star,
-    Plus,
-    ChevronRight,
-    Settings,
-    LogOut,
-    Check,
     X,
     Ruler,
     Power,
@@ -23,7 +17,6 @@ import Image from 'next/image'
 import { useI18n, Locale } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
 import SmartDatePicker from '@/components/SmartDatePicker'
-import { format } from 'date-fns'
 
 interface Stats {
     userId: string

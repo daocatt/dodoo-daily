@@ -33,7 +33,6 @@ interface Wish {
 }
 
 type View = 'ITEMS' | 'WISHES'
-type ModalMode = 'item' | 'addToShop' | 'deleteConfirm'
 
 export default function ShopManagement({ onOrdersClick }: { onOrdersClick?: () => void }) {
     const { t } = useI18n()

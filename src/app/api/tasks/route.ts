@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { task, users } from '@/lib/schema'
-import { desc, eq, and, or, sql, isNull } from 'drizzle-orm'
+import { task } from '@/lib/schema'
+import { desc, eq, and, sql, isNull } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         const { userId: id } = session
 
-        const body = await _req.json()
+        const body = await req.json()
         const { title, description, isRepeating, isMonthlyRepeating, plannedTime } = body
 
         if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 })

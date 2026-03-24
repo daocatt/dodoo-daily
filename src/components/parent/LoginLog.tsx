@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, Clock, Hash, Smartphone, Globe, Loader2, User, ChevronRight } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Shield, Clock, Smartphone, Globe, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Image from 'next/image'

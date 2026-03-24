@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft, ArrowRight, Loader2, Heart, Eye, Share2, Coins, Disc, User, ShieldAlert, ShieldCheck, CheckCircle, ChevronRight, X, User as UserIcon, Maximize2, History } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, Heart, Eye, Coins, Disc, User, ShieldAlert, ShieldCheck, CheckCircle, ChevronRight, X, User as UserIcon, Maximize2, History } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import NatureBackground from '@/components/NatureBackground'
@@ -11,9 +11,9 @@ import PanelHeader from '@/components/PanelHeader'
 import Link from 'next/link'
 import ShareButton from '@/components/public/ShareButton'
 import AuthGate from '@/components/public/AuthGate'
-import VisitorCenter from '@/components/public/VisitorCenter'
+
 import VisitorAuth from '@/components/public/VisitorAuth'
-import { useAuthSession } from '@/hooks/useAuthSession'
+
 
 type ArtworkDetail = {
     id: string
@@ -55,7 +55,7 @@ export default function ArtworkDetailPage() {
     const [hasLiked, setHasLiked] = useState(false)
     const [visitor, setVisitor] = useState<{ id: string; name: string; currency: number; phone?: string; email?: string; address?: string } | null>(null)
     const [member, setMember] = useState<{ id: string; name: string; nickname?: string; currency: number } | null>(null)
-    const [showVisitorPanel, setShowVisitorPanel] = useState(false)
+
     const [isLightboxOpen, setIsLightboxOpen] = useState(false)
 
     // Contact info
@@ -63,7 +63,7 @@ export default function ArtworkDetailPage() {
     const [contactPhone, setContactPhone] = useState('')
     const [contactEmail, setContactEmail] = useState('')
     const [shippingAddress, setShippingAddress] = useState('')
-    const [useSavedAddress, setUseSavedAddress] = useState(true)
+    const [useSavedAddress] = useState(true)
 
     const [systemStatus, setSystemStatus] = useState({ disableVisitorLogin: false, disableVisitorRegistration: false })
 
@@ -385,8 +385,7 @@ export default function ArtworkDetailPage() {
                                                 if (visitor || member) {
                                                     setShowCollectModal(true)
                                                 } else {
-                                                    setShowVisitorPanel(false)
-                                                    setShowCollectModal(true)
+                                                setShowCollectModal(true)
                                                 }
                                             }}
                                             className="hardware-btn group w-full mb-6"
@@ -454,7 +453,6 @@ export default function ArtworkDetailPage() {
                                                 </p>
                                                 <button 
                                                     onClick={() => {
-                                                        setShowVisitorPanel(false)
                                                         setShowCollectModal(true)
                                                     }}
                                                     className="hardware-btn group w-full block"

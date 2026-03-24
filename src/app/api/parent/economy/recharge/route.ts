@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { users } from '@/lib/schema'
-import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { addBalance } from '@/lib/economy'
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId, role } = await getSessionUser()
-        if (role !== 'PARENT' || !userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const session = await getSessionUser()
+        if (!session || session.role !== 'PARENT') return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const userId = session.userId
 
         const body = await req.json()
         const { amount, type } = body // type: 'CURRENCY' or 'GOLD_STAR'
@@ -24,8 +22,8 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ success: true, balance: res.balance })
-    } catch (_e) {
-        console.error('Recharge failed:', e)
+    } catch (error) {
+        console.error('Recharge failed:', error)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

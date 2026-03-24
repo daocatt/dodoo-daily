@@ -68,8 +68,8 @@ export default function MyGalleryWidget() {
                         <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-black text-slate-800 tracking-tight leading-none mb-1">My Collection</h3>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{likes.length + orders.length} Items Total</span>
+                        <h3 className="text-lg font-black text-slate-800 tracking-tight leading-none mb-1">{t('widget.myGallery.title')}</h3>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('widget.myGallery.totalItems', { count: (likes.length + orders.length).toString() })}</span>
                     </div>
                 </div>
                 <Link href="/member" className="p-2.5 bg-slate-100 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all border border-transparent hover:border-indigo-100 shadow-sm">
@@ -104,8 +104,8 @@ export default function MyGalleryWidget() {
                     <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-indigo-200 mb-3 shadow-inner">
                         <Heart className="w-6 h-6" />
                     </div>
-                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">No Collections Stored</p>
-                    <p className="text-[8px] text-slate-400 italic mt-1 font-medium italic">Visit Exhibition to add items</p>
+                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{t('widget.myGallery.noItems')}</p>
+                    <p className="text-[8px] text-slate-400 italic mt-1 font-medium italic">{t('widget.myGallery.visitExhibition')}</p>
                 </div>
             )}
 
@@ -114,14 +114,14 @@ export default function MyGalleryWidget() {
                     <Heart className="w-4 h-4 text-rose-500 fill-rose-500 group-hover/btn:scale-110 transition-transform" />
                     <div className="flex flex-col">
                         <span className="text-xs font-black text-rose-700">{likes.length}</span>
-                        <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest leading-none">Likes</span>
+                        <span className="text-[8px] font-black text-rose-400 uppercase tracking-widest leading-none">{t('widget.myGallery.likes')}</span>
                     </div>
                 </div>
                 <div className="flex-1 bg-indigo-50 border border-indigo-100 p-3 rounded-2xl flex items-center gap-3 group/btn cursor-pointer transition-all hover:bg-indigo-100/50">
                     <ShoppingBag className="w-4 h-4 text-indigo-500 group-hover/btn:rotate-12 transition-transform" />
                     <div className="flex flex-col">
                         <span className="text-xs font-black text-indigo-700">{orders.length}</span>
-                        <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest leading-none">Order</span>
+                        <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest leading-none">{t('widget.myGallery.order')}</span>
                     </div>
                 </div>
             </div>

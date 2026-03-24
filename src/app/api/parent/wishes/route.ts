@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { wish, users, shopItem } from '@/lib/schema'
-import { eq, desc, isNull } from 'drizzle-orm'
-import { cookies } from 'next/headers'
+import { eq, desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 async function isParent() {

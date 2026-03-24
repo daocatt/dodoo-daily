@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { growthRecord, users } from '@/lib/schema'
-import { eq, and, desc, gte, lte, sql } from 'drizzle-orm'
+import { growthRecord } from '@/lib/schema'
+import { eq, desc, sql } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
-    const { userId, role } = await getSessionUser()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getSessionUser()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId, role } = session
 
     const { searchParams } = new URL(req.url)
     const targetUserId = searchParams.get('userId') || userId
@@ -49,8 +50,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-    const { userId, role } = await getSessionUser()
-    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await getSessionUser()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { userId, role } = session
 
     try {
         const body = await req.json()

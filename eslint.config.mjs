@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "migrate.js",
     "dnd-example/**",
+    "public/**",
   ]),
   {
     rules: {

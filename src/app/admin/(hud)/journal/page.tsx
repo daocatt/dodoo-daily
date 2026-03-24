@@ -78,11 +78,8 @@ export default function JournalPage() {
     }
 
 
-    const milestoneEntries = entries.filter(e => e.isMilestone)
     const regularEntries = entries.filter(e => !e.isMilestone)
     const renderEntry = (entry: JournalEntry) => {
-        const isChild = entry.authorRole === 'CHILD'
-
         let entryImages: string[] = []
         try {
             if (entry.imageUrls) {
@@ -97,7 +94,7 @@ export default function JournalPage() {
             } else if (entry.imageUrl) {
                 entryImages = [entry.imageUrl]
             }
-        } catch (_e) {
+        } catch (e) {
             console.error("Failed to parse journal images", e)
             if (entry.imageUrl) entryImages = [entry.imageUrl]
         }

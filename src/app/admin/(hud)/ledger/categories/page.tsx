@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from 'framer-motion'
 import { Trash2, Loader2, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
@@ -44,7 +44,7 @@ export default function CategoryManagerPage() {
                 const res = await fetch('/api/ledger/categories')
                 const data = await res.json()
                 setCategories(data)
-            } catch (_error) {
+            } catch (error) {
                 console.error('Fetch error:', error)
             } finally {
                 setLoading(false)

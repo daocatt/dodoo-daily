@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { ShoppingBag, CheckCircle, RotateCcw, MessageSquare, X, Package, User, Palette, Phone, Calendar } from 'lucide-react'
+import { ShoppingBag, CheckCircle, RotateCcw, MessageSquare, X, Package, User, Phone, Calendar } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
@@ -76,8 +76,8 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState<string | null>(null)
 
-    const [remarkModal, setRemarkModal] = useState<{ open: boolean; orderId: string; current: string }>({
-        open: false, orderId: '', current: ''
+    const [remarkModal, setRemarkModal] = useState<{ open: boolean; orderId: string; initialValue: string }>({
+        open: false, orderId: '', initialValue: ''
     })
     const [remarkText, setRemarkText] = useState('')
     const remarkRef = useRef<HTMLTextAreaElement>(null)
@@ -99,10 +99,10 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
 
     useEffect(() => {
         if (remarkModal.open) {
-            setRemarkText(remarkModal.current)
+            setRemarkText(remarkModal.initialValue)
             setTimeout(() => remarkRef.current?.focus(), 100)
         }
-    }, [remarkModal.open, remarkModal.current])
+    }, [remarkModal])
 
     const handleShopUpdate = async (id: string, data: Record<string, unknown>) => {
         setUpdating(id)
@@ -246,7 +246,7 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                                                 </>
                                             )}
                                             <button
-                                                onClick={() => setRemarkModal({ open: true, orderId: order.id, current: order.remarks || '' })}
+                                                onClick={() => setRemarkModal({ open: true, orderId: order.id, initialValue: order.remarks || '' })}
                                                 disabled={isBusy}
                                                 className="px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-xs font-black flex items-center gap-2 hover:bg-slate-50 text-slate-600 transition-all"
                                             >
@@ -377,7 +377,7 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                                         {updating === remarkModal.orderId ? '...' : t('common.confirm')}
                                     </button>
                                     <button
-                                        onClick={() => setRemarkModal({ open: false, orderId: '', current: '' })}
+                                        onClick={() => setRemarkModal({ open: false, orderId: '', initialValue: '' })}
                                         className="w-full h-14 bg-slate-100 rounded-2xl font-black text-slate-500 hover:bg-slate-200 transition-all text-sm uppercase tracking-widest"
                                     >
                                         {t('common.cancel')}
@@ -393,6 +393,6 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
 
     async function saveRemark() {
         await handleShopUpdate(remarkModal.orderId, { remarks: remarkText })
-        setRemarkModal({ open: false, orderId: '', current: '' })
+        setRemarkModal({ open: false, orderId: '', initialValue: '' })
     }
 }

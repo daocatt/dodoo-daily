@@ -5,7 +5,8 @@ import { eq, and, not, or } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function PATCH(req: Request) {
-    const { userId: session } = await getSessionUser()
+    const sessionObj = await getSessionUser()
+    const session = sessionObj?.userId
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
@@ -59,7 +60,7 @@ export async function PATCH(req: Request) {
             .where(eq(users.id, session))
 
         return NextResponse.json({ success: true, ...updates })
-    } catch (_e) {
+    } catch (e) {
         console.error('Profile update error:', e)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }

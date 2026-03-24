@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Clock, Lock, Terminal, Activity, CheckCircle, ArrowLeft } from 'lucide-react'
+import { User, Phone, Mail, Ticket, Loader2, ArrowRight, ShieldCheck, Lock, Terminal, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 
 interface VisitorData {

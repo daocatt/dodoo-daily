@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { visitorMessage, visitor, users } from '@/lib/schema'
 import { getSessionUser } from '@/lib/auth'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 
 // GET ALL VISITOR MESSAGES (Parent Access)
 export async function GET() {
@@ -11,22 +11,6 @@ export async function GET() {
         if (!user || user.role !== 'PARENT') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
         }
-
-        const messages = await db.select({
-            id: visitorMessage.id,
-            text: visitorMessage.text,
-            isPublic: visitorMessage.isPublic,
-            targetUserId: visitorMessage.targetUserId,
-            createdAt: visitorMessage.createdAt,
-            visitorName: visitor.name,
-            memberName: users.name,
-            memberNickname: users.nickname,
-            targetUserName: db.select({ name: users.name }).from(users).where(eq(users.id, visitorMessage.targetUserId)).as('target_name')
-        })
-        .from(visitorMessage)
-        .leftJoin(visitor, eq(visitorMessage.visitorId, visitor.id))
-        .leftJoin(users, eq(visitorMessage.memberId, users.id))
-        .orderBy(desc(visitorMessage.createdAt))
 
         // Note: Drizzle subqueries in select can be tricky with types in this setup, 
         // let's just do a join for target user too.
@@ -58,7 +42,7 @@ export async function GET() {
         }))
 
         return NextResponse.json(results)
-    } catch (_e) {
+    } catch (e) {
         console.error('Failed to fetch parent messages:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

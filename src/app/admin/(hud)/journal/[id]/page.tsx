@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    ChevronLeft, ChevronRight, User, UserRound, Calendar, Milestone as MilestoneIcon,
-    Clock, Tag, Share2, Globe, Lock, Edit2, Check, X as CloseIcon, Loader2, Camera, X, Star
+    ChevronLeft, ChevronRight, UserRound, Calendar,
+    Clock, Tag, Edit2, Check, Loader2, Camera, X, Star
 } from 'lucide-react'
-import Link from 'next/link'
+
 import { useI18n } from '@/contexts/I18nContext'
 import Lightbox from '@/components/Lightbox'
 import SmartDatePicker from '@/components/SmartDatePicker'
@@ -107,7 +107,7 @@ export default function JournalDetailPage() {
             }
         }
         if (id) fetchDetail()
-    }, [id, router])
+    }, [id, router, searchParams])
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return
@@ -193,7 +193,7 @@ export default function JournalDetailPage() {
         }
     })()
 
-    const isChild = entry.authorRole === 'CHILD'
+
 
     return (
         <div className="min-h-dvh flex flex-col relative overflow-x-hidden bg-orange-50/30 text-[#2c2416] pb-20">

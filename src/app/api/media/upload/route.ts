@@ -4,7 +4,8 @@ import { getSessionUser } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId: authenticatedUserId } = await getSessionUser();
+        const session = await getSessionUser();
+        const authenticatedUserId = session?.userId;
         if (!authenticatedUserId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -21,6 +22,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(media);
     } catch (error) {
         console.error('Upload failed:', error);
-        return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
     }
 }

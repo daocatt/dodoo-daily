@@ -6,7 +6,7 @@ export async function PATCH(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params;
+        const { id } = await _params;
         const { name } = await req.json();
         if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
 
@@ -14,7 +14,7 @@ export async function PATCH(
         return NextResponse.json(updated);
     } catch (error) {
         console.error('Rename failed:', error);
-        return NextResponse.json({ error: error.message || 'Rename failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Rename failed' }, { status: 500 });
     }
 }
 
@@ -23,11 +23,11 @@ export async function DELETE(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params;
+        const { id } = await _params;
         await deleteMedia(id);
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Delete failed:', error);
-        return NextResponse.json({ error: error.message || 'Delete failed' }, { status: 500 });
+        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
     }
 }

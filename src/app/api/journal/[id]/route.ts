@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { journal, users, journalMedia } from '@/lib/schema'
-import { eq, and, or, asc } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
-        const { userId } = await getSessionUser()
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { id } = await _params
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
 

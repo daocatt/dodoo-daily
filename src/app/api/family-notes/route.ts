@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { familyNote, users } from '@/lib/schema'
-import { desc, eq, sql } from 'drizzle-orm'
+import { familyNote } from '@/lib/schema'
+import { desc, sql } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 export async function GET() {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        const { userId } = session
 
         const notes = await db.select({
             id: familyNote.id,
@@ -33,8 +32,9 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId } = await getSessionUser()
-        if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId } = session
 
         const { text, color } = await req.json()
         if (!text) return NextResponse.json({ error: 'Text is required' }, { status: 400 })

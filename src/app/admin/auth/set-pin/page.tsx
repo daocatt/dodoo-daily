@@ -5,12 +5,10 @@ import { motion } from 'framer-motion'
 import { Lock, ShieldCheck, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import NatureBackground from '@/components/NatureBackground'
-import { useI18n } from '@/contexts/I18nContext'
 
 export default function SetPinPage() {
     const searchParams = useSearchParams()
     const router = useRouter()
-    const { t } = useI18n()
     const userId = searchParams.get('userId')
     
     const [pin, setPin] = useState('')

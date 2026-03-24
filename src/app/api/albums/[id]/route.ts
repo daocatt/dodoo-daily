@@ -8,9 +8,7 @@ export async function GET(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
-        const { searchParams } = new URL(req.url)
-        const targetUserId = searchParams.get('userId')
+        const { id } = await _params
 
         const albums = await db.select().from(album).where(eq(album.id, id))
 
@@ -56,7 +54,7 @@ export async function PUT(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const body = await req.json()
         const { title } = body
 
@@ -76,11 +74,11 @@ export async function PUT(
     }
 }
 export async function DELETE(
-    req: NextRequest,
+    _req: NextRequest,
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
 
         // Un-assign artworks from this album before deleting
         await db.update(artwork)

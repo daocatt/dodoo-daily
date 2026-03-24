@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { ChevronLeft, Sparkles, Heart, Clock, X, Package } from 'lucide-react'
+import { ChevronLeft, Sparkles, Heart, Clock } from 'lucide-react'
 import Link from 'next/link'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'

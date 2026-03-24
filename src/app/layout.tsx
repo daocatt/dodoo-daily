@@ -6,6 +6,20 @@ import { db } from '@/lib/db'
 import { systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 
+import { Inter, JetBrains_Mono } from 'next/font/google'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono',
+})
+
 export async function generateMetadata(): Promise<Metadata> {
   let systemName = 'DoDoo Daily'
   try {
@@ -13,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     if (settings?.systemName) {
       systemName = settings.systemName
     }
-  } catch (_error) {
+  } catch (error) {
     console.error('Failed to fetch system name for metadata:', error)
   }
 
@@ -53,17 +67,12 @@ export default async function RootLayout({
     if (settings?.defaultLocale) {
       defaultLocale = settings.defaultLocale
     }
-  } catch (_error) {
+  } catch (error) {
     console.error('Failed to fetch default locale:', error)
   }
 
   return (
-    <html lang={defaultLocale === 'zh-CN' ? 'zh' : 'en'}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang={defaultLocale === 'zh-CN' ? 'zh' : 'en'} className={`${inter.variable} ${mono.variable}`}>
       <body>
         <I18nProvider defaultLocale={defaultLocale as 'en' | 'zh-CN'}>
           {children}
@@ -81,7 +90,7 @@ export default async function RootLayout({
                 }
                 navigator.serviceWorker.register('/sw.js').then(function(registration) {
                   console.log('PWA: ServiceWorker registration successful with scope: ', registration.scope);
-                }, function(_err) {
+                }, function(err) {
                   console.log('PWA: ServiceWorker registration failed: ', err);
                 });
               });

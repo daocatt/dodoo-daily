@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import {
     Activity,
@@ -16,12 +16,11 @@ import {
     Scale,
     Ruler,
     History,
-    Coins,
     User,
     CalendarDays
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
-import { format, startOfWeek, endOfWeek, subWeeks, isSameDay } from 'date-fns'
+import { format } from 'date-fns'
 import SmartDatePicker from '@/components/SmartDatePicker'
 import Image from 'next/image'
 
@@ -96,7 +95,7 @@ export default function GrowthStatsPage() {
     const [weight, setWeight] = useState('')
     const [recordDate, setRecordDate] = useState<Date>(new Date())
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true)
             const res = await fetch('/api/parent/children/stats')
@@ -111,14 +110,14 @@ export default function GrowthStatsPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [t])
 
     useEffect(() => {
         const loadInitialData = async () => {
             await fetchData()
         }
         loadInitialData()
-    }, [])
+    }, [fetchData])
 
     const fetchGrowthRecords = async (userId: string, page: number = 1) => {
         try {
@@ -242,7 +241,7 @@ export default function GrowthStatsPage() {
 
         return (
             <div className="relative h-48 flex items-end justify-between gap-1 mt-4 px-2">
-                {data.map((d, i) => {
+                {data.map((d) => {
                     const val = (type === 'height' ? d.height : d.weight) || 0
                     const heightPercent = val === 0 ? 0 : ((val - min) / range * 70) + 30
                     return (

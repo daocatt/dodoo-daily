@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { ipBlacklist } from '@/lib/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
         const list = await db.select().from(ipBlacklist).orderBy(desc(ipBlacklist.createdAt))
         return NextResponse.json(list)
-    } catch (_e) {
+    } catch (e) {
         console.error('Fetch IP blacklist error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         }).returning()
 
         return NextResponse.json(newItem)
-    } catch (_e) {
+    } catch (e) {
         console.error('Add IP to blacklist error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

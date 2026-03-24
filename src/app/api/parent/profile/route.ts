@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import { db } from '@/lib/db'
 import { users } from '@/lib/schema'
-import { eq, or, and, not } from 'drizzle-orm'
+import { eq, and, not } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth';
 
 export async function PATCH(req: Request) {
-    const cookieStore = await cookies()
     const session = (await getSessionUser())?.userId
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -77,7 +75,8 @@ export async function PATCH(req: Request) {
             .where(eq(users.id, session))
 
         return NextResponse.json({ success: true })
-    } catch (_e) {
+    } catch (e) {
+        console.error('Update parent profile error:', e)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 }

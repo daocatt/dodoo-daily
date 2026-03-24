@@ -6,7 +6,6 @@ import VisitorCenter from '@/components/public/VisitorCenter'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
 import { useI18n } from '@/contexts/I18nContext'
-import { ArrowLeft } from 'lucide-react'
 
 export default function VisitorPage() {
     const router = useRouter()

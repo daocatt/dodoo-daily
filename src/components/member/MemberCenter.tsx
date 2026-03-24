@@ -4,24 +4,19 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { 
     MessageSquare, 
-    History, 
-    ExternalLink, 
-    Download,
     MapPin,
     X,
-    Loader2,
     ArrowUpRight,
     ArrowDownRight,
     LayoutGrid,
     ExternalLink as ExternalLinkIcon,
     Settings,
-    ShieldCheck,
     Heart,
     Package
 } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/contexts/I18nContext'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 interface MemberData {
@@ -86,20 +81,18 @@ const ModalHeader = ({ title, id, accentColor }: { title: string, id: string, ac
     </div>
 )
 
-export default function MemberCenter({ member, onLogout, onUpdateCurrency }: { 
+export default function MemberCenter({ member, onUpdateCurrency }: { 
     member: MemberData, 
-    onLogout: () => void,
+    onLogout?: () => void,
     onUpdateCurrency?: (newVal: number) => void
 }) {
     const { t } = useI18n()
     const router = useRouter()
-    const params = useParams()
     const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'HISTORY' | 'ORDERS' | 'COLLECTIONS' | 'FAVORITES' | 'PROFILE'>('OVERVIEW')
     const [logs, setLogs] = useState<VisitorLog[]>([])
     const [orders, setOrders] = useState<VisitorOrder[]>([])
     const [likes, setLikes] = useState<VisitorLike[]>([])
     const [messages, setMessages] = useState<SystemMessage[]>([])
-    const [messageLoading, setMessageLoading] = useState(false)
     
     // Address State
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false)
@@ -109,9 +102,8 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
     useEffect(() => {
         fetchData()
         fetchMessages()
-    }, [member.id])
-
-    const fetchData = async () => {
+    }, [fetchData, fetchMessages])
+    const fetchData = useCallback(async () => {
         try {
             const [logsRes, ordersRes, likesRes] = await Promise.all([
                 fetch(`/api/public/visitor/logs?memberId=${member.id}`),
@@ -125,10 +117,9 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
         } catch (_err) {
             console.error('Failed to fetch member data', _err)
         }
-    }
+    }, [member.id])
 
-    const fetchMessages = async () => {
-        setMessageLoading(true)
+    const fetchMessages = useCallback(async () => {
         try {
             const res = await fetch(`/api/public/message?userId=${member.id}&limit=20`)
             if (res.ok) {
@@ -136,10 +127,8 @@ export default function MemberCenter({ member, onLogout, onUpdateCurrency }: {
             }
         } catch (_err) {
             console.error('Failed to fetch messages', _err)
-        } finally {
-            setMessageLoading(false)
         }
-    }
+    }, [member.id])
 
     const handleSaveAddress = async (e: React.FormEvent) => {
         e.preventDefault()

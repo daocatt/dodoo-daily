@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { purchase, users, shopItem, accountStats } from '@/lib/schema'
+import { purchase, users, shopItem } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
 import { getSessionUser } from '@/lib/auth'
 

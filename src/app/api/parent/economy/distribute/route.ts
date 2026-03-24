@@ -5,8 +5,9 @@ import { sendPushNotification } from '@/lib/push'
 
 export async function POST(req: NextRequest) {
     try {
-        const { userId: parentId, role } = await getSessionUser()
-        if (role !== 'PARENT' || !parentId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const session = await getSessionUser()
+        if (!session || session.role !== 'PARENT') return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        const parentId = session.userId
 
         const body = await req.json()
         const { targetUserId, type, amount, reason } = body
@@ -30,17 +31,15 @@ export async function POST(req: NextRequest) {
         }
         
         const typeLabel = typeLabels[type] || type
-        const actionLabel = amount >= 0 ? 'Received' : 'Adjusted'
-        const actionLabelZh = amount >= 0 ? '获得了' : '调整了'
         
         sendPushNotification(targetUserId, {
             title: `Balance Updated / 余额变动: ${typeLabel}`,
-            body: `${amount >= 0 ? '+' : '-'}${Math.abs(amount)} ${typeLabel}. ${reason || 'Family update'}\n${actionLabelZh} ${Math.abs(amount)} ${typeLabel}: ${reason || '家庭动态'}`,
+            body: `${amount >= 0 ? '+' : '-'}${Math.abs(amount)} ${typeLabel}. ${reason || 'Family update'}\n${amount >= 0 ? '获得了' : '调整了'} ${Math.abs(amount)} ${typeLabel}: ${reason || '家庭动态'}`,
             data: { url: '/' }
         }).catch(e => console.error('Distribute push failed:', e))
 
         return NextResponse.json({ success: true, balance: res.balance })
-    } catch (_e) {
+    } catch (e) {
         console.error('Manual distribution failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

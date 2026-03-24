@@ -1,25 +1,18 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Power, ShieldAlert, Cpu, RotateCcw, AlertTriangle, Check, X, Loader2, Camera, LayoutGrid, Image as ImageIcon, Globe, Bell, Github, Mail, ExternalLink, Info, Heart } from 'lucide-react'
+import { Power, ShieldAlert, AlertTriangle, Check, X, Loader2, LayoutGrid, Image as ImageIcon, Globe, Github, Mail, ExternalLink, Info, Heart } from 'lucide-react'
 import pkg from '@/../package.json'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 export default function SystemSettings() {
     const { t } = useI18n()
-    const router = useRouter()
     const [showConfirm, setShowConfirm] = useState(false)
     const [systemName, setSystemName] = useState('DoDoo Family')
     const [systemSubtitle, setSystemSubtitle] = useState('')
     const [showAllAvatars, setShowAllAvatars] = useState(true)
-    const [requireVisitorApproval, setRequireVisitorApproval] = useState(true)
-    const [requireInvitationCode, setRequireInvitationCode] = useState(false)
-    const [visitorInvitationCode, setVisitorInvitationCode] = useState('')
-    const [disableVisitorLogin, setDisableVisitorLogin] = useState(false)
-    const [disableVisitorRegistration, setDisableVisitorRegistration] = useState(false)
     const [hideFamilyLogin, setHideFamilyLogin] = useState(false)
     const [homepageImages, setHomepageImages] = useState<string[]>([])
     const [uploading, setUploading] = useState(false)
@@ -46,11 +39,6 @@ export default function SystemSettings() {
                 setSystemName(data.systemName || 'DoDoo Family')
                 setSystemSubtitle(data.systemSubtitle || '')
                 setShowAllAvatars(data.showAllAvatars ?? true)
-                setRequireVisitorApproval(data.requireVisitorApproval ?? true)
-                setRequireInvitationCode(data.requireInvitationCode ?? false)
-                setVisitorInvitationCode(data.visitorInvitationCode || '')
-                setDisableVisitorLogin(data.disableVisitorLogin ?? false)
-                setDisableVisitorRegistration(data.disableVisitorRegistration ?? false)
                 setHideFamilyLogin(data.hideFamilyLogin ?? false)
                 try {
                     setHomepageImages(data.homepageImages ? JSON.parse(data.homepageImages) : [])
@@ -82,11 +70,6 @@ export default function SystemSettings() {
                 if (updates.systemName !== undefined) setSystemName(updates.systemName as string)
                 if (updates.systemSubtitle !== undefined) setSystemSubtitle(updates.systemSubtitle as string)
                 if (updates.showAllAvatars !== undefined) setShowAllAvatars(updates.showAllAvatars as boolean)
-                if (updates.requireVisitorApproval !== undefined) setRequireVisitorApproval(updates.requireVisitorApproval as boolean)
-                if (updates.requireInvitationCode !== undefined) setRequireInvitationCode(updates.requireInvitationCode as boolean)
-                if (updates.visitorInvitationCode !== undefined) setVisitorInvitationCode(updates.visitorInvitationCode as string)
-                if (updates.disableVisitorLogin !== undefined) setDisableVisitorLogin(updates.disableVisitorLogin as boolean)
-                if (updates.disableVisitorRegistration !== undefined) setDisableVisitorRegistration(updates.disableVisitorRegistration as boolean)
                 if (updates.hideFamilyLogin !== undefined) setHideFamilyLogin(updates.hideFamilyLogin as boolean)
                 if (updates.homepageImages !== undefined) {
                     try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (_e) { }

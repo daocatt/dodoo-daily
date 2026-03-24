@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
     try {
         const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        const { userId } = session
 
         const { searchParams } = new URL(req.url)
         const page = parseInt(searchParams.get('page') || '1')

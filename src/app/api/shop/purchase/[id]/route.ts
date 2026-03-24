@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { purchase, shopItem, accountStats } from '@/lib/schema'
+import { purchase } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
 import { sendPushNotification } from '@/lib/push'
 import { getSessionUser } from '@/lib/auth';
 
 async function checkAuth() {
-    const cookieStore = await cookies()
-    const role = (await getSessionUser())?.role
-    const userId = (await getSessionUser())?.userId
+    const session = await getSessionUser()
+    const role = session?.role
+    const userId = session?.userId
     return { role, userId }
 }
 
 export async function PATCH(
-    req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -67,7 +66,7 @@ export async function PATCH(
         }
 
         return NextResponse.json(result)
-    } catch (_e) {
+    } catch (e) {
         console.error('Update purchase failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { accountStats, accountStatsLog, users } from '@/lib/schema'
+import { accountStats, accountStatsLog } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
 async function checkIsParent() {
-    const { role } = await getSessionUser()
-    return role === 'PARENT'
+    const session = await getSessionUser()
+    return session?.role === 'PARENT'
 }
 
 export async function GET(req: NextRequest) {
@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-    const { userId: actorId, role } = await getSessionUser()
+    const session = await getSessionUser()
+    const actorId = session?.userId
+    const role = session?.role
     if (role !== 'PARENT' || !actorId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {

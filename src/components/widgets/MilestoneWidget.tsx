@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Trophy, ChevronRight, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { clsx, type ClassValue } from 'clsx'
+import { clsx } from 'clsx'
 import { useI18n } from '@/contexts/I18nContext'
 
 interface Milestone {

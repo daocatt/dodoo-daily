@@ -6,7 +6,6 @@ import {
     User, 
     Ticket, 
     History, 
-    ShoppingBag, 
     Heart, 
     LogOut, 
     ExternalLink, 
@@ -14,8 +13,6 @@ import {
     MapPin,
     X,
     Loader2,
-    Ticket as TicketIcon,
-    Package,
     ArrowUpRight,
     ArrowDownRight,
     LayoutGrid
@@ -104,11 +101,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
     const [addressInput, setAddressInput] = useState(visitor.address || '')
     const [savingAddress, setSavingAddress] = useState(false)
 
-    useEffect(() => {
-        fetchData()
-    }, [visitor.id])
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [logsRes, ordersRes, likesRes] = await Promise.all([
                 fetch(`/api/public/visitor/logs?visitorId=${visitor.id}`),
@@ -122,7 +115,11 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
         } catch (_err) {
             console.error('Failed to fetch visitor data', _err)
         }
-    }
+    }, [visitor.id])
+
+    useEffect(() => {
+        fetchData()
+    }, [fetchData])
 
     const handleRecharge = async (e: React.FormEvent) => {
         e.preventDefault()

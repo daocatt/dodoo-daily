@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
-import { format, startOfWeek, endOfWeek, isSameDay } from 'date-fns'
+import { startOfWeek, endOfWeek } from 'date-fns'
 import SmartDatePicker from '@/components/SmartDatePicker'
 import Image from 'next/image'
 
@@ -38,12 +38,7 @@ type Child = {
     avatarUrl: string | null
 }
 
-type ParentInfo = {
-    id: string
-    name: string
-    nickname: string
-    avatarUrl: string | null
-}
+
 
 function TasksPageContent() {
     const searchParams = useSearchParams()
@@ -57,7 +52,6 @@ function TasksPageContent() {
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
     const [assignTo, setAssignTo] = useState<string[]>([]) // Changed to array
     const [currentUserId, setCurrentUserId] = useState<string>('')
-    const [parentInfo, setParentInfo] = useState<ParentInfo | null>(null)
     const [systemTimezone, setSystemTimezone] = useState('Asia/Shanghai')
     const { t } = useI18n()
 
@@ -79,12 +73,6 @@ function TasksPageContent() {
             .then(data => {
                 if (data.userId) {
                     setCurrentUserId(data.userId)
-                    setParentInfo({
-                        id: data.userId,
-                        name: data.name || 'Parent',
-                        nickname: data.nickname || data.name || 'Parent',
-                        avatarUrl: data.avatarUrl
-                    })
                 }
                 if (data.timezone) setSystemTimezone(data.timezone)
                 if (data.isParent) {
@@ -788,7 +776,7 @@ function TasksPageContent() {
                                                     type="checkbox"
                                                     id="isRep"
                                                     checked={isRepeating}
-                                                    onChange={(_e) => {
+                                                    onChange={(e) => {
                                                         setIsRepeating(e.target.checked);
                                                         if (e.target.checked) setIsMonthlyRepeating(false);
                                                     }}
@@ -801,7 +789,7 @@ function TasksPageContent() {
                                                     type="checkbox"
                                                     id="isMonthlyRep"
                                                     checked={isMonthlyRepeating}
-                                                    onChange={(_e) => {
+                                                    onChange={(e) => {
                                                         setIsMonthlyRepeating(e.target.checked);
                                                         if (e.target.checked) setIsRepeating(false);
                                                     }}

@@ -77,8 +77,9 @@ export async function POST(req: NextRequest) {
             sameSite: 'lax'
         })
 
-        return NextResponse.json(newVisitor)
-    } catch (_e) {
+        const { password: _, ...safeVisitor } = newVisitor
+        return NextResponse.json(safeVisitor)
+    } catch (e) {
         console.error('Visitor registration error:', e)
         return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
     }

@@ -1,15 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion } from 'motion/react'
-import { ChevronLeft, Store, Save, ExternalLink, MessageSquare, Eye, EyeOff, Trash2 } from 'lucide-react'
+import { ChevronLeft, Store, Save, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
-import { useI18n } from '@/contexts/I18nContext'
 
 export default function ExhibitionSettingsPage() {
-    const { t } = useI18n()
     const router = useRouter()
     
     const [loading, setLoading] = useState(true)
@@ -108,7 +105,7 @@ export default function ExhibitionSettingsPage() {
                                             type="checkbox"
                                             className="sr-only"
                                             checked={settings.exhibitionEnabled}
-                                            onChange={(_e) => setSettings({ ...settings, exhibitionEnabled: e.target.checked })}
+                                            onChange={(e) => setSettings({ ...settings, exhibitionEnabled: e.target.checked })}
                                         />
                                         <div className={`block w-14 h-8 rounded-full ${settings.exhibitionEnabled ? 'bg-indigo-500' : 'bg-slate-300'} transition-colors`}></div>
                                         <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${settings.exhibitionEnabled ? 'transform translate-x-6' : ''}`}></div>

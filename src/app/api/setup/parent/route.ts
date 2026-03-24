@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users, systemSettings } from '@/lib/schema'
-import { eq, or, and, not } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { uploadMedia } from '@/lib/storage'
 

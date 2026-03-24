@@ -45,8 +45,9 @@ export async function GET(request: Request) {
         const balance = stats?.fiatBalance || 0;
 
         return NextResponse.json({ records, balance });
-    } catch (e: unknown) {
-        return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    } catch (e) {
+        console.error("Ledger fetch error:", e);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
 
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { amount, categoryId, type, description, relatedUserId, date } = body;
+        const { amount, categoryId, type, description, relatedUserId } = body;
 
         if (!amount || !categoryId || !type || !description) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -78,7 +79,8 @@ export async function POST(request: Request) {
         }
 
         return NextResponse.json({ success: true, newBalance: res.balance });
-    } catch (e: unknown) {
-        return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    } catch (e) {
+        console.error("Ledger create error:", e);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

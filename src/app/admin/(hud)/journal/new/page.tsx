@@ -2,22 +2,12 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, Camera, X, Milestone as MilestoneIcon, Calendar, BookOpen, Loader2 } from 'lucide-react'
+import { ChevronLeft, Camera, X, Calendar, Loader2 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
-import Link from 'next/link'
 import Image from 'next/image'
 import SmartDatePicker from '@/components/SmartDatePicker'
 
-const formatDate = (date: string | number | Date) => {
-    const d = new Date(date)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    const h = String(d.getHours()).padStart(2, '0')
-    const min = String(d.getMinutes()).padStart(2, '0')
-    return `${y}-${m}-${day} ${h}:${min}`
-}
+
 
 export default function NewJournalPage() {
     const { t } = useI18n()

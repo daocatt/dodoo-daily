@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
-import { cookies } from 'next/headers'
 import { addBalance } from '@/lib/economy'
 import { getSessionUser } from '@/lib/auth'
 
@@ -13,7 +12,7 @@ async function checkParent() {
 
 export async function POST(
     req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params
@@ -52,7 +51,7 @@ export async function POST(
         }
 
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-    } catch (_e) {
+    } catch (e) {
         console.error('Confirmation failed:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

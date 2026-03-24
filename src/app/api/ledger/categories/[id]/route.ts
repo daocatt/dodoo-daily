@@ -1,12 +1,12 @@
 import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ledgerCategory, ledgerRecord } from "@/lib/schema";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
-    req: NextRequest,
-    { params: _params }: { params: Promise<{ id: string }> }
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params
     const session = await getSessionUser();
@@ -37,7 +37,8 @@ export async function DELETE(
         )
 
         return NextResponse.json({ success: true });
-    } catch (e: unknown) {
-        return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    } catch (e) {
+        console.error("Ledger category delete error:", e);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

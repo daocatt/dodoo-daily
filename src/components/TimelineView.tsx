@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Milestone as MilestoneIcon, Star, Calendar, ChevronRight } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import Image from 'next/image'
 

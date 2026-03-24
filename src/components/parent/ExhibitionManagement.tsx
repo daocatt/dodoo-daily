@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Palette, XCircle, Search, Filter, Loader2, Image as ImageIcon, ExternalLink, Heart, Eye, CheckCircle, Edit, Save, ShoppingBag } from 'lucide-react'
+import { Palette, XCircle, Search, Loader2, Heart, Eye, CheckCircle, Edit, Save, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
@@ -39,7 +39,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
                 const data = await res.json()
                 setArtworks(data)
             }
-        } catch (_e) {
+        } catch (e: unknown) {
             console.error('Failed to fetch exhibition artworks:', e)
         } finally {
             setLoading(false)
@@ -62,7 +62,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
             if (res.ok) {
                 setArtworks(prev => prev.filter(art => art.id !== id))
             }
-        } catch (_e) {
+        } catch (e: unknown) {
             console.error('Failed to take down artwork:', e)
         } finally {
             setProcessingId(null)
@@ -81,7 +81,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
             if (res.ok) {
                 setArtworks(prev => prev.map(art => art.id === id ? { ...art, isApproved: true } : art))
             }
-        } catch (_e) {
+        } catch (e: unknown) {
             console.error('Failed to approve artwork:', e)
         } finally {
             setProcessingId(null)
@@ -101,7 +101,7 @@ export default function ExhibitionManagement({ onOrdersClick }: { onOrdersClick?
                 setArtworks(prev => prev.map(art => art.id === id ? { ...art, exhibitionDescription: tempDescription } : art))
                 setEditingDescriptionId(null)
             }
-        } catch (_e) {
+        } catch (e: unknown) {
             console.error('Failed to save description:', e)
         } finally {
             setProcessingId(null)

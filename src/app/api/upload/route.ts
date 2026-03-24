@@ -1,22 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { artwork, users } from '@/lib/schema'
+import { artwork } from '@/lib/schema'
 import { uploadMedia } from '@/lib/storage'
-import { cookies } from 'next/headers'
-import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth';
-
-async function getAuth() {
-    await cookies()
-    const userId = (await getSessionUser())?.userId
-    return { userId }
-}
 
 export async function POST(req: NextRequest) {
     try {
-        await cookies()
-        const userId = (await getSessionUser())?.userId
-        const role = (await getSessionUser())?.role
+        const session = await getSessionUser()
+        const userId = session?.userId
+        const role = session?.role
         if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const formData = await req.formData()

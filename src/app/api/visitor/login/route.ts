@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { users, visitor, ipBlacklist, systemSettings } from '@/lib/schema'
-import { eq, and, or } from 'drizzle-orm'
+import { visitor, ipBlacklist, systemSettings } from '@/lib/schema'
+import { eq, or } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { signVisitorJWT } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
@@ -65,9 +65,10 @@ export async function POST(req: NextRequest) {
             sameSite: 'lax'
         })
 
-        return NextResponse.json(currentVisitor)
-    } catch (_error) {
-        console.error('Visitor login error:', _error)
+        const { password: _, ...safeVisitor } = currentVisitor
+        return NextResponse.json(safeVisitor)
+    } catch (error) {
+        console.error('Visitor login error:', error)
         return NextResponse.json({ error: 'Login failed' }, { status: 500 })
     }
 }

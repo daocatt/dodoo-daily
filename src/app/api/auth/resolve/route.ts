@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
             avatarUrl: user.avatarUrl,
             hasPin: !!user.pin
         })
-    } catch (_e) {
-        console.error('Resolve failed', e)
+    } catch (error) {
+        console.error('Resolve failed', error)
         return NextResponse.json({ error: 'Server error' }, { status: 500 })
     }
 }

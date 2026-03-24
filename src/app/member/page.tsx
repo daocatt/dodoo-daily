@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import MemberCenter from '@/components/member/MemberCenter'
 import AuthGate from '@/components/public/AuthGate'
 import { useAuthSession } from '@/hooks/useAuthSession'
-import { ArrowLeft } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 
 export default function MemberPage() {
@@ -47,7 +46,7 @@ export default function MemberPage() {
                                     logout()
                                     router.push('/')
                                 }} 
-                                onUpdateCurrency={(newVal) => refresh()}
+                                onUpdateCurrency={(_newVal) => refresh()}
                             />
                         </div>
                     )}
