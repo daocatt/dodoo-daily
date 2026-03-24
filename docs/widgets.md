@@ -59,6 +59,19 @@ const WIDGET_REGISTRY = {
 }
 ```
 
+### 2.4 Directory-Based Structure
+For complex widgets, we recommend splitting the logic by size into a dedicated directory. This prevents monolithic files and improves maintainability:
+
+```text
+src/components/widgets/Tasks/
+  ├── index.tsx         // Main entry / size switcher
+  ├── size_icon.tsx     // 1x1 variant (badge)
+  ├── size_square.tsx   // 2x2 variant (minimal list)
+  ├── size_wide.tsx     // 4x2 variant (interative list)
+  ├── size_giant.tsx    // 8x4 variant (full dashboard)
+  └── types.ts          // Shared interfaces
+```
+
 ---
 
 ## 3. Decoupling from Bento Container

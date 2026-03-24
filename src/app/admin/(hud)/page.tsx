@@ -453,7 +453,12 @@ export default function Home() {
   }
 
   const addWidget = async (type: string) => {
-    // Repeated widgets are now allowed
+    // Only one instance of each widget type allowed across all pages (per user request)
+    if (widgets.some(w => w.type === type)) {
+      alert(t('widget.errors.alreadyExists'))
+      return
+    }
+
     try {
       const isPosOccupied = (x: number, y: number, sw: number, sh: number, currentPlaced: Widget[]) => {
         return currentPlaced.some(p => {
@@ -462,7 +467,7 @@ export default function Home() {
         })
       }
 
-      // Find an empty slot horizontally across pages
+      // Find an empty slot horizontally ONLY ON THE CURRENT PAGE
       const reqW = 1;
       const reqH = 1;
       const initialSize = 'ICON';
@@ -470,14 +475,19 @@ export default function Home() {
       let foundSlot = false;
       let nx = 0;
       let ny = 0;
-      for (let page = 0; page < pageCount && !foundSlot; page++) {
-        for (let ty = 0; ty <= maxRows - reqH && !foundSlot; ty++) {
-          for (let tx = page * gridCols; tx <= page * gridCols + gridCols - reqW && !foundSlot; tx++) {
-            if (!isPosOccupied(tx, ty, reqW, reqH, widgets)) {
-              nx = tx; ny = ty; foundSlot = true;
-            }
+      
+      const page = currentPage
+      for (let ty = 0; ty <= maxRows - reqH && !foundSlot; ty++) {
+        for (let tx = page * gridCols; tx <= page * gridCols + gridCols - reqW && !foundSlot; tx++) {
+          if (!isPosOccupied(tx, ty, reqW, reqH, widgets)) {
+            nx = tx; ny = ty; foundSlot = true;
           }
         }
+      }
+
+      if (!foundSlot) {
+        alert(t('widget.errors.noSpace'))
+        return
       }
 
       const res = await fetch('/api/home-widgets', {
@@ -978,7 +988,8 @@ export default function Home() {
                       const nx = Math.round((absoluteX - pageOffsetX) / (cellSize + currentGap))
                       const ny = Math.round((absoluteY - pageOffsetY) / (cellSize + currentGap))
 
-                      const finalNx = Math.max(0, Math.min(gridCols * pageCount - spanW, nx))
+                      // Constrain destination to the CURRENT PAGE
+                      const finalNx = Math.max(currentPage * gridCols, Math.min((currentPage + 1) * gridCols - spanW, nx))
                       const finalNy = Math.max(0, Math.min(maxRows - spanH, ny))
 
                       if (!dragPreview || dragPreview.x !== finalNx || dragPreview.y !== finalNy) {
@@ -996,8 +1007,9 @@ export default function Home() {
                       const nx = Math.round((absoluteX - pageOffsetX) / (cellSize + currentGap))
                       const ny = Math.round((absoluteY - pageOffsetY) / (cellSize + currentGap))
 
-                      const finalNx = Math.max(0, Math.min(gridCols * pageCount - spanW, nx))
-                      const finalNy = Math.max(0, Math.min(maxRows - spanH, ny))
+                       // Constrain destination to the CURRENT PAGE
+                       const finalNx = Math.max(currentPage * gridCols, Math.min((currentPage + 1) * gridCols - spanW, nx))
+                       const finalNy = Math.max(0, Math.min(maxRows - spanH, ny))
 
                       const moved = { ...w, x: finalNx, y: finalNy }
                       const next = resolveOverlap(moved, widgets)

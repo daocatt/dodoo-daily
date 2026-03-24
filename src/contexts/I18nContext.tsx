@@ -216,6 +216,8 @@ const dictionaries: Dictionary = {
         'menu.ledger': 'Ledger',
         'menu.storage': 'Inventory',
         'menu.milestone': 'Milestones',
+        'widget.errors.alreadyExists': 'This widget is already on your dashboard.',
+        'widget.errors.noSpace': 'No space left on this page.',
 
         // Milestones
         'milestones.empty': 'No milestone records yet.',
@@ -1082,6 +1084,8 @@ const dictionaries: Dictionary = {
         'menu.ledger': '账本',
         'menu.storage': '物资',
         'menu.milestone': '大事记',
+        'widget.errors.alreadyExists': '该小组件已在你的看板上。',
+        'widget.errors.noSpace': '当前页面空间不足。',
 
         // Milestones
         'milestones.empty': '暂无大事记记录。',
