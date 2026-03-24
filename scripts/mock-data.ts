@@ -25,8 +25,8 @@ async function main() {
     // 2. Mock 2 Children: Lucky (Boy) and Summer (Girl)
     console.log('Generating 2 Children...');
     const childrenData = [
-        { name: 'Lucky', gender: 'MALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky', nickname: '小乐 (Lucky)', slug: 'lucky' },
-        { name: 'Summer', gender: 'FEMALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Summer', nickname: '小夏 (Summer)', slug: 'summer' }
+        { name: 'Lucky', gender: 'MALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky', nickname: '小乐 (Lucky)', slug: 'lucky', birthDate: '2018-05-20' },
+        { name: 'Summer', gender: 'FEMALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Summer', nickname: '小夏 (Summer)', slug: 'summer', birthDate: '2020-08-15' }
     ];
 
     let luckyId = '';
@@ -43,7 +43,8 @@ async function main() {
                 gender: childRecord.gender as any,
                 avatarUrl: childRecord.avatar,
                 permissionRole: 'USER',
-                pin: '1234'
+                pin: '1234',
+                birthDate: childRecord.birthDate
             }).returning().get();
             
             // Create initial stats for children

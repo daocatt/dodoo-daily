@@ -141,7 +141,10 @@ export default function AccountHUD() {
             const res = await fetch('/api/parent/economy/recharge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: parseInt(rechargeAmt), type: rechargeType })
+                body: JSON.stringify({ 
+                    amount: parseInt(rechargeAmt), 
+                    type: rechargeType 
+                })
             })
             if (res.ok) {
                 setShowRechargeModal(false)
@@ -296,34 +299,50 @@ export default function AccountHUD() {
                                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                className="relative w-full max-w-md bg-white rounded-2xl p-8 shadow-2xl my-auto"
+                                className="relative w-full max-w-md hardware-well bg-[#E6E2D1] rounded-lg p-4 shadow-2xl border border-black/10 my-auto"
                             >
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-black text-slate-800 tracking-tight">{t('parent.growth')}</h3>
-                                    <button onClick={() => setShowGrowthModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                        <X className="w-5 h-5 text-slate-400" />
+                                {/* Decorative Screws */}
+                                <div className="absolute top-2 left-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                                <div className="absolute top-2 right-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                                <div className="absolute bottom-2 left-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                                <div className="absolute bottom-2 right-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+
+                                <div className="flex justify-between items-center mb-3">
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                                            <h3 className="label-mono text-xs font-black text-slate-900 uppercase tracking-tight">{t('parent.growth')}</h3>
+                                        </div>
+                                        <p className="label-mono text-[6px] text-slate-500 uppercase tracking-widest pl-4 opacity-60 italic">Telemetry Log</p>
+                                    </div>
+                                    <button onClick={() => setShowGrowthModal(false)} className="w-5 h-5 hardware-well bg-black/5 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors">
+                                        <X className="w-2.5 h-2.5" />
                                     </button>
                                 </div>
 
                                 {/* Child selector (parent only) */}
                                 {stats.isParent && (
-                                    <div className="space-y-2 mb-6">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.selectChild')}</label>
-                                        <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-3 mb-6 px-1">
+                                        <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.selectChild')}</label>
+                                        <div className="flex flex-wrap gap-2">
                                             {children.map(child => (
                                                 <button
                                                     key={child.id}
                                                     type="button"
                                                     onClick={() => setTargetChildId(child.id)}
                                                     className={clsx(
-                                                        "flex items-center gap-2 p-3 rounded-2xl border-2 transition-all",
-                                                        targetChildId === child.id ? "border-emerald-500 bg-emerald-50" : "border-slate-100 bg-slate-50 opacity-60"
+                                                        "flex items-center gap-2.5 p-2 rounded-md border transition-all hardware-well",
+                                                        targetChildId === child.id ? "border-emerald-500 bg-white shadow-sm" : "border-black/20 bg-black/5 opacity-60 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                                                     )}
                                                 >
-                                                    <div className="w-6 h-6 rounded-full bg-emerald-200 overflow-hidden">
-                                                        {child.avatarUrl && <Image src={child.avatarUrl} width={24} height={24} alt={child.name} className="w-full h-full object-cover" />}
+                                                    <div className="w-7 h-7 rounded-md overflow-hidden bg-white border border-black/20 p-[3px] shadow-inner">
+                                                        {child.avatarUrl ? (
+                                                            <Image src={child.avatarUrl} width={24} height={24} alt={child.name} className="w-full h-full object-cover rounded-[3px]" />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center font-black text-[10px] text-emerald-800 bg-emerald-100 uppercase">{child.name[0]}</div>
+                                                        )}
                                                     </div>
-                                                    <span className="text-xs font-black text-slate-700">{child.name}</span>
+                                                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-tight">{child.name}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -332,65 +351,87 @@ export default function AccountHUD() {
 
                                 {/* No birth date warning */}
                                 {stats.isParent && !childBirthDate ? (
-                                    <div className="flex flex-col items-center gap-4 py-6 text-center">
-                                        <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center">
-                                            <AlertCircle className="w-7 h-7 text-amber-400" />
+                                    <div className="flex flex-col items-center gap-4 py-8 text-center hardware-well bg-black/5 rounded-2xl border border-black/5">
+                                        <div className="w-12 h-12 rounded-xl bg-amber-50 hardware-well flex items-center justify-center border border-amber-100 shadow-inner">
+                                            <AlertCircle className="w-6 h-6 text-amber-500" />
                                         </div>
-                                        <p className="font-black text-slate-700">{locale === 'zh-CN' ? '请先设置出生日期' : 'Birth Date Required'}</p>
-                                        <p className="text-sm text-slate-400">{locale === 'zh-CN' ? '需要先为该孩子补充出生日期，才能添加成长记录。' : 'Please set a birth date for this child before adding growth records.'}</p>
+                                        <div className="space-y-1">
+                                            <p className="label-mono text-xs font-black text-slate-700 uppercase tracking-tight">{locale === 'zh-CN' ? '缺失出生日期' : 'Birth Date Missing'}</p>
+                                            <p className="label-mono text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed px-6">
+                                                {locale === 'zh-CN' ? '需要先补充出生日期，才能激活成长记录模块。' : 'Supplement birth date to activate the growth telemetry module.'}
+                                            </p>
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={() => { setShowGrowthModal(false); window.location.href = '/admin' }}
-                                            className="mt-1 px-8 py-3 bg-amber-400 text-white rounded-2xl font-black shadow-lg shadow-amber-200 hover:bg-amber-500 transition-all active:scale-95"
+                                            className="hardware-btn group w-full max-w-[160px]"
                                         >
-                                            {locale === 'zh-CN' ? '前往设置' : 'Go to Settings'}
+                                            <div className="hardware-well p-1 rounded-xl">
+                                                <div className="hardware-cap bg-amber-500 py-3 rounded-lg font-black uppercase tracking-widest text-[9px] text-white flex items-center justify-center shadow-cap hover:brightness-110">
+                                                    {locale === 'zh-CN' ? '系统设置' : 'System Settings'}
+                                                </div>
+                                            </div>
                                         </button>
                                     </div>
                                 ) : (
-                                    <form onSubmit={handleSaveGrowth} className="space-y-5">
-                                        <div className="grid grid-cols-2 gap-4">
+                                    <form onSubmit={handleSaveGrowth} className="space-y-6">
+                                        <div className="grid grid-cols-2 gap-4 px-1">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.height')}</label>
-                                                <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    value={height}
-                                                    onChange={e => setHeight(e.target.value)}
-                                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
-                                                    placeholder="140"
-                                                />
+                                                <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.height')}</label>
+                                                <div className="hardware-well rounded-md p-[3px] bg-black/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] border border-black/20">
+                                                    <input
+                                                        type="number"
+                                                        step="0.1"
+                                                        value={height}
+                                                        onChange={e => setHeight(e.target.value)}
+                                                        className="w-full px-4 py-2 bg-white rounded-[4px] outline-none font-black text-slate-900 label-mono text-xs shadow-sm"
+                                                        placeholder="140"
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.weight')}</label>
-                                                <input
-                                                    type="number"
-                                                    step="0.1"
-                                                    value={weight}
-                                                    onChange={e => setWeight(e.target.value)}
-                                                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-emerald-500 outline-none font-black text-slate-700"
-                                                    placeholder="35"
+                                            <div className="space-y-1">
+                                                <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.weight')}</label>
+                                                <div className="hardware-well rounded-md p-[3px] bg-black/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] border border-black/20">
+                                                    <input
+                                                        type="number"
+                                                        step="0.1"
+                                                        value={weight}
+                                                        onChange={e => setWeight(e.target.value)}
+                                                        className="w-full px-4 py-2 bg-white rounded-[4px] outline-none font-black text-slate-900 label-mono text-xs shadow-sm"
+                                                        placeholder="35"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1 px-1">
+                                            <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.date') || 'Date'}</label>
+                                            <div className="hardware-well rounded-md p-[3px] bg-black/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] border border-black/20">
+                                                <SmartDatePicker
+                                                    selected={recordDate || undefined}
+                                                    onSelect={(date) => date && setRecordDate(date)}
+                                                    minDate={childBirthDate ? new Date(childBirthDate) : undefined}
+                                                    maxDate={new Date()}
+                                                    triggerClassName="w-full bg-white rounded-[4px] px-4 py-2 font-black text-slate-900 label-mono text-xs shadow-sm border-none justify-between items-center h-9 gap-3"
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('common.date') || 'Date'}</label>
-                                            <SmartDatePicker
-                                                selected={recordDate || undefined}
-                                                onSelect={(date) => date && setRecordDate(date)}
-                                                minDate={childBirthDate ? new Date(childBirthDate) : undefined}
-                                                maxDate={new Date()}
-                                                triggerClassName="bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 font-black text-slate-700"
-                                            />
+                                        <div className="pt-1">
+                                            <button
+                                                type="submit"
+                                                disabled={isSaving}
+                                                className="hardware-btn w-full group relative"
+                                            >
+                                                <div className="hardware-well h-12 bg-black/10 p-1 rounded-lg border border-black/25 shadow-[inset_0_1.5px_4px_rgba(0,0,0,0.2)]">
+                                                    <div className="hardware-cap h-full w-full bg-emerald-600 rounded-[4px] flex items-center justify-center gap-3 group-hover:brightness-110 active:translate-y-0.5 shadow-cap disabled:opacity-50">
+                                                        <span className="label-mono text-[10px] font-black text-white uppercase tracking-[0.1em]">
+                                                            {isSaving ? t('parent.processing') : t('parent.saveGrowth')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </button>
                                         </div>
-
-                                        <button
-                                            type="submit"
-                                            disabled={isSaving}
-                                            className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition-all disabled:opacity-50 active:scale-95"
-                                        >
-                                            {isSaving ? t('parent.processing') : t('parent.saveGrowth')}
-                                        </button>
                                     </form>
                                 )}
                             </motion.div>
@@ -414,34 +455,29 @@ export default function AccountHUD() {
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="relative w-full max-w-sm hardware-well bg-[#E2DFD2] rounded-2xl p-5 shadow-2xl border border-black/5"
+                            className="relative w-full max-w-sm hardware-well bg-[#E6E2D1] rounded-lg p-4 shadow-2xl border border-black/10"
                         >
                             {/* Decorative Screws */}
-                            <div className="absolute top-2.5 left-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
-                            <div className="absolute top-2.5 right-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
-                            <div className="absolute bottom-2.5 left-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
-                            <div className="absolute bottom-2.5 right-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute top-2 left-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute top-2 right-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute bottom-2 left-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute bottom-2 right-2 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
 
-                            <div className="flex justify-between items-center mb-4 pt-1">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-lg bg-white shadow-cap flex items-center justify-center text-amber-500">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 blur-sm bg-amber-500/10 rounded-full" />
-                                            <Coins className={clsx("w-5 h-5 relative z-10", isSaving && "animate-pulse")} />
-                                        </div>
+                            <div className="flex justify-between items-center mb-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-md bg-white shadow-cap flex items-center justify-center text-amber-500">
+                                        <Coins className={clsx("w-3.5 h-3.5", isSaving && "animate-pulse")} />
                                     </div>
                                     <div>
-                                        <h3 className="label-mono text-[11px] font-black text-slate-900 tracking-wider leading-none">{t('hud.coins')}</h3>
-                                        <p className="label-mono text-[6px] text-slate-500 uppercase tracking-widest mt-1 opacity-60">Asset Node</p>
+                                        <h3 className="label-mono text-xs font-black text-slate-900 tracking-wider leading-none">{t('hud.coins')}</h3>
+                                        <p className="label-mono text-[6px] text-slate-500 uppercase tracking-widest mt-0.5 opacity-60 italic pl-0.5">Node Auth</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setShowRechargeModal(false)}
-                                    className="hardware-btn group"
+                                    className="w-5 h-5 hardware-well bg-white/50 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors"
                                 >
-                                    <div className="w-6 h-6 hardware-well rounded-md bg-white flex items-center justify-center text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-500 transition-all shadow-cap">
-                                        <X className="w-3 h-3" />
-                                    </div>
+                                    <X className="w-2.5 h-2.5" />
                                 </button>
                             </div>
 
@@ -450,27 +486,27 @@ export default function AccountHUD() {
                             <form onSubmit={handleRecharge} className="space-y-6">
                                 <div className="space-y-4">
                                     <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.assetType')}</label>
-                                    <div className="flex gap-4 hardware-well p-1.5 rounded-xl bg-black/5">
+                                    <div className="flex gap-4 hardware-well p-1 rounded-md bg-black/5 border border-black/20 shadow-[inset_0_1.5px_4px_rgba(0,0,0,0.15)]">
                                         <button
                                             type="button"
                                             onClick={() => setRechargeType('CURRENCY')}
                                             className={clsx(
-                                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all font-black text-[10px] uppercase tracking-wider",
-                                                rechargeType === 'CURRENCY' ? "bg-white text-slate-900 shadow-cap translate-y-[-1px]" : "text-slate-400 hover:text-slate-600"
+                                                "flex-1 flex items-center justify-center gap-2 py-2 rounded-[4px] transition-all font-black text-[9px] uppercase tracking-wider",
+                                                rechargeType === 'CURRENCY' ? "bg-white text-slate-900 shadow-sm border border-black/10" : "text-slate-400 hover:text-slate-600"
                                             )}
                                         >
-                                            <Coins className={clsx("w-3.5 h-3.5", rechargeType === 'CURRENCY' ? "text-amber-500" : "text-slate-300")} />
+                                            <Coins className={clsx("w-3 h-3", rechargeType === 'CURRENCY' ? "text-amber-500" : "text-slate-300")} />
                                             {t('hud.coins')}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setRechargeType('GOLD_STAR')}
                                             className={clsx(
-                                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all font-black text-[10px] uppercase tracking-wider",
-                                                rechargeType === 'GOLD_STAR' ? "bg-white text-slate-900 shadow-cap translate-y-[-1px]" : "text-slate-400 hover:text-slate-600"
+                                                "flex-1 flex items-center justify-center gap-2 py-2 rounded-[4px] transition-all font-black text-[9px] uppercase tracking-wider",
+                                                rechargeType === 'GOLD_STAR' ? "bg-white text-slate-900 shadow-sm border border-black/10" : "text-slate-400 hover:text-slate-600"
                                             )}
                                         >
-                                            <Star className={clsx("w-3.5 h-3.5", rechargeType === 'GOLD_STAR' ? "text-amber-500 fill-amber-500" : "text-slate-300")} />
+                                            <Star className={clsx("w-3 h-3", rechargeType === 'GOLD_STAR' ? "text-amber-500 fill-amber-500" : "text-slate-300")} />
                                             {t('hud.goldStars')}
                                         </button>
                                     </div>
@@ -485,27 +521,27 @@ export default function AccountHUD() {
                                                 type="button"
                                                 onClick={() => setRechargeAmt(amt)}
                                                 className={clsx(
-                                                    "h-12 rounded-lg border border-black/5 font-black label-mono text-[10px] transition-all relative overflow-hidden",
+                                                    "h-10 rounded-md border font-black label-mono text-[10px] transition-all relative overflow-hidden hardware-well !bg-white",
                                                     rechargeAmt === amt 
-                                                        ? "bg-white text-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] border-amber-500/20" 
-                                                        : "bg-black/5 text-slate-400 hover:bg-black/10"
+                                                        ? "text-slate-900 border-amber-500 shadow-sm" 
+                                                        : "text-slate-400 border-black/10 hover:bg-slate-50 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                                                 )}
                                             >
-                                                {rechargeAmt === amt && <div className="absolute top-0 right-0 w-2 h-2 bg-amber-500 rounded-bl-sm" />}
+                                                {rechargeAmt === amt && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-amber-500 rounded-bl-[2px]" />}
                                                 {amt}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="pt-2">
+                                <div className="pt-1">
                                     <button
                                         disabled={isSaving}
                                         className="hardware-btn w-full group relative"
                                     >
-                                        <div className="hardware-well h-14 bg-black/10 p-1 rounded-xl">
-                                            <div className="hardware-cap h-full w-full bg-orange-600 rounded-lg flex items-center justify-center gap-3 group-hover:brightness-110 active:translate-y-0.5 shadow-cap disabled:opacity-50">
-                                                <span className="label-mono text-[11px] font-black text-white uppercase tracking-[0.15em]">
+                                        <div className="hardware-well h-12 bg-black/10 p-1 rounded-lg border border-black/25 shadow-[inset_0_1.5px_4px_rgba(0,0,0,0.2)]">
+                                            <div className="hardware-cap h-full w-full bg-orange-600 rounded-[4px] flex items-center justify-center gap-3 group-hover:brightness-110 active:translate-y-0.5 shadow-cap disabled:opacity-50">
+                                                <span className="label-mono text-[10px] font-black text-white uppercase tracking-[0.1em]">
                                                     {isSaving ? t('parent.processing') : t('parent.rechargeAmount', { amount: rechargeAmt, type: rechargeType === 'CURRENCY' ? t('hud.coins') : t('hud.goldStars') })}
                                                 </span>
                                             </div>

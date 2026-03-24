@@ -9,13 +9,16 @@ export async function POST(req: NextRequest) {
         const userId = session.userId
 
         const body = await req.json()
-        const { amount, type } = body // type: 'CURRENCY' or 'GOLD_STAR'
+        const { amount, type, targetUserId } = body // type: 'CURRENCY' or 'GOLD_STAR'
 
         if (!amount || amount <= 0) {
             return NextResponse.json({ error: 'Positive amount required' }, { status: 400 })
         }
 
-        const res = await addBalance(userId, type || 'CURRENCY', amount, 'Auto-recharge by Parent')
+        // Use targetUserId if provided (for parent to child), otherwise default to current user
+        const finalUserId = targetUserId || userId
+
+        const res = await addBalance(finalUserId, type || 'CURRENCY', amount, 'Manual Recharge by Parent')
 
         if (!res || !res.success) {
             return NextResponse.json({ error: res?.error || 'Transaction failed' }, { status: 400 })

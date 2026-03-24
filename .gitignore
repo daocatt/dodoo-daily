@@ -53,3 +53,7 @@ lint_output*.txt
 lint_u*.txt
 scripts/seed-child.ts
 lint_results.txt
+public/placeholder-storage-4.jpg
+public/placeholder-storage-3.jpg
+public/placeholder-storage-2.jpg
+public/placeholder-storage-1.jpg

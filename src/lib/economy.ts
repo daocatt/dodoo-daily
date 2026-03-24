@@ -21,10 +21,10 @@ export async function addBalance(userId: string, type: TransactionType, amount: 
         stats = newStats[0]
     }
 
-    // 2. Handle 10-star daily limit for GOLD_STAR (if not from assigned task)
+    // 2. Handle 10-star daily limit for GOLD_STAR (if not from assigned task or parent)
     // We'll pass a special flag in reason or a separate param if we want to enforce this strictly.
     // For now, let's assume the caller handles the logic or we check the reason.
-    if (type === 'GOLD_STAR' && amount > 0 && !reason.includes('Assigned Task')) {
+    if (type === 'GOLD_STAR' && amount > 0 && !reason.includes('Assigned Task') && !reason.includes('Parent')) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         const endOfDay = new Date(startOfDay);
