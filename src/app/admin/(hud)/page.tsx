@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import {
   Settings, Maximize2, Trash2, Check, ListTodo, ShoppingBag,
   StickyNote, Images, Layout, Sparkles, Wallet, WalletCards,
-  Refrigerator, SquareCheckBig, Fan, SquareStar, CircleStar
+  Refrigerator, SquareCheckBig, Fan, SquareStar, CircleStar, User
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import NatureBackground from '@/components/NatureBackground'
@@ -25,6 +25,8 @@ import LedgerWidget from '@/components/widgets/LedgerWidget'
 import StorageWidget from '@/components/widgets/StorageWidget'
 import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
 import BausteinWidgetContainer from '@/components/BausteinWidgetContainer'
+import ProfileWidget from '@/components/widgets/ProfileWidget'
+import MyGalleryWidget from '@/components/widgets/MyGalleryWidget'
 
 const JournalIconFixed = (props: React.SVGProps<SVGSVGElement>) => (
   <svg 
@@ -521,7 +523,9 @@ export default function Home() {
         TASKS: '/admin/tasks', JOURNAL: '/admin/journal', PHOTOS: '/admin/gallery',
         MILESTONE: '/admin/journal?filter=milestone',
         LEDGER: '/admin/ledger',
-        STORAGE: '/admin/storage'
+        STORAGE: '/admin/storage',
+        PROFILE: '/admin/profile',
+        MYGALLERY: '/member'
       }
       if (routes[w.type]) router.push(routes[w.type])
     }
@@ -533,8 +537,10 @@ export default function Home() {
       PHOTOS: { Icon: Fan, bg: 'bg-purple-500', glow: 'shadow-purple-500/30', label: t('menu.gallery') },
       SHOP: { Icon: ShoppingBag, bg: 'bg-amber-400', glow: 'shadow-amber-500/30', label: t('menu.shop') },
       MILESTONE: { Icon: CircleStar, bg: 'bg-rose-600', glow: 'shadow-rose-600/30', label: t('parent.milestone') },
-      LEDGER: { Icon: WalletCards, bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: '账本' },
+      LEDGER: { Icon: WalletCards, bg: 'bg-indigo-500', glow: 'shadow-indigo-500/30', label: t('menu.ledger') },
       STORAGE: { Icon: Refrigerator, bg: 'bg-emerald-600', glow: 'shadow-emerald-600/30', label: t('storage.title') || '物资' },
+      PROFILE: { Icon: User, bg: 'bg-slate-700', glow: 'shadow-slate-700/30', label: t('menu.profile') },
+      MYGALLERY: { Icon: Sparkles, bg: 'bg-indigo-600', glow: 'shadow-indigo-600/30', label: t('menu.gallery') },
     }[w.type] || { Icon: Layout, bg: 'bg-slate-500', glow: 'shadow-slate-500/20', label: w.type }
 
     const isIconOnly = w.size === 'ICON' || ICON_ONLY_WIDGETS.includes(w.type)
@@ -612,6 +618,8 @@ export default function Home() {
               case 'MILESTONE': return <MilestoneWidget size={w.size} cellSize={cellSize} />
               case 'LEDGER': return <LedgerWidget size={w.size} cellSize={cellSize} />
               case 'STORAGE': return <StorageWidget size={w.size} cellSize={cellSize} />
+              case 'PROFILE': return <ProfileWidget size={w.size} cellSize={cellSize} />
+              case 'MYGALLERY': return <MyGalleryWidget size={w.size} cellSize={cellSize} />
               default: return <div>Unknown {w.type}</div>
             }
           })()
@@ -751,8 +759,10 @@ export default function Home() {
                   { type: 'PHOTOS', Icon: Fan, color: 'text-purple-500' },
                   { type: 'SHOP', Icon: ShoppingBag, color: 'text-amber-500' },
                   { type: 'MILESTONE', Icon: CircleStar, color: 'text-rose-600' },
-                  { type: 'LEDGER', Icon: Wallet, color: 'text-indigo-500' },
-                  { type: 'STORAGE', Icon: Refrigerator, color: 'text-emerald-600' }
+                  { type: 'LEDGER', Icon: WalletCards, color: 'text-indigo-500' },
+                  { type: 'STORAGE', Icon: Refrigerator, color: 'text-emerald-600' },
+                  { type: 'PROFILE', Icon: User, color: 'text-slate-700' },
+                  { type: 'MYGALLERY', Icon: Sparkles, color: 'text-indigo-600' }
                 ].map(({ type, Icon, color }) => {
                   return (
                     <button

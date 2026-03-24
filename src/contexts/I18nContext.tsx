@@ -212,6 +212,10 @@ const dictionaries: Dictionary = {
         'menu.journal': 'Journal',
         'menu.shop': 'Shop',
         'menu.tasks': 'Tasks',
+        'menu.profile': 'Profile',
+        'menu.ledger': 'Ledger',
+        'menu.storage': 'Inventory',
+        'menu.milestone': 'Milestones',
 
         // Milestones
         'milestones.empty': 'No milestone records yet.',
@@ -1074,6 +1078,10 @@ const dictionaries: Dictionary = {
         'menu.journal': '日志',
         'menu.shop': '商店',
         'menu.tasks': '任务',
+        'menu.profile': '个人',
+        'menu.ledger': '账本',
+        'menu.storage': '物资',
+        'menu.milestone': '大事记',
 
         // Milestones
         'milestones.empty': '暂无大事记记录。',
