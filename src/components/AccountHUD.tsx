@@ -26,6 +26,7 @@ interface Stats {
     name: string
     nickname?: string
     avatar?: string
+    permissionRole: string
     isParent: boolean
     coins: number
     slug?: string
@@ -216,17 +217,19 @@ export default function AccountHUD() {
                                 <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 group-hover/asset:scale-110 transition-transform" />
                                 <span className="label-mono text-[13px] font-black text-slate-900 tracking-tighter">{stats.goldStars ?? 0}</span>
                             </div>
-                            {stats.isParent && (
-                                <button
-                                    onClick={() => { setRechargeType('GOLD_STAR'); setShowRechargeModal(true); }}
-                                    className="hardware-btn group"
-                                >
-                                    <div className="w-4 h-4 hardware-well rounded-md bg-amber-500 shadow-cap flex items-center justify-center text-white active:translate-y-px hover:brightness-110">
-                                        <span className="text-[9px] font-black">+</span>
-                                    </div>
-                                </button>
-                            )}
                         </div>
+
+                        {stats.permissionRole === 'SUPERADMIN' && (
+                            <button
+                                onClick={() => { setRechargeType('CURRENCY'); setShowRechargeModal(true); }}
+                                className="hardware-btn group ml-1"
+                                title={t('parent.bank')}
+                            >
+                                <div className="w-6 h-6 hardware-well rounded-lg bg-indigo-600 shadow-cap flex items-center justify-center text-white active:translate-y-px hover:brightness-110">
+                                    <span className="text-[12px] font-black">+</span>
+                                </div>
+                            </button>
+                        )}
                     </div>
 
                     {/* Right: Operations & Switches */}
@@ -399,81 +402,116 @@ export default function AccountHUD() {
             {/* Recharge Modal */}
             <AnimatePresence>
                 {showRechargeModal && (
-                    <div className="fixed inset-0 z-[1100] flex flex-col items-center justify-start p-4 pointer-events-auto overflow-y-auto">
+                    <div className="fixed inset-0 z-[2100] flex flex-col items-center justify-center p-4 pointer-events-auto">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                             onClick={() => setShowRechargeModal(false)}
                         />
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="relative w-full max-w-md bg-white rounded-2xl p-8 shadow-2xl my-auto"
+                            className="relative w-full max-w-sm hardware-well bg-[#E2DFD2] rounded-2xl p-5 shadow-2xl border border-black/5"
                         >
-                            <div className="flex justify-between items-center mb-6">
-                                <h3 className="text-xl font-black text-slate-800 tracking-tight">{t('parent.bank')}</h3>
-                                <button onClick={() => setShowRechargeModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-slate-400" />
+                            {/* Decorative Screws */}
+                            <div className="absolute top-2.5 left-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute top-2.5 right-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute bottom-2.5 left-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+                            <div className="absolute bottom-2.5 right-2.5 w-0.5 h-0.5 rounded-full bg-black/10 shadow-inner" />
+
+                            <div className="flex justify-between items-center mb-4 pt-1">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-white shadow-cap flex items-center justify-center text-amber-500">
+                                        <div className="relative">
+                                            <div className="absolute inset-0 blur-sm bg-amber-500/10 rounded-full" />
+                                            <Coins className={clsx("w-5 h-5 relative z-10", isSaving && "animate-pulse")} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h3 className="label-mono text-[11px] font-black text-slate-900 tracking-wider leading-none">{t('hud.coins')}</h3>
+                                        <p className="label-mono text-[6px] text-slate-500 uppercase tracking-widest mt-1 opacity-60">Asset Node</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowRechargeModal(false)}
+                                    className="hardware-btn group"
+                                >
+                                    <div className="w-6 h-6 hardware-well rounded-md bg-white flex items-center justify-center text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-500 transition-all shadow-cap">
+                                        <X className="w-3 h-3" />
+                                    </div>
                                 </button>
                             </div>
 
+                            <div className="h-px w-full bg-black/5 mb-4" />
+
                             <form onSubmit={handleRecharge} className="space-y-6">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.assetType')}</label>
-                                    <div className="flex gap-3">
+                                <div className="space-y-4">
+                                    <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.assetType')}</label>
+                                    <div className="flex gap-4 hardware-well p-1.5 rounded-xl bg-black/5">
                                         <button
                                             type="button"
                                             onClick={() => setRechargeType('CURRENCY')}
                                             className={clsx(
-                                                "flex-1 flex items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all",
-                                                rechargeType === 'CURRENCY' ? "border-amber-500 bg-amber-50" : "border-slate-100 bg-slate-50"
+                                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all font-black text-[10px] uppercase tracking-wider",
+                                                rechargeType === 'CURRENCY' ? "bg-white text-slate-900 shadow-cap translate-y-[-1px]" : "text-slate-400 hover:text-slate-600"
                                             )}
                                         >
-                                            <Coins className="w-4 h-4 text-amber-500" />
-                                            <span className="text-xs font-black text-slate-700">{t('hud.coins')}</span>
+                                            <Coins className={clsx("w-3.5 h-3.5", rechargeType === 'CURRENCY' ? "text-amber-500" : "text-slate-300")} />
+                                            {t('hud.coins')}
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setRechargeType('GOLD_STAR')}
                                             className={clsx(
-                                                "flex-1 flex items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all",
-                                                rechargeType === 'GOLD_STAR' ? "border-indigo-500 bg-indigo-50" : "border-slate-100 bg-slate-50"
+                                                "flex-1 flex items-center justify-center gap-2 py-3 rounded-lg transition-all font-black text-[10px] uppercase tracking-wider",
+                                                rechargeType === 'GOLD_STAR' ? "bg-white text-slate-900 shadow-cap translate-y-[-1px]" : "text-slate-400 hover:text-slate-600"
                                             )}
                                         >
-                                            <Star className="w-4 h-4 text-indigo-500 fill-indigo-500" />
-                                            <span className="text-xs font-black text-slate-700">{t('hud.goldStars')}</span>
+                                            <Star className={clsx("w-3.5 h-3.5", rechargeType === 'GOLD_STAR' ? "text-amber-500 fill-amber-500" : "text-slate-300")} />
+                                            {t('hud.goldStars')}
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.amount')}</label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-4">
+                                    <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.amount')}</label>
+                                    <div className="grid grid-cols-3 gap-3">
                                         {['50', '100', '200', '500', '1000', '5000'].map(amt => (
                                             <button
                                                 key={amt}
                                                 type="button"
                                                 onClick={() => setRechargeAmt(amt)}
                                                 className={clsx(
-                                                    "py-3 rounded-xl border-2 font-black transition-all",
-                                                    rechargeAmt === amt ? "border-indigo-600 bg-indigo-50 text-indigo-600" : "border-slate-100 text-slate-400"
+                                                    "h-12 rounded-lg border border-black/5 font-black label-mono text-[10px] transition-all relative overflow-hidden",
+                                                    rechargeAmt === amt 
+                                                        ? "bg-white text-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] border-amber-500/20" 
+                                                        : "bg-black/5 text-slate-400 hover:bg-black/10"
                                                 )}
                                             >
+                                                {rechargeAmt === amt && <div className="absolute top-0 right-0 w-2 h-2 bg-amber-500 rounded-bl-sm" />}
                                                 {amt}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                <button
-                                    disabled={isSaving}
-                                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all disabled:opacity-50"
-                                >
-                                    {isSaving ? t('parent.processing') : t('parent.rechargeAmount', { amount: rechargeAmt, type: rechargeType === 'CURRENCY' ? t('hud.coins') : t('hud.goldStars') })}
-                                </button>
+                                <div className="pt-2">
+                                    <button
+                                        disabled={isSaving}
+                                        className="hardware-btn w-full group relative"
+                                    >
+                                        <div className="hardware-well h-14 bg-black/10 p-1 rounded-xl">
+                                            <div className="hardware-cap h-full w-full bg-orange-600 rounded-lg flex items-center justify-center gap-3 group-hover:brightness-110 active:translate-y-0.5 shadow-cap disabled:opacity-50">
+                                                <span className="label-mono text-[11px] font-black text-white uppercase tracking-[0.15em]">
+                                                    {isSaving ? t('parent.processing') : t('parent.rechargeAmount', { amount: rechargeAmt, type: rechargeType === 'CURRENCY' ? t('hud.coins') : t('hud.goldStars') })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
                             </form>
                         </motion.div>
                     </div>

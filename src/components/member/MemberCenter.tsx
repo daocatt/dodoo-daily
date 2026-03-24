@@ -103,9 +103,9 @@ export default function MemberCenter({ member, onUpdateCurrency }: {
     const fetchData = useCallback(async () => {
         try {
             const [logsRes, ordersRes, likesRes] = await Promise.all([
-                fetch(`/api/public/visitor/logs?memberId=${member.id}`),
-                fetch(`/api/public/visitor/orders?memberId=${member.id}`),
-                fetch(`/api/public/visitor/likes?memberId=${member.id}`)
+                fetch(`/api/member/logs`),
+                fetch(`/api/member/orders`),
+                fetch(`/api/member/likes`)
             ])
             
             if (logsRes.ok) setLogs(await logsRes.json())
@@ -136,10 +136,10 @@ export default function MemberCenter({ member, onUpdateCurrency }: {
         e.preventDefault()
         setSavingAddress(true)
         try {
-            const res = await fetch('/api/public/visitor/profile', {
+            const res = await fetch('/api/member/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ memberId: member.id, address: addressInput })
+                body: JSON.stringify({ address: addressInput })
             })
             if (res.ok) {
                 // Update local member data

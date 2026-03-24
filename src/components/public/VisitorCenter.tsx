@@ -105,9 +105,9 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
     const fetchData = useCallback(async () => {
         try {
             const [logsRes, ordersRes, likesRes] = await Promise.all([
-                fetch(`/api/public/visitor/logs?visitorId=${visitor.id}`),
-                fetch(`/api/public/visitor/orders?visitorId=${visitor.id}`),
-                fetch(`/api/public/visitor/likes?visitorId=${visitor.id}`)
+                fetch(`/api/visitor/logs?visitorId=${visitor.id}`),
+                fetch(`/api/visitor/orders?visitorId=${visitor.id}`),
+                fetch(`/api/visitor/likes?visitorId=${visitor.id}`)
             ])
             
             if (logsRes.ok) setLogs(await logsRes.json())
@@ -130,7 +130,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
         setMessage(null)
         
         try {
-            const res = await fetch('/api/public/visitor/recharge', {
+            const res = await fetch('/api/visitor/recharge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ visitorId: visitor.id, code: rechargeCode })
@@ -156,7 +156,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
         e.preventDefault()
         setSavingAddress(true)
         try {
-            const res = await fetch('/api/public/visitor/profile', {
+            const res = await fetch('/api/visitor/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ visitorId: visitor.id, address: addressInput })
@@ -182,7 +182,7 @@ export default function VisitorCenter({ visitor, onLogout, onUpdateCurrency }: {
         setSavingProfile(true)
         setMessage(null)
         try {
-            const res = await fetch('/api/public/visitor/profile', {
+            const res = await fetch('/api/visitor/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
