@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { currencyLog } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
-import { getSession } from '@/lib/auth'
+import { getSessionUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
     try {
-        const session = await getSession()
+        const session = await getSessionUser()
         if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         
         const userId = session.userId
