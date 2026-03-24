@@ -42,11 +42,15 @@ export async function POST(
         const results = await db.update(artwork)
             .set({ likes: sql`${artwork.likes} + 1` })
             .where(eq(artwork.id, id))
-            .returning({ newLikes: artwork.likes })
+            .returning({ newLikes: artwork.likes, creatorId: artwork.userId, title: artwork.title })
 
         if (results.length === 0) {
             return NextResponse.json({ error: 'Artwork not found' }, { status: 404 })
         }
+
+        // Award Star to Creator (Line 75 in system_roles.md)
+        const { addBalance } = await import('@/lib/economy')
+        await addBalance(results[0].creatorId!, 'GOLD_STAR', 1, `Like from engagement: ${results[0].title}`, 'SYSTEM')
 
         return NextResponse.json({ success: true, likes: results[0].newLikes })
     } catch (_e) {

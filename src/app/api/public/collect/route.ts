@@ -56,6 +56,13 @@ export async function POST(req: NextRequest) {
                         balance: newBalance,
                         reason: `COLLECT_ARTWORK: ${art.title}`
                     }).run()
+
+                    // Reward Creator (Line 76 in system_roles.md)
+                    const { addBalance } = await import('@/lib/economy')
+                    // Add Coins if paying by Coins
+                    await addBalance(art.userId!, 'CURRENCY', art.priceCoins, `Sold artwork (Member): ${art.title}`, 'SYSTEM')
+                    // Add 10 Stars reward
+                    await addBalance(art.userId!, 'GOLD_STAR', 10, `Reward for order: ${art.title}`, 'SYSTEM')
                 }
 
                 // Create Order
@@ -103,6 +110,17 @@ export async function POST(req: NextRequest) {
                     balance: newBalance,
                     reason: 'PURCHASE'
                 }).run()
+
+                // Reward Creator (Line 76 in system_roles.md)
+                const { addBalance } = await import('@/lib/economy')
+                // Add Coins if paying by Coins
+                await addBalance(art.userId!, 'CURRENCY', art.priceCoins, `Sold artwork (Visitor): ${art.title}`, 'SYSTEM')
+                // Add 10 Stars reward
+                await addBalance(art.userId!, 'GOLD_STAR', 10, `Reward for order: ${art.title}`, 'SYSTEM')
+            } else {
+                // If paying by RMB or other manual, creator still gets the 10 Stars reward once collected!
+                const { addBalance } = await import('@/lib/economy')
+                await addBalance(art.userId!, 'GOLD_STAR', 10, `Reward for order: ${art.title}`, 'SYSTEM')
             }
 
             const newOrder = tx.insert(order).values({

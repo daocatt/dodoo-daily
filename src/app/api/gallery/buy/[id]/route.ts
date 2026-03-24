@@ -39,8 +39,9 @@ export async function POST(
         const deductRes = await addBalance(parentId, 'CURRENCY', -art.priceCoins, `Bought poster: ${art.title}`)
         if (!deductRes || !deductRes.success) return NextResponse.json({ error: 'Transaction failed' }, { status: 500 })
 
-        // 2. Add to Child
-        await addBalance(art.userId!, 'CURRENCY', art.priceCoins, `Sold poster: ${art.title} to Parent`)
+        // 2. Add to Child (Reward coins and bonus stars per line 76 of system_roles.md)
+        await addBalance(art.userId!, 'CURRENCY', art.priceCoins, `Sold artwork: ${art.title} (Member purchase)`, 'SYSTEM')
+        await addBalance(art.userId!, 'GOLD_STAR', 10, `Reward for order: ${art.title}`, 'SYSTEM')
 
         // 3. Update Artwork status
         const updatedArt = await db.update(artwork)
