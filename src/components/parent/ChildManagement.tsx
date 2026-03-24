@@ -231,7 +231,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('settings.realName')}</label>
                         <input
-                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                            className="w-full h-[42px] px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                             placeholder="Full Name"
                             value={member.name || ''}
                             onChange={e => {
@@ -250,7 +250,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.nickname')}</label>
                         <input
-                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                            className="w-full h-[42px] px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                             placeholder="Nickname"
                             value={member.nickname || ''}
                             onChange={e => {
@@ -273,7 +273,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                                     key={g}
                                     type="button"
                                     onClick={() => onChange({ ...member, gender: g })}
-                                    className={`flex-1 py-2.5 rounded-xl font-black text-[10px] transition-all border flex items-center justify-center gap-1 ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    className={`flex-1 h-[42px] rounded-xl font-black text-[10px] transition-all border flex items-center justify-center gap-1 ${member.gender === g ? 'bg-blue-500 text-white border-blue-400 shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
                                 >
                                     <span>{genderEmojis[g]}</span>
                                     <span className="hidden sm:inline">{t(`gender.${g.toLowerCase()}`)}</span>
@@ -284,7 +284,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.memberPin')}</label>
                         <input
-                            className="w-full px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all tracking-widest"
+                            className="w-full h-[42px] px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all tracking-widest"
                             placeholder="••••"
                             maxLength={4}
                             value={String(member.pin || '')}
@@ -293,7 +293,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                     </div>
                 </div>
 
-                {/* Row 3: Role + BirthDate */}
+                {/* Row 3: Role + Admin Privileges */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Member Role</label>
@@ -308,7 +308,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                                     key={r.value}
                                     type="button"
                                     onClick={() => onChange({ ...member, role: r.value })}
-                                    className={`py-2 rounded-xl font-black text-[10px] transition-all border flex items-center justify-center gap-1 ${(member.role || 'CHILD') === r.value ? 'bg-indigo-500 text-white border-indigo-400 shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                                    className={`h-[42px] rounded-xl font-black text-[10px] transition-all border flex items-center justify-center gap-1 ${(member.role || 'CHILD') === r.value ? 'bg-indigo-500 text-white border-indigo-400 shadow-md' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}
                                 >
                                     <span>{r.emoji}</span>
                                     {r.label}
@@ -316,6 +316,32 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                             ))}
                         </div>
                     </div>
+                    {/* Admin Role Toggle (Superadmin only) */}
+                    {currentUser.permissionRole === 'SUPERADMIN' && member.id && member.id !== currentUser.id ? (
+                        <div className="space-y-1 flex flex-col justify-end">
+                            <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-1">{t('parent.permissionLevel')}</label>
+                            <button
+                                type="button"
+                                onClick={() => onChange({ 
+                                    ...member, 
+                                    permissionRole: member.permissionRole === 'ADMIN' ? 'USER' : 'ADMIN' 
+                                })}
+                                className={`w-full h-[42px] px-4 rounded-xl font-bold text-[10px] flex items-center justify-between transition-all border ${member.permissionRole === 'ADMIN' ? 'bg-indigo-50 border-indigo-100 text-indigo-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <Shield className={`w-3.5 h-3.5 ${member.permissionRole === 'ADMIN' ? 'text-indigo-500' : 'text-slate-300'}`} />
+                                    {t('parent.adminPrivileges')}
+                                </span>
+                                <div className={`w-8 h-4 rounded-full relative transition-colors ${member.permissionRole === 'ADMIN' ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+                                    <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all shadow-sm ${member.permissionRole === 'ADMIN' ? 'translate-x-4.5' : 'translate-x-0.5'}`} />
+                                </div>
+                            </button>
+                        </div>
+                    ) : <div />}
+                </div>
+
+                {/* Row 4: BirthDate + Zodiac */}
+                <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.birthDate')}</label>
                         <SmartDatePicker
@@ -330,24 +356,33 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                             }}
                             maxDate={new Date()}
                             placeholder={t('parent.birthDate')}
-                            triggerClassName="px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                            triggerClassName="w-full h-[42px] px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all font-black text-slate-700"
                         />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')} / {t('parent.zodiac')}</label>
+                        <div className="flex gap-2 h-[42px] px-3 bg-slate-100 rounded-xl items-center">
+                            <span className="text-xs font-black text-slate-600">
+                                {member.chineseZodiac ? t('chineseZodiac.' + member.chineseZodiac) : (member.birthDate ? t('chineseZodiac.' + getChineseZodiac(new Date(member.birthDate))) : '—')}
+                            </span>
+                            <span className="text-slate-300">·</span>
+                            <span className="text-xs font-black text-slate-600">
+                                {member.zodiac ? t('zodiac.' + member.zodiac) : (member.birthDate ? t('zodiac.' + getZodiac(new Date(member.birthDate))) : '—')}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Row 4: Zodiac tags + Slug / Exhibition Toggle */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Bottom Row: Public ID (Slug) & Exhibition Toggle */}
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-50">
                     <div className="space-y-1">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex justify-between">
                             {t('parent.slugLabel')}
-                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${member.exhibitionEnabled !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                {member.exhibitionEnabled !== false ? 'ON' : 'OFF'}
-                            </span>
                         </label>
                         <div className="flex gap-1.5">
                             <input
-                                className="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all font-mono"
-                                placeholder="e.g. lily-art"
+                                className="flex-1 min-w-0 h-[42px] px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all font-mono"
+                                placeholder="Public ID"
                                 value={member.slug || ''}
                                 onChange={e => onChange({ ...member, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
                             />
@@ -355,10 +390,10 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                                 type="button"
                                 title="Auto-generate numeric ID"
                                 onClick={() => {
-                                    const randId = Math.floor(10000000 + Math.random() * 90000000).toString();
+                                    const randId = Math.floor(1000000 + Math.random() * 9000000).toString();
                                     onChange({ ...member, slug: randId });
                                 }}
-                                className="px-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-blue-500"
+                                className="px-3 h-[42px] bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors shadow-sm text-slate-400 hover:text-blue-500"
                             >
                                 ✨
                             </button>
@@ -369,57 +404,16 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                         <button
                             type="button"
                             onClick={() => onChange({ ...member, exhibitionEnabled: member.exhibitionEnabled === false })}
-                            className={`w-full h-[40px] px-4 rounded-xl font-bold text-sm flex items-center justify-between transition-all border ${member.exhibitionEnabled !== false ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
+                            className={`w-full h-[42px] px-4 rounded-xl font-bold text-[10px] flex items-center justify-between transition-all border ${member.exhibitionEnabled !== false ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
                         >
                             <span className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${member.exhibitionEnabled !== false ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
-                                {member.exhibitionEnabled !== false ? t('settings.exhibitionEnabled') : t('settings.exhibitionDisabled')}
+                                <div className={`w-1.5 h-1.5 rounded-full ${member.exhibitionEnabled !== false ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
+                                {member.exhibitionEnabled !== false ? 'PUBLIC PAGE ON' : 'PUBLIC PAGE OFF'}
                             </span>
-                            <div className={`w-8 h-4 rounded-full relative transition-colors ${member.exhibitionEnabled !== false ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all shadow-sm ${member.exhibitionEnabled !== false ? 'left-4.5' : 'left-0.5'}`} />
-                            </div>
                         </button>
                     </div>
                 </div>
-                
-                {/* Admin Role Toggle (Superadmin only) */}
-                {currentUser.permissionRole === 'SUPERADMIN' && member.id && member.id !== currentUser.id && (
-                    <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Shield className="w-4 h-4 text-indigo-500" />
-                                <span className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Admin Privileges</span>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => onChange({ 
-                                    ...member, 
-                                    permissionRole: member.permissionRole === 'ADMIN' ? 'USER' : 'ADMIN' 
-                                })}
-                                className={`hardware-cap px-4 py-1.5 rounded-lg text-[10px] font-black transition-all border ${member.permissionRole === 'ADMIN' ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-200' : 'bg-white text-indigo-400 border-indigo-100 hover:bg-white'}`}
-                            >
-                                {member.permissionRole === 'ADMIN' ? 'Revoke Admin' : 'Make Admin'}
-                            </button>
-                        </div>
-                        <p className="text-[9px] text-indigo-400 font-medium leading-relaxed italic">
-                            * Admins have full access to management and system controls, but cannot manage the Superadmin.
-                        </p>
-                    </div>
-                )}
-
-                <div className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.chineseZodiac')} / {t('parent.zodiac')}</label>
-                        <div className="flex gap-2 py-2.5 px-3 bg-slate-100 rounded-xl">
-                            <span className="text-sm font-black text-slate-500">
-                                {member.chineseZodiac || (member.birthDate ? getChineseZodiac(new Date(member.birthDate)) : '—')}
-                            </span>
-                            <span className="text-slate-300">·</span>
-                            <span className="text-sm font-black text-slate-500">
-                                {member.zodiac || (member.birthDate ? getZodiac(new Date(member.birthDate)) : '—')}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+            </div>
             )
     }
 
@@ -493,12 +487,12 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                             <div className="flex gap-2 flex-wrap mt-1">
                                 {(child.chineseZodiac || child.birthDate) && (
                                     <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block">
-                                        {child.chineseZodiac || getChineseZodiac(new Date(child.birthDate!))}
+                                        {child.chineseZodiac ? t('chineseZodiac.' + child.chineseZodiac) : t('chineseZodiac.' + getChineseZodiac(new Date(child.birthDate!)))}
                                     </div>
                                 )}
                                 {(child.zodiac || child.birthDate) && (
                                     <div className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block">
-                                        {child.zodiac || getZodiac(new Date(child.birthDate!))}
+                                        {child.zodiac ? t('zodiac.' + child.zodiac) : t('zodiac.' + getZodiac(new Date(child.birthDate!)))}
                                     </div>
                                 )}
                             </div>
@@ -699,7 +693,7 @@ export default function ChildManagement({ onAssignTask, currentUser }: {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm"
-                        onClick={(_e) => { if (e.target === e.currentTarget) { setShowAdd(false); setEditingChild(null); } }}
+                        onClick={(e) => { if (e.target === e.currentTarget) { setShowAdd(false); setEditingChild(null); } }}
                     >
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 16 }}

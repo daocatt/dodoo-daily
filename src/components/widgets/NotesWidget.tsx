@@ -56,7 +56,7 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                             className="font-black text-slate-800 tracking-tight uppercase opacity-60"
                             style={{ fontSize: Math.max(8, cellSize * 0.1) }}
                         >
-                            {t('widget.notes.pinned')}
+                            {t('widget.notes.title')}
                         </span>
                     )}
                 </div>
@@ -71,34 +71,34 @@ export default function NotesWidget({ size = 'ICON', cellSize = 100 }: { size?: 
             </div>
 
             <div className="flex-1 space-y-2.5 overflow-hidden relative">
-                    {notes.length > 0 ? (
-                        notes.map((note) => (
-                            <div
-                                key={note.id}
-                                className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-amber-200 transition-colors shadow-sm"
-                            >
-                                <div className="flex items-center gap-2 flex-1 overflow-hidden">
-                                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: note.color || '#FEF3C7' }} />
-                                    <p
-                                        className={`font-bold text-slate-700 truncate ${size === 'SMALL' ? 'line-clamp-2' : ''}`}
-                                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
-                                    >
-                                        {note.text}
-                                    </p>
-                                </div>
-                                {note.isPinned && (
-                                    <Pin
-                                        className="text-amber-500 fill-amber-500 shrink-0 ml-1"
-                                        style={{ width: cellSize * 0.1, height: cellSize * 0.1 }}
-                                    />
-                                )}
+                {notes.length > 0 ? (
+                    notes.map((note) => (
+                        <div
+                            key={note.id}
+                            className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-amber-200 transition-colors shadow-sm"
+                        >
+                            <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: note.color || '#FEF3C7' }} />
+                                <p
+                                    className={`font-bold text-slate-700 truncate ${size === 'SMALL' ? 'line-clamp-2' : ''}`}
+                                    style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                                >
+                                    {note.text}
+                                </p>
                             </div>
-                        ))
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-amber-300 opacity-40 italic text-[9px]">
-                            <span>{t('widget.notes.waiting')}</span>
+                            {note.isPinned && (
+                                <Pin
+                                    className="text-amber-500 fill-amber-500 shrink-0 ml-1"
+                                    style={{ width: cellSize * 0.1, height: cellSize * 0.1 }}
+                                />
+                            )}
                         </div>
-                    )}
+                    ))
+                ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-amber-300 opacity-40 italic text-[9px]">
+                        <span>{t('widget.notes.waiting')}</span>
+                    </div>
+                )}
             </div>
 
             {/* Bottom Sweep Highlight */}

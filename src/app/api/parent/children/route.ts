@@ -173,6 +173,7 @@ export async function PATCH(req: NextRequest) {
     try {
         const body = await req.json()
         const { id, name, nickname, slug, gender, birthDate, pin, avatarUrl, role, isArchived, isDeleted, exhibitionEnabled, permissionRole } = body
+        let { zodiac, chineseZodiac } = body
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
         
         // Safety check: Cannot modify SUPERADMIN unless you ARE the SUPERADMIN (and even then, limited)
