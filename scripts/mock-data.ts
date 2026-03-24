@@ -25,10 +25,11 @@ async function main() {
     // 2. Mock 2 Children: Lucky (Boy) and Summer (Girl)
     console.log('Generating 2 Children...');
     const childrenData = [
-        { name: 'Lucky', gender: 'MALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky', nickname: '小乐 (Lucky)' },
-        { name: 'Summer', gender: 'FEMALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Summer', nickname: '小夏 (Summer)' }
+        { name: 'Lucky', gender: 'MALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky', nickname: '小乐 (Lucky)', slug: 'lucky' },
+        { name: 'Summer', gender: 'FEMALE', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Summer', nickname: '小夏 (Summer)', slug: 'summer' }
     ];
 
+    let luckyId = '';
     for (const childRecord of childrenData) {
         let child = await db.select().from(schema.users).where(eq(schema.users.name, childRecord.name)).get();
         if (!child) {
@@ -36,6 +37,7 @@ async function main() {
                 id: uuidv4(),
                 name: childRecord.name,
                 nickname: childRecord.nickname,
+                slug: childRecord.slug,
                 role: 'CHILD',
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 gender: childRecord.gender as any,
@@ -47,15 +49,50 @@ async function main() {
             // Create initial stats for children
             await db.insert(schema.accountStats).values({
                 userId: child.id,
-                goldStars: 12,
-                purpleStars: 5,
-                currency: 150,
-                fiatBalance: 0
+                goldStars: 24,
+                purpleStars: 8,
+                currency: 300,
+                fiatBalance: 50.5
             });
         }
+        if (childRecord.name === 'Lucky') luckyId = child.id;
     }
 
-    // 3. Mock 10 Notes
+    // 3. Mock 2 Visitors
+    console.log('Generating 2 Visitors...');
+    const visitorIds: string[] = [];
+    const visitorNames = ['Alice Wang', 'Bob Chen'];
+    for (let i = 0; i < 2; i++) {
+        const v = await db.insert(schema.visitor).values({
+            name: visitorNames[i],
+            password: '000000', // As requested
+            status: 'PENDING',  // Not loggable by default
+            currency: 100
+        }).returning().get();
+        visitorIds.push(v.id);
+    }
+
+    // 4. Mock Visitor Messages for Lucky
+    console.log('Generating Messages for Lucky...');
+    const messages = [
+        { text: "Happy birthday Lucky! You're growing so fast.", isPublic: true, visitorIdx: 0 },
+        { text: "Your latest drawing is amazing! Keep it up.", isPublic: true, visitorIdx: 1 },
+        { text: "Private note: Remember to bring the gift tomorrow.", isPublic: false, visitorIdx: 0 },
+        { text: "I saw you at the park today, you look happy!", isPublic: true, memberId: userId },
+        { text: "Secret message from Grandma.", isPublic: false, memberId: userId }
+    ];
+
+    for (const msg of messages) {
+        await db.insert(schema.visitorMessage).values({
+            visitorId: msg.visitorIdx !== undefined ? visitorIds[msg.visitorIdx] : null,
+            memberId: msg.memberId || null,
+            targetUserId: luckyId,
+            text: msg.text,
+            isPublic: msg.isPublic
+        });
+    }
+
+    // 5. Mock 10 Notes
     const noteContents = [
         "Buy milk and eggs",
         "Call Grandma this weekend",
@@ -77,7 +114,7 @@ async function main() {
         });
     }
 
-    // 3. Mock 10 Tasks
+    // 6. Mock 10 Tasks
     console.log('Generating 10 Tasks...');
     const taskTitles = [
         "Finish Project Report", "Clean the Garage", "Read one chapter of a book", 
@@ -107,7 +144,7 @@ async function main() {
         });
     }
 
-    // 4. Mock Ledger Categories & 20 Records
+    // 7. Mock Ledger Categories & 20 Records
     console.log('Generating 20 Ledger Records...');
     // Ensure default categories exist or create some
     let incomeCat = await db.select().from(schema.ledgerCategory).where(eq(schema.ledgerCategory.name, 'Salary')).get();
@@ -145,7 +182,7 @@ async function main() {
 
     console.log(`Updated balance for Superadmin: ${totalBalance.toFixed(2)}`);
 
-    // 5. Mock 10 Household items
+    // 8. Mock 10 Household items
     console.log('Generating 10 Storage Items...');
     const itemNames = [
         "Vintage Camera", "Gaming Laptop", "Ergonomic Chair", "Espresso Machine", 
@@ -164,8 +201,8 @@ async function main() {
         });
     }
 
-    // 6. Mock 10 Journals
-    console.log('Generating 10 Journal Entries...');
+    // 9. Mock 7 Journals
+    console.log('Generating 7 Journal Entries...');
     const journalEntries = [
         "Today we had an amazing picnic in the park.",
         "Started a new project at work. Feeling productive!",
@@ -173,12 +210,9 @@ async function main() {
         "Watched a deep documentary about space exploration.",
         "Sunday brunch with the neighbors was fun.",
         "Finally finished reading that mystery novel.",
-        "Rainy afternoon. Spent it playing board games with family.",
-        "Delicious homemade pizza for dinner tonight.",
-        "Morning run was refreshing. 5km completed.",
-        "Spent the evening organizing the backyard garden."
+        "Rainy afternoon. Spent it playing board games with family."
     ];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 7; i++) {
         await db.insert(schema.journal).values({
             authorId: userId,
             authorRole: superadmin.role,
@@ -187,7 +221,7 @@ async function main() {
         });
     }
 
-    // 7. Mock Milestone Timeline (Birth to University) - 18 years span
+    // 10. Mock Milestone Timeline (Birth to University) - 18 years span
     console.log('Generating Milestone Timeline (18 Years)...');
     const milestones = [
         { title: "Hello World! (Birth)", date: "2008-01-01", desc: "A star is born! Welcome to the family." },
