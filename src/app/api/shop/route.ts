@@ -6,9 +6,9 @@ import { getSessionUser } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
-async function isParent() {
-    const { role } = await getSessionUser()
-    return role === 'PARENT'
+async function isAdmin() {
+    const user = await getSessionUser()
+    return user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
 }
 
 export async function GET() {
@@ -42,7 +42,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const body = await req.json()
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const body = await req.json()
@@ -101,7 +101,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const { id } = await req.json()

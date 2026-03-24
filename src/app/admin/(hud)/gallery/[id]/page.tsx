@@ -115,11 +115,11 @@ export default function AlbumDetailPage() {
                 const searchParams = new URLSearchParams(window.location.search)
                 const targetId = searchParams.get('userId')
 
-                if (data.isParent) {
+                if (data.isAdmin) {
                     if (targetId) setSelectedChildId(targetId)
                 }
 
-                const albumsUrl = targetId && data.isParent ? `/api/albums?userId=${targetId}` : '/api/albums'
+                const albumsUrl = targetId && data.isAdmin ? `/api/albums?userId=${targetId}` : '/api/albums'
                 fetch(albumsUrl).then(r => r.json()).then(albums => {
                     if (Array.isArray(albums)) setAvailableAlbums(albums)
                 })

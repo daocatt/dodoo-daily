@@ -47,7 +47,7 @@ export default function StoragePage() {
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')
     const [selectedTag, setSelectedTag] = useState<string | null>(null)
-    const [isParent, setIsParent] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
     
     // UI state
     const [showItemModal, setShowItemModal] = useState(false)
@@ -61,7 +61,7 @@ export default function StoragePage() {
         fetch('/api/stats')
             .then(res => res.json())
             .then(data => {
-                setIsParent(data.isParent)
+                setIsAdmin(data.isAdmin)
                 setUser(data)
             })
         fetchInitialItems()
@@ -156,7 +156,7 @@ export default function StoragePage() {
                         </span>
                     </div>
 
-                    {isParent && (
+                    {isAdmin && (
                         <button
                             onClick={() => {
                                 setEditingItem(null)
@@ -243,7 +243,7 @@ export default function StoragePage() {
                                         </div>
 
                                         {/* Action Buttons overlay for parent */}
-                                        {isParent && (
+                                        {isAdmin && (
                                             <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button 
                                                     onClick={(e) => { e.stopPropagation(); setEditingItem(item); setShowItemModal(true); }}

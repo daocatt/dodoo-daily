@@ -33,7 +33,7 @@ export default function FamilyNoteBoard() {
     const [newText, setNewText] = useState('')
     const [selectedColor, setSelectedColor] = useState(COLORS[0].value)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [currentUser, setCurrentUser] = useState<{ userId: string; isParent: boolean } | null>(null)
+    const [currentUser, setCurrentUser] = useState<{ userId: string; isAdmin: boolean } | null>(null)
 
     const fetchNotes = async () => {
         try {
@@ -54,7 +54,7 @@ export default function FamilyNoteBoard() {
             const res = await fetch('/api/stats')
             if (res.ok) {
                 const data = await res.json()
-                setCurrentUser({ userId: data.userId, isParent: data.isParent })
+                setCurrentUser({ userId: data.userId, isAdmin: data.isAdmin })
             }
         } catch (_e) {
             console.error('Failed to fetch user:', _e)
@@ -151,7 +151,7 @@ export default function FamilyNoteBoard() {
                             style={{ backgroundColor: note.color }}
                         >
                             {/* Pin Icon */}
-                            {(note.authorId === currentUser?.userId || currentUser?.isParent) && (
+                            {(note.authorId === currentUser?.userId || currentUser?.isAdmin) && (
                                 <button
                                     onClick={() => handleTogglePin(note)}
                                     className={`absolute top-4 right-4 p-1.5 rounded-full transition-all ${note.isPinned ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-black/5'}`}
@@ -174,7 +174,7 @@ export default function FamilyNoteBoard() {
                                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">{note.authorName}</span>
                                 </div>
 
-                                {(note.authorId === currentUser?.userId || currentUser?.isParent) && (
+                                {(note.authorId === currentUser?.userId || currentUser?.isAdmin) && (
                                     <button
                                         onClick={() => handleDeleteNote(note.id)}
                                         className="p-2 text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all rounded-lg"

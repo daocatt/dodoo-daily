@@ -21,7 +21,7 @@ interface Stats {
     name: string
     nickname?: string
     avatar?: string
-    isParent: boolean
+    isAdmin: boolean
     coins: number
     goldStars: number
     role: string
@@ -111,7 +111,7 @@ export default function BausteinAdminNavbar({ isEditing, onToggleEdit }: { isEdi
             <div className="flex items-center gap-2 md:gap-5 relative z-10 pointer-events-auto">
 
                 {/* Mode Toggle Shortcut (DASHBOARD <-> CONSOLE) */}
-                {stats?.isParent && (
+                {stats?.isAdmin && (
                     <Link 
                         href={pathname === '/admin' ? '/admin/console' : '/admin'} 
                         className="hardware-btn group"
@@ -148,7 +148,7 @@ export default function BausteinAdminNavbar({ isEditing, onToggleEdit }: { isEdi
 
                     {/* User Profile Trigger */}
                     <button 
-                        onClick={() => window.location.href = stats.isParent ? '/admin/console?view=PROFILE' : '/admin/profile'}
+                        onClick={() => window.location.href = stats.isAdmin ? '/admin/console?view=PROFILE' : '/admin/profile'}
                         className="hardware-btn group"
                         title={locale === 'zh-CN' ? '个人设置' : 'Profile Settings'}
                     >

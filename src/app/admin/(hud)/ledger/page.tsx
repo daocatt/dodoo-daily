@@ -27,7 +27,7 @@ export default function LedgerPage() {
     const [statsLoading, setStatsLoading] = useState(false)
     const [statsData, setStatsData] = useState<StatsData | null>(null)
     const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()))
-    const [isParent, setIsParent] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
 
     // Modal State
     const [showAddModal, setShowAddModal] = useState(false)
@@ -59,7 +59,7 @@ export default function LedgerPage() {
             const statsData = await statsRes.json()
             const membersData = await membersRes.json()
             
-            setIsParent(statsData.isParent || false)
+            setIsAdmin(statsData.isAdmin || false)
             setCurrentUserId(statsData.userId)
 
             if (ledgerData.records) {
@@ -192,7 +192,7 @@ export default function LedgerPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-3">
-                    {isParent && (
+                    {isAdmin && (
                         <Link
                             href="/admin/ledger/categories"
                             className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-500 border border-slate-200"

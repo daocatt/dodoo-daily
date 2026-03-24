@@ -13,7 +13,7 @@ interface UserStats {
     currency: number
     goldStars: number
     purpleStars: number
-    isParent: boolean
+    isAdmin: boolean
 }
 
 interface GrowthRecord {

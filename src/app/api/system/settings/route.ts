@@ -4,14 +4,14 @@ import { systemSettings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 
-async function checkIsParent() {
+async function checkIsAdmin() {
     const user = await getSessionUser()
-    return user?.role === 'PARENT'
+    return user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
 }
 
 export async function GET() {
     try {
-        const isParent = await checkIsParent()
+        const isAdmin = await checkIsAdmin()
         let settings = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).get()
 
         if (!settings) {
@@ -30,8 +30,8 @@ export async function GET() {
             settings = newSettings
         }
 
-        // If not a parent, return only a safe public subset
-        if (!isParent && settings) {
+        // If not an admin, return only a safe public subset
+        if (!isAdmin && settings) {
              const publicSettings = {
                 id: settings.id,
                 systemName: settings.systemName,
@@ -63,7 +63,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-    if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await checkIsAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const body = await req.json()

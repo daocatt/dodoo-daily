@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 async function checkIsAdmin() {
     const user = await getSessionUser()
     if (!user) return false
-    return user.permissionRole === 'SUPERADMIN' || user.permissionRole === 'ADMIN' || user.role === 'PARENT'
+    return user.permissionRole === 'SUPERADMIN' || user.permissionRole === 'ADMIN'
 }
 
 async function getPermissionContext() {
@@ -16,7 +16,7 @@ async function getPermissionContext() {
     return {
         id: user?.id,
         isSuperAdmin: user?.permissionRole === 'SUPERADMIN',
-        isAdmin: user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN' || user?.role === 'PARENT'
+        isAdmin: user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN'
     }
 }
 

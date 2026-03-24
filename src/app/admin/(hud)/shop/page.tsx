@@ -25,7 +25,7 @@ export default function ShopPage() {
     const [loading, setLoading] = useState(true)
     const [purchasingId, setPurchasingId] = useState<string | null>(null)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
-    const [isParent, setIsParent] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
     const [confirmItem, setConfirmItem] = useState<ShopItem | null>(null)
 
     const [showAddModal, setShowAddModal] = useState(false)
@@ -47,7 +47,7 @@ export default function ShopPage() {
             const res = await fetch('/api/stats')
             if (res.ok) {
                 const data = await res.json()
-                setIsParent(data.isParent || false)
+                setIsAdmin(data.isAdmin || false)
             }
         } catch (_e) {
             console.error(_e)
@@ -131,7 +131,7 @@ export default function ShopPage() {
                         {t('shop.title')}
                     </span>
                 </div>
-                {!isParent && (
+                {!isAdmin && (
                     <div className="flex items-center gap-2">
                         <Link
                             href="/shop/orders"
@@ -222,7 +222,7 @@ export default function ShopPage() {
                                         <span className="font-black text-2xl text-amber-600">{item.costCoins}</span>
                                     </div>
 
-                                    {!isParent ? (
+                                    {!isAdmin ? (
                                         <button
                                             onClick={() => setConfirmItem(item)}
                                             disabled={purchasingId === item.id}

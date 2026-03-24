@@ -35,7 +35,7 @@ export default function GalleryPage() {
 
     const [newAlbumName, setNewAlbumName] = useState('')
     const [showNewAlbumModal, setShowNewAlbumModal] = useState(false)
-    const [, setIsParent] = useState(false)
+    const [, setIsAdmin] = useState(false)
     const [selectedChildId] = useState<string | null>(null)
 
     const router = useRouter()
@@ -44,7 +44,7 @@ export default function GalleryPage() {
         fetch('/api/stats')
             .then(res => res.json())
             .then(data => {
-                setIsParent(data.isParent)
+                setIsAdmin(data.isAdmin)
                 if (data.isParent && data.children?.length > 0) {
                     // Possible future enhancement: setChildren(data.children)
                     // setSelectedChildId(data.children[0].id)

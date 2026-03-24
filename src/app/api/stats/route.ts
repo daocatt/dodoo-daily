@@ -57,7 +57,6 @@ export async function GET() {
         const responseData = {
             ...statsRecord,
             isAdmin: userRecord.permissionRole === 'SUPERADMIN' || userRecord.permissionRole === 'ADMIN',
-            isParent: userRecord.permissionRole === 'SUPERADMIN' || userRecord.permissionRole === 'ADMIN',
             permissionRole: userRecord.permissionRole,
             isLocked: userRecord.isLocked,
             role: userRecord.role,
@@ -70,7 +69,8 @@ export async function GET() {
             coins: statsRecord.currency,
             locale: userRecord.locale,
             timezone: settings?.timezone || 'Asia/Shanghai',
-            systemName: settings?.systemName || 'DoDoo Family'
+            systemName: settings?.systemName || 'DoDoo Family',
+            birthDate: userRecord.birthDate
         }
 
         return NextResponse.json(responseData)

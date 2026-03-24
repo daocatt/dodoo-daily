@@ -5,13 +5,13 @@ import { eq, desc } from 'drizzle-orm'
 import { addBalance } from '@/lib/economy'
 import { getSessionUser } from '@/lib/auth'
 
-async function isParent() {
+async function isAdmin() {
     const session = await getSessionUser()
-    return session?.role === 'PARENT'
+    return session?.permissionRole === 'SUPERADMIN' || session?.permissionRole === 'ADMIN'
 }
 
 export async function GET() {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const orders = await db.select({
@@ -61,7 +61,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-    if (!await isParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!await isAdmin()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
         const { id, status, remarks } = await req.json()

@@ -36,7 +36,7 @@ export default function CategoryManagerPage() {
                 const statsRes = await fetch('/api/stats')
                 const statsData = await statsRes.json()
                 
-                if (!statsData.isParent) {
+                if (!statsData.isAdmin) {
                     router.push('/ledger')
                     return
                 }

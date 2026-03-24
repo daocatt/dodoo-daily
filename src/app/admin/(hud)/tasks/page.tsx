@@ -47,7 +47,7 @@ function TasksPageContent() {
     const [loading, setLoading] = useState(true)
     const [showNewTaskModal, setShowNewTaskModal] = useState(false)
     const [activeTab, setActiveTab] = useState<'today' | 'tomorrow' | 'week' | 'planned' | 'assigns'>('today')
-    const [isParent, setIsParent] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
     const [children, setChildren] = useState<Child[]>([])
     const [assignedChildId, setAssignedChildId] = useState<string | 'ALL'>('ALL')
     const [assignTo, setAssignTo] = useState<string[]>([]) // Changed to array
@@ -75,8 +75,8 @@ function TasksPageContent() {
                     setCurrentUserId(data.userId)
                 }
                 if (data.timezone) setSystemTimezone(data.timezone)
-                if (data.isParent) {
-                    setIsParent(true)
+                if (data.isAdmin) {
+                    setIsAdmin(true)
                     fetch('/api/parent/children')
                         .then(res => res.json())
                         .then(kids => {
@@ -270,7 +270,7 @@ function TasksPageContent() {
                         <Plus className="w-4 h-4 md:w-5 md:h-5" />
                         <span className="hidden md:inline">{t('tasks.newTask')}</span>
                     </button>
-                    {isParent && children.length > 0 && (
+                    {isAdmin && children.length > 0 && (
                         <button
                             onClick={() => {
                                 setEditingTask(null)
@@ -332,7 +332,7 @@ function TasksPageContent() {
                                 <CalendarDays className={`w-4 h-4 transition-transform duration-300 ${activeTab === 'planned' ? 'scale-110' : ''}`} />
                                 <span className="hidden md:inline whitespace-nowrap">{t('tasks.planned')}</span>
                             </button>
-                            {!isParent ? (
+                            {!isAdmin ? (
                                 <button
                                     onClick={() => setActiveTab('assigns')}
                                     className={`flex-1 md:w-full flex items-center justify-center md:justify-start gap-2.5 py-2.5 md:py-3.5 md:px-4 rounded-xl md:rounded-2xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'assigns' ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 scale-[1.02]' : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'}`}
@@ -429,7 +429,7 @@ function TasksPageContent() {
                                     // In "Assigns" tab:
                                     // - If Parent: show tasks I gave to others
                                     // - If Child: show tasks I received from parent
-                                    if (isParent) {
+                                    if (isAdmin) {
                                         if (!isAssignIGave) return false;
                                         if (assignedChildId !== 'ALL') return task.assigneeId === assignedChildId;
                                     } else {

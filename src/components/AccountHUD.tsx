@@ -27,13 +27,14 @@ interface Stats {
     nickname?: string
     avatar?: string
     permissionRole: string
-    isParent: boolean
+    isAdmin: boolean
     coins: number
     slug?: string
     goldStars: number
     todayTasks: number
     completedTasks: number
     growthScore: number
+    birthDate?: string | null
 }
 
 interface Child {
@@ -102,7 +103,7 @@ export default function AccountHUD() {
                     }
                 }
 
-                if (data.isParent && loadKids) {
+                if (data.isAdmin && loadKids) {
                     const cRes = await fetch('/api/parent/children')
                     if (cRes.ok) {
                         const kids = await cRes.json()
@@ -157,14 +158,14 @@ export default function AccountHUD() {
 
     const handleSaveGrowth = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!targetChildId && stats?.isParent) return
+        if (!targetChildId && stats?.isAdmin) return
         setIsSaving(true)
         try {
             const res = await fetch('/api/growth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    targetUserId: stats?.isParent ? targetChildId : stats?.userId,
+                    targetUserId: stats?.isAdmin ? targetChildId : stats?.userId,
                     height: parseFloat(height),
                     weight: parseFloat(weight),
                     date: recordDate.toISOString()
@@ -222,7 +223,7 @@ export default function AccountHUD() {
                             </div>
                         </div>
 
-                        {stats.permissionRole === 'SUPERADMIN' && (
+                        {stats.isAdmin && (
                             <button
                                 onClick={() => { setRechargeType('CURRENCY'); setShowRechargeModal(true); }}
                                 className="hardware-btn group ml-1"
@@ -251,7 +252,7 @@ export default function AccountHUD() {
                         </button>
 
                         <div className="flex items-center gap-2 px-1.5 py-1 bg-black/[0.03] rounded-lg">
-                            {/* Growth Switch */}
+                            {/* Growth Switch (Admin records for kids, Child records for self) */}
                             <button
                                 onClick={() => setShowGrowthModal(true)}
                                 className="hardware-btn group relative"
@@ -284,8 +285,7 @@ export default function AccountHUD() {
             {/* Growth Modal */}
             <AnimatePresence>
                 {showGrowthModal && (() => {
-                    const targetChild = children.find(c => c.id === targetChildId)
-                    const childBirthDate = targetChild?.birthDate
+                    const childBirthDate = stats.isAdmin ? children.find(c => c.id === targetChildId)?.birthDate : stats.birthDate
                     return (
                         <div className="fixed inset-0 z-[1100] flex flex-col items-center justify-start p-4 pointer-events-auto overflow-y-auto">
                             <motion.div
@@ -321,7 +321,7 @@ export default function AccountHUD() {
                                 </div>
 
                                 {/* Child selector (parent only) */}
-                                {stats.isParent && (
+                                {stats.isAdmin && (
                                     <div className="space-y-3 mb-6 px-1">
                                         <label className="label-mono text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('parent.selectChild')}</label>
                                         <div className="flex flex-wrap gap-2">
@@ -350,7 +350,7 @@ export default function AccountHUD() {
                                 )}
 
                                 {/* No birth date warning */}
-                                {stats.isParent && !childBirthDate ? (
+                                {stats.isAdmin && !childBirthDate ? (
                                     <div className="flex flex-col items-center gap-4 py-8 text-center hardware-well bg-black/5 rounded-2xl border border-black/5">
                                         <div className="w-12 h-12 rounded-xl bg-amber-50 hardware-well flex items-center justify-center border border-amber-100 shadow-inner">
                                             <AlertCircle className="w-6 h-6 text-amber-500" />

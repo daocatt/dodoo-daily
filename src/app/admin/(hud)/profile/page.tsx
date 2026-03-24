@@ -16,7 +16,7 @@ interface User {
     slug?: string | null
     role: string
     avatarUrl: string | null
-    isParent?: boolean
+    isAdmin?: boolean
 }
 
 export default function SettingsPage() {
@@ -50,7 +50,7 @@ export default function SettingsPage() {
         fetch('/api/stats')
             .then(res => res.json())
             .then(data => {
-                if (data.isParent) {
+                if (data.isAdmin) {
                     router.push('/admin')
                     return
                 }

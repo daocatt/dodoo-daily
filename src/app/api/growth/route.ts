@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const targetUserId = searchParams.get('userId') || userId
 
-    // If not self, must be parent
-    if (targetUserId !== userId && role !== 'PARENT') {
+    // If not self, must be admin
+    if (targetUserId !== userId && session.permissionRole === 'USER') {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         const { targetUserId, height, weight, date } = body
 
         const finalTargetId = targetUserId || userId
-        if (finalTargetId !== userId && role !== 'PARENT') {
+        if (finalTargetId !== userId && session.permissionRole === 'USER') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
