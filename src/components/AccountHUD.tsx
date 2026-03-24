@@ -272,14 +272,7 @@ export default function AccountHUD() {
                         </button>
                     </div>
 
-                    {/* Close/Exit Action */}
-                    <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={handleLogout}
-                        className="w-7 h-7 flex items-center justify-center bg-rose-50 rounded-full text-rose-500 hover:bg-rose-500 hover:text-white transition-all ml-1 border border-rose-100"
-                    >
-                        <Power className="w-4 h-4" />
-                    </motion.button>
+
                 </motion.div>
             </div>
 

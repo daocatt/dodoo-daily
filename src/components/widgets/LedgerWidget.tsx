@@ -55,22 +55,7 @@ export default function LedgerWidget({ size = 'ICON', cellSize = 100 }: { size?:
             className={`w-full h-full bg-indigo-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-indigo-100/50 shadow-xl shadow-indigo-200/20 flex flex-col group overflow-hidden relative cursor-pointer`}
         >
             <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2 z-10'}`}>
-                <div className="flex items-center gap-2">
-                    <div
-                        className="rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
-                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
-                    >
-                        <Wallet style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
-                    </div>
-                    {size !== 'ICON' && (
-                        <span
-                            className="font-black text-indigo-600 tracking-tight uppercase opacity-80"
-                            style={{ fontSize: Math.max(8, cellSize * 0.1) }}
-                        >
-                            {t('ledger.title')}
-                        </span>
-                    )}
-                </div>
+                <div />
                 {/* Total Balance right aligned */}
                 {size !== 'ICON' && (
                     <div

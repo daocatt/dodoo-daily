@@ -67,10 +67,6 @@ export default function MyGalleryWidget() {
                     <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-100/50">
                         <Sparkles className="w-5 h-5" />
                     </div>
-                    <div>
-                        <h3 className="text-lg font-black text-slate-800 tracking-tight leading-none mb-1">{t('widget.myGallery.title')}</h3>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('widget.myGallery.totalItems', { count: (likes.length + orders.length).toString() })}</span>
-                    </div>
                 </div>
                 <Link href="/member" className="p-2.5 bg-slate-100 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all border border-transparent hover:border-indigo-100 shadow-sm">
                     <ArrowUpRight className="w-5 h-5" />

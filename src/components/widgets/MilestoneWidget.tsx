@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Trophy, ChevronRight, Calendar } from 'lucide-react'
+import { ChevronRight, Calendar } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 import { useI18n } from '@/contexts/I18nContext'
@@ -49,21 +49,7 @@ export default function MilestoneWidget({ size = 'ICON', cellSize = 100 }: { siz
             onClick={() => router.push('/journal?filter=milestone')}
             className="w-full h-full bg-orange-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border-2 border-orange-100 hover:border-orange-400 shadow-xl shadow-orange-200/10 flex flex-col group overflow-hidden relative cursor-pointer transition-all duration-300"
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
-                <div className="flex items-center gap-2">
-                    <div
-                        className="rounded-xl bg-orange-100/80 flex items-center justify-center text-orange-600 shadow-sm transition-transform group-hover:rotate-12"
-                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
-                    >
-                        <Trophy style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
-                    </div>
-                    <span
-                        className="font-black text-orange-900/40 tracking-tight uppercase"
-                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
-                    >
-                        {t('widget.milestones.title')}
-                    </span>
-                </div>
+            <div className={`flex items-center justify-end ${size === 'ICON' ? '' : 'mb-2'}`}>
                 <ChevronRight style={{ width: cellSize * 0.15, height: cellSize * 0.15 }} className="text-orange-300 group-hover:translate-x-1 transition-transform" />
             </div>
 

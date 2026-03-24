@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import { Package, Search } from 'lucide-react'
-import { useI18n } from '@/contexts/I18nContext'
 import Image from 'next/image'
 import clsx from 'clsx'
 
@@ -13,14 +12,11 @@ type StorageItem = {
   tags: string
 }
 
-export default function StorageWidget({ size, cellSize }: { size: string, cellSize: number }) {
+export default function StorageWidget({ size }: { size: string, cellSize: number }) {
   const [items, setItems] = useState<StorageItem[]>([])
-  const { t } = useI18n()
-
   const isWide = size === 'WIDE' || size === 'GIANT'
   
   useEffect(() => {
-    // If wide, fetch more to fill the shelf
     const fetchLimit = isWide ? 8 : 4
     fetch(`/api/storage?limit=${fetchLimit}`)
       .then(res => res.json())
@@ -29,15 +25,9 @@ export default function StorageWidget({ size, cellSize }: { size: string, cellSi
       })
   }, [isWide])
 
-  const fontSize = Math.max(10, Math.floor(cellSize * 0.12))
-
   return (
     <div className="w-full h-full bg-white p-3 md:p-4 flex flex-col gap-2 md:gap-3 pointer-events-none">
-      <div className="flex items-center justify-between shrink-0">
-        <h3 className="font-black text-slate-800 flex items-center gap-2" style={{ fontSize }}>
-          <Package className="w-4 h-4 text-amber-500" />
-          {t('storage.title') || 'Family Storage'}
-        </h3>
+      <div className="flex items-center justify-end shrink-0">
         <Search className="w-3.5 h-3.5 text-slate-300" />
       </div>
 

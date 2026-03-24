@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion } from 'motion/react'
-import { CheckCircle2, Circle, Star, Coins, Calendar } from 'lucide-react'
+import { CheckCircle2, Circle, Star } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
 
@@ -24,14 +23,6 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const router = useRouter()
     const { t } = useI18n()
 
-
-    const formatTaskDate = (dateStr: string | number | null) => {
-        if (!dateStr) return ''
-        const d = new Date(dateStr)
-        const today = new Date()
-        if (d.toDateString() === today.toDateString()) return t('widget.tasks.today')
-        return d.toLocaleDateString([], { month: '2-digit', day: '2-digit' })
-    }
 
     const displayCount = size === 'ICON' ? 0 : size === 'SQUARE' ? 4 : 8;
 
@@ -69,93 +60,45 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
         <div className="w-full h-full bg-slate-50/50 backdrop-blur-md rounded-3xl animate-pulse" />
     )
 
-    const totalCount = tasks.length
-    const completedCount = tasks.filter(t => t.completed).length
-
     return (
-        <motion.div
-            whileHover={{ scale: 1.01 }}
-            onClick={() => router.push('/tasks')}
-            className="w-full h-full bg-blue-50/40 backdrop-blur-xl rounded-3xl p-4 md:p-5 border border-blue-100/50 shadow-xl shadow-blue-200/20 flex flex-col group overflow-hidden relative cursor-pointer"
+        <div
+            className="w-full h-full flex flex-col p-6 pt-10 group overflow-hidden relative cursor-pointer"
+            onClick={() => router.push('/admin/tasks')}
         >
-            <div className={`flex items-center justify-between ${size === 'ICON' ? '' : 'mb-2'}`}>
-                <div className="flex items-center gap-2">
-                    <div
-                        className="rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm transition-transform group-hover:rotate-12 outline-none"
-                        style={{ width: cellSize * 0.35, height: cellSize * 0.35 }}
-                    >
-                        <CheckCircle2 style={{ width: cellSize * 0.18, height: cellSize * 0.18 }} />
-                    </div>
-                    {size !== 'ICON' && (
-                        <span
-                            className="font-black text-slate-800 tracking-tight uppercase opacity-60"
-                            style={{ fontSize: Math.max(8, cellSize * 0.1) }}
-                        >
-                            {t('widget.tasks.title')}
-                        </span>
-                    )}
-                </div>
-                {size !== 'ICON' && tasks.length > 0 && (
-                    <div
-                        className="px-2 py-0.5 bg-blue-100/80 rounded-full font-black text-blue-700 uppercase tracking-widest leading-none"
-                        style={{ fontSize: Math.max(7, cellSize * 0.07) }}
-                    >
-                        {completedCount}/{totalCount}
-                    </div>
-                )}
-            </div>
-
-            <div className="flex-1 space-y-2.5 overflow-hidden">
+            <div className="flex-1 space-y-2 overflow-hidden">
                     {tasks.length > 0 ? (
                         tasks.map((task) => (
                             <div
                                 key={task.id}
-                                className="flex items-center justify-between p-2 bg-white/60 rounded-xl border border-white/80 group-hover:border-blue-200 transition-colors shadow-sm min-w-0"
+                                className="flex items-center justify-between p-2.5 bg-white border border-black/5 rounded-lg shadow-sm group-hover:bg-slate-50 transition-colors min-w-0"
                             >
-                                <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                                <div className="flex items-center gap-3 overflow-hidden min-w-0">
                                     {task.completed ? (
-                                        <div className="relative flex items-center justify-center shrink-0">
-                                            <CheckCircle2
-                                                className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : "text-blue-500"}
-                                                style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
-                                            />
-                                        </div>
+                                        <CheckCircle2
+                                            className={task.isAssigned && task.confirmationStatus === 'PENDING' ? "text-amber-500" : "text-indigo-500"}
+                                            style={{ width: cellSize * 0.16, height: cellSize * 0.16 }}
+                                        />
                                     ) : (
                                         <Circle
-                                            className="text-blue-300 shrink-0"
-                                            style={{ width: cellSize * 0.15, height: cellSize * 0.15 }}
+                                            className="text-slate-300 shrink-0"
+                                            style={{ width: cellSize * 0.16, height: cellSize * 0.16 }}
                                         />
                                     )}
                                     <span
-                                        className={`font-bold text-slate-700 truncate ${task.completed ? 'line-through opacity-40' : ''}`}
-                                        style={{ fontSize: Math.max(8, cellSize * 0.1) }}
+                                        className={`font-black text-slate-800 truncate tracking-tight ${task.completed ? 'line-through opacity-30 font-medium' : ''}`}
+                                        style={{ fontSize: Math.max(9, cellSize * 0.11) }}
                                     >
                                         {task.title}
                                     </span>
                                 </div>
                                 
-                                <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
-                                    {task.plannedTime && (
-                                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100/80 rounded-lg text-slate-500 shrink-0">
-                                            <Calendar style={{ width: cellSize * 0.08, height: cellSize * 0.08 }} className="opacity-70" />
-                                            <span className="font-bold tabular-nums" style={{ fontSize: Math.max(7, cellSize * 0.07) }}>
-                                                {formatTaskDate(task.plannedTime)}
-                                            </span>
-                                        </div>
-                                    )}
-                                    
+                                <div className="flex items-center gap-2 shrink-0 ml-auto pl-2">
                                     {(size !== 'SQUARE' && size !== 'SMALL') && (task.rewardStars > 0 || task.rewardCoins > 0) && (
-                                        <div className="flex items-center gap-1 shrink-0">
+                                        <div className="flex items-center gap-1.5 shrink-0">
                                             {task.rewardStars > 0 && (
-                                                <div className="flex items-center gap-0.5 px-1 py-0.5 bg-amber-50/80 rounded-full">
-                                                    <Star style={{ width: cellSize * 0.09, height: cellSize * 0.09 }} className="text-amber-500 fill-amber-500 font-bold" />
-                                                    <span style={{ fontSize: Math.max(7, cellSize * 0.07) }} className="font-black text-amber-700">{task.rewardStars}</span>
-                                                </div>
-                                            )}
-                                            {task.rewardCoins > 0 && (
-                                                <div className="flex items-center gap-0.5 px-1 py-0.5 bg-blue-50/80 rounded-full">
-                                                    <Coins style={{ width: cellSize * 0.09, height: cellSize * 0.09 }} className="text-blue-500" />
-                                                    <span style={{ fontSize: Math.max(7, cellSize * 0.07) }} className="font-black text-blue-700">{task.rewardCoins}</span>
+                                                <div className="flex items-center gap-1 px-1.5 py-0.5 bg-yellow-50 rounded-md border border-yellow-100">
+                                                    <Star style={{ width: cellSize * 0.08, height: cellSize * 0.08 }} className="text-yellow-500 fill-yellow-500" />
+                                                    <span style={{ fontSize: Math.max(8, cellSize * 0.08) }} className="label-mono text-yellow-700">{task.rewardStars}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -165,12 +108,12 @@ export default function TasksWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                         ))
                     ) : (
                         size !== 'ICON' && (
-                            <div className="h-full flex flex-col items-center justify-center text-blue-300 opacity-40 italic text-[9px]">
-                                <span>{t('widget.tasks.clear')}</span>
+                            <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-60">
+                                <span className="label-mono text-[9px] uppercase tracking-widest">{t('widget.tasks.clear')}</span>
                             </div>
                         )
                     )}
             </div>
-        </motion.div>
+        </div>
     )
 }

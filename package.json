@@ -11,6 +11,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:setup": "node migrate.js",
+    "db:mock": "tsx scripts/mock-data.ts",
+    "db:reset": "tsx scripts/reset-data.ts",
     "db:studio": "drizzle-kit studio",
     "prepare": "husky"
   },

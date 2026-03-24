@@ -4,13 +4,13 @@ import { motion } from 'framer-motion'
 
 export default function NatureBackground() {
     return (
-        <div className="fixed inset-0 z-0 overflow-hidden bg-[#fdfcf7]">
-            {/* Mesh Gradient Foundation */}
-            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(at_0%_0%,hsla(143,30%,85%,1)_0,transparent_50%),radial-gradient(at_50%_0%,hsla(34,50%,95%,1)_0,transparent_50%),radial-gradient(at_100%_0%,hsla(186,40%,90%,1)_0,transparent_50%),radial-gradient(at_0%_100%,hsla(43,60%,92%,1)_0,transparent_50%),radial-gradient(at_50%_100%,hsla(143,40%,88%,1)_0,transparent_50%),radial-gradient(at_100%_100%,hsla(22,70%,94%,1)_0,transparent_50%)]" />
+        <div className="fixed inset-0 z-0 overflow-hidden bg-[#e9e7df]">
+            {/* Mesh Gradient Foundation - Darkened & Muted */}
+            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(at_0%_0%,hsla(34,20%,80%,1)_0,transparent_50%),radial-gradient(at_50%_0%,hsla(34,25%,85%,1)_0,transparent_50%),radial-gradient(at_100%_0%,hsla(186,15%,80%,1)_0,transparent_50%),radial-gradient(at_0%_100%,hsla(43,25%,82%,1)_0,transparent_50%),radial-gradient(at_50%_100%,hsla(43,20%,82%,1)_0,transparent_50%),radial-gradient(at_100%_100%,hsla(22,30%,84%,1)_0,transparent_50%)]" />
 
-            {/* Dynamic Organic Blobs */}
+            {/* Dynamic Organic Blobs - More Muted & Darker */}
             <motion.div
-                className="absolute top-[-15%] left-[-10%] w-[70vw] h-[70vw] bg-[#e8f5e9] rounded-full mix-blend-multiply filter blur-[120px]"
+                className="absolute top-[-15%] left-[-10%] w-[70vw] h-[70vw] bg-[#dcd4c8] rounded-full mix-blend-multiply filter blur-[120px]"
                 animate={{
                     x: [0, 80, 0],
                     y: [0, 40, 0],
@@ -20,7 +20,7 @@ export default function NatureBackground() {
                 transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
-                className="absolute bottom-[-10%] right-[-15%] w-[65vw] h-[65vw] bg-[#fff3e0] rounded-full mix-blend-multiply filter blur-[140px]"
+                className="absolute bottom-[-10%] right-[-15%] w-[65vw] h-[65vw] bg-[#e1d9c5] rounded-full mix-blend-multiply filter blur-[140px]"
                 animate={{
                     x: [0, -60, 0],
                     y: [0, -40, 0],
@@ -29,7 +29,7 @@ export default function NatureBackground() {
                 transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
             />
             <motion.div
-                className="absolute top-[20%] right-[-10%] w-[50vw] h-[50vw] bg-[#f1f8e9] rounded-full mix-blend-multiply filter blur-[100px]"
+                className="absolute top-[20%] right-[-10%] w-[50vw] h-[50vw] bg-[#e6ded0] rounded-full mix-blend-multiply filter blur-[100px]"
                 animate={{
                     x: [0, -100, 0],
                     y: [0, 50, 0],
@@ -37,9 +37,9 @@ export default function NatureBackground() {
                 transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
             />
             
-            {/* Golden hour accent */}
+            {/* Golden hour accent - Darker Amber */}
             <motion.div
-                className="absolute bottom-[20%] left-[10%] w-[40vw] h-[40vw] bg-[#fff8e1] rounded-full mix-blend-soft-light filter blur-[110px]"
+                className="absolute bottom-[20%] left-[10%] w-[40vw] h-[40vw] bg-[#dfd6c0] rounded-full mix-blend-soft-light filter blur-[110px]"
                 animate={{
                     scale: [0.8, 1.2, 0.8],
                     opacity: [0.3, 0.6, 0.3],
@@ -47,12 +47,14 @@ export default function NatureBackground() {
                 transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
             />
 
-            {/* Premium Grain & Overlay */}
-            <div className="absolute inset-0 bg-[#fdfcf7]/10 backdrop-blur-[2px]" />
-            <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+            <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(30,30,20,0.1)] pointer-events-none" />
+
+            {/* Global Connected Grid Overlay - Technical Blueprint Style */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.06] bg-[linear-gradient(rgba(0,0,0,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.2)_1px,transparent_1px)] bg-[length:24px_24px]" />
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(0,0,0,0.3)_1.5px,transparent_1.5px),linear-gradient(90deg,rgba(0,0,0,0.3)_1.5px,transparent_1.5px)] bg-[length:120px_120px]" />
             
-            {/* Soft vignette */}
-            <div className="absolute inset-0 shadow-[inset_0_0_150px_rgba(253,252,247,0.8)] pointer-events-none" />
+            {/* Dots at intersections for extra detail */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.08] bg-[radial-gradient(circle_at_center,black_1px,transparent_1px)] bg-[length:24px_24px]" />
         </div>
     )
 }

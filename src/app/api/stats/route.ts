@@ -46,7 +46,10 @@ export async function GET() {
             }
         }
 
-        const settings = await db.select({ timezone: systemSettings.timezone })
+        const settings = await db.select({ 
+            timezone: systemSettings.timezone,
+            systemName: systemSettings.systemName
+        })
             .from(systemSettings)
             .where(eq(systemSettings.id, 'app_settings'))
             .get()
@@ -66,7 +69,8 @@ export async function GET() {
             exhibitionEnabled: userRecord.exhibitionEnabled,
             coins: statsRecord.currency,
             locale: userRecord.locale,
-            timezone: settings?.timezone || 'Asia/Shanghai'
+            timezone: settings?.timezone || 'Asia/Shanghai',
+            systemName: settings?.systemName || 'DoDoo Family'
         }
 
         return NextResponse.json(responseData)
