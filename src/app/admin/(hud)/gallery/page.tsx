@@ -1,9 +1,10 @@
 'use client'
 
+import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
-import { Plus, Camera, Image as ImageIcon, ChevronLeft, Archive, Sparkles, Store, MessageSquare } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Camera, Image as ImageIcon, Archive, Sparkles, Store, MessageSquare } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import UploadModal from '@/components/gallery/UploadModal'
@@ -93,54 +94,48 @@ export default function GalleryPage() {
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416]">
             <AnimatedSky />
 
-            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-white/50 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-800 border border-slate-200">
-                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-                    </Link>
-                    <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800 flex items-center gap-2">
-                        <ImageIcon className="w-6 h-6 text-indigo-500" />
-                        {t('gallery.title')}
-                    </span>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowUploadModal(true)}
-                        className="flex items-center justify-center p-2 rounded-2xl bg-purple-500/80 hover:bg-purple-500 backdrop-blur-md transition-colors text-white shadow-sm border border-purple-400 aspect-square"
-                        title={t('gallery.upload')}
-                    >
-                        <Camera className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={() => setShowNewAlbumModal(true)}
-                        className="flex items-center justify-center p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 backdrop-blur-md transition-colors text-white shadow-sm border border-slate-700 aspect-square"
-                        title={t('gallery.newAlbum')}
-                    >
-                        <Plus className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={() => window.open('/admin/gallery/messages', '_blank')}
-                        className="flex items-center justify-center p-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-600 backdrop-blur-md transition-colors text-white shadow-sm border border-indigo-400 aspect-square"
-                        title="Moderate Signals"
-                    >
-                        <MessageSquare className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin/gallery/exhibition')}
-                        className="flex items-center justify-center p-2 rounded-2xl bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-white shadow-sm border border-amber-400 aspect-square"
-                        title={t('gallery.exhibition') || 'Exhibition Settings'}
-                    >
-                        <Store className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={() => router.push('/admin/gallery/archive')}
-                        className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
-                        title={t('gallery.archives')}
-                    >
-                        <Archive className="w-5 h-5" />
-                    </button>
-                </div>
-            </header >
+            <BausteinAdminNavbar 
+                onBack={() => router.push('/admin')}
+                actions={
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowUploadModal(true)}
+                            className="flex items-center justify-center p-2 rounded-2xl bg-purple-500/80 hover:bg-purple-500 backdrop-blur-md transition-colors text-white shadow-sm border border-purple-400 aspect-square"
+                            title={t('gallery.upload')}
+                        >
+                            <Camera className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => setShowNewAlbumModal(true)}
+                            className="flex items-center justify-center p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 backdrop-blur-md transition-colors text-white shadow-sm border border-slate-700 aspect-square"
+                            title={t('gallery.newAlbum')}
+                        >
+                            <Plus className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => window.open('/admin/gallery/messages', '_blank')}
+                            className="flex items-center justify-center p-2 rounded-2xl bg-indigo-500/80 hover:bg-indigo-600 backdrop-blur-md transition-colors text-white shadow-sm border border-indigo-400 aspect-square"
+                            title="Moderate Signals"
+                        >
+                            <MessageSquare className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin/gallery/exhibition')}
+                            className="flex items-center justify-center p-2 rounded-2xl bg-amber-500/80 hover:bg-amber-500 backdrop-blur-md transition-colors text-white shadow-sm border border-amber-400 aspect-square"
+                            title={t('gallery.exhibition') || 'Exhibition Settings'}
+                        >
+                            <Store className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={() => router.push('/admin/gallery/archive')}
+                            className="flex items-center justify-center p-2 rounded-2xl bg-slate-200/80 hover:bg-slate-300 backdrop-blur-md transition-colors text-slate-600 shadow-sm border border-slate-300 aspect-square"
+                            title={t('gallery.archives')}
+                        >
+                            <Archive className="w-5 h-5" />
+                        </button>
+                    </div>
+                }
+            />
 
             <main className="relative z-10 flex-1 overflow-y-auto p-6 md:p-12 pb-24 hide-scrollbar">
                 {loading ? (

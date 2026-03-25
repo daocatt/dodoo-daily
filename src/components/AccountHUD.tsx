@@ -13,7 +13,7 @@ import {
     SquareActivity
 } from 'lucide-react'
 import Image from 'next/image'
-import { useI18n, Locale } from '@/contexts/I18nContext'
+import { useI18n } from '@/contexts/I18nContext'
 import { clsx } from 'clsx'
 import SmartDatePicker from '@/components/SmartDatePicker'
 
@@ -44,7 +44,7 @@ interface Child {
     birthDate?: string | null
 }
 
-export default function AccountHUD() {
+export default function AccountHUD({ inline = false }: { inline?: boolean }) {
     const [stats, setStats] = useState<Stats | null>(null)
     const [children, setChildren] = useState<Child[]>([])
     const [showGrowthModal, setShowGrowthModal] = useState(false)
@@ -81,15 +81,6 @@ export default function AccountHUD() {
                 const data = await res.json()
                 setStats(data)
 
-                // Sync locale from database to localStorage if no local cache exists (Fresh Start)
-                if (data.locale && data.locale !== locale) {
-                    const localSaved = localStorage.getItem('dodoo-locale')
-                    if (!localSaved && typeof setLocale === 'function') {
-                        console.log('[AccountHUD] Fresh start detected, syncing locale from database:', data.locale)
-                        setLocale(data.locale as Locale)
-                    }
-                }
-
                 if (data.isAdmin && loadKids) {
                     const cRes = await fetch('/api/parent/children')
                     if (cRes.ok) {
@@ -105,7 +96,7 @@ export default function AccountHUD() {
         } catch (_err) {
             console.error("AccountHUD: Fetch failed", _err)
         }
-    }, [locale])
+    }, [])
 
     useEffect(() => {
         setMounted(true)
@@ -171,9 +162,12 @@ export default function AccountHUD() {
 
     return (
         <>
-            <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[2000] pointer-events-none w-auto max-w-[90vw] px-2 flex items-center justify-center h-[56px]">
+            <div className={clsx(
+                inline ? "relative h-full" : "fixed top-2 left-1/2 -translate-x-1/2 z-[2000] h-[56px]",
+                "pointer-events-none w-auto max-w-[90vw] px-2 flex items-center justify-center"
+            )}>
                 <motion.div
-                    initial={{ y: -50, opacity: 0 }}
+                    initial={inline ? false : { y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     className="h-10 bg-[var(--surface-warm)] border-2 border-black/20 shadow-[0_15px_40px_rgba(0,0,0,0.15)] rounded-xl flex items-center gap-4 px-4 pointer-events-auto relative active-panel overflow-hidden"
                 >

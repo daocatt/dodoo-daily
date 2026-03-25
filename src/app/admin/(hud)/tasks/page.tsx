@@ -1,14 +1,14 @@
 'use client'
 
+import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+
 import React, { useEffect, useState, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, CalendarDays, Users, Edit2, Coins, Check, CheckCheck, RotateCcw, Trash2, X as XIcon } from 'lucide-react'
-import { getStartOfDayInTimezone, getTodayStringInTimezone } from '@/lib/utils'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, CalendarDays, Users, Edit2, Check, CheckCheck, RotateCcw, Trash2, X as XIcon } from 'lucide-react'
+import { getStartOfDayInTimezone } from '@/lib/utils'
+import { useSearchParams, useRouter } from 'next/navigation'
 import AnimatedSky from '@/components/AnimatedSky'
 import { useI18n } from '@/contexts/I18nContext'
-import { startOfWeek, endOfWeek } from 'date-fns'
 import SmartDatePicker from '@/components/SmartDatePicker'
 import Image from 'next/image'
 
@@ -45,6 +45,7 @@ type Child = {
 
 
 function TasksPageContent() {
+    const router = useRouter()
     const searchParams = useSearchParams()
     const assignToParam = searchParams.get('assignTo')
     const [tasks, setTasks] = useState<Task[]>([])
@@ -63,7 +64,6 @@ function TasksPageContent() {
     const [editingTask, setEditingTask] = useState<Task | null>(null)
     const [title, setTitle] = useState('')
     const [rewardStars, setRewardStars] = useState(1)
-    const [rewardCoins, setRewardCoins] = useState(0)
     const [isRepeating, setIsRepeating] = useState(false)
     const [isMonthlyRepeating, setIsMonthlyRepeating] = useState(false)
     const [plannedDate, setPlannedDate] = useState<Date | null>(() => new Date())
@@ -198,7 +198,6 @@ function TasksPageContent() {
             setEditingTask(null)
             setTitle('')
             setRewardStars(1)
-            setRewardCoins(0)
             setIsRepeating(false)
             setIsMonthlyRepeating(false)
             fetchTasks()
@@ -241,65 +240,52 @@ function TasksPageContent() {
         <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#e0f2fe] text-[#2c2416]">
             <AnimatedSky />
 
-            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-white/30 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-slate-800 border border-slate-200">
-                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-                    </Link>
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex w-10 h-10 bg-blue-500 rounded-2xl items-center justify-center shadow-md shadow-blue-500/30 text-white flex-shrink-0">
-                            <CheckSquare className="w-5 h-5" />
-                        </div>
-                        <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800">
-                            {t('tasks.title')}
-                        </span>
-                    </div>
-                </div>
-                <div className="flex items-center gap-2 md:gap-3">
-                    <button
-                        onClick={() => {
-                            setEditingTask(null)
-                            setTitle('')
-                            setRewardStars(1)
-                            setRewardCoins(0)
-                            setIsRepeating(false)
-                            setPlannedDate(new Date())
-                            setAssignTo([])
-                            setModalMode('PERSONAL')
-                            setShowNewTaskModal(true)
-                        }}
-                        className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95 border-2 border-blue-400"
-                    >
-                        <Plus className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="hidden md:inline">{t('tasks.newTask')}</span>
-                    </button>
-                    {isAdmin && children.length > 0 && (
+            <BausteinAdminNavbar 
+                onBack={() => router.push('/admin')}
+                actions={
+                    <div className="flex items-center gap-2 md:gap-3">
                         <button
                             onClick={() => {
                                 setEditingTask(null)
                                 setTitle('')
                                 setRewardStars(1)
-                                setRewardStars(1)
                                 setIsRepeating(false)
-                                setIsMonthlyRepeating(false)
                                 setPlannedDate(new Date())
-                                // Default to currently filtered child, or first child
-                                if (assignedChildId !== 'ALL') {
-                                    setAssignTo([assignedChildId])
-                                } else {
-                                    setAssignTo(assignToParam ? [assignToParam] : [])
-                                }
-                                setModalMode('ASSIGN')
+                                setAssignTo([])
+                                setModalMode('PERSONAL')
                                 setShowNewTaskModal(true)
                             }}
-                            className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-sm md:text-base font-bold text-white shadow-md shadow-emerald-500/20 active:scale-95 border-2 border-emerald-400"
+                            className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-blue-500 hover:bg-blue-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95 border-2 border-blue-400"
                         >
                             <Plus className="w-4 h-4 md:w-5 md:h-5" />
-                            <span className="hidden md:inline">{t('parent.assignTask')}</span>
+                            <span className="hidden md:inline">{t('tasks.newTask')}</span>
                         </button>
-                    )}
-                </div>
-            </header>
+                        {isAdmin && children.length > 0 && (
+                            <button
+                                onClick={() => {
+                                    setEditingTask(null)
+                                    setTitle('')
+                                    setRewardStars(1)
+                                    setIsRepeating(false)
+                                    setIsMonthlyRepeating(false)
+                                    setPlannedDate(new Date())
+                                    if (assignedChildId !== 'ALL') {
+                                        setAssignTo([assignedChildId])
+                                    } else {
+                                        setAssignTo(assignToParam ? [assignToParam] : [])
+                                    }
+                                    setModalMode('ASSIGN')
+                                    setShowNewTaskModal(true)
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-xl md:rounded-2xl bg-emerald-500 hover:bg-emerald-600 transition-colors text-sm md:text-base font-bold text-white shadow-md shadow-emerald-500/20 active:scale-95 border-2 border-emerald-400"
+                            >
+                                <Plus className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="hidden md:inline">{t('parent.assignTask')}</span>
+                            </button>
+                        )}
+                    </div>
+                }
+            />
 
             <main className="relative z-10 flex-1 w-full max-w-[1200px] mx-auto flex flex-col md:flex-row gap-6 md:gap-12 px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar items-start md:justify-center">
 
