@@ -5,7 +5,9 @@ import { addBalance } from '@/lib/economy'
 export async function POST(req: NextRequest) {
     try {
         const session = await getSessionUser()
-        if (!session || session.permissionRole !== 'SUPERADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        if (!session || (session.permissionRole !== 'SUPERADMIN' && session.permissionRole !== 'ADMIN')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        }
         const userId = session.userId
 
         const body = await req.json()

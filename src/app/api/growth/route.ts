@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const targetUserId = searchParams.get('userId') || userId
 
-    // If not self, must be admin
-    if (targetUserId !== userId && session.permissionRole === 'USER') {
+    // Only Admin can fetch growth records
+    if (session.permissionRole !== 'SUPERADMIN' && session.permissionRole !== 'ADMIN') {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -59,7 +59,8 @@ export async function POST(req: NextRequest) {
         const { targetUserId, height, weight, date } = body
 
         const finalTargetId = targetUserId || userId
-        if (finalTargetId !== userId && session.permissionRole === 'USER') {
+        // Only Admin can record growth data
+        if (session.permissionRole !== 'SUPERADMIN' && session.permissionRole !== 'ADMIN') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 

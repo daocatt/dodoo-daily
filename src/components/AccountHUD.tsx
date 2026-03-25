@@ -233,18 +233,20 @@ export default function AccountHUD({ inline = false }: { inline?: boolean }) {
                         </button>
 
                         <div className="flex items-center gap-2 px-1.5 py-1 bg-black/[0.03] rounded-lg">
-                            {/* Growth Switch (Admin records for kids, Child records for self) */}
-                            <button
-                                onClick={() => setShowGrowthModal(true)}
-                                className="hardware-btn group relative"
-                                title="Growth Record"
-                            >
-                                <div className="w-7 h-7 hardware-well rounded-lg flex items-center justify-center bg-emerald-50/50">
-                                    <div className="hardware-cap absolute inset-0.5 bg-emerald-600 text-white rounded-md flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap">
-                                        <Ruler className="w-3.5 h-3.5" />
+                            {/* Growth Switch (Admin records for kids only as per latest request) */}
+                            {stats.isAdmin && (
+                                <button
+                                    onClick={() => setShowGrowthModal(true)}
+                                    className="hardware-btn group relative"
+                                    title="Growth Record"
+                                >
+                                    <div className="w-7 h-7 hardware-well rounded-lg flex items-center justify-center bg-emerald-50/50">
+                                        <div className="hardware-cap absolute inset-0.5 bg-emerald-600 text-white rounded-md flex items-center justify-center group-hover:brightness-110 active:translate-y-0.5 shadow-cap">
+                                            <Ruler className="w-3.5 h-3.5" />
+                                        </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+                            )}
 
                             {/* Stats Switch */}
                             <Link
