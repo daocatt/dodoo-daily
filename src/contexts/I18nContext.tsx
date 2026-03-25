@@ -247,6 +247,7 @@ const dictionaries: Dictionary = {
         'parent.assetType': 'Asset Type',
         'parent.amount': 'Amount',
         'parent.rechargeAmount': 'Recharge {amount} {type}',
+        'parent.recharge': 'Recharge',
         'parent.processing': 'Processing...',
 
         // Parent
@@ -614,7 +615,9 @@ const dictionaries: Dictionary = {
         'stats.saveRecord': 'Save Record',
         'stats.starsEarned': 'Stars Earned',
         'stats.subtitle': 'Family Statistics',
-        'stats.tasksCompleted': 'Tasks Done Last Week',
+        'stats.tasksCompleted': 'Tasks Completed (Last Week)',
+        'stats.tasksCompletedMonth': 'Tasks Completed (Month)',
+        'stats.tasksCompletedYear': 'Tasks Completed (Year)',
         'stats.title': 'Growth & Stats',
         'stats.weight': 'Weight (kg)',
         'stats.weeklyProgress': 'Weekly Progress',
@@ -1060,7 +1063,7 @@ const dictionaries: Dictionary = {
         'login.firstLaunchAvatar': '点击设置头像',
         'login.firstLaunchPlaceholder': '输入你的名字开始...',
         'login.loginButton': '登录',
-        'login.restrictedMember': '访问受限：仅限超级管理员',
+        'login.restrictedMember': '访问受限：仅限 Family Member',
         'login.login': '登录',
         'login.register': '注册',
         'login.nextStep': '下一步',
@@ -1115,6 +1118,7 @@ const dictionaries: Dictionary = {
         'parent.assetType': '资产类型',
         'parent.amount': '金额',
         'parent.rechargeAmount': '充值 {amount} {type}',
+        'parent.recharge': '充值',
         'parent.processing': '正在处理...',
 
         // Parent
@@ -1507,6 +1511,8 @@ const dictionaries: Dictionary = {
         'stats.starsEarned': '获得的星星',
         'stats.subtitle': '家庭统计',
         'stats.tasksCompleted': '上周完成的任务',
+        'stats.tasksCompletedMonth': '本月完成任务',
+        'stats.tasksCompletedYear': '本年完成任务',
         'stats.title': '成长与统计',
         'stats.weight': '体重 (kg)',
         'stats.weeklyProgress': '每周进展',

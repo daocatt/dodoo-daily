@@ -40,6 +40,9 @@ export async function GET(req: NextRequest) {
             )
             .all()
 
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        const thisYearStart = new Date(now.getFullYear(), 0, 1)
+
         const detailedStats = await Promise.all(children.map(async (child) => {
             // 1. This week's earnings (since 7 days ago)
             const thisWeekLogs = await db.select()
@@ -71,28 +74,37 @@ export async function GET(req: NextRequest) {
             }
 
             // 3. Task completion (Sum of personal tasks and assigned tasks)
-            const personalTasksCount = await db.select({ count: sql<number>`count(*)` })
-                .from(task)
-                .where(and(
-                    eq(task.creatorId, child.id),
-                    isNull(task.assignerId),
+            // Function to get task count for a range
+            const getTaskCountInRange = async (start: Date, end?: Date) => {
+                const conditions = [
                     eq(task.completed, true),
-                    gte(task.updatedAt, lastWeekStart),
-                    lte(task.updatedAt, lastWeekEnd)
-                )).get()
+                    gte(task.updatedAt, start)
+                ]
+                if (end) conditions.push(lte(task.updatedAt, end))
 
-            const assignedTasksCount = await db.select({ count: sql<number>`count(*)` })
-                .from(task)
-                .where(and(
-                    eq(task.assigneeId, child.id),
-                    isNotNull(task.assignerId),
-                    eq(task.completed, true),
-                    eq(task.confirmationStatus, 'APPROVED'),
-                    gte(task.updatedAt, lastWeekStart),
-                    lte(task.updatedAt, lastWeekEnd)
-                )).get()
+                const personal = await db.select({ count: sql<number>`count(*)` })
+                    .from(task)
+                    .where(and(
+                        eq(task.creatorId, child.id),
+                        isNull(task.assignerId),
+                        ...conditions
+                    )).get()
 
-            const totalCompletedCount = (personalTasksCount?.count || 0) + (assignedTasksCount?.count || 0)
+                const assigned = await db.select({ count: sql<number>`count(*)` })
+                    .from(task)
+                    .where(and(
+                        eq(task.assigneeId, child.id),
+                        isNotNull(task.assignerId),
+                        eq(task.confirmationStatus, 'APPROVED'),
+                        ...conditions
+                    )).get()
+
+                return (personal?.count || 0) + (assigned?.count || 0)
+            }
+
+            const lastWeekTaskCount = await getTaskCountInRange(lastWeekStart, lastWeekEnd)
+            const thisMonthTaskCount = await getTaskCountInRange(thisMonthStart)
+            const thisYearTaskCount = await getTaskCountInRange(thisYearStart)
 
             // 4. Growth data (Fetch top 10 for charts/overview)
             const growthData = await db.select()
@@ -106,7 +118,9 @@ export async function GET(req: NextRequest) {
                 ...child,
                 thisWeekStats,
                 lastWeekStats,
-                lastWeekTaskCount: totalCompletedCount,
+                lastWeekTaskCount,
+                thisMonthTaskCount,
+                thisYearTaskCount,
                 growthData
             }
         }))
