@@ -21,7 +21,7 @@ export default function PushSubscriptionManager() {
     // Browser doesn't support push or no service worker registered
     if (!swAvailable) {
         return (
-            <div className="flex items-center gap-2 text-slate-300 p-2" title="Push notifications not available in this environment">
+            <div className="flex items-center gap-2 text-slate-500 p-2" title="Push notifications not available in this environment">
                 <WifiOff className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-widest">N/A</span>
             </div>

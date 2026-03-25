@@ -116,13 +116,19 @@ export default function ParentDashboard() {
     }
 
     return (
-        <div className="min-h-dvh flex flex-col relative overflow-hidden app-bg-pattern font-sans pb-20">
+        <div className="min-h-dvh flex flex-col relative overflow-hidden app-bg-pattern font-sans pb-10">
             {/* ─── Integrated Navbar ─── */}
-            <BausteinAdminNavbar />
+            <BausteinAdminNavbar 
+                onBack={view !== 'HOME' ? () => {
+                    if (view === 'SHOP_ORDERS') setView('REWARDS')
+                    else if (view === 'GALLERY_ORDERS') setView('EXHIBITION')
+                    else setView('HOME')
+                } : undefined}
+            />
 
-            <main className="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full relative z-10">
+            <main className="flex-1 p-6 md:px-12 md:py-6 max-w-7xl mx-auto w-full relative z-10">
                 {view === 'HOME' ? (
-                    <div className="space-y-12 pb-20">
+                    <div className="space-y-12 pb-10">
                         {/* Group 1: Family & Core Resources */}
                         <div className="space-y-6">
                             <div className="flex items-center gap-3 px-2">
@@ -335,26 +341,8 @@ export default function ParentDashboard() {
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        <button 
-                            onClick={() => {
-                                if (view === 'SHOP_ORDERS') setView('REWARDS')
-                                else if (view === 'GALLERY_ORDERS') setView('EXHIBITION')
-                                else setView('HOME')
-                            }} 
-                            className="hardware-btn group mb-6"
-                        >
-                            <div className="hardware-cap bg-white px-5 py-2.5 rounded-xl border border-black/5 flex items-center gap-2 shadow-sm transition-all hover:bg-slate-50 active:translate-y-0.5">
-                                <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:-translate-x-1 transition-transform" />
-                                <span className="label-mono">{t('common.back')}</span>
-                            </div>
-                        </button>
-                        
-                        <div className="baustein-panel w-full min-h-[600px] p-2 bg-[#D1CDBC]">
-                            <div className="w-full h-full bg-white rounded-xl overflow-hidden shadow-inner border border-black/5 p-6 md:p-10">
-                                {renderView()}
-                            </div>
-                        </div>
+                    <div className="w-full">
+                        {renderView()}
                     </div>
                 )}
             </main>

@@ -4,11 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'motion/react'
 import {
-    Power,
-    LayoutGrid,
     Settings,
     Cpu,
-    Blocks
+    Blocks,
+    ChevronLeft,
+    Power,
+    LayoutGrid
 } from 'lucide-react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
@@ -29,7 +30,15 @@ interface Stats {
     systemName: string
 }
 
-export default function BausteinAdminNavbar({ isEditing, onToggleEdit }: { isEditing?: boolean, onToggleEdit?: () => void }) {
+export default function BausteinAdminNavbar({ 
+    isEditing, 
+    onToggleEdit,
+    onBack 
+}: { 
+    isEditing?: boolean, 
+    onToggleEdit?: () => void,
+    onBack?: () => void
+}) {
     const { locale, setLocale } = useI18n()
     const [stats, setStats] = useState<Stats | null>(null)
     const [status, setStatus] = useState('NOMINAL')
@@ -84,27 +93,40 @@ export default function BausteinAdminNavbar({ isEditing, onToggleEdit }: { isEdi
                             </div>
                         </Link>
                     </div>
-                    <div className="hidden sm:flex flex-col justify-center">
-                        <span className="text-[11px] font-black tracking-tighter text-slate-900 leading-none">
-                            {stats.systemName.toUpperCase()}
-                        </span>
-                        <div className="flex items-center gap-3 mt-1.5">
-                            <div className="flex items-center gap-1.5 bg-black/5 px-2 py-0.5 rounded border border-black/5 shadow-inner">
-                                <div className={clsx(
-                                    "w-1.5 h-1.5 rounded-full animate-pulse",
-                                    status === 'NOMINAL' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                                )} />
-                                <span className="label-mono text-[7px] font-black text-slate-600">DoDoo</span>
-                            </div>
-                            <div className="w-[1px] h-3 bg-black/10" />
-                            <div className="flex items-center gap-1.5">
-                                <Cpu className="w-3 h-3 text-slate-400" />
-                                <span className="label-mono text-[7px] text-slate-400">Ver. {versionData.version}</span>
+                    <div className="flex items-center gap-4">
+                        <div className="hidden sm:flex flex-col justify-center">
+                            <span className="text-[11px] font-black tracking-tighter text-slate-900 leading-none">
+                                {stats.systemName.toUpperCase()}
+                            </span>
+                            <div className="flex items-center gap-3 mt-1.5 line-clamp-1">
+                                <div className="flex items-center gap-1.5 bg-black/5 px-2 py-0.5 rounded border border-black/5 shadow-inner">
+                                    <div className={clsx(
+                                        "w-1.5 h-1.5 rounded-full animate-pulse",
+                                        status === 'NOMINAL' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"
+                                    )} />
+                                    <span className="label-mono text-[7px] font-black text-slate-600">DoDoo</span>
+                                </div>
+                                <div className="w-[1px] h-3 bg-black/10" />
+                                <div className="flex items-center gap-1.5">
+                                    <Cpu className="w-3 h-3 text-slate-400" />
+                                    <span className="label-mono text-[7px] text-slate-400">Ver. {versionData.version}</span>
+                                </div>
                             </div>
                         </div>
+                        {onBack && (
+                            <button 
+                                onClick={onBack}
+                                className="hardware-btn group shrink-0 ml-1"
+                            >
+                                <div className="hardware-well w-8 h-8 rounded-lg bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative border border-black/5">
+                                    <div className="hardware-cap absolute inset-1 bg-white rounded-md flex items-center justify-center group-hover:bg-slate-50 transition-all shadow-cap active:translate-y-0.5">
+                                        <ChevronLeft className="w-4 h-4 text-slate-600" />
+                                    </div>
+                                </div>
+                            </button>
+                        )}
                     </div>
                 </div>
-
             </div>
 
             {/* Right Section: Instrument Panel (HUD) */}
