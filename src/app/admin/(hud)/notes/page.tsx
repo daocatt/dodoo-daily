@@ -1,35 +1,43 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import FamilyNoteBoard from '@/components/FamilyNoteBoard'
-import NatureBackground from '@/components/NatureBackground'
-import { ArrowLeft } from 'lucide-react'
+import { RefrigeratorBackground } from '@/components/RefrigeratorBackground'
+import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
+import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
 
 export default function NotesPage() {
     const { t } = useI18n()
     const router = useRouter()
+    const [isAdding, setIsAdding] = useState(false)
 
     return (
-        <div className="min-h-dvh flex flex-col relative">
-            <NatureBackground />
+        <div className="min-h-dvh flex flex-col relative overflow-hidden bg-[#E2DFD2]">
+            <RefrigeratorBackground />
 
-            <header className="relative z-10 flex items-center p-6 px-12 backdrop-blur-md bg-white/40 border-b border-[#4a3728]/10 h-[80px]">
-                <button
-                    onClick={() => router.back()}
-                    className="w-12 h-12 bg-white/60 rounded-2xl flex items-center justify-center hover:bg-white shadow-sm transition-all active:scale-95"
-                >
-                    <ArrowLeft className="w-6 h-6 text-[#4a3728]" />
-                </button>
-                <div className="ml-6">
-                    <h1 className="text-2xl font-black text-[#2c2416] leading-none">{t('board.title')}</h1>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4a3728]/40 mt-1">{t('board.chatAndNotes')}</p>
-                </div>
-            </header>
+            <BausteinAdminNavbar 
+                onBack={() => router.push('/admin')}
+                actions={
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="hardware-btn group"
+                        title={t('board.leaveNote')}
+                    >
+                        <div className="hardware-well h-12 px-5 rounded-xl flex items-center gap-2 bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative">
+                            <div className="hardware-cap absolute inset-1.5 bg-white rounded-lg flex items-center justify-center transition-all shadow-cap group-hover:bg-slate-50 active:translate-y-0.5" />
+                            <Plus className="w-5 h-5 text-slate-500 relative z-10" />
+                            <span className="hidden md:inline label-mono text-[11px] font-black text-slate-800 uppercase tracking-widest relative z-10">
+                                {t('board.leaveNote')}
+                            </span>
+                        </div>
+                    </button>
+                }
+            />
 
             <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto p-4 md:p-12 overflow-y-auto custom-scrollbar">
-                <FamilyNoteBoard />
+                <FamilyNoteBoard isAdding={isAdding} setIsAdding={setIsAdding} />
             </main>
         </div>
     )

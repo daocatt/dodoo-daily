@@ -83,6 +83,7 @@ export default function BausteinAdminNavbar({
     const getSubtitle = () => {
         if (pathname.includes('/tasks')) return 'Tasks'
         if (pathname.includes('/gallery')) return 'Gallery'
+        if (pathname.includes('/notes')) return 'Notes'
         if (pathname === '/admin/console') return 'Console'
         if (pathname === '/admin') return 'Dashboard'
         return undefined
