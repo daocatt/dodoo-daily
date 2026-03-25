@@ -71,9 +71,13 @@ export default function BausteinAdminNavbar({
 
     if (!stats) return null
 
-    // HUD Visibility Logic as per docs/Admin_NavBar_Structure.md
-    // Only visible on /admin and /admin/console, and hidden if BackButton is active
-    const showHUD = !onBack && (pathname === '/admin' || pathname === '/admin/console')
+    const isSubpage = pathname !== '/admin'
+    
+    // HUD Visibility Logic - ONLY visible on the main dashboard index
+    const showHUD = !isSubpage
+
+    // Default back behavior for subpages: return to /admin dashboard
+    const handleBack = onBack || (isSubpage ? () => window.location.href = '/admin' : undefined)
 
     // Dynamic Module Name for Subtitle
     const getSubtitle = () => {
@@ -93,12 +97,12 @@ export default function BausteinAdminNavbar({
                     subtitle={getSubtitle()}
                     status={status} 
                 />
-                <BackButton onBack={onBack} />
+                <BackButton onBack={handleBack} />
             </div>
 
-            {/* Center Section: HUD (Telemetry) */}
+            {/* Center Section: HUD (Telemetry) - Higher z-index to allow modals to cover everything */}
             {showHUD && (
-                <div className="flex-1 flex justify-center z-10">
+                <div className="flex-1 flex justify-center z-[2000]">
                     <AccountHUD inline />
                 </div>
             )}
@@ -113,6 +117,7 @@ export default function BausteinAdminNavbar({
                     isEditing={isEditing}
                     onToggleEdit={onToggleEdit}
                     actions={actions}
+                    isSubpage={isSubpage}
                 />
             </div>
         </header>

@@ -25,6 +25,7 @@ interface RightMenuModuleProps {
     isEditing?: boolean
     onToggleEdit?: () => void
     actions?: React.ReactNode
+    isSubpage?: boolean
 }
 
 export function RightMenuModule({
@@ -34,7 +35,8 @@ export function RightMenuModule({
     setLocale,
     isEditing,
     onToggleEdit,
-    actions
+    actions,
+    isSubpage
 }: RightMenuModuleProps) {
     const handleLogout = async () => {
         try {
@@ -47,14 +49,14 @@ export function RightMenuModule({
 
     return (
         <div className="flex items-center gap-3">
-            {/* Module Specific Actions */}
+            {/* Module Specific Actions (Custom Sub-menu) */}
             {actions && (
                 <div className="flex items-center gap-2 mr-2">
                     {actions}
                 </div>
             )}
 
-            {/* 1. User Profile Trigger (Personal) */}
+            {/* 1. User Profile Trigger (Personal) - Always Shown */}
             <button 
                 onClick={() => window.location.href = stats.isAdmin ? '/admin/console?view=PROFILE' : '/admin/profile'}
                 className="hardware-btn group"
@@ -84,7 +86,7 @@ export function RightMenuModule({
             </button>
 
             {/* 2. Widget Adjustment Toggle (Only on Dashboard) */}
-            {pathname === '/admin' && (
+            {!isSubpage && pathname === '/admin' && (
                 <button 
                     onClick={onToggleEdit}
                     className="hardware-btn group"
@@ -101,8 +103,8 @@ export function RightMenuModule({
                 </button>
             )}
 
-            {/* 3. Console Button (Restricted to SUPERADMIN, ADMIN) */}
-            {(stats.permissionRole === 'SUPERADMIN' || stats.permissionRole === 'ADMIN') && (
+            {/* 3. Console Button (Restricted to SUPERADMIN, ADMIN, and HIDDEN in Subpage mode) */}
+            {!isSubpage && (stats.permissionRole === 'SUPERADMIN' || stats.permissionRole === 'ADMIN') && (
                 <Link 
                     href="/admin/console" 
                     className="hardware-btn group"
@@ -116,48 +118,52 @@ export function RightMenuModule({
                 </Link>
             )}
 
-            {/* 4. Language Switcher */}
-            <div 
-                onClick={() => setLocale(locale === 'en' ? 'zh-CN' : 'en')}
-                className="hardware-btn cursor-pointer group"
-                title={locale === 'en' ? 'Switch to Chinese' : '切换为英文'}
-            >
-                <div className="hardware-well w-[56px] h-10 rounded-xl bg-[#DADBD4] shadow-well relative flex items-center px-1 overflow-hidden">
-                    <div className="absolute inset-x-2.5 inset-y-0 flex items-center justify-between pointer-events-none">
-                        <span className={clsx(
-                            "text-[8px] font-black transition-colors duration-300", 
-                            locale === 'zh-CN' ? "text-slate-900" : "text-slate-400/50"
-                        )}>CN</span>
-                        <span className={clsx(
-                            "text-[8px] font-black transition-colors duration-300", 
-                            locale === 'en' ? "text-slate-900" : "text-slate-400/50"
-                        )}>EN</span>
-                    </div>
-                    <motion.div 
-                        className="hardware-cap w-6 h-7 bg-white rounded-lg shadow-cap z-10 flex items-center justify-center p-0.5"
-                        animate={{ x: locale === 'en' ? 21 : 0 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                    >
-                        <div className="w-full h-full flex items-center justify-center rounded-md bg-slate-50 border border-slate-100/50">
-                            <span className="text-[7px] font-black text-slate-900 leading-none antialiased">
-                                {locale === 'en' ? 'EN' : 'CN'}
-                            </span>
+            {/* 4. Language Switcher (HIDDEN in Subpage mode) */}
+            {!isSubpage && (
+                <div 
+                    onClick={() => setLocale(locale === 'en' ? 'zh-CN' : 'en')}
+                    className="hardware-btn cursor-pointer group"
+                    title={locale === 'en' ? 'Switch to Chinese' : '切换为英文'}
+                >
+                    <div className="hardware-well w-[56px] h-10 rounded-xl bg-[#DADBD4] shadow-well relative flex items-center px-1 overflow-hidden">
+                        <div className="absolute inset-x-2.5 inset-y-0 flex items-center justify-between pointer-events-none">
+                            <span className={clsx(
+                                "text-[8px] font-black transition-colors duration-300", 
+                                locale === 'zh-CN' ? "text-slate-900" : "text-slate-400/50"
+                            )}>CN</span>
+                            <span className={clsx(
+                                "text-[8px] font-black transition-colors duration-300", 
+                                locale === 'en' ? "text-slate-900" : "text-slate-400/50"
+                            )}>EN</span>
                         </div>
-                    </motion.div>
-                </div>
-            </div>
-
-            {/* 5. Power / Logout */}
-            <button 
-                onClick={handleLogout}
-                className="hardware-btn group"
-            >
-                <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[#DADBD4] shadow-well overflow-hidden relative">
-                    <div className="hardware-cap absolute inset-1.5 bg-white rounded-lg flex items-center justify-center group-hover:bg-rose-500 transition-all shadow-cap active:translate-y-0.5 group/power">
-                        <Power className="w-5 h-5 text-slate-400 group-hover/power:text-white transition-colors" />
+                        <motion.div 
+                            className="hardware-cap w-6 h-7 bg-white rounded-lg shadow-cap z-10 flex items-center justify-center p-0.5"
+                            animate={{ x: locale === 'en' ? 21 : 0 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        >
+                            <div className="w-full h-full flex items-center justify-center rounded-md bg-slate-50 border border-slate-100/50">
+                                <span className="text-[7px] font-black text-slate-900 leading-none antialiased">
+                                    {locale === 'en' ? 'EN' : 'CN'}
+                                </span>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
-            </button>
+            )}
+
+            {/* 5. Power / Logout (HIDDEN in Subpage mode) */}
+            {!isSubpage && (
+                <button 
+                    onClick={handleLogout}
+                    className="hardware-btn group"
+                >
+                    <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[#DADBD4] shadow-well overflow-hidden relative">
+                        <div className="hardware-cap absolute inset-1.5 bg-white rounded-lg flex items-center justify-center group-hover:bg-rose-500 transition-all shadow-cap active:translate-y-0.5 group/power">
+                            <Power className="w-5 h-5 text-slate-400 group-hover/power:text-white transition-colors" />
+                        </div>
+                    </div>
+                </button>
+            )}
         </div>
     )
 }
