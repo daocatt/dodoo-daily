@@ -1,6 +1,6 @@
 'use client'
 
-import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 
 import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'

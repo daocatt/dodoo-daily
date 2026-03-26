@@ -15,7 +15,7 @@ import {
     Fan
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
-import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 
 import ChildManagement from '@/components/parent/ChildManagement'
 import ShopManagement from '@/components/parent/ShopManagement'

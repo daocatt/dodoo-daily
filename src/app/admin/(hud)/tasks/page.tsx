@@ -1,6 +1,6 @@
 'use client'
 
-import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 import React, { useEffect, useState, Suspense, useRef } from 'react'
 import { motion, AnimatePresence, useAnimation, PanInfo } from 'framer-motion'
 import { CheckSquare, Plus, Star, CircleAlert, Sun, Sunrise, Calendar, CalendarDays, Users, Edit2, Check, CheckCheck, RotateCcw, Trash2, X as XIcon, ListTodo, Loader2 } from 'lucide-react'

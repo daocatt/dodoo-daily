@@ -10,20 +10,78 @@ export async function GET(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
-    const monthStr = searchParams.get('month'); // e.g. "2024-03"
+    const startDateParam = searchParams.get('startDate'); // YYYY-MM-DD
+    const endDateParam = searchParams.get('endDate');   // YYYY-MM-DD
     const targetUserId = searchParams.get('userId') || user.id;
 
-    // Parent can view child's stats, but children can only view their own
     if (user.role !== 'PARENT' && targetUserId !== user.id) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     try {
         const now = new Date();
-        const start = monthStr ? new Date(`${monthStr}-01T00:00:00`) : startOfMonth(now);
-        const end = endOfMonth(start);
+        
+        // --- 1. Determine Date Range ---
+        let start = startDateParam ? new Date(startDateParam) : startOfMonth(subMonths(now, 5));
+        let end = endDateParam ? endOfMonth(new Date(endDateParam)) : endOfMonth(now);
 
-        // 1. Get Category Breakdown
+        // Limit range to 24 months
+        const monthDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+        if (monthDiff > 24) {
+            return NextResponse.json({ error: "Range exceeds 24 months limit" }, { status: 400 });
+        }
+
+        // --- 2. Summary Logic: Current Month & Current Year ---
+        const thisMonthStart = startOfMonth(now);
+        const thisMonthEnd = endOfMonth(now);
+        const thisYearStart = new Date(now.getFullYear(), 0, 1);
+
+        const summaries = await db.select({
+            period: sql<string>`case 
+                when ${ledgerRecord.date} >= ${thisMonthStart.getTime()} then 'MONTH'
+                when ${ledgerRecord.date} >= ${thisYearStart.getTime()} then 'YEAR'
+                else 'OTHER'
+            end`,
+            type: ledgerRecord.type,
+            amount: sql<number>`sum(${ledgerRecord.amount})`
+        })
+        .from(ledgerRecord)
+        .where(eq(ledgerRecord.userId, targetUserId))
+        .groupBy(sql`case 
+                when ${ledgerRecord.date} >= ${thisMonthStart.getTime()} then 'MONTH'
+                when ${ledgerRecord.date} >= ${thisYearStart.getTime()} then 'YEAR'
+                else 'OTHER'
+            end`, ledgerRecord.type);
+
+        const currentMonthStats = { income: 0, expense: 0 };
+        const currentYearStats = { income: 0, expense: 0 };
+
+        summaries.forEach(s => {
+            if (s.period === 'MONTH') {
+                if (s.type === 'INCOME') { currentMonthStats.income += s.amount; currentYearStats.income += s.amount; }
+                else { currentMonthStats.expense += s.amount; currentYearStats.expense += s.amount; }
+            } else if (s.period === 'YEAR') {
+                if (s.type === 'INCOME') currentYearStats.income += s.amount;
+                else currentYearStats.expense += s.amount;
+            }
+        });
+
+        // --- 3. Monthly Trend for the selected range ---
+        const monthlyData = await db.select({
+            month: sql<string>`strftime('%Y-%m', ${ledgerRecord.date} / 1000, 'unixepoch')`,
+            income: sql<number>`sum(case when ${ledgerRecord.type} = 'INCOME' then ${ledgerRecord.amount} else 0 end)`,
+            expense: sql<number>`sum(case when ${ledgerRecord.type} = 'EXPENSE' then ${ledgerRecord.amount} else 0 end)`
+        })
+        .from(ledgerRecord)
+        .where(and(
+            eq(ledgerRecord.userId, targetUserId),
+            gte(ledgerRecord.date, start),
+            lte(ledgerRecord.date, end)
+        ))
+        .groupBy(sql`strftime('%Y-%m', ${ledgerRecord.date} / 1000, 'unixepoch')`)
+        .orderBy(sql`strftime('%Y-%m', ${ledgerRecord.date} / 1000, 'unixepoch')`);
+
+        // --- 4. Category Breakdown for the selected range ---
         const categories = await db.select({
             id: ledgerCategory.id,
             name: ledgerCategory.name,
@@ -40,49 +98,14 @@ export async function GET(request: Request) {
             ))
             .groupBy(ledgerCategory.id);
 
-        // 2. Get Daily Summary for Charts
-        const dailyData = await db.select({
-            day: sql<string>`date(${ledgerRecord.date} / 1000, 'unixepoch')`,
-            income: sql<number>`sum(case when ${ledgerRecord.type} = 'INCOME' then ${ledgerRecord.amount} else 0 end)`,
-            expense: sql<number>`sum(case when ${ledgerRecord.type} = 'EXPENSE' then ${ledgerRecord.amount} else 0 end)`
-        })
-            .from(ledgerRecord)
-            .where(and(
-                eq(ledgerRecord.userId, targetUserId),
-                gte(ledgerRecord.date, start),
-                lte(ledgerRecord.date, end)
-            ))
-            .groupBy(sql`date(${ledgerRecord.date} / 1000, 'unixepoch')`)
-            .orderBy(sql`date(${ledgerRecord.date} / 1000, 'unixepoch')`);
-
-        // Fill in missing days for the chart
-        const allDaysInRange = eachDayOfInterval({ start, end });
-        const chartData = allDaysInRange.map(d => {
-            const dayStr = format(d, 'yyyy-MM-dd');
-            const match = dailyData.find(dd => dd.day === dayStr);
-            return {
-                day: format(d, 'dd'),
-                fullDate: dayStr,
-                income: match?.income || 0,
-                expense: match?.expense || 0
-            };
-        });
-
-        // 3. Overall Totals
-        const totals = categories.reduce((acc, cat) => {
-            if (cat.type === 'INCOME') acc.income += Number(cat.total);
-            else acc.expense += Number(cat.total);
-            return acc;
-        }, { income: 0, expense: 0 });
-
         return NextResponse.json({
-            totals,
+            currentMonthStats,
+            currentYearStats,
             categories,
-            chartData,
+            monthlyTrend: monthlyData,
             period: {
                 start: start.toISOString(),
-                end: end.toISOString(),
-                label: format(start, 'yyyy-MM')
+                end: end.toISOString()
             }
         });
     } catch (e: unknown) {

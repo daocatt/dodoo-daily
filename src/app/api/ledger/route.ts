@@ -11,6 +11,9 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const userIdQuery = searchParams.get('userId'); 
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const offset = (page - 1) * limit;
 
     // Determine target user. Parent can see child's ledger.
     const targetUserId = (user.role === 'PARENT' && userIdQuery) ? userIdQuery : user.id;
@@ -38,7 +41,8 @@ export async function GET(request: Request) {
             .innerJoin(ledgerCategory, eq(ledgerRecord.categoryId, ledgerCategory.id))
             .leftJoin(users, eq(ledgerRecord.relatedUserId, users.id))
             .orderBy(desc(ledgerRecord.createdAt))
-            .limit(100); // Pagination or filters can be added later
+            .limit(limit)
+            .offset(offset);
 
         // Let's also fetch current balance
         const stats = await db.select().from(accountStats).where(eq(accountStats.userId, targetUserId)).get()

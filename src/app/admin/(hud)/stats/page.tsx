@@ -25,7 +25,7 @@ import { useI18n } from '@/contexts/I18nContext'
 import { format } from 'date-fns'
 import SmartDatePicker from '@/components/SmartDatePicker'
 import Image from 'next/image'
-import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 import { clsx } from 'clsx'
 
 interface GrowthRecord {

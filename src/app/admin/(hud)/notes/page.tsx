@@ -6,7 +6,7 @@ import { RefrigeratorBackground } from '@/components/RefrigeratorBackground'
 import { Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
-import BausteinAdminNavbar from '@/components/BausteinAdminNavbar'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 
 export default function NotesPage() {
     const { t } = useI18n()

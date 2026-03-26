@@ -21,7 +21,7 @@ interface Stats {
     systemName: string
 }
 
-export default function BausteinAdminNavbar({ 
+export function BausteinAdminNavbar({ 
     isEditing, 
     onToggleEdit,
     onBack,
