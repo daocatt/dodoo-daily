@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { Wallet, Plus, X as XIcon, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check, Trash2 } from 'lucide-react'
+import { Wallet, Plus, X as XIcon, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check, Trash2, ShieldCheck, RotateCcw } from 'lucide-react'
 import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -13,9 +13,9 @@ interface LedgerRecord { id: string; type: string; amount: number; description: 
 interface Category { id: string; type: string; name: string; emoji: string; }
 interface ChartData { fullDate: string; day: string; income: number; expense: number; }
 interface CategoryStat { id: string; name: string; emoji: string; total: number | string; type: string; }
-interface StatsData { totals?: { income: number; expense: number; }; chartData?: ChartData[]; categories?: CategoryStat[]; }
+interface StatsData { totals?: { income: number; expense: number; }; chartData?: ChartData[]; categories?: CategoryStat[]; monthlyTrend?: { month: string; income: number; expense: number; }[]; }
 
-const LedgerItem = ({ record, index, locale, t, onDelete }: { record: LedgerRecord, index: number, locale: string, t: any, onDelete?: (id: string) => void }) => {
+const LedgerItem = ({ record, index, locale, t, onDelete }: { record: LedgerRecord, index: number, locale: string, t: (key: string, params?: Record<string, string>) => string, onDelete?: (id: string) => void }) => {
     const controls = useAnimation();
     const isDragging = useRef(false);
     const isExpense = record.type === 'EXPENSE';
@@ -32,7 +32,7 @@ const LedgerItem = ({ record, index, locale, t, onDelete }: { record: LedgerReco
         });
     }, [controls, index]);
 
-    const onDragEnd = (_event: any, info: any) => {
+    const onDragEnd = (event: unknown, info: { offset: { x: number } }) => {
         if (info.offset.x < -40) {
             controls.start({ x: -100 });
         } else {
@@ -149,6 +149,31 @@ export default function LedgerPage() {
     const [description, setDescription] = useState('')
     const [selectedCategoryId, setSelectedCategoryId] = useState('')
     const [submitting, setSubmitting] = useState(false)
+    const categoryScrollRef = useRef<HTMLDivElement>(null)
+    const memberScrollRef = useRef<HTMLDivElement>(null)
+
+    // Ultra-smooth mouse drag-to-scroll engine
+    const handleDragScroll = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement>) => {
+        if (!ref.current) return;
+        const slider = ref.current;
+        const startX = e.pageX - slider.offsetLeft;
+        const scrollLeft = slider.scrollLeft;
+        
+        const onMouseMove = (moveE: MouseEvent) => {
+            const x = moveE.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 2.5; // Optimized scroll multiplier
+            slider.scrollLeft = scrollLeft - walk;
+        };
+        
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            // Optional: reset cursor if needed
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
     
     // Transfer State
     const [showTransferModal, setShowTransferModal] = useState(false)
@@ -156,7 +181,7 @@ export default function LedgerPage() {
     const [transferAmount, setTransferAmount] = useState('')
     const [transferDesc, setTransferDesc] = useState('')
 
-    const fetchData = async (targetPage = 1) => {
+    const fetchData = useCallback(async (targetPage = 1) => {
         if (targetPage === 1) setLoading(true)
         try {
             const limit = 50;
@@ -194,19 +219,19 @@ export default function LedgerPage() {
                 setMembers(membersData)
             }
             setPage(targetPage)
-        } catch (_error) {
-            console.error('Failed to fetch ledger data', _error)
+        } catch (error) {
+            console.error('Failed to fetch ledger data', error)
         }
         setLoading(false)
-    }
+    }, [setLoading, setRecords, setBalance, setHasMore, setIsAdmin, setCurrentUserId, setCategories, setSelectedCategoryId, setMembers, selectedCategoryId, setPage]);
 
-    const loadMore = () => {
+    const loadMore = useCallback(() => {
         if (!loading && hasMore) {
             fetchData(page + 1)
         }
-    }
+    }, [loading, hasMore, fetchData, page]);
 
-    const handleAddSubmit = async (e: React.FormEvent) => {
+    const handleAddSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
         if (!amount || !description || !selectedCategoryId) return
         
@@ -231,13 +256,13 @@ export default function LedgerPage() {
             } else {
                 alert(data.error || 'Failed to add record')
             }
-        } catch (_error) {
-            console.error(_error)
+        } catch (error) {
+            console.error(error)
         }
         setSubmitting(false)
-    }
+    }, [amount, description, selectedCategoryId, txType, setSubmitting, setShowAddModal, setAmount, setDescription, fetchData]);
 
-    const handleTransferSubmit = async (e: React.FormEvent) => {
+    const handleTransferSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
         if (!targetUserId || !transferAmount) return
         
@@ -261,49 +286,51 @@ export default function LedgerPage() {
             } else {
                 alert(data.error || '转账失败')
             }
-        } catch (_error) {
-            console.error(_error)
+        } catch (error) {
+            console.error(error)
         }
         setSubmitting(false)
-    }
+    }, [targetUserId, transferAmount, transferDesc, setSubmitting, setShowTransferModal, setTransferAmount, setTransferDesc, fetchData]);
 
-    const handleDeleteRecord = async (id: string) => {
+    const handleDeleteRecord = useCallback(async (id: string) => {
         if (!window.confirm(t('ledger.delete.confirm'))) return;
         try {
             const res = await fetch(`/api/ledger/${id}`, { method: 'DELETE' });
             if (res.ok) {
-                setRecords(prev => prev.filter(r => r.id !== id));
-                const record = records.find(r => r.id === id);
-                if (record) {
-                    const delta = record.type === 'EXPENSE' ? record.amount : -record.amount;
-                    setBalance(prev => prev + delta);
-                }
+                setRecords(prev => {
+                    const record = prev.find(r => r.id === id);
+                    if (record) {
+                        const delta = record.type === 'EXPENSE' ? record.amount : -record.amount;
+                        setBalance(currentBalance => currentBalance + delta);
+                    }
+                    return prev.filter(r => r.id !== id);
+                });
             }
-        } catch (e) {
-            console.error('Delete failed:', e);
+        } catch (error) {
+            console.error('Delete failed:', error);
         }
-    };
+    }, [t, setRecords, setBalance]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         setStatsLoading(true)
         try {
             const res = await fetch(`/api/ledger/stats?startDate=${startDate}&endDate=${endDate}`)
             const data = await res.json()
             setStatsData(data)
-        } catch (_error) {
-            console.error('Failed to fetch stats', _error)
+        } catch (error) {
+            console.error('Failed to fetch stats', error)
         }
         setStatsLoading(false)
-    }
+    }, [startDate, endDate, setStatsLoading, setStatsData]);
 
     useEffect(() => {
         if (activeTab === 'STATS') {
             fetchStats()
         }
-    }, [activeTab, startDate, endDate])
+    }, [activeTab, startDate, endDate, fetchStats])
 
     // Custom SVG Line Chart Component
-    const MonthlyLineChart = ({ trend }: { trend: any[] }) => {
+    const MonthlyLineChart = ({ trend }: { trend: { month: string; income: number; expense: number }[] }) => {
         if (!trend || trend.length === 0) return <div className="h-40 flex items-center justify-center opacity-30 label-mono text-xs">{t('ledger.noData')}</div>
 
         const padding = 40;
@@ -322,7 +349,7 @@ export default function LedgerPage() {
                 const xmid = (points[i].x + points[i+1].x) / 2;
                 const ymid = (points[i].y + points[i+1].y) / 2;
                 const xcp1 = (xmid + points[i].x) / 2;
-                const xcp2 = (xmid + points[i+1].x) / 2;
+                const _xcp2 = (xmid + points[i+1].x) / 2;
                 path += ` Q ${xcp1},${points[i].y} ${xmid},${ymid} T ${points[i+1].x},${points[i+1].y}`;
             }
             return path;
@@ -399,7 +426,7 @@ export default function LedgerPage() {
                             </text>
                         </React.Fragment>
                     ))}
-                </svg>/n
+                </svg>
                 
                 {/* Legend */}
                 <div className="flex gap-6 mt-8 justify-center">
@@ -418,7 +445,7 @@ export default function LedgerPage() {
 
     useEffect(() => {
         fetchData()
-    }, [])
+    }, [fetchData])
 
     // Helper to group records by month
     const groupedRecords = records.reduce((groups, record) => {
@@ -476,51 +503,46 @@ export default function LedgerPage() {
                                 exit={{ opacity: 0, x: -10 }}
                                 className="w-full max-w-2xl flex flex-col gap-10"
                             >
-                                {/* Physical POS Hardware Display: WARM EDITION */}
-                                    <div className="w-full max-w-2xl hardware-well p-1 bg-[#8B735B] rounded-[2.5rem] shadow-[0_10px_50px_-10px_rgba(139,115,91,0.4),inset_0_2px_4px_rgba(255,255,255,0.3)] border-b-8 border-[#5D4037] relative group overflow-hidden">
-                                        {/* Physical Bezel */}
-                                        <div className="w-full h-full bg-[#3E2723] rounded-[2.2rem] p-6 shadow-[inset_0_4px_15px_rgba(0,0,0,0.9)] flex flex-col items-center relative overflow-hidden">
-                                            
-                                            {/* LCD Screen Plate: AMBER GLOW */}
-                                            <div className="w-full bg-[#F5D76E] rounded-2xl p-8 flex flex-col items-center relative overflow-hidden shadow-[inset_0_6px_15px_rgba(8d,66,48,0.5),0_1px_rgba(255,236,179,0.4)] border border-[#8D6E63]/30">
-                                                
-                                                {/* Screen Headers */}
-                                                <div className="w-full flex justify-between items-center mb-4 px-1">
-                                                    <span className="text-[10px] font-black text-[#5D4037]/80 uppercase tracking-[0.25em] font-mono leading-none">
-                                                        {t('ledger.balance.available')}
-                                                    </span>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[8px] font-black text-[#5D4037]/60 font-mono">BAT: 98%</span>
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)] animate-pulse" />
-                                                    </div>
-                                                </div>
-
-                                                {/* Amount Display */}
-                                                <div className="flex items-baseline gap-4 relative">
-                                                    <span className="text-3xl font-black text-[#795548]/40 font-mono italic">¥</span>
-                                                    <span className="text-7xl font-black text-[#2D1B15] font-number tracking-tighter mix-blend-multiply drop-shadow-[0_1px_1px_rgba(255,255,255,0.4)]">
-                                                        {Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(balance)}
-                                                    </span>
-                                                </div>
-
-                                                {/* LCD Ghosting & Scanlines Overlay */}
-                                                <div className="absolute inset-0 pointer-events-none">
-                                                    {/* Screen Grain: WARMER */}
-                                                    <div className="absolute inset-0 opacity-[0.15] bg-[url('/grain.png')] mix-blend-overlay" />
-                                                    {/* Horizontal Scanlines */}
-                                                    <div className="absolute inset-0 bg-[linear-gradient(rgba(93,64,55,0.08)_50%,transparent_50%)] bg-[length:100%_2px] opacity-30" />
-                                                    {/* Golden Glass Glare */}
-                                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-100/10 to-white/30 opacity-60 rotate-[-12deg] scale-150 translate-x-12 -translate-y-20" />
-                                                </div>
+                                {/* Section I: Compact Ledger HUD - MINIMALIST HARDWARE */}
+                                <div className="w-full max-w-2xl hardware-well p-6 md:p-8 rounded-[2.2rem] bg-[#DADBD4]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.1)] border border-black/5 relative overflow-hidden flex flex-col gap-6 mb-10">
+                                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-2 mb-1 px-1">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] label-mono">{t('ledger.balance.total')}</span>
                                             </div>
-
-                                            {/* Hardware Detail: Brand Name or Serial */}
-                                            <div className="mt-4 flex justify-between w-full px-6 opacity-40">
-                                                <span className="text-[9px] font-black text-amber-100/60 label-mono uppercase">Model: DOD-LGR-95-AMB</span>
-                                                <span className="text-[9px] font-black text-amber-100/60 label-mono uppercase tracking-widest">Digital Ledger Systems</span>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-2xl font-black text-slate-400 font-mono italic">¥</span>
+                                                <span className="text-6xl font-black text-slate-800 tracking-tighter font-number leading-none">
+                                                    {Intl.NumberFormat(locale).format(balance)}
+                                                </span>
                                             </div>
                                         </div>
+
+                                        {/* Simplified Compact Side-by-Side Buttons at Bottom-Right */}
+                                        <div className="w-full md:w-auto flex md:self-end justify-end items-center gap-3 mt-2">
+                                            <button onClick={() => setShowAddModal(true)} className="hardware-btn group">
+                                                <div className="hardware-well relative w-24 h-11 rounded-lg bg-[#DADBD4] shadow-well active:translate-y-0.5 transition-all flex items-center justify-center p-0.5">
+                                                    <div className="hardware-cap absolute inset-0.5 bg-indigo-500 rounded-[6px] flex items-center justify-center gap-1.5 transition-all shadow-cap group-hover:bg-indigo-600">
+                                                        <Plus className="w-3.5 h-3.5 text-white" />
+                                                        <span className="text-[8px] font-black uppercase tracking-widest label-mono text-white">Record</span>
+                                                    </div>
+                                                </div>
+                                            </button>
+
+                                            <button onClick={() => setShowTransferModal(true)} className="hardware-btn group">
+                                                <div className="hardware-well relative w-24 h-11 rounded-lg bg-[#DADBD4] shadow-well active:translate-y-0.5 transition-all flex items-center justify-center p-0.5">
+                                                    <div className="hardware-cap absolute inset-0.5 bg-white rounded-[6px] flex items-center justify-center gap-1.5 transition-all shadow-cap group-hover:bg-slate-50">
+                                                        <ReceiptText className="w-3.5 h-3.5 text-slate-400" />
+                                                        <span className="text-[8px] font-black uppercase tracking-widest label-mono text-slate-400">Trans</span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </div>
                                     </div>
+                                    {/* Decorative Plate */}
+                                    <div className="absolute top-0 right-10 w-16 h-1 bg-black/5 rounded-b-full" />
+                                </div>
 
                                 {/* Month Grouped Sections */}
                                 <div className="flex flex-col gap-12">
@@ -620,8 +642,8 @@ export default function LedgerPage() {
                                             
                                             {/* Financial Health Indicator */}
                                             {(() => {
-                                                const totalInc = statsData.monthlyTrend.reduce((acc: any, cur: any) => acc + cur.income, 0);
-                                                const totalExp = statsData.monthlyTrend.reduce((acc: any, cur: any) => acc + cur.expense, 0);
+                                                const totalInc = (statsData.monthlyTrend || []).reduce((acc: number, cur: { income: number }) => acc + cur.income, 0);
+                                                const totalExp = (statsData.monthlyTrend || []).reduce((acc: number, cur: { expense: number }) => acc + cur.expense, 0);
                                                 const savings = totalInc - totalExp;
                                                 const savingsRate = totalInc > 0 ? (savings / totalInc) * 100 : 0;
                                                 
@@ -801,225 +823,341 @@ export default function LedgerPage() {
                             )}
                         </AnimatePresence>
                     )}
-            </main>
+                </main>
 
-            {/* Add Record Modal */}
+                {/* Add Record Modal: TASKS STYLE REBALANCED */}
             <AnimatePresence>
                 {showAddModal && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex flex-col justify-end"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
                         onClick={() => setShowAddModal(false)}
                     >
                         <motion.div
-                            initial={{ y: "100%" }}
-                            animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="bg-white rounded-t-3xl min-h-[70vh] w-full p-6 flex flex-col gap-6"
+                            initial={{ scale: 0.95, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 10 }}
+                            className="w-full max-w-lg baustein-panel shadow-2xl relative overflow-hidden bg-[#E6E2D1] border-4 border-white/20 rounded-[2.8rem]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-black text-slate-800">{t('ledger.add.title')}</h2>
-                                <button onClick={() => setShowAddModal(false)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                    <XIcon className="w-5 h-5" />
-                                </button>
-                            </div>
+                            {/* Panel Screws */}
+                            <div className="absolute top-4 left-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
+                            <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
+                            <div className="absolute bottom-4 left-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
+                            <div className="absolute bottom-4 right-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
 
-                            <form onSubmit={handleAddSubmit} className="flex-1 flex flex-col gap-6">
-                                {/* Type Toggle */}
-                                <div className="flex p-1 bg-slate-100 rounded-2xl">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setTxType('EXPENSE');
-                                            const cats = categories.filter(c => c.type === 'EXPENSE')
-                                            if (cats.length > 0) setSelectedCategoryId(cats[0].id)
-                                        }}
-                                        className={`flex-1 py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1 transition-all ${txType === 'EXPENSE' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400'}`}
-                                    >
-                                        {t('ledger.add.expense')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setTxType('INCOME');
-                                            const cats = categories.filter(c => c.type === 'INCOME')
-                                            if (cats.length > 0) setSelectedCategoryId(cats[0].id)
-                                        }}
-                                        className={`flex-1 py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1 transition-all ${txType === 'INCOME' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-400'}`}
-                                    >
-                                        {t('ledger.add.income')}
+                            <div className="p-6 md:p-8 flex flex-col">
+                                <div className="flex justify-between items-center mb-5 border-b-2 border-black/5 pb-3">
+                                    <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-3">
+                                        <div className="hardware-well w-8 h-8 rounded-lg bg-[#DADBD4] shadow-well relative overflow-hidden">
+                                            <div className="hardware-cap absolute inset-1 bg-indigo-500 rounded-md flex items-center justify-center">
+                                                <Plus className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        {t('ledger.add.title')}
+                                    </h3>
+                                    <button onClick={() => setShowAddModal(false)} className="hardware-btn group">
+                                        <div className="hardware-well w-8 h-8 rounded-lg bg-[#DADBD4] shadow-well flex items-center justify-center relative active:translate-y-0.5 overflow-hidden">
+                                            <div className="hardware-cap absolute inset-0.5 bg-white rounded-md flex items-center justify-center transition-all group-hover:bg-slate-50 transition-colors">
+                                                <XIcon className="w-4 h-4 text-slate-400" />
+                                            </div>
+                                        </div>
                                     </button>
                                 </div>
 
-                                {/* Amount Input */}
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">{t('ledger.add.amount')}</label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        placeholder="0.00"
-                                        className="w-full text-5xl font-black font-number bg-transparent border-b-2 border-slate-100 focus:border-indigo-500 py-2 outline-none transition-colors"
-                                        required
-                                        autoFocus
-                                    />
-                                </div>
-
-                                {/* Category Selection */}
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">{t('ledger.add.category')}</label>
-                                    <div className="grid grid-cols-4 gap-3">
-                                        {categories.filter(c => c.type === txType).map(cat => (
+                                <form onSubmit={handleAddSubmit} className="flex flex-col gap-5">
+                                    {/* Type Toggle */}
+                                    <div className="space-y-1.5">
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400 ml-1">SYSTEM_CMD_TYPE</label>
+                                        <div className="flex p-1 bg-[#DADBD4]/30 rounded-xl border border-black/5 shadow-inner">
                                             <button
-                                                key={cat.id}
                                                 type="button"
-                                                onClick={() => setSelectedCategoryId(cat.id)}
-                                                className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedCategoryId === cat.id ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-transparent hover:bg-slate-100'}`}
+                                                onClick={() => {
+                                                    setTxType('EXPENSE');
+                                                    const cats = categories.filter(c => c.type === 'EXPENSE')
+                                                    if (cats.length > 0) setSelectedCategoryId(cats[0].id)
+                                                }}
+                                                className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest label-mono transition-all ${txType === 'EXPENSE' ? 'bg-white text-red-500 shadow-sm border border-black/5' : 'text-slate-400 opacity-60'}`}
                                             >
-                                                <span className="text-2xl">{cat.emoji}</span>
-                                                <span className={`text-[10px] font-bold ${selectedCategoryId === cat.id ? 'text-indigo-600' : 'text-slate-500'}`}>{cat.name}</span>
+                                                {t('ledger.add.expense')}
                                             </button>
-                                        ))}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setTxType('INCOME');
+                                                    const cats = categories.filter(c => c.type === 'INCOME')
+                                                    if (cats.length > 0) setSelectedCategoryId(cats[0].id)
+                                                }}
+                                                className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest label-mono transition-all ${txType === 'INCOME' ? 'bg-white text-emerald-500 shadow-sm border border-black/5' : 'text-slate-400 opacity-60'}`}
+                                            >
+                                                {t('ledger.add.income')}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Description */}
-                                <div>
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1 mb-2 block">{t('ledger.add.desc')}</label>
-                                    <input
-                                        type="text"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder={t('ledger.add.desc') + '...'}
-                                        className="w-full bg-slate-50 text-slate-700 font-medium p-4 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all border border-transparent focus:border-indigo-200"
-                                        required
-                                    />
-                                </div>
+                                    {/* Amount Input */}
+                                    <div className="space-y-1.5">
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400 ml-1">{t('ledger.add.amount')}</label>
+                                        <div className="hardware-well rounded-xl bg-[#DADBD4]/20 shadow-well border border-black/5 p-1.5">
+                                            <div className="bg-white rounded-lg p-4 shadow-cap flex items-baseline gap-3 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+                                                <span className="text-xl font-black text-slate-300 font-mono select-none">¥</span>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={amount}
+                                                    onChange={(e) => setAmount(e.target.value)}
+                                                    placeholder="0.00"
+                                                    className="w-full text-4xl font-black font-number bg-transparent text-slate-800 outline-none placeholder:text-slate-200"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                {/* Submit */}
-                                <div className="mt-auto pt-4 pb-[env(safe-area-inset-bottom)]">
-                                    <button
-                                        type="submit"
-                                        disabled={submitting}
-                                        className="w-full bg-indigo-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-                                    >
-                                        {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
-                                        {t('ledger.add.save')}
-                                    </button>
-                                </div>
-                            </form>
+                                    {/* Category Selection */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex justify-between px-1">
+                                            <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400">{t('ledger.add.category')}</label>
+                                            <span className="text-[7px] font-bold text-slate-300 label-mono uppercase">Slide ⇄</span>
+                                        </div>
+                                        <div 
+                                            ref={categoryScrollRef} 
+                                            className="relative overflow-x-auto hide-scrollbar cursor-grab active:cursor-grabbing hardware-well bg-[#DADBD4]/20 rounded-xl p-1 shadow-inner border border-black/5 select-none touch-pan-x"
+                                            onMouseDown={(e) => handleDragScroll(e, categoryScrollRef)}
+                                        >
+                                            <div className="flex gap-2.5 w-max">
+                                                {categories.filter(c => c.type === txType).map(cat => (
+                                                    <button
+                                                        key={cat.id}
+                                                        type="button"
+                                                        onClick={() => setSelectedCategoryId(cat.id)}
+                                                        className="hardware-btn group shrink-0 pointer-events-auto"
+                                                    >
+                                                        <div className={clsx(
+                                                            "hardware-well min-w-[75px] h-8 md:h-9 rounded-lg shadow-well relative overflow-hidden transition-all active:translate-y-0.5",
+                                                            selectedCategoryId === cat.id ? "bg-indigo-900/5" : "bg-white/40"
+                                                        )}>
+                                                            <div className={clsx(
+                                                                "hardware-cap absolute inset-0.5 rounded-md shadow-cap transition-all flex items-center justify-center gap-1.5 px-2",
+                                                                selectedCategoryId === cat.id ? "bg-indigo-500" : "bg-white group-hover:bg-slate-50"
+                                                            )}>
+                                                                <span className={clsx("text-sm transition-transform leading-none translate-y-[1px]", selectedCategoryId === cat.id ? "scale-110" : "grayscale opacity-40")}>{cat.emoji}</span>
+                                                                <span className={clsx(
+                                                                    "text-[7px] font-black uppercase tracking-tight label-mono truncate",
+                                                                    selectedCategoryId === cat.id ? "text-white" : "text-slate-500"
+                                                                )}>{cat.name}</span>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Description Input */}
+                                    <div className="space-y-1.5">
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400 ml-1">{t('ledger.add.desc')}</label>
+                                        <div className="hardware-well rounded-xl bg-[#DADBD4]/20 shadow-well border border-black/5 p-1.5">
+                                            <input
+                                                type="text"
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                placeholder="..."
+                                                className="w-full bg-white rounded-lg p-3 font-black text-slate-800 text-sm outline-none shadow-cap placeholder:text-slate-200"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Submit */}
+                                    <div className="mt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={submitting}
+                                            className="hardware-btn group w-full"
+                                        >
+                                            <div className="hardware-well h-14 md:h-16 rounded-xl bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative border-b-2 border-slate-400/20">
+                                                <div className="hardware-cap absolute inset-1 rounded-lg bg-indigo-500 flex items-center justify-center gap-3 transition-all shadow-cap group-hover:brightness-110 active:translate-y-0.5">
+                                                    {submitting ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin text-white" />
+                                                    ) : (
+                                                        <Check className="w-5 h-5 text-white" />
+                                                    )}
+                                                    <span className="label-mono text-base font-black uppercase tracking-[0.15em] text-white drop-shadow-sm">
+                                                        {submitting ? 'Executing...' : t('ledger.add.save')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Transfer Modal */}
+            {/* Transfer Modal: TASKS STYLE REBALANCED */}
             <AnimatePresence>
                 {showTransferModal && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex flex-col justify-end"
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
                         onClick={() => setShowTransferModal(false)}
                     >
                         <motion.div
-                            initial={{ y: "100%" }}
-                            animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="bg-white rounded-t-3xl min-h-[85vh] w-full p-8 flex flex-col gap-8 shadow-2xl"
+                            initial={{ scale: 0.95, y: 10 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 10 }}
+                            className="w-full max-w-lg baustein-panel shadow-2xl relative overflow-hidden bg-[#E6E2D1] border-4 border-white/20 rounded-[2.8rem]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t('ledger.transfer.title')}</h2>
-                                <button onClick={() => setShowTransferModal(false)} className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
-                                    <XIcon className="w-6 h-6" />
-                                </button>
-                            </div>
+                            {/* Panel Screws */}
+                            <div className="absolute top-4 left-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
+                            <div className="absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
+                            <div className="absolute bottom-4 left-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
+                            <div className="absolute bottom-4 right-4 w-1.5 h-1.5 rounded-full bg-slate-900/10 shadow-inner" />
 
-                            <form onSubmit={handleTransferSubmit} className="flex-1 flex flex-col gap-8">
-                                {/* Target User Toggle */}
-                                <div className="flex flex-col gap-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">{t('ledger.transfer.target')}</label>
-                                    <div className="flex flex-wrap gap-3">
-                                        {members.filter(m => m.id !== currentUserId).map(member => (
-                                            <button
-                                                key={member.id}
-                                                type="button"
-                                                onClick={() => setTargetUserId(member.id)}
-                                                className={`flex items-center gap-3 p-1.5 pr-5 rounded-full border-2 transition-all ${targetUserId === member.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-200 scale-105' : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-white hover:border-slate-200'}`}
-                                            >
-                                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-200">
-                                                    {member.avatarUrl ? (
-                                                        <Image src={member.avatarUrl} width={40} height={40} alt={member.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-indigo-100 text-indigo-500 font-bold text-xs uppercase">
-                                                            {(member.nickname || member.name)[0]}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <span className="text-sm font-black">{member.nickname || member.name}</span>
-                                                {targetUserId === member.id && <Check className="w-4 h-4" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Transfer Amount */}
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">{t('ledger.transfer.amount')}</label>
-                                    <div className="relative flex items-center">
-                                        <span className="absolute left-0 text-3xl font-black text-slate-200">¥</span>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={transferAmount}
-                                            onChange={(e) => setTransferAmount(e.target.value)}
-                                            placeholder="0.00"
-                                            className="w-full text-6xl font-black font-number bg-transparent border-b-4 border-slate-100 focus:border-indigo-500 pl-8 pb-4 outline-none transition-all placeholder:text-slate-50"
-                                            required
-                                        />
-                                    </div>
-                                    <span className="px-1 text-xs font-bold text-slate-500">
-                                        {t('ledger.balance.available')}: ¥{Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(balance)}
-                                    </span>
-                                </div>
-
-                                {/* Transfer Description */}
-                                <div className="flex flex-col gap-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">{t('ledger.transfer.desc')}</label>
-                                    <input
-                                        type="text"
-                                        value={transferDesc}
-                                        onChange={(e) => setTransferDesc(e.target.value)}
-                                        placeholder={t('ledger.transfer.desc')}
-                                        className="w-full bg-slate-50 text-slate-700 font-bold p-5 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 transition-all placeholder:text-slate-200"
-                                    />
-                                </div>
-
-                                {/* Submit Transfer */}
-                                <div className="mt-auto pb-[env(safe-area-inset-bottom,2rem)]">
-                                    <button
-                                        type="submit"
-                                        disabled={submitting || !targetUserId || !transferAmount}
-                                        className="w-full bg-slate-900 text-white font-black text-xl py-6 rounded-[32px] shadow-2xl shadow-indigo-200 disabled:opacity-30 flex items-center justify-center gap-3 active:scale-[0.98] transition-all hover:bg-slate-800"
-                                    >
-                                        {submitting && <Loader2 className="w-6 h-6 animate-spin" />}
-                                        {t('ledger.transfer.confirm')}
+                            <div className="p-6 md:p-8 flex flex-col">
+                                <div className="flex justify-between items-center mb-5 border-b-2 border-black/5 pb-3">
+                                    <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tighter uppercase flex items-center gap-3">
+                                        <div className="hardware-well w-8 h-8 rounded-lg bg-[#DADBD4] shadow-well relative overflow-hidden">
+                                            <div className="hardware-cap absolute inset-1 bg-emerald-500 rounded-md flex items-center justify-center">
+                                                <RotateCcw className="w-4 h-4 text-white" />
+                                            </div>
+                                        </div>
+                                        {t('ledger.transfer.title')}
+                                    </h3>
+                                    <button onClick={() => setShowTransferModal(false)} className="hardware-btn group">
+                                        <div className="hardware-well w-8 h-8 rounded-lg bg-[#DADBD4] shadow-well flex items-center justify-center relative active:translate-y-0.5 overflow-hidden">
+                                            <div className="hardware-cap absolute inset-0.5 bg-white rounded-md flex items-center justify-center transition-all group-hover:bg-slate-50">
+                                                <XIcon className="w-4 h-4 text-slate-400" />
+                                            </div>
+                                        </div>
                                     </button>
                                 </div>
-                            </form>
+
+                                <form onSubmit={handleTransferSubmit} className="flex flex-col gap-5">
+                                    {/* Member selection */}
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center px-1">
+                                            <label className="label-mono text-[9px] uppercase tracking-widest text-slate-500">{t('ledger.transfer.target')}</label>
+                                            <span className="text-[7px] font-bold text-zinc-300 label-mono uppercase">Slide ⇄</span>
+                                        </div>
+                                        <div 
+                                            ref={memberScrollRef} 
+                                            className="relative overflow-x-auto hide-scrollbar cursor-grab active:cursor-grabbing hardware-well bg-[#DADBD4]/20 rounded-xl p-1 shadow-inner border border-black/5 select-none touch-pan-x"
+                                            onMouseDown={(e) => handleDragScroll(e, memberScrollRef)}
+                                        >
+                                            <div className="flex gap-3 w-max">
+                                                {members.filter(m => m.id !== currentUserId).map(member => (
+                                                    <button
+                                                        key={member.id}
+                                                        type="button"
+                                                        onClick={() => setTargetUserId(member.id)}
+                                                        className="hardware-btn group shrink-0 pointer-events-auto"
+                                                    >
+                                                        <div className={clsx(
+                                                            "hardware-well min-w-[85px] h-[58px] rounded-lg shadow-well relative transition-all active:translate-y-0.5",
+                                                            targetUserId === member.id ? "bg-emerald-900/5" : "bg-white/40"
+                                                        )}>
+                                                            <div className={clsx(
+                                                                "hardware-cap absolute inset-0.5 rounded-md shadow-cap transition-all flex flex-col items-center justify-center gap-1 px-1.5",
+                                                                targetUserId === member.id ? "bg-emerald-500" : "bg-white group-hover:bg-slate-50"
+                                                            )}>
+                                                                <div className={clsx(
+                                                                    "w-5 h-5 rounded-full overflow-hidden border relative z-10 shadow-sm",
+                                                                    targetUserId === member.id ? "border-emerald-300" : "border-[#F1F2E9]"
+                                                                )}>
+                                                                    {member.avatarUrl ? (
+                                                                        <Image src={member.avatarUrl} width={20} height={20} alt={member.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[6px] font-black text-slate-400">
+                                                                            {member.name[0]}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className={clsx(
+                                                                    "text-[7px] label-mono font-black uppercase tracking-widest truncate w-full text-center leading-none",
+                                                                    targetUserId === member.id ? "text-white" : "text-slate-500"
+                                                                )}>
+                                                                    {member.nickname || member.name}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Amount Input */}
+                                    <div className="space-y-1.5">
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400 ml-1">{t('ledger.transfer.amount')}</label>
+                                        <div className="hardware-well rounded-xl bg-[#DADBD4]/20 shadow-well border border-black/5 p-1.5">
+                                            <div className="bg-white rounded-lg p-4 shadow-cap flex items-baseline gap-3 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                                                <span className="text-xl font-black text-slate-300 font-mono select-none">¥</span>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={transferAmount}
+                                                    onChange={(e) => setTransferAmount(e.target.value)}
+                                                    placeholder="0.00"
+                                                    className="w-full text-4xl font-black font-number bg-transparent text-slate-800 outline-none placeholder:text-slate-200"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center px-4 mt-1 opacity-50">
+                                            <span className="text-[7px] font-black text-slate-400 label-mono uppercase">Avail. ¥{Intl.NumberFormat(locale).format(balance)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Description Input */}
+                                    <div className="space-y-1.5">
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400 ml-1">{t('ledger.transfer.desc')}</label>
+                                        <div className="hardware-well rounded-xl bg-[#DADBD4]/20 shadow-well border border-black/5 p-1.5">
+                                            <input
+                                                type="text"
+                                                value={transferDesc}
+                                                onChange={(e) => setTransferDesc(e.target.value)}
+                                                placeholder="..."
+                                                className="w-full bg-white rounded-lg p-3 font-black text-slate-800 text-sm outline-none shadow-cap placeholder:text-slate-200"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Submit */}
+                                    <div className="mt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={submitting || !targetUserId || !transferAmount}
+                                            className="hardware-btn group w-full"
+                                        >
+                                            <div className="hardware-well h-14 md:h-16 rounded-xl bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative border-b-2 border-slate-400/20">
+                                                <div className="hardware-cap absolute inset-1 rounded-lg bg-indigo-500 flex items-center justify-center gap-3 transition-all shadow-cap group-hover:brightness-110 active:translate-y-0.5">
+                                                    {submitting ? (
+                                                        <Loader2 className="w-5 h-5 animate-spin text-white" />
+                                                    ) : (
+                                                        <ShieldCheck className="w-5 h-5 text-white" />
+                                                    )}
+                                                    <span className="label-mono text-base font-black uppercase tracking-[0.15em] text-white drop-shadow-sm">
+                                                        {submitting ? 'Authenticating...' : t('ledger.transfer.confirm')}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
-
         </div>
     )
 }
