@@ -399,7 +399,7 @@ export default function LedgerPage() {
                             </text>
                         </React.Fragment>
                     ))}
-                </svg>
+                </svg>/n
                 
                 {/* Legend */}
                 <div className="flex gap-6 mt-8 justify-center">
@@ -759,14 +759,15 @@ export default function LedgerPage() {
                                                             ) : (
                                                                 <circle cx="50" cy="50" r="40" fill="transparent" stroke="#F1F5F9" strokeWidth="12" />
                                                             )}
-                                                                                          <div className="absolute inset-0 flex flex-center items-center justify-center flex-col">
+                                                        </svg>
+                                                        <div className="absolute inset-0 flex flex-center items-center justify-center flex-col">
                                                             <span className="text-[10px] font-black text-slate-300 label-mono uppercase">Consumed</span>
                                                             <span className="text-sm font-black text-slate-900 font-number">
                                                                 ¥{Intl.NumberFormat(locale).format(statsData.categories.filter((c: CategoryStat) => c.type === 'EXPENSE').reduce((acc: number, cur: CategoryStat) => acc + Number(cur.total), 0))}
                                                             </span>
                                                         </div>
                                                     </div>
- 
+
                                                     {/* Legend List */}
                                                     <div className="flex-1 w-full flex flex-col gap-4">
                                                         {statsData.categories?.filter((c: CategoryStat) => c.type === 'EXPENSE').length ? statsData.categories.filter((c: CategoryStat) => c.type === 'EXPENSE')
@@ -778,7 +779,6 @@ export default function LedgerPage() {
                                                                 const percentage = (Number(cat.total) / totalExpense) * 100;
                                                                 return (
                                                                     <div key={cat.id} className="flex items-center justify-between group/row p-1 -m-1 rounded-xl hover:bg-slate-50 transition-colors">
--slate-50 transition-colors">
                                                                         <div className="flex items-center gap-3">
                                                                             <div className="w-2.5 h-2.5 rounded-full shadow-inner ring-2 ring-white" style={{ backgroundColor: colors[i % colors.length] }} />
                                                                             <span className="text-[11px] font-black text-slate-600 label-mono tracking-tight uppercase">{cat.emoji} {cat.name}</span>
