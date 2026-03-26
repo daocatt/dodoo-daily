@@ -135,7 +135,7 @@ async function main() {
         await db.insert(schema.task).values({
             creatorId: userId,
             assignerId: userId,
-            assigneeId: userId,
+            assigneeId: luckyId,
             title: taskTitles[i],
             description: "Automatically generated mock task description.",
             rewardStars: Math.floor(Math.random() * 5) + 1,

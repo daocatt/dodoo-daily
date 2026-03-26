@@ -71,6 +71,7 @@ const dictionaries: Dictionary = {
         'common.logo': 'Logo',
         'common.logout': 'Logout',
         'common.save': 'Save',
+        'common.create': 'Create',
 
         // Emotions
         'emotions.angerQuestion': 'What is your anger level now?',
@@ -634,6 +635,7 @@ const dictionaries: Dictionary = {
         'tasks.planned': 'All Planned',
         'tasks.today': 'Today',
         'tasks.tomorrow': 'Tomorrow',
+        'tasks.week': 'This Week',
         'tasks.thisWeek': 'This Week',
         'tasks.dailyLoop': 'Daily Loop',
         'tasks.monthlyLoop': 'Monthly Loop',
@@ -644,7 +646,8 @@ const dictionaries: Dictionary = {
         'tasks.noTasksSub': 'Enjoy your free time!',
         'tasks.status.completedBy': 'Completed by {name}',
         'tasks.status.pendingApproval': 'Pending Approval',
-        'tasks.status.assignedBy': 'By {name}',
+        'tasks.status.assignedBy': 'Assigned by {name}',
+        'tasks.status.assignTo': 'Assign to {name}',
         'tasks.button.restart': 'Redo',
         'tasks.button.confirmReward': 'Confirm Reward',
         'tasks.editTask': 'Edit Task',
@@ -910,6 +913,7 @@ const dictionaries: Dictionary = {
         'common.logo': '标志',
         'common.logout': '登出',
         'common.save': '保存',
+        'common.create': '创建',
 
         // Emotions
         'emotions.angerQuestion': '你现在的愤怒程度是？',
@@ -1534,6 +1538,7 @@ const dictionaries: Dictionary = {
         'tasks.planned': '所有计划',
         'tasks.today': '今日任务',
         'tasks.tomorrow': '明天任务',
+        'tasks.week': '一周任务',
         'tasks.thisWeek': '本周任务',
         'tasks.dailyLoop': '每日循环',
         'tasks.monthlyLoop': '每月循环',
@@ -1544,7 +1549,8 @@ const dictionaries: Dictionary = {
         'tasks.noTasksSub': '享受你的闲暇时光吧！',
         'tasks.status.completedBy': '由 {name} 完成',
         'tasks.status.pendingApproval': '待审核',
-        'tasks.status.assignedBy': '由 {name} 指派',
+        'tasks.status.assignedBy': '委派自 {name}',
+        'tasks.status.assignTo': '委派给 {name}',
         'tasks.button.restart': '重做',
         'tasks.button.confirmReward': '发放奖励',
         'tasks.editTask': '编辑任务',

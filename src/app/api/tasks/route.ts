@@ -30,6 +30,7 @@ export async function GET(_req: NextRequest) {
             .from(task)
             .where(and(eq(task.creatorId, id), isNull(task.assignerId)))
             .orderBy(desc(task.createdAt))
+            .limit(100);
 
         return NextResponse.json(personalTasks)
     } catch (_error) {

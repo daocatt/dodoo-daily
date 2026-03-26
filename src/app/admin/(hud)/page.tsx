@@ -704,15 +704,17 @@ export default function Home() {
   }
 
   return (
-    <div className="h-dvh w-full flex flex-col relative overflow-hidden app-bg-pattern">
-      {/* ─── Integrated Navbar & HUD ─── */}
+    <div className="h-dvh w-full flex flex-col relative overflow-hidden bg-[#E2DFD2] app-bg-pattern text-slate-900">
+      {/* ─── Immersive Lighting & Industrial Textures ─── */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-40 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4)_0%,transparent_100%)]" />
+      <div className="absolute inset-0 pointer-events-none z-[1] hud-vignette opacity-50 shadow-[inset_0_0_120px_rgba(0,0,0,0.15)]" />
+      <div className="absolute inset-0 pointer-events-none z-[2] bg-gradient-to-b from-black/[0.02] via-transparent to-black/[0.08]" />
+
       <BausteinAdminNavbar
         isEditing={isEditing}
         onToggleEdit={() => setIsEditing(!isEditing)}
       />
 
-      <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,var(--surface-warm)_0%,transparent_100%)] z-0" />
-      <NatureBackground />
       <Confetti config={confetti} />
 
       {/* ─── Premium Industrial Edit Control Board ─── */}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { task, accountStats, goldStarLog } from '@/lib/schema'
-import { desc, eq, and, sql, isNotNull } from 'drizzle-orm'
+import { desc, eq, and, sql, isNotNull, ne } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
 import { sendPushNotification } from '@/lib/push'
 
@@ -39,8 +39,9 @@ export async function GET(req: NextRequest) {
             .from(task)
 
         const filters = [];
-        // Ensure we only get assigned tasks
-        filters.push(isNotNull(task.assignerId));
+        // Ensure we only get assigned tasks (must have an assignee AND cannot be self-assigned)
+        filters.push(isNotNull(task.assigneeId));
+        filters.push(ne(task.assigneeId, task.assignerId));
 
         if (role === 'PARENT') {
             if (targetUserId) {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
             filters.push(eq(task.assigneeId, id));
         }
 
-        const tasks = await query.where(and(...filters)).orderBy(desc(task.createdAt));
+        const tasks = await query.where(and(...filters)).orderBy(desc(task.createdAt)).limit(100);
 
         return NextResponse.json(tasks)
     } catch (error) {
@@ -67,9 +68,9 @@ export async function POST(req: NextRequest) {
         if (!id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         const body = await req.json()
-        const { title, description, rewardStars, assignedTo, plannedTime, isRepeating, isMonthlyRepeating } = body
+        const { title, description, rewardStars, assigneeId, plannedTime, isRepeating, isMonthlyRepeating } = body
 
-        if (!title || !assignedTo) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        if (!title || !assigneeId) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         const stars = Math.max(0, parseInt(rewardStars?.toString() || '0'))
 
         // Verify and Deduct Stars from Assigner (P2P logic)
@@ -78,23 +79,24 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Insufficient Gold Stars' }, { status: 400 })
         }
 
-        const [newTask] = await db.transaction(async (tx) => {
+        const [newTask] = db.transaction((tx) => {
             // Deduct Stars
-            await tx.update(accountStats)
+            tx.update(accountStats)
                 .set({ goldStars: sql`goldStars - ${stars}` })
                 .where(eq(accountStats.userId, id))
+                .run();
 
-            await tx.insert(goldStarLog).values({
+            tx.insert(goldStarLog).values({
                 userId: id,
                 amount: -stars,
                 balance: stats.goldStars - stars,
                 reason: `Assigned Task: ${title}`,
                 actorId: id
-            })
+            }).run();
 
             return tx.insert(task).values({
                 assignerId: id,
-                assigneeId: assignedTo,
+                assigneeId: assigneeId,
                 creatorId: id,
                 title,
                 description,
@@ -105,12 +107,12 @@ export async function POST(req: NextRequest) {
                 isRepeating: isRepeating || false,
                 isMonthlyRepeating: isMonthlyRepeating || false,
                 completed: false
-            }).returning()
-        })
+            }).returning().all();
+        });
 
         // Send Push Notification to child asynchronously
         try {
-            sendPushNotification(assignedTo, {
+            sendPushNotification(assigneeId, {
                 title: 'New Task! 🌟',
                 body: `You have a new task: ${title}`,
                 data: { url: '/tasks' }
