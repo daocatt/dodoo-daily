@@ -1,17 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { AnimatePresence } from 'framer-motion'
-import { Trash2, Loader2, ArrowLeft } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trash2, Loader2, ArrowLeft, XIcon, ShieldCheck, Settings, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '@/contexts/I18nContext'
-import dynamic from 'next/dynamic'
-
-const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false })
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
+import clsx from 'clsx'
 
 interface Category {
     id: string
-    type: string
+    type: 'INCOME' | 'EXPENSE'
     name: string
     emoji: string
     isSystem: boolean
@@ -19,237 +18,248 @@ interface Category {
 
 export default function CategoryManagerPage() {
     const router = useRouter()
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     const [loading, setLoading] = useState(true)
     const [categories, setCategories] = useState<Category[]>([])
-    const [submitting, setSubmitting] = useState(false)
-
+    
     // Form State
-    const [newCatName, setNewCatName] = useState('')
-    const [newCatEmoji, setNewCatEmoji] = useState('💰')
-    const [newCatType, setNewCatType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE')
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+    const [name, setName] = useState('')
+    const [emoji, setEmoji] = useState('🍔')
+    const [type, setType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE')
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isDeleting, setIsDeleting] = useState<string | null>(null)
+
+    const expenseEmojis = ['🍔', '🚌', '🕹️', '📚', '🛒', '👔', '🏠', '💊', '🎾', '✈️', '💄', '🐱', '☕', '🎬']
+    const incomeEmojis = ['💰', '🧧', '🔄', '📈', '🎁', '💎', '🏧', '💼', '💸']
+    const currentEmojis = type === 'EXPENSE' ? expenseEmojis : incomeEmojis
 
     useEffect(() => {
-        const checkAuthAndFetch = async () => {
+        const fetchCategories = async () => {
             try {
-                const statsRes = await fetch('/api/stats')
-                const statsData = await statsRes.json()
-                
-                if (!statsData.isAdmin) {
-                    router.push('/ledger')
-                    return
-                }
-
                 const res = await fetch('/api/ledger/categories')
                 const data = await res.json()
-                setCategories(data)
-            } catch (error) {
-                console.error('Fetch error:', error)
-            } finally {
-                setLoading(false)
-            }
+                if (Array.isArray(data)) setCategories(data)
+            } catch (e) { console.error(e) }
+            setLoading(false)
         }
-        checkAuthAndFetch()
-    }, [router])
+        fetchCategories()
+    }, [])
 
-    const handleAddCategory = async (e: React.FormEvent) => {
+    const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!newCatName || !newCatEmoji) return
-        setSubmitting(true)
+        if (!name || !emoji) return
+        setIsSubmitting(true)
         try {
             const res = await fetch('/api/ledger/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newCatName, emoji: newCatEmoji, type: newCatType })
+                body: JSON.stringify({ name, emoji, type })
             })
             if (res.ok) {
-                setNewCatName('')
+                setName('')
                 const updated = await fetch('/api/ledger/categories').then(r => r.json())
-                setCategories(updated)
+                if (Array.isArray(updated)) setCategories(updated)
             }
-        } catch (_error) {
-            console.error(_error)
-        }
-        setSubmitting(false)
+        } catch (e) { console.error(e) }
+        setIsSubmitting(false)
     }
 
-    const handleDeleteCategory = async (id: string) => {
-        if (!confirm(t('ledger.categories.deleteConfirm'))) return
+    const handleDelete = async (id: string, isSystem: boolean) => {
+        if (isSystem) return
+        if (!window.confirm(t('ledger.categories.deleteConfirm'))) return
+        setIsDeleting(id)
         try {
             const res = await fetch(`/api/ledger/categories/${id}`, { method: 'DELETE' })
             if (res.ok) {
-                const updated = await fetch('/api/ledger/categories').then(r => r.json())
-                setCategories(updated)
+                setCategories(prev => prev.filter(c => c.id !== id))
             } else {
                 const data = await res.json()
-                alert(data.error || 'Action failed')
+                alert(data.error || 'Delete failed')
             }
-        } catch (_error) {
-            console.error(_error)
-        }
+        } catch (e) { console.error(e) }
+        setIsDeleting(null)
     }
 
     if (loading) {
         return (
-            <div className="min-h-dvh flex flex-col items-center justify-center bg-slate-50 gap-4">
-                <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
-                <span className="text-slate-400 font-bold">{t('ledger.loading')}</span>
+            <div className="min-h-screen bg-[#E2DFD2] flex flex-col items-center justify-center gap-6">
+                <div className="w-16 h-16 rounded-full border-4 border-dashed border-slate-400 animate-[spin_10s_linear_infinite]" />
+                <span className="label-mono text-xs font-black uppercase text-slate-500 tracking-[0.3em] animate-pulse">Initializing Interface...</span>
             </div>
         )
     }
 
     return (
-        <div className="min-h-dvh bg-slate-50 relative flex flex-col">
-            {/* Header */}
-            <header className="sticky top-0 z-10 px-6 py-5 md:px-10 md:py-8 backdrop-blur-md bg-white/80 border-b border-slate-100 flex items-center gap-6">
-                <button
-                    onClick={() => router.push('/ledger')}
-                    className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl bg-white hover:bg-slate-50 transition-colors shadow-sm text-slate-500 border border-slate-100"
-                >
-                    <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
-                </button>
-                <div className="flex flex-col">
-                    <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                        {t('ledger.categories.manage')}
-                    </h1>
-                    <p className="text-[10px] md:text-xs font-bold text-slate-400 tracking-widest uppercase">{t('ledger.categories.setup')}</p>
-                </div>
-            </header>
+        <div className="min-h-screen bg-[#E2DFD2] relative flex flex-col font-sans selection:bg-indigo-100 pb-20">
+            <BausteinAdminNavbar 
+                title={t('ledger.categories.manage')}
+                onBack={() => router.push('/admin/ledger')}
+            />
 
-            <main className="flex-1 max-w-5xl mx-auto w-full p-6 md:p-10 flex flex-col gap-10">
-                {/* Add New Section */}
-                <section className="bg-white p-6 md:p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col gap-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
-                        <h2 className="text-base font-black text-slate-800 tracking-wide uppercase">{t('ledger.categories.add')}</h2>
-                    </div>
-
-                    <form onSubmit={handleAddCategory} className="flex flex-col gap-6 lg:flex-row lg:items-center">
-                        <div className="grid grid-cols-4 md:grid-cols-6 gap-3 flex-1 pb-2">
-                            <div className="col-span-1 relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                    className="w-full h-16 bg-slate-50 rounded-2xl text-3xl flex items-center justify-center shadow-sm border-2 border-transparent hover:border-indigo-500 transition-all active:scale-95"
-                                >
-                                    {newCatEmoji || '🏷️'}
-                                </button>
-                                
-                                <AnimatePresence>
-                                    {showEmojiPicker && (
-                                        <div className="absolute top-full mt-4 left-0 z-[100] shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-2xl overflow-hidden">
-                                            <EmojiPicker
-                                                onEmojiClick={(emojiData) => {
-                                                    setNewCatEmoji(emojiData.emoji)
-                                                    setShowEmojiPicker(false)
-                                                }}
-                                                width={320}
-                                                height={450}
-                                                lazyLoadEmojis={true}
-                                                previewConfig={{ showPreview: false }}
-                                            />
-                                        </div>
-                                    )}
-                                </AnimatePresence>
+            <main className="flex-1 max-w-5xl mx-auto w-full px-4 md:px-8 pt-8 flex flex-col gap-12">
+                {/* Section I: Registry Console */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    
+                    {/* Left: Input Console */}
+                    <div className="lg:col-span-5 flex flex-col gap-8">
+                        <div className="baustein-panel bg-[#E6E2D1] rounded-[2.8rem] p-1 border-4 border-white/20 shadow-2xl relative overflow-hidden">
+                             {/* Panel Decoration */}
+                            <div className="absolute top-4 right-6 flex gap-1.5 opacity-20">
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-900 shadow-inner" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-900 shadow-inner" />
                             </div>
 
-                            <input
-                                type="text"
-                                value={newCatName}
-                                onChange={e => setNewCatName(e.target.value)}
-                                className="col-span-3 md:col-span-3 h-16 bg-slate-50 rounded-2xl px-6 text-sm font-bold shadow-sm border-2 border-transparent focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
-                                placeholder={t('ledger.categories.name')}
-                                required
-                            />
-
-                            <select
-                                value={newCatType}
-                                onChange={e => setNewCatType(e.target.value as 'INCOME' | 'EXPENSE')}
-                                className="col-span-2 md:col-span-1 h-16 bg-slate-50 rounded-2xl px-5 text-xs font-black text-slate-600 shadow-sm border-2 border-transparent focus:border-indigo-500 outline-none appearance-none"
-                            >
-                                <option value="EXPENSE">{t('ledger.add.expense')}</option>
-                                <option value="INCOME">{t('ledger.add.income')}</option>
-                            </select>
-
-                            <button
-                                type="submit"
-                                disabled={submitting || !newCatName}
-                                className="col-span-2 md:col-span-1 h-16 bg-indigo-500 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-200 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                {t('button.add')}
-                            </button>
-                        </div>
-                    </form>
-                </section>
-
-                <div className="flex flex-col gap-12 pb-20">
-                    {/* Expense List */}
-                    <section className="flex flex-col gap-6">
-                        <div className="flex items-center gap-3 pl-1">
-                            <div className="w-2 h-7 bg-rose-400 rounded-full" />
-                            <h3 className="text-lg font-black text-slate-700 tracking-widest uppercase">{t('ledger.add.expense')}</h3>
-                            <span className="text-xs font-bold text-slate-300 ml-auto bg-slate-100 px-3 py-1 rounded-full">
-                                {categories.filter(c => c.type === 'EXPENSE').length} Categories
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {categories.filter(cat => cat.type === 'EXPENSE').map((cat) => (
-                                <div key={cat.id} className="bg-white p-5 rounded-[28px] flex items-center justify-between group hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-slate-100 border-transparent hover:border-slate-200">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-slate-100/50">
-                                            {cat.emoji}
-                                        </div>
-                                        <span className="font-bold text-slate-800 tracking-tight">{cat.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {!cat.isSystem && (
-                                            <button
-                                                onClick={() => handleDeleteCategory(cat.id)}
-                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        )}
-                                    </div>
+                            <form onSubmit={handleAdd} className="p-6 md:p-8 flex flex-col gap-8">
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] label-mono mb-1">{t('ledger.categories.setup')}</span>
+                                    <h3 className="text-xl font-black text-slate-800 tracking-tight uppercase font-mono italic">Category <span className="text-indigo-600">Console</span></h3>
                                 </div>
-                            ))}
-                        </div>
-                    </section>
 
-                    {/* Income List */}
-                    <section className="flex flex-col gap-6">
-                        <div className="flex items-center gap-3 pl-1">
-                            <div className="w-2 h-7 bg-emerald-500 rounded-full" />
-                            <h3 className="text-lg font-black text-slate-700 tracking-widest uppercase">{t('ledger.add.income')}</h3>
-                            <span className="text-xs font-bold text-slate-300 ml-auto bg-slate-100 px-3 py-1 rounded-full">
-                                {categories.filter(c => c.type === 'INCOME').length} Categories
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {categories.filter(cat => cat.type === 'INCOME').map((cat) => (
-                                <div key={cat.id} className="bg-white p-5 rounded-[28px] flex items-center justify-between group hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-slate-100 border-transparent hover:border-slate-200">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-slate-100/50">
-                                            {cat.emoji}
-                                        </div>
-                                        <span className="font-bold text-slate-800 tracking-tight">{cat.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {!cat.isSystem && (
-                                            <button
-                                                onClick={() => handleDeleteCategory(cat.id)}
-                                                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
+                                {/* Type Sector Switch */}
+                                <div className="flex p-1 hardware-well rounded-xl bg-[#DADBD4]/60 shadow-inner border border-black/5">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setType('EXPENSE')} 
+                                        className={clsx(
+                                            "flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest label-mono transition-all",
+                                            type === 'EXPENSE' ? "bg-white text-rose-500 shadow-sm" : "text-slate-400"
                                         )}
-                                    </div>
+                                    >
+                                        {t('ledger.stats.expense')}
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setType('INCOME')} 
+                                        className={clsx(
+                                            "flex-1 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest label-mono transition-all",
+                                            type === 'INCOME' ? "bg-white text-emerald-500 shadow-sm" : "text-slate-400"
+                                        )}
+                                    >
+                                        {t('ledger.stats.income')}
+                                    </button>
                                 </div>
-                            ))}
+
+                                <div className="hardware-well p-5 rounded-3xl bg-white/40 border border-black/5 shadow-well space-y-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 h-16 flex items-center justify-center text-3xl hardware-well rounded-2xl bg-white shadow-cap border border-black/5 transition-transform hover:scale-105 active:scale-95 duration-200">
+                                            {emoji}
+                                        </div>
+                                        <div className="flex-1 hardware-well rounded-2xl bg-[#DADBD4]/20 shadow-inner p-2 border border-black/5">
+                                            <input 
+                                                value={name} 
+                                                onChange={e => setName(e.target.value)} 
+                                                placeholder={t('ledger.categories.name')}
+                                                className="w-full bg-white rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest label-mono text-slate-800 outline-none shadow-cap border-b-2 border-slate-100" 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest label-mono ml-1">Asset Library</span>
+                                        <div className="grid grid-cols-7 gap-2.5 p-3 rounded-2xl bg-slate-900/5 shadow-inner border border-white/40">
+                                            {currentEmojis.map(e => (
+                                                <button 
+                                                    key={e} 
+                                                    type="button"
+                                                    onClick={() => setEmoji(e)} 
+                                                    className={clsx(
+                                                        "w-full aspect-square flex items-center justify-center rounded-xl transition-all hover:scale-110 active:scale-90",
+                                                        emoji === e ? "bg-indigo-500 shadow-lg scale-110 ring-2 ring-white" : "bg-white/80 shadow-sm grayscale opacity-60 hover:grayscale-0 hover:opacity-100"
+                                                    )}
+                                                >
+                                                    <span className="text-lg">{e}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        disabled={isSubmitting || !name} 
+                                        className="hardware-btn group w-full pt-2"
+                                    >
+                                        <div className="hardware-well relative w-full h-14 rounded-xl bg-[#DADBD4] shadow-well active:translate-y-1 transition-all flex items-center justify-center p-0.5 border-b-2 border-slate-400/20">
+                                            <div className="hardware-cap absolute inset-1 bg-indigo-500 rounded-lg flex items-center justify-center gap-3 shadow-cap group-hover:bg-indigo-600">
+                                                {isSubmitting ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                                                ) : (
+                                                    <Plus className="w-5 h-5 text-white" />
+                                                )}
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] label-mono text-white">
+                                                    {t('ledger.categories.save')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </section>
+                    </div>
+
+                    {/* Right: Registry Display */}
+                    <div className="lg:col-span-7 flex flex-col gap-6">
+                        <section className="flex flex-col gap-6">
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="w-1.5 h-6 bg-slate-900/10 rounded-full" />
+                                <h3 className="text-xs font-black text-slate-400 label-mono uppercase tracking-[0.3em]">Registry List</h3>
+                                <div className="h-[1px] flex-1 bg-slate-900/5" />
+                                <span className="label-mono text-[9px] font-black uppercase text-slate-300 bg-slate-400/5 px-3 py-1 rounded-full border border-black/5">
+                                    {categories.filter(c => c.type === type).length} Records
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <AnimatePresence mode="popLayout">
+                                    {categories.filter(c => c.type === type).map((cat, idx) => (
+                                        <motion.div 
+                                            layout
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            transition={{ delay: idx * 0.03 }}
+                                            key={cat.id} 
+                                            className="group hardware-well p-4 rounded-3xl bg-white shadow-cap border border-black/5 flex items-center justify-between hover:border-indigo-200 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 flex items-center justify-center text-2xl hardware-well rounded-2xl bg-slate-50 shadow-inner border border-black/5">
+                                                    {cat.emoji}
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black uppercase tracking-widest label-mono text-slate-800">{cat.name}</span>
+                                                    {cat.isSystem && (
+                                                        <span className="text-[7px] font-black uppercase text-slate-300 label-mono tracking-tighter flex items-center gap-1 mt-0.5">
+                                                            <ShieldCheck className="w-2 h-2" /> System Protocol
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            {!cat.isSystem && (
+                                                <button 
+                                                    onClick={() => handleDelete(cat.id, cat.isSystem)} 
+                                                    disabled={!!isDeleting}
+                                                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-rose-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all shadow-sm active:scale-95"
+                                                >
+                                                    {isDeleting === cat.id ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-4 h-4" />
+                                                    )}
+                                                </button>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                                
+                                {categories.filter(c => c.type === type).length === 0 && (
+                                    <div className="col-span-full py-20 flex flex-col items-center justify-center opacity-30 gap-4">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-ping" />
+                                        <span className="label-mono text-[9px] font-black uppercase tracking-[0.2em]">{t('ledger.categories.noCustom')}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+                    </div>
                 </div>
             </main>
         </div>

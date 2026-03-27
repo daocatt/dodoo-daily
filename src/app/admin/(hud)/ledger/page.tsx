@@ -9,7 +9,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import clsx from 'clsx'
 import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
-interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; relatedUser?: { id: string; name: string; avatarUrl: string; }; }
+import { useRouter } from "next/navigation";interface LedgerRecord { id: string; type: string; amount: number; description: string; date: string; category?: { name: string; emoji: string; }; relatedUser?: { id: string; name: string; avatarUrl: string; }; }
 interface Category { id: string; type: string; name: string; emoji: string; }
 interface ChartData { fullDate: string; day: string; income: number; expense: number; }
 interface CategoryStat { id: string; name: string; emoji: string; total: number | string; type: string; }
@@ -125,6 +125,7 @@ const LedgerItem = ({ record, index, locale, t, onDelete }: { record: LedgerReco
 
 export default function LedgerPage() {
     const { t, locale } = useI18n()
+    const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [balance, setBalance] = useState(0)
     const [records, setRecords] = useState<LedgerRecord[]>([])
@@ -210,10 +211,6 @@ export default function LedgerPage() {
             }
             if (Array.isArray(catData)) {
                 setCategories(catData)
-                const expCats = catData.filter((c: Category) => c.type === 'EXPENSE')
-                if (expCats.length > 0 && !selectedCategoryId) {
-                    setSelectedCategoryId(expCats[0].id)
-                }
             }
             if (Array.isArray(membersData)) {
                 setMembers(membersData)
@@ -223,7 +220,7 @@ export default function LedgerPage() {
             console.error('Failed to fetch ledger data', error)
         }
         setLoading(false)
-    }, [setLoading, setRecords, setBalance, setHasMore, setIsAdmin, setCurrentUserId, setCategories, setSelectedCategoryId, setMembers, selectedCategoryId, setPage]);
+    }, [setLoading, setRecords, setBalance, setHasMore, setIsAdmin, setCurrentUserId, setCategories, setPage]);
 
     const loadMore = useCallback(() => {
         if (!loading && hasMore) {
@@ -447,6 +444,15 @@ export default function LedgerPage() {
         fetchData()
     }, [fetchData])
 
+    // Initialize default category when categories are loaded
+    useEffect(() => {
+        if (categories.length > 0 && !selectedCategoryId) {
+            const expCats = categories.filter(c => c.type === "EXPENSE");
+            if (expCats.length > 0) {
+                setSelectedCategoryId(expCats[0].id);
+            }
+        }
+    }, [categories, selectedCategoryId]);
     // Helper to group records by month
     const groupedRecords = records.reduce((groups, record) => {
         const month = format(new Date(record.date), 'yyyy-MM');
@@ -521,11 +527,19 @@ export default function LedgerPage() {
 
                                         {/* Simplified Compact Side-by-Side Buttons at Bottom-Right */}
                                         <div className="w-full md:w-auto flex md:self-end justify-end items-center gap-3 mt-2">
+                                            <button 
+                                                onClick={() => router.push('/admin/ledger/categories')}
+                                                className="w-11 h-11 flex items-center justify-center rounded-lg bg-slate-900/5 hover:bg-slate-900/10 transition-colors mr-2"
+                                                title={t('ledger.categories.setup')}
+                                            >
+                                                <Settings className="w-5 h-5 text-slate-400" />
+                                            </button>
+
                                             <button onClick={() => setShowAddModal(true)} className="hardware-btn group">
                                                 <div className="hardware-well relative w-24 h-11 rounded-lg bg-[#DADBD4] shadow-well active:translate-y-0.5 transition-all flex items-center justify-center p-0.5">
                                                     <div className="hardware-cap absolute inset-0.5 bg-indigo-500 rounded-[6px] flex items-center justify-center gap-1.5 transition-all shadow-cap group-hover:bg-indigo-600">
                                                         <Plus className="w-3.5 h-3.5 text-white" />
-                                                        <span className="text-[8px] font-black uppercase tracking-widest label-mono text-white">Record</span>
+                                                        <span className="text-[8px] font-black uppercase tracking-widest label-mono text-white">{t('ledger.add.title')}</span>
                                                     </div>
                                                 </div>
                                             </button>
@@ -534,7 +548,7 @@ export default function LedgerPage() {
                                                 <div className="hardware-well relative w-24 h-11 rounded-lg bg-[#DADBD4] shadow-well active:translate-y-0.5 transition-all flex items-center justify-center p-0.5">
                                                     <div className="hardware-cap absolute inset-0.5 bg-white rounded-[6px] flex items-center justify-center gap-1.5 transition-all shadow-cap group-hover:bg-slate-50">
                                                         <ReceiptText className="w-3.5 h-3.5 text-slate-400" />
-                                                        <span className="text-[8px] font-black uppercase tracking-widest label-mono text-slate-400">Trans</span>
+                                                        <span className="text-[8px] font-black uppercase tracking-widest label-mono text-slate-400">{t('ledger.transfer.title')}</span>
                                                     </div>
                                                 </div>
                                             </button>
@@ -588,7 +602,7 @@ export default function LedgerPage() {
                                                 <div className="flex items-center gap-3">
                                                     {loading ? <Loader2 className="w-4 h-4 animate-spin text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
                                                     <span className="text-xs font-black uppercase tracking-[0.2em] label-mono text-slate-500">
-                                                        {loading ? 'Decrypting...' : t('common.loadMore')}
+                                                        {loading ? t('common.loading') : t('common.loadMore')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -826,9 +840,9 @@ export default function LedgerPage() {
                 </main>
 
                 {/* Add Record Modal: TASKS STYLE REBALANCED */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <motion.div
+                <AnimatePresence>
+                    {showAddModal && (
+                        <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -1113,7 +1127,7 @@ export default function LedgerPage() {
                                             </div>
                                         </div>
                                         <div className="flex justify-between items-center px-4 mt-1 opacity-50">
-                                            <span className="text-[7px] font-black text-slate-400 label-mono uppercase">Avail. ¥{Intl.NumberFormat(locale).format(balance)}</span>
+                                            <span className="text-[7px] font-black text-slate-400 label-mono uppercase">{t('ledger.transfer.available')}: ¥{Intl.NumberFormat(locale).format(balance)}</span>
                                         </div>
                                     </div>
 
@@ -1146,7 +1160,7 @@ export default function LedgerPage() {
                                                         <ShieldCheck className="w-5 h-5 text-white" />
                                                     )}
                                                     <span className="label-mono text-base font-black uppercase tracking-[0.15em] text-white drop-shadow-sm">
-                                                        {submitting ? 'Authenticating...' : t('ledger.transfer.confirm')}
+                                                        {submitting ? t('common.loading') : t('ledger.transfer.confirm')}
                                                     </span>
                                                 </div>
                                             </div>
