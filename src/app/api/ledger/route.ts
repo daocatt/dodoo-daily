@@ -1,7 +1,7 @@
 import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ledgerRecord, ledgerCategory, accountStats, users } from "@/lib/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc, gte, lte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { addFiatBalance } from "@/lib/economy";
 
@@ -14,11 +14,22 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const offset = (page - 1) * limit;
-
-    // Determine target user. Parent can see child's ledger.
+    const startDate = searchParams.get('startDate'); // YYYY-MM-DD
+    const endDate = searchParams.get('endDate'); // YYYY-MM-DD
+     // Determine target user. Parent can see child's ledger.
     const targetUserId = (user.role === 'PARENT' && userIdQuery) ? userIdQuery : user.id;
 
     try {
+        const conditions = [eq(ledgerRecord.userId, targetUserId)];
+        if (startDate) {
+            const d = new Date(startDate + 'T00:00:00');
+            conditions.push(gte(ledgerRecord.date, d));
+        }
+        if (endDate) {
+            const d = new Date(endDate + 'T23:59:59.999');
+            conditions.push(lte(ledgerRecord.date, d));
+        }
+
         const records = await db.select({
             id: ledgerRecord.id,
             amount: ledgerRecord.amount,
@@ -37,10 +48,10 @@ export async function GET(request: Request) {
             }
         })
             .from(ledgerRecord)
-            .where(eq(ledgerRecord.userId, targetUserId))
+            .where(and(...conditions))
             .innerJoin(ledgerCategory, eq(ledgerRecord.categoryId, ledgerCategory.id))
             .leftJoin(users, eq(ledgerRecord.relatedUserId, users.id))
-            .orderBy(desc(ledgerRecord.createdAt))
+            .orderBy(desc(ledgerRecord.date))
             .limit(limit)
             .offset(offset);
 
@@ -63,7 +74,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { amount, categoryId, type, description, relatedUserId } = body;
 
-        if (!amount || !categoryId || !type || !description) {
+        if (!amount || !categoryId || !type) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useAnimation } from 'framer-motion'
-import { Wallet, Plus, X as XIcon, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check, Trash2, ShieldCheck, RotateCcw } from 'lucide-react'
+import { Wallet, Plus, X as XIcon, Loader2, BarChart3, ReceiptText, ChevronLeft, ChevronRight, PieChart, TrendingUp, TrendingDown, Settings, Check, Trash2, ShieldCheck, RotateCcw, CalendarDays } from 'lucide-react'
 import { format, subMonths, addMonths, startOfMonth, endOfMonth } from 'date-fns'
 import { useI18n } from '@/contexts/I18nContext'
 import Link from 'next/link'
@@ -150,10 +150,11 @@ export default function LedgerPage() {
     const [description, setDescription] = useState('')
     const [selectedCategoryId, setSelectedCategoryId] = useState('')
     const [submitting, setSubmitting] = useState(false)
+    const [showCategoryPicker, setShowCategoryPicker] = useState(false)
+    const [showMemberPicker, setShowMemberPicker] = useState(false)
     const categoryScrollRef = useRef<HTMLDivElement>(null)
     const memberScrollRef = useRef<HTMLDivElement>(null)
-
-    // Ultra-smooth mouse drag-to-scroll engine
+     // Ultra-smooth mouse drag-to-scroll engine
     const handleDragScroll = (e: React.MouseEvent, ref: React.RefObject<HTMLDivElement>) => {
         if (!ref.current) return;
         const slider = ref.current;
@@ -182,12 +183,25 @@ export default function LedgerPage() {
     const [transferAmount, setTransferAmount] = useState('')
     const [transferDesc, setTransferDesc] = useState('')
 
-    const fetchData = useCallback(async (targetPage = 1) => {
+    const [filterMonth, setFilterMonth] = useState<string>(format(new Date(), 'yyyy-MM'))
+    const [showMonthPicker, setShowMonthPicker] = useState(false)
+    const [pickerYear, setPickerYear] = useState(new Date().getFullYear())
+
+    const fetchData = useCallback(async (targetPage = 1, monthFilter = '') => {
         if (targetPage === 1) setLoading(true)
         try {
             const limit = 50;
+            let url = `/api/ledger?page=${targetPage}&limit=${limit}`;
+            
+            if (monthFilter) {
+                const start = startOfMonth(new Date(monthFilter + '-01'));
+                const end = endOfMonth(new Date(monthFilter + '-01'));
+                url += `&startDate=${format(start, 'yyyy-MM-dd')}&endDate=${format(end, 'yyyy-MM-dd')}`;
+            }
+
+            console.log('[LedgerPage] fetchData called:', { targetPage, monthFilter, url });
             const [ledgerRes, catRes, statsRes, membersRes] = await Promise.all([
-                fetch(`/api/ledger?page=${targetPage}&limit=${limit}`),
+                fetch(url),
                 fetch('/api/ledger/categories'),
                 fetch('/api/stats'),
                 fetch('/api/family/members')
@@ -208,6 +222,10 @@ export default function LedgerPage() {
                 }
                 setBalance(ledgerData.balance)
                 setHasMore(ledgerData.records.length === limit)
+            } else if (targetPage === 1) {
+                setRecords([])
+                setBalance(0)
+                setHasMore(false)
             }
             if (Array.isArray(catData)) {
                 setCategories(catData)
@@ -222,15 +240,22 @@ export default function LedgerPage() {
         setLoading(false)
     }, [setLoading, setRecords, setBalance, setHasMore, setIsAdmin, setCurrentUserId, setCategories, setPage]);
 
+    // Reload when month filter changes — pass value directly to avoid stale closure
+    useEffect(() => {
+        fetchData(1, filterMonth)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterMonth])
+
+
     const loadMore = useCallback(() => {
         if (!loading && hasMore) {
-            fetchData(page + 1)
+            fetchData(page + 1, filterMonth)
         }
-    }, [loading, hasMore, fetchData, page]);
+    }, [loading, hasMore, fetchData, page, filterMonth]);
 
     const handleAddSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!amount || !description || !selectedCategoryId) return
+        if (!amount || !selectedCategoryId) return
         
         setSubmitting(true)
         try {
@@ -249,7 +274,7 @@ export default function LedgerPage() {
                 setShowAddModal(false)
                 setAmount('')
                 setDescription('')
-                fetchData(1) // Refresh from start
+                fetchData(1, filterMonth) // Preserving the current month filter
             } else {
                 alert(data.error || 'Failed to add record')
             }
@@ -257,7 +282,7 @@ export default function LedgerPage() {
             console.error(error)
         }
         setSubmitting(false)
-    }, [amount, description, selectedCategoryId, txType, setSubmitting, setShowAddModal, setAmount, setDescription, fetchData]);
+    }, [amount, description, selectedCategoryId, txType, setSubmitting, setShowAddModal, setAmount, setDescription, fetchData, filterMonth]);
 
     const handleTransferSubmit = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
@@ -279,7 +304,7 @@ export default function LedgerPage() {
                 setShowTransferModal(false)
                 setTransferAmount('')
                 setTransferDesc('')
-                fetchData(1) // Refresh
+                fetchData(1, filterMonth) // Preserving the current month filter
             } else {
                 alert(data.error || '转账失败')
             }
@@ -287,7 +312,7 @@ export default function LedgerPage() {
             console.error(error)
         }
         setSubmitting(false)
-    }, [targetUserId, transferAmount, transferDesc, setSubmitting, setShowTransferModal, setTransferAmount, setTransferDesc, fetchData]);
+    }, [targetUserId, transferAmount, transferDesc, setSubmitting, setShowTransferModal, setTransferAmount, setTransferDesc, fetchData, filterMonth]);
 
     const handleDeleteRecord = useCallback(async (id: string) => {
         if (!window.confirm(t('ledger.delete.confirm'))) return;
@@ -507,10 +532,10 @@ export default function LedgerPage() {
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
-                                className="w-full max-w-2xl flex flex-col gap-10"
+                                className="w-full max-w-2xl flex flex-col gap-4"
                             >
                                 {/* Section I: Compact Ledger HUD - MINIMALIST HARDWARE */}
-                                <div className="w-full max-w-2xl hardware-well p-6 md:p-8 rounded-[2.2rem] bg-[#DADBD4]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.1)] border border-black/5 relative overflow-hidden flex flex-col gap-6 mb-10">
+                                <div className="w-full max-w-2xl hardware-well p-6 md:p-8 rounded-[2.2rem] bg-[#DADBD4]/40 shadow-[inset_0_2px_12px_rgba(0,0,0,0.1)] border border-black/5 relative overflow-hidden flex flex-col gap-6 mb-4">
                                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                         <div className="flex flex-col">
                                             <div className="flex items-center gap-2 mb-1 px-1">
@@ -528,7 +553,7 @@ export default function LedgerPage() {
                                         {/* Simplified Compact Side-by-Side Buttons at Bottom-Right */}
                                         <div className="w-full md:w-auto flex md:self-end justify-end items-center gap-3 mt-2">
                                             <button 
-                                                onClick={() => router.push('/admin/ledger/categories')}
+                                                onClick={() => router.push('/admin/ledger/category_manager')}
                                                 className="w-11 h-11 flex items-center justify-center rounded-lg bg-slate-900/5 hover:bg-slate-900/10 transition-colors mr-2"
                                                 title={t('ledger.categories.setup')}
                                             >
@@ -559,12 +584,58 @@ export default function LedgerPage() {
                                 </div>
 
                                 {/* Month Grouped Sections */}
-                                <div className="flex flex-col gap-12">
+                                <div className="flex flex-col gap-4">
                                     {records.length > 0 ? Object.entries(groupedRecords).sort(([mA], [mB]) => mB.localeCompare(mA)).map(([month, monthRecords]) => (
-                                        <div key={month} className="flex flex-col gap-5">
-                                            <div className="sticky top-0 z-20 flex items-center gap-4 py-2 bg-[#E2DFD2]/80 backdrop-blur-sm px-1">
-                                                <div className="text-[10px] font-bold text-slate-400 label-mono uppercase tracking-[0.2em]">
-                                                    {format(new Date(month + '-01'), 'MMMM yyyy')}
+                                        <div key={month} className="flex flex-col gap-2">
+                                            <div className="sticky top-0 z-20 flex items-center gap-4 py-1 bg-[#E2DFD2]/80 backdrop-blur-sm px-1">
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setShowMonthPicker(p => !p)}
+                                                        className="flex items-center gap-1.5 group px-2 py-1 rounded-lg hover:bg-slate-900/8 transition-colors"
+                                                    >
+                                                        <span className="text-[10px] font-bold text-slate-400 label-mono uppercase tracking-[0.2em] group-hover:text-indigo-500 transition-colors">
+                                                            {format(new Date((filterMonth || month) + '-01'), 'MMMM yyyy')}
+                                                        </span>
+                                                        <CalendarDays className="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                                                    </button>
+                                                    {showMonthPicker && (
+                                                        <div className="absolute top-full left-0 mt-1 z-50 bg-white rounded-xl shadow-xl border border-black/10 p-3 w-52">
+                                                            {/* Year Navigator */}
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <button onClick={() => setPickerYear(y => y - 1)} className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors">
+                                                                    <ChevronLeft className="w-3.5 h-3.5 text-slate-500" />
+                                                                </button>
+                                                                <span className="label-mono text-xs font-black text-slate-700 tracking-widest">{pickerYear}</span>
+                                                                <button onClick={() => setPickerYear(y => y + 1)} className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors">
+                                                                    <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+                                                                </button>
+                                                            </div>
+                                                            {/* Month Grid */}
+                                                            <div className="grid grid-cols-3 gap-1">
+                                                                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => {
+                                                                    const val = `${pickerYear}-${String(i + 1).padStart(2, '0')}`;
+                                                                    const isActive = (filterMonth || month) === val;
+                                                                    return (
+                                                                        <button
+                                                                            key={val}
+                                                                            onClick={() => { setFilterMonth(val); setShowMonthPicker(false); }}
+                                                                            className={clsx(
+                                                                                'text-[9px] font-black label-mono uppercase py-1.5 rounded-lg transition-colors',
+                                                                                isActive ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:bg-slate-100'
+                                                                            )}
+                                                                        >
+                                                                            {m}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            {filterMonth && (
+                                                                <button onClick={() => { setFilterMonth(''); setShowMonthPicker(false); }} className="w-full mt-2 text-[9px] label-mono font-black uppercase text-slate-400 hover:text-indigo-500 transition-colors pt-1 border-t border-black/5">
+                                                                    Reset Filter
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="h-[1px] flex-1 bg-slate-400/20" />
                                                 <div className="text-[10px] font-bold text-slate-400 label-mono uppercase">
@@ -586,9 +657,21 @@ export default function LedgerPage() {
                                             </div>
                                         </div>
                                     )) : (
-                                        <div className="py-20 flex flex-col items-center justify-center opacity-30 label-mono text-xs gap-4">
-                                            <div className="w-12 h-12 rounded-full border-4 border-dashed border-slate-300 animate-[spin_10s_linear_infinite]" />
-                                            {t('ledger.noData')} — SYSTEM IDLE
+                                        <div className="py-16 flex flex-col items-center justify-center gap-3">
+                                            <div className="w-10 h-10 rounded-full border-2 border-dashed border-slate-300 animate-[spin_8s_linear_infinite]" />
+                                            <div className="text-center">
+                                                <div className="label-mono text-xs font-black text-slate-400 uppercase tracking-widest">
+                                                    {filterMonth ? `${filterMonth} · 当月无收支记录` : '暂无收支数据'}
+                                                </div>
+                                                {filterMonth && (
+                                                    <button
+                                                        onClick={() => setFilterMonth('')}
+                                                        className="mt-2 text-[10px] label-mono text-indigo-400 hover:text-indigo-600 transition-colors font-black uppercase tracking-widest"
+                                                    >
+                                                        ← 查看所有月份
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
 
@@ -850,9 +933,10 @@ export default function LedgerPage() {
                         onClick={() => setShowAddModal(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.95, y: 10 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.95, y: 10 }}
+                            initial={{ scale: 0.93, y: 20, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 420, damping: 30 }}
                             className="w-full max-w-lg baustein-panel shadow-2xl relative overflow-hidden bg-[#E6E2D1] border-4 border-white/20 rounded-[2.8rem]"
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -893,7 +977,7 @@ export default function LedgerPage() {
                                                     const cats = categories.filter(c => c.type === 'EXPENSE')
                                                     if (cats.length > 0) setSelectedCategoryId(cats[0].id)
                                                 }}
-                                                className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest label-mono transition-all ${txType === 'EXPENSE' ? 'bg-white text-red-500 shadow-sm border border-black/5' : 'text-slate-400 opacity-60'}`}
+                                                className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest label-mono transition-all ${txType === 'EXPENSE' ? 'bg-white text-emerald-500 shadow-sm border border-black/5' : 'text-slate-400 opacity-60'}`}
                                             >
                                                 {t('ledger.add.expense')}
                                             </button>
@@ -904,7 +988,7 @@ export default function LedgerPage() {
                                                     const cats = categories.filter(c => c.type === 'INCOME')
                                                     if (cats.length > 0) setSelectedCategoryId(cats[0].id)
                                                 }}
-                                                className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest label-mono transition-all ${txType === 'INCOME' ? 'bg-white text-emerald-500 shadow-sm border border-black/5' : 'text-slate-400 opacity-60'}`}
+                                                className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest label-mono transition-all ${txType === 'INCOME' ? 'bg-white text-red-500 shadow-sm border border-black/5' : 'text-slate-400 opacity-60'}`}
                                             >
                                                 {t('ledger.add.income')}
                                             </button>
@@ -930,44 +1014,80 @@ export default function LedgerPage() {
                                         </div>
                                     </div>
 
-                                    {/* Category Selection */}
+                                    {/* Category Selection — Click to open picker */}
                                     <div className="space-y-1.5">
-                                        <div className="flex justify-between px-1">
-                                            <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400">{t('ledger.add.category')}</label>
-                                            <span className="text-[7px] font-bold text-slate-300 label-mono uppercase">Slide ⇄</span>
-                                        </div>
-                                        <div 
-                                            ref={categoryScrollRef} 
-                                            className="relative overflow-x-auto hide-scrollbar cursor-grab active:cursor-grabbing hardware-well bg-[#DADBD4]/20 rounded-xl p-1 shadow-inner border border-black/5 select-none touch-pan-x"
-                                            onMouseDown={(e) => handleDragScroll(e, categoryScrollRef)}
-                                        >
-                                            <div className="flex gap-2.5 w-max">
-                                                {categories.filter(c => c.type === txType).map(cat => (
-                                                    <button
-                                                        key={cat.id}
-                                                        type="button"
-                                                        onClick={() => setSelectedCategoryId(cat.id)}
-                                                        className="hardware-btn group shrink-0 pointer-events-auto"
-                                                    >
-                                                        <div className={clsx(
-                                                            "hardware-well min-w-[75px] h-8 md:h-9 rounded-lg shadow-well relative overflow-hidden transition-all active:translate-y-0.5",
-                                                            selectedCategoryId === cat.id ? "bg-indigo-900/5" : "bg-white/40"
-                                                        )}>
-                                                            <div className={clsx(
-                                                                "hardware-cap absolute inset-0.5 rounded-md shadow-cap transition-all flex items-center justify-center gap-1.5 px-2",
-                                                                selectedCategoryId === cat.id ? "bg-indigo-500" : "bg-white group-hover:bg-slate-50"
-                                                            )}>
-                                                                <span className={clsx("text-sm transition-transform leading-none translate-y-[1px]", selectedCategoryId === cat.id ? "scale-110" : "grayscale opacity-40")}>{cat.emoji}</span>
-                                                                <span className={clsx(
-                                                                    "text-[7px] font-black uppercase tracking-tight label-mono truncate",
-                                                                    selectedCategoryId === cat.id ? "text-white" : "text-slate-500"
-                                                                )}>{cat.name}</span>
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-400 ml-1">{t('ledger.add.category')}</label>
+                                        
+                                        {/* Selected Category Button */}
+                                        {(() => {
+                                            const selectedCat = categories.find(c => c.id === selectedCategoryId);
+                                            return (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCategoryPicker(true)}
+                                                    className="w-full hardware-well bg-[#DADBD4]/20 rounded-xl shadow-inner border border-black/5 p-1.5 group"
+                                                >
+                                                    <div className="bg-white rounded-lg px-4 py-3 shadow-cap flex items-center justify-between group-hover:bg-slate-50 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-2xl leading-none">{selectedCat?.emoji || '📦'}</span>
+                                                            <div className="text-left">
+                                                                <div className="text-sm font-black text-slate-800">{selectedCat?.name || t('ledger.add.category')}</div>
+                                                                <div className="label-mono text-[8px] text-slate-400 uppercase tracking-widest">{txType === 'EXPENSE' ? t('ledger.add.expense') : t('ledger.add.income')}</div>
                                                             </div>
                                                         </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                                    </div>
+                                                </button>
+                                            );
+                                        })()}
+
+                                        {/* Category Picker Sheet */}
+                                        <AnimatePresence>
+                                        {showCategoryPicker && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 backdrop-blur-sm"
+                                                onClick={() => setShowCategoryPicker(false)}
+                                            >
+                                                <motion.div
+                                                    initial={{ y: 80, opacity: 0 }}
+                                                    animate={{ y: 0, opacity: 1 }}
+                                                    exit={{ y: 80, opacity: 0 }}
+                                                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                                                    className="w-full max-w-lg bg-[#E6E2D1] rounded-t-[2rem] p-5 pb-8"
+                                                    onClick={e => e.stopPropagation()}
+                                                >
+                                                    <div className="w-10 h-1 bg-slate-400/30 rounded-full mx-auto mb-4" />
+                                                    <div className="label-mono text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                                                        {txType === 'EXPENSE' ? t('ledger.add.expense') : t('ledger.add.income')} — {t('ledger.add.category')}
+                                                    </div>
+                                                    <div className="grid grid-cols-4 gap-2">
+                                                        {categories.filter(c => c.type === txType).map(cat => (
+                                                            <button
+                                                                key={cat.id}
+                                                                type="button"
+                                                                onClick={() => { setSelectedCategoryId(cat.id); setShowCategoryPicker(false); }}
+                                                                className={clsx(
+                                                                    'flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all',
+                                                                    selectedCategoryId === cat.id
+                                                                        ? 'bg-indigo-500 shadow-lg'
+                                                                        : 'bg-white/60 hover:bg-white'
+                                                                )}
+                                                            >
+                                                                <span className="text-2xl leading-none">{cat.emoji}</span>
+                                                                <span className={clsx(
+                                                                    'label-mono text-[8px] font-black uppercase tracking-tight text-center leading-tight',
+                                                                    selectedCategoryId === cat.id ? 'text-white' : 'text-slate-600'
+                                                                )}>{cat.name}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </motion.div>
+                                            </motion.div>
+                                        )}
+                                        </AnimatePresence>
                                     </div>
 
                                     {/* Description Input */}
@@ -980,7 +1100,6 @@ export default function LedgerPage() {
                                                 onChange={(e) => setDescription(e.target.value)}
                                                 placeholder="..."
                                                 className="w-full bg-white rounded-lg p-3 font-black text-slate-800 text-sm outline-none shadow-cap placeholder:text-slate-200"
-                                                required
                                             />
                                         </div>
                                     </div>
@@ -1024,9 +1143,10 @@ export default function LedgerPage() {
                         onClick={() => setShowTransferModal(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.95, y: 10 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.95, y: 10 }}
+                            initial={{ scale: 0.93, y: 20, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 420, damping: 32 }}
                             className="w-full max-w-lg baustein-panel shadow-2xl relative overflow-hidden bg-[#E6E2D1] border-4 border-white/20 rounded-[2.8rem]"
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -1056,27 +1176,20 @@ export default function LedgerPage() {
                                 </div>
 
                                 <form onSubmit={handleTransferSubmit} className="flex flex-col gap-5">
-                                    {/* Member selection */}
+                                    {/* Member selection — Simple Grid for better UX */}
                                     <div className="space-y-2">
-                                        <div className="flex justify-between items-center px-1">
-                                            <label className="label-mono text-[9px] uppercase tracking-widest text-slate-500">{t('ledger.transfer.target')}</label>
-                                            <span className="text-[7px] font-bold text-zinc-300 label-mono uppercase">Slide ⇄</span>
-                                        </div>
-                                        <div 
-                                            ref={memberScrollRef} 
-                                            className="relative overflow-x-auto hide-scrollbar cursor-grab active:cursor-grabbing hardware-well bg-[#DADBD4]/20 rounded-xl p-1 shadow-inner border border-black/5 select-none touch-pan-x"
-                                            onMouseDown={(e) => handleDragScroll(e, memberScrollRef)}
-                                        >
-                                            <div className="flex gap-3 w-max">
+                                        <label className="label-mono text-[9px] uppercase tracking-widest text-slate-500 ml-1">{t('ledger.transfer.target')}</label>
+                                        <div className="hardware-well bg-[#DADBD4]/20 rounded-xl p-1.5 shadow-inner border border-black/5">
+                                            <div className="grid grid-cols-3 gap-2">
                                                 {members.filter(m => m.id !== currentUserId).map(member => (
                                                     <button
                                                         key={member.id}
                                                         type="button"
                                                         onClick={() => setTargetUserId(member.id)}
-                                                        className="hardware-btn group shrink-0 pointer-events-auto"
+                                                        className="hardware-btn group"
                                                     >
                                                         <div className={clsx(
-                                                            "hardware-well min-w-[85px] h-[58px] rounded-lg shadow-well relative transition-all active:translate-y-0.5",
+                                                            "hardware-well h-14 rounded-lg shadow-well relative transition-all active:translate-y-0.5",
                                                             targetUserId === member.id ? "bg-emerald-900/5" : "bg-white/40"
                                                         )}>
                                                             <div className={clsx(
@@ -1084,19 +1197,19 @@ export default function LedgerPage() {
                                                                 targetUserId === member.id ? "bg-emerald-500" : "bg-white group-hover:bg-slate-50"
                                                             )}>
                                                                 <div className={clsx(
-                                                                    "w-5 h-5 rounded-full overflow-hidden border relative z-10 shadow-sm",
+                                                                    "w-4 h-4 rounded-full overflow-hidden border relative z-10 shadow-sm",
                                                                     targetUserId === member.id ? "border-emerald-300" : "border-[#F1F2E9]"
                                                                 )}>
                                                                     {member.avatarUrl ? (
-                                                                        <Image src={member.avatarUrl} width={20} height={20} alt={member.name} className="w-full h-full object-cover" />
+                                                                        <Image src={member.avatarUrl} width={16} height={16} alt={member.name} className="w-full h-full object-cover" />
                                                                     ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[6px] font-black text-slate-400">
+                                                                        <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[5px] font-black text-slate-400">
                                                                             {member.name[0]}
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                                 <span className={clsx(
-                                                                    "text-[7px] label-mono font-black uppercase tracking-widest truncate w-full text-center leading-none",
+                                                                    "text-[8px] label-mono font-black uppercase tracking-tight truncate w-full text-center leading-none",
                                                                     targetUserId === member.id ? "text-white" : "text-slate-500"
                                                                 )}>
                                                                     {member.nickname || member.name}

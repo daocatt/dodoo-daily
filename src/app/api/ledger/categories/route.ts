@@ -1,6 +1,7 @@
 import { getSessionUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ledgerCategory } from "@/lib/schema";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -53,7 +54,17 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const newCat = await db.insert(ledgerCategory).values({
+        // Check uniqueness within the same type
+        const existing = await db.select().from(ledgerCategory)
+            .where(and(
+                eq(ledgerCategory.name, name),
+                eq(ledgerCategory.type, type)
+            )).get();
+
+        if (existing) {
+            return NextResponse.json({ error: "Category name already exists in this type" }, { status: 409 });
+        }
+         const newCat = await db.insert(ledgerCategory).values({
             name,
             emoji,
             type,
