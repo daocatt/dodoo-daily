@@ -25,7 +25,8 @@ export async function GET() {
                 timezone: 'Asia/Shanghai',
                 systemName: 'DoDoo Family',
                 showAllAvatars: true,
-                homepageImages: JSON.stringify(['/carousel/bg1.jpg', '/carousel/bg2.jpg', '/carousel/bg3.jpg'])
+                homepageImages: JSON.stringify(['/carousel/bg1.jpg', '/carousel/bg2.jpg', '/carousel/bg3.jpg']),
+                currencySymbol: '¥'
             }).returning()
             settings = newSettings
         }
@@ -44,6 +45,7 @@ export async function GET() {
                 disableVisitorLogin: settings.disableVisitorLogin,
                 disableVisitorRegistration: settings.disableVisitorRegistration,
                 defaultLocale: settings.defaultLocale,
+                currencySymbol: settings.currencySymbol,
                 // Do NOT include visitorInvitationCode or financial ratios for non-parents
             }
             return NextResponse.json(publicSettings)
@@ -83,6 +85,7 @@ export async function PATCH(req: NextRequest) {
         if (typeof body.disableVisitorRegistration === 'boolean') updates.disableVisitorRegistration = body.disableVisitorRegistration
         if (body.homepageImages !== undefined) updates.homepageImages = body.homepageImages
         if (body.defaultLocale !== undefined) updates.defaultLocale = body.defaultLocale
+        if (body.currencySymbol !== undefined) updates.currencySymbol = body.currencySymbol
 
         const existing = await db.select().from(systemSettings).where(eq(systemSettings.id, 'app_settings')).all()
 

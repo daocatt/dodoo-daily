@@ -329,6 +329,7 @@ export const systemSettings = sqliteTable("SystemSettings", {
     hideFamilyLogin: integer("hideFamilyLogin", { mode: "boolean" }).default(false).notNull(),
     homepageImages: text("homepageImages"), // stringified JSON array
     defaultLocale: text("defaultLocale").default("en").notNull(),
+    currencySymbol: text("currencySymbol").default("¥").notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 

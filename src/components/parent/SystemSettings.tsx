@@ -41,6 +41,7 @@ export default function SystemSettings() {
     const [coinsToRmbRatio, setCoinsToRmbRatio] = useState(1.0)
     const [timezone, setTimezone] = useState('Asia/Shanghai')
     const [defaultLocale, setDefaultLocale] = useState<'en' | 'zh-CN'>('en')
+    const [currencySymbol, setCurrencySymbol] = useState('¥')
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
     // All available timezones
@@ -62,6 +63,7 @@ export default function SystemSettings() {
                     setHomepageImages(data.homepageImages ? JSON.parse(data.homepageImages) : [])
                 } catch (_e) { setHomepageImages([]) }
                 setDefaultLocale(data.defaultLocale || 'en')
+                setCurrencySymbol(data.currencySymbol || '¥')
                 setLoading(false)
             })
             .catch(() => setLoading(false))
@@ -93,6 +95,7 @@ export default function SystemSettings() {
                     try { setHomepageImages(JSON.parse(updates.homepageImages as string)) } catch (_e) { }
                 }
                 if (updates.defaultLocale !== undefined) setDefaultLocale(updates.defaultLocale as 'en' | 'zh-CN')
+                if (updates.currencySymbol !== undefined) setCurrencySymbol(updates.currencySymbol as string)
                 showToast(t('settings.updateSuccess'))
                 setShowConfirm(false)
             } else {
@@ -210,6 +213,33 @@ export default function SystemSettings() {
                                     <option value="en">English (US)</option>
                                     <option value="zh-CN">简体中文 (Chinese)</option>
                                 </select>
+                            </div>
+
+                            {/* Global Currency Setting */}
+                            <div className="space-y-2 pt-4 border-t border-slate-100">
+                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <span className="w-3 h-3 flex items-center justify-center bg-indigo-100 text-[10px] text-indigo-600 rounded-sm font-black">
+                                        $
+                                    </span>
+                                    {t('settings.currency')}
+                                </label>
+                                <div className="flex gap-3">
+                                    <select
+                                        value={currencySymbol}
+                                        onChange={(e) => handleUpdateSettings({ currencySymbol: e.target.value })}
+                                        className="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-3 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer shadow-sm"
+                                    >
+                                        <option value="¥">CNY (¥)</option>
+                                        <option value="$">USD ($)</option>
+                                        <option value="€">EUR (€)</option>
+                                        <option value="£">GBP (£)</option>
+                                        <option value="HKD">HKD</option>
+                                        <option value="TWD">TWD</option>
+                                    </select>
+                                    <div className="w-14 h-full min-h-[48px] bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center font-black text-indigo-600 text-xl shadow-inner">
+                                        {currencySymbol}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Moved System Timezone here */}

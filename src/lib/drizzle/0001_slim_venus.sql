@@ -1,0 +1,1 @@
+ALTER TABLE `SystemSettings` ADD `currencySymbol` text DEFAULT '¥' NOT NULL;
