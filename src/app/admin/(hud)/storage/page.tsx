@@ -1011,10 +1011,10 @@ function ItemModal({
                                                         <div className="flex items-center gap-2 px-3">
                                                             <div className={clsx(
                                                                 "w-1.5 h-1.5 rounded-full animate-pulse",
-                                                                editingItem?.isTransferred ? "bg-slate-400" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                                                                item?.isTransferred ? "bg-slate-400" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                                                             )} />
                                                             <span className="text-[9px] font-black uppercase tracking-[0.15em] label-mono text-slate-500">
-                                                                {editingItem?.isTransferred ? t('storage.status.transferred') : t('storage.status.onSale')}
+                                                                {item?.isTransferred ? t('storage.status.transferred') : t('storage.status.onSale')}
                                                             </span>
                                                         </div>
 
