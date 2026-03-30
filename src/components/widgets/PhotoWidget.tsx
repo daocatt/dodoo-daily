@@ -79,13 +79,15 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                         className="absolute inset-0 z-0 touch-none"
                     >
                         <div className="absolute inset-0 bg-slate-50 flex items-center justify-center pointer-events-none group-hover:scale-105 transition-transform duration-700">
-                            <Image
-                                src={photos[currentIndex].url}
-                                alt=""
-                                fill
-                                sizes="50vw"
-                                className="w-full h-full object-cover"
-                            />
+                            {photos[currentIndex].url && (
+                                <Image
+                                    src={photos[currentIndex].url}
+                                    alt=""
+                                    fill
+                                    sizes="50vw"
+                                    className="w-full h-full object-cover"
+                                />
+                            )}
                         </div>
                         {/* Elegant Vignette Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />

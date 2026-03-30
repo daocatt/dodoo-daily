@@ -12,6 +12,16 @@ type StorageItem = {
   tags: string
 }
 
+const getItemPhotos = (imageUrl: string): string[] => {
+  if (!imageUrl) return []
+  try {
+    const parsed = JSON.parse(imageUrl)
+    return Array.isArray(parsed) ? parsed : [imageUrl]
+  } catch (_err) {
+    return [imageUrl]
+  }
+}
+
 export default function StorageWidget({ size }: { size: string, cellSize: number }) {
   const [items, setItems] = useState<StorageItem[]>([])
   const isWide = size === 'WIDE' || size === 'GIANT'
@@ -47,13 +57,15 @@ export default function StorageWidget({ size }: { size: string, cellSize: number
         ) : (
           items.map(item => (
             <div key={item.id} className="relative rounded-xl overflow-hidden hardware-well h-full border border-black/5 shadow-inner group">
-               <Image 
-                 src={item.imageUrl} 
-                 alt={item.name} 
-                 fill
-                 sizes="(max-width: 768px) 25vw, 15vw"
-                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-               />
+                {getItemPhotos(item.imageUrl)[0] && (
+                  <Image 
+                    src={getItemPhotos(item.imageUrl)[0]} 
+                    alt={item.name} 
+                    fill
+                    sizes="(max-width: 768px) 25vw, 15vw"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  />
+                )}
                <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-[4px] p-2 translate-y-full group-hover:translate-y-0 transition-transform flex items-center justify-center">
                  <p className="label-mono text-[8px] text-white font-black truncate tracking-wider">{item.name}</p>
                </div>
