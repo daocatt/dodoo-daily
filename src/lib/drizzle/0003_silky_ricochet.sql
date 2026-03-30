@@ -1,0 +1,1 @@
+ALTER TABLE `Journal` ADD `title` text;

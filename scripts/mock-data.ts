@@ -33,6 +33,9 @@ async function main() {
     for (const childRecord of childrenData) {
         let child = await db.select().from(schema.users).where(eq(schema.users.name, childRecord.name)).get();
         if (!child) {
+            child = await db.select().from(schema.users).where(eq(schema.users.nickname, childRecord.nickname)).get();
+        }
+        if (!child) {
             child = await db.insert(schema.users).values({
                 id: uuidv4(),
                 name: childRecord.name,
@@ -44,7 +47,7 @@ async function main() {
                 avatarUrl: childRecord.avatar,
                 permissionRole: 'USER',
                 pin: '1234',
-                birthDate: childRecord.birthDate
+                birthDate: childRecord.birthDate ? new Date(childRecord.birthDate) : null
             }).returning().get();
             
             // Create initial stats for children
@@ -64,13 +67,19 @@ async function main() {
     const visitorIds: string[] = [];
     const visitorNames = ['Alice Wang', 'Bob Chen'];
     for (let i = 0; i < 2; i++) {
-        const v = await db.insert(schema.visitor).values({
-            name: visitorNames[i],
-            password: '000000', // As requested
-            status: 'PENDING',  // Not loggable by default
-            currency: 100
-        }).returning().get();
-        visitorIds.push(v.id);
+        try {
+            const v = await db.insert(schema.visitor).values({
+                name: visitorNames[i],
+                password: '000000', // As requested
+                status: 'PENDING',  // Not loggable by default
+                currency: 100
+            }).returning().get();
+            visitorIds.push(v.id);
+        } catch (_e) {
+            // Probably already exists
+            const existingVisitor = await db.select().from(schema.visitor).where(eq(schema.visitor.name, visitorNames[i])).get();
+            if (existingVisitor) visitorIds.push(existingVisitor.id);
+        }
     }
 
     // 4. Mock Visitor Messages for Lucky
@@ -202,22 +211,27 @@ async function main() {
         });
     }
 
-    // 9. Mock 7 Journals
+    // 9. Mock Journals (Cleanup first)
+    console.log('Cleaning up Journal entries...');
+    await db.delete(schema.journal).execute();
+
     console.log('Generating 7 Journal Entries...');
     const journalEntries = [
-        "Today we had an amazing picnic in the park.",
-        "Started a new project at work. Feeling productive!",
-        "The kids did a great job at the school play tonight.",
-        "Watched a deep documentary about space exploration.",
-        "Sunday brunch with the neighbors was fun.",
-        "Finally finished reading that mystery novel.",
-        "Rainy afternoon. Spent it playing board games with family."
+        { title: "Family Picnic Day", text: "Today we had an amazing picnic in the park." },
+        { title: "Productivity Boost", text: "Started a new project at work. Feeling productive!" },
+        { title: "School Play Success", text: "The kids did a great job at the school play tonight." },
+        { title: "Cosmos Documentary", text: "Watched a deep documentary about space exploration." },
+        { title: "Neighborhood Brunch", text: "Sunday brunch with the neighbors was fun." },
+        { title: "Mystery Novel Finished", text: "Finally finished reading that mystery novel." },
+        { title: "Board Game Afternoon", text: "Rainy afternoon. Spent it playing board games with family." }
     ];
     for (let i = 0; i < 7; i++) {
         await db.insert(schema.journal).values({
             authorId: userId,
             authorRole: superadmin.role,
-            text: journalEntries[i],
+            title: journalEntries[i].title,
+            text: journalEntries[i].text,
+            isMilestone: false,
             createdAt: new Date(Date.now() - i * 86400000)
         });
     }
@@ -242,8 +256,10 @@ async function main() {
         await db.insert(schema.journal).values({
             authorId: userId,
             authorRole: superadmin.role,
-            text: `[MILESTONE] ${m.title}: ${m.desc}`,
+            title: m.title,
+            text: m.desc,
             isMilestone: true,
+            isTimeline: true, // Correct for timeline display
             milestoneDate: date,
             createdAt: date
         });

@@ -22,6 +22,7 @@ export async function GET(
             authorAvatar: users.avatarUrl,
             authorName: users.name,
             authorNickname: users.nickname,
+            title: journal.title,
             text: journal.text,
             imageUrl: journal.imageUrl,
             imageUrls: journal.imageUrls,
@@ -48,6 +49,7 @@ export async function GET(
 
         const entry = {
             ...rawEntry,
+            isMilestone: rawEntry.isMilestone === 1 || rawEntry.isMilestone === true || String(rawEntry.isMilestone) === '1' || String(rawEntry.isMilestone) === 'true',
             authorName: rawEntry.authorNickname || rawEntry.authorName,
             media: media || []
         }
@@ -65,7 +67,7 @@ export async function PATCH(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const { userId, role } = await getSessionUser()
 
         if (!userId) {
@@ -73,7 +75,7 @@ export async function PATCH(
         }
 
         const body = await req.json()
-        const { text, imageUrls, isMilestone, milestoneDate } = body
+        const { title, text, imageUrls, isMilestone, milestoneDate } = body
 
         // Check if journal exists and access control
         const existingJournal = await db.select().from(journal).where(eq(journal.id, id)).get()
@@ -89,6 +91,7 @@ export async function PATCH(
         db.transaction((tx) => {
             tx.update(journal)
                 .set({
+                    title: title !== undefined ? title : existingJournal.title,
                     text: text || existingJournal.text,
                     imageUrl: (imageUrls && imageUrls.length > 0) ? imageUrls[0] : existingJournal.imageUrl,
                     imageUrls: imageUrls ? JSON.stringify(imageUrls) : existingJournal.imageUrls,
@@ -125,6 +128,7 @@ export async function PATCH(
             authorAvatar: users.avatarUrl,
             authorName: users.name,
             authorNickname: users.nickname,
+            title: journal.title,
             text: journal.text,
             imageUrl: journal.imageUrl,
             imageUrls: journal.imageUrls,

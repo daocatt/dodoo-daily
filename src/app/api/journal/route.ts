@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
             authorAvatar: users.avatarUrl,
             authorName: users.name,
             authorNickname: users.nickname,
+            title: journal.title,
             text: journal.text,
             imageUrl: journal.imageUrl,
             imageUrls: journal.imageUrls,
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
 
         const entries = rawEntries.map(e => ({
             ...e,
+            isMilestone: e.isMilestone === 1 || e.isMilestone === true || String(e.isMilestone) === '1' || String(e.isMilestone) === 'true',
             authorName: e.authorNickname || e.authorName
         }))
 
@@ -75,9 +77,9 @@ export async function POST(req: NextRequest) {
         const currentUserRole = (currentUserRoleRaw as 'CHILD' | 'PARENT') || 'CHILD'
 
         const body = await req.json()
-        const { text, imageUrl, imageUrls, voiceUrl, isMilestone, milestoneDate } = body
+        const { title, text, imageUrl, imageUrls, voiceUrl, isMilestone, milestoneDate } = body
 
-        if (!text && !imageUrl && !imageUrls && !voiceUrl) {
+        if (!title && !text && !imageUrl && !imageUrls && !voiceUrl) {
             return NextResponse.json({ error: 'Journal must have content' }, { status: 400 })
         }
 
@@ -86,6 +88,7 @@ export async function POST(req: NextRequest) {
             const [newEntry] = tx.insert(journal).values({
                 authorId: currentUserId,
                 authorRole: currentUserRole,
+                title,
                 text,
                 imageUrl: imageUrl || (imageUrls && imageUrls.length > 0 ? imageUrls[0] : null),
                 imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,

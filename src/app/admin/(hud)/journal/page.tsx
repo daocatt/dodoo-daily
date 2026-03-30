@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import {
-    ChevronLeft, BookOpen, UserRound, Layers, History, Clock,
-    PlusCircle, Loader2, Star
+    ChevronLeft, BookOpen, Layers, History, Clock,
+    Plus, Loader2, Star, Calendar, User, ArrowRight,
+    Search, SlidersHorizontal, Image as ImageIcon
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -12,6 +13,9 @@ import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
 import Lightbox from '@/components/Lightbox'
 import TimelineView from '@/components/TimelineView'
+import clsx from 'clsx'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
+
 type JournalEntry = {
     id: string
     authorRole: 'CHILD' | 'PARENT'
@@ -27,7 +31,6 @@ type JournalEntry = {
     updatedAt: string
 }
 
-
 export default function JournalPage() {
     const { t } = useI18n()
     const router = useRouter()
@@ -37,7 +40,7 @@ export default function JournalPage() {
     const [activeTab, setActiveTab] = useState<'feed' | 'timeline'>('feed')
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(true)
-
+    const [search, setSearch] = useState('')
 
     // Lightbox State
     const [lightbox, setLightbox] = useState<{ images: string[], index: number } | null>(null)
@@ -51,7 +54,8 @@ export default function JournalPage() {
         else setLoading(true)
 
         try {
-            const res = await fetch(`/api/journal?page=${p}&limit=10`)
+            const searchParam = search ? `&search=${search}` : ''
+            const res = await fetch(`/api/journal?page=${p}&limit=10${searchParam}`)
             const data = await res.json()
             const newEntries = data.entries || []
 
@@ -77,190 +81,264 @@ export default function JournalPage() {
         }
     }
 
-
-    const regularEntries = entries.filter(e => !e.isMilestone)
-    const renderEntry = (entry: JournalEntry) => {
-        let entryImages: string[] = []
-        try {
-            if (entry.imageUrls) {
-                if (typeof entry.imageUrls === 'string' && entry.imageUrls.trim().startsWith('[')) {
-                    const parsed = JSON.parse(entry.imageUrls)
-                    entryImages = Array.isArray(parsed) ? parsed : (entry.imageUrl ? [entry.imageUrl] : [])
-                } else if (Array.isArray(entry.imageUrls)) {
-                    entryImages = entry.imageUrls
-                } else if (entry.imageUrl) {
-                    entryImages = [entry.imageUrl]
-                }
-            } else if (entry.imageUrl) {
-                entryImages = [entry.imageUrl]
-            }
-        } catch (e) {
-            console.error("Failed to parse journal images", e)
-            if (entry.imageUrl) entryImages = [entry.imageUrl]
-        }
-
-        return (
-            <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ y: -4 }}
-                className="break-inside-avoid mb-4 w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-all cursor-pointer group"
-                onClick={() => router.push(`/admin/journal/${entry.id}`)}
-            >
-                {/* Image Section - Large Thumbnail */}
-                {entryImages.length > 0 ? (
-                    <div className="relative aspect-square w-full overflow-hidden bg-slate-50">
-                        <Image
-                            src={entryImages[0]}
-                            alt=""
-                            width={400}
-                            height={400}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                        {entryImages.length > 1 && (
-                            <div className="absolute top-2 right-2 px-2 py-1 bg-black/30 backdrop-blur-md rounded-lg flex items-center gap-1">
-                                <Layers className="w-3 h-3 text-white" />
-                                <span className="text-[10px] font-black text-white">{entryImages.length}</span>
-                            </div>
-                        )}
-                        {entry.isMilestone && (
-                            <div className="absolute top-2 left-2 px-2 py-1 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg shadow-lg">
-                                <Star className="w-3 h-3 text-white fill-white" />
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="aspect-square w-full bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-6 text-center">
-                        <BookOpen className="w-12 h-12 text-orange-200/50" />
-                    </div>
-                )}
-
-                {/* Content Section */}
-                <div className="p-3 md:p-4 space-y-3">
-                    {/* Text Snippet */}
-                    <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
-                        {entry.text || t('journal.entry.preciousMoment')}
-                    </p>
-
-                    {/* Author Row */}
-                    <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-2 overflow-hidden">
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden border border-slate-100 flex-shrink-0">
-                                {entry.authorAvatar ? (
-                                    <Image src={entry.authorAvatar} width={24} height={24} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300">
-                                        <UserRound className="w-2.5 h-2.5" />
-                                    </div>
-                                )}
-                            </div>
-                            <span className="text-[10px] md:text-xs font-medium text-slate-400 truncate">
-                                {entry.authorName || 'User'}
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-1 text-slate-300 group-hover:text-rose-400 transition-colors">
-                            <Star className="w-3.5 h-3.5" />
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-        )
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault()
+        fetchJournal(1, true)
     }
 
+    const getEntryImages = (entry: JournalEntry): string[] => {
+        try {
+            if (entry.imageUrls) {
+                const parsed = typeof entry.imageUrls === 'string' ? JSON.parse(entry.imageUrls) : entry.imageUrls
+                return Array.isArray(parsed) ? parsed : (entry.imageUrl ? [entry.imageUrl] : [])
+            }
+            return entry.imageUrl ? [entry.imageUrl] : []
+        } catch {
+            return entry.imageUrl ? [entry.imageUrl] : []
+        }
+    }
+
+    const regularEntries = entries.filter(e => !e.isMilestone)
+
     return (
-        <div className="min-h-dvh flex flex-col relative overflow-hidden bg-orange-50/30 text-[#2c2416]">
-            {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-amber-100/30 via-orange-50/20 to-emerald-50/10 pointer-events-none" />
-
-            {/* Top Header */}
-            <header className="relative z-10 flex justify-between items-center px-6 py-4 md:px-10 md:py-6 backdrop-blur-sm bg-white/40 border-b border-orange-100/50 shadow-sm">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-sm text-orange-600 border border-orange-100 hover:bg-orange-50 transition-colors">
-                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-                    </Link>
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex w-10 h-10 bg-orange-500 rounded-2xl items-center justify-center shadow-md shadow-orange-500/30 text-white flex-shrink-0">
-                            <BookOpen className="w-5 h-5" />
+        <div className="min-h-screen bg-[#D1CDBC] relative flex flex-col font-sans selection:bg-rose-100 selection:text-rose-900">
+            <BausteinAdminNavbar 
+                actions={
+                    <Link href="/admin/journal/new" className="hardware-btn group">
+                        <div className="hardware-well h-12 w-44 rounded-xl bg-rose-500 shadow-well flex items-center justify-center relative overflow-hidden active:translate-y-0.5 transition-all">
+                            <div className="hardware-cap absolute inset-1 bg-rose-400 group-hover:bg-rose-500 rounded-lg shadow-cap flex items-center justify-center gap-3 transition-all border border-rose-300/30">
+                                <Plus className="w-4 h-4 text-white" />
+                                <span className="text-[10px] font-black text-white uppercase italic tracking-tighter leading-none">{t('journal.newPost')}</span>
+                            </div>
                         </div>
-                        <span className="font-extrabold text-xl md:text-2xl tracking-tight text-slate-800">
-                            {t('journal.title')}
-                        </span>
+                    </Link>
+                }
+            />
+
+            <main className="flex-1 flex flex-col items-center px-6 md:px-10 pt-6 pb-32 md:pt-10 max-w-7xl mx-auto w-full gap-8 md:gap-14 relative overflow-y-auto hide-scrollbar scroll-smooth">
+                
+                {/* Header HUD - Industrial Manifest */}
+                <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-8 px-2">
+                    <div className="flex flex-col gap-1 items-center lg:items-start">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 hardware-well rounded-xl bg-[#DADBD4] shadow-well flex items-center justify-center">
+                                <BookOpen className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <h1 className="text-2xl md:text-3xl font-black italic tracking-tighter uppercase text-slate-800 leading-none">
+                                {t('journal.title')}
+                            </h1>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+                        {/* VIEW MODE SWITCHER - Hardware Well */}
+                        <div className="hardware-well p-1 bg-[#DADBD4] rounded-2xl shadow-well flex gap-1 w-full sm:w-auto">
+                            <button
+                                onClick={() => setActiveTab('feed')}
+                                className={clsx(
+                                    "flex-1 sm:w-32 py-2.5 px-4 rounded-xl font-black text-[10px] uppercase tracking-tighter transition-all flex items-center justify-center gap-2 relative overflow-hidden",
+                                    activeTab === 'feed' ? "bg-white text-rose-500 shadow-cap" : "text-slate-400 hover:text-slate-500"
+                                )}
+                            >
+                                <History className="w-3.5 h-3.5" />
+                                <span>{t('journal.dailyPost')}</span>
+                                {activeTab === 'feed' && <motion.div layoutId="tab-active" className="absolute bottom-1 w-4 h-0.5 bg-rose-400 rounded-full" />}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('timeline')}
+                                className={clsx(
+                                    "flex-1 sm:w-32 py-2.5 px-4 rounded-xl font-black text-[10px] uppercase tracking-tighter transition-all flex items-center justify-center gap-2 relative overflow-hidden",
+                                    activeTab === 'timeline' ? "bg-white text-rose-500 shadow-cap" : "text-slate-400 hover:text-slate-500"
+                                )}
+                            >
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>{t('parent.timeline')}</span>
+                                {activeTab === 'timeline' && <motion.div layoutId="tab-active" className="absolute bottom-1 w-4 h-0.5 bg-rose-400 rounded-full" />}
+                            </button>
+                        </div>
+
+                        {/* Search Chassis */}
+                        <form onSubmit={handleSearch} className="hardware-well p-1 bg-[#DADBD4] rounded-2xl shadow-well flex-1 lg:w-72">
+                            <div className="bg-white/80 rounded-xl px-4 flex items-center gap-3 border border-black/5 h-11 focus-within:bg-white transition-all ring-inset focus-within:ring-2 focus-within:ring-rose-500/20">
+                                <Search className="w-4 h-4 text-slate-300" />
+                                <input 
+                                    type="text" 
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    placeholder="SCANNING LOG ENTRIES..." 
+                                    className="bg-transparent border-none outline-none text-[11px] font-black uppercase text-slate-700 italic tracking-tight w-full placeholder:text-slate-300"
+                                />
+                            </div>
+                        </form>
                     </div>
                 </div>
 
-                <Link
-                    href="/admin/journal/new"
-                    className="flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl bg-orange-500 hover:bg-orange-600 transition-colors text-sm md:text-base font-bold text-white shadow-md active:scale-95"
-                >
-                    <PlusCircle className="w-4 h-4 md:w-5 md:h-5" />
-                    <span className="hidden md:inline">{t('journal.newPost')}</span>
-                </Link>
-            </header>
-
-            {/* Main Content Area */}
-            <main className="relative z-10 flex-1 w-full max-w-5xl mx-auto flex flex-col gap-6 px-4 md:px-6 pt-6 pb-24 overflow-y-auto hide-scrollbar">
-
-                {/* View Selector Tabs */}
-                <div className="flex justify-center mb-4">
-                    <div className="flex p-1 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-white max-w-md w-full">
-                        <button
-                            onClick={() => setActiveTab('feed')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-xs transition-all ${activeTab === 'feed' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            <History className="w-4 h-4" /> {t('journal.dailyPost')}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('timeline')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-black text-xs transition-all ${activeTab === 'timeline' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-400 hover:text-slate-600'}`}
-                        >
-                            <Clock className="w-4 h-4" /> {t('parent.timeline')}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Feed Content */}
+                {/* CONTENT ENGINE */}
                 <div className="w-full">
                     {activeTab === 'feed' ? (
-                        <div className="w-full">
+                        <div className="w-full flex flex-col gap-12">
                             {loading && entries.length === 0 ? (
-                                <div className="text-center font-bold text-orange-400 py-20 animate-pulse">{t('journal.loading')}</div>
-                            ) : regularEntries.length === 0 && !hasMore ? (
-                                <div className="text-center py-20 px-10 bg-white/40 rounded-xl border-2 border-dashed border-white flex flex-col items-center gap-6 max-w-2xl mx-auto">
-                                    <Layers className="w-16 h-16 text-slate-300" />
-                                    <p className="text-slate-500 font-bold">{t('journal.empty')}</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {[1, 2, 3, 4, 5, 6].map(i => (
+                                        <div key={i} className="hardware-well h-64 rounded-3xl bg-[#DADBD4] animate-pulse opacity-40 shadow-well" />
+                                    ))}
+                                </div>
+                            ) : entries.length === 0 && !hasMore ? (
+                                <div className="w-full baustein-panel bg-[#E2DFD2] rounded-[2.5rem] p-16 md:p-32 flex flex-col items-center justify-center text-center gap-8 border-4 border-[#C8C4B0] shadow-2xl">
+                                    <div className="hardware-well w-24 h-24 rounded-full flex items-center justify-center bg-[#D1CDBC] mb-2 shadow-well relative overflow-hidden">
+                                        <div className="hardware-cap absolute inset-2 bg-slate-100 rounded-full flex items-center justify-center shadow-cap border border-black/5">
+                                            <History className="w-10 h-10 text-slate-300 opacity-60" />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-3">
+                                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">{t('journal.empty')}</h3>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest max-w-xs">{t('journal.loading')}</p>
+                                    </div>
+                                    <Link href="/admin/journal/new" className="hardware-btn group">
+                                         <div className="hardware-well h-12 w-48 rounded-xl bg-orange-500 shadow-well flex items-center justify-center relative active:translate-y-0.5 transition-all">
+                                            <div className="hardware-cap absolute inset-1 bg-white group-hover:bg-orange-50 rounded-lg shadow-cap flex items-center justify-center gap-3 border border-black/5">
+                                                <Plus className="w-4 h-4 text-orange-500" />
+                                                <span className="text-[10px] font-black text-orange-500 uppercase italic tracking-tighter">CREATE_FIRST_LOG</span>
+                                            </div>
+                                        </div>
+                                    </Link>
                                 </div>
                             ) : (
-                                <>
-                                    <div className="columns-2 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 md:gap-6 space-y-4 md:space-y-6">
-                                        {regularEntries.map(entry => renderEntry(entry))}
-                                    </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 px-2 pb-10">
+                                    {entries.map((entry, idx) => {
+                                        const images = getEntryImages(entry)
+                                        return (
+                                            <motion.div
+                                                key={entry.id}
+                                                initial={{ opacity: 0, y: 30 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.05, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                                                onClick={() => router.push(`/admin/journal/${entry.id}`)}
+                                                className="group cursor-pointer h-full"
+                                            >
+                                                {/* Entry Chassis - Panel Style */}
+                                                <div className="baustein-panel bg-white p-3 rounded-3xl border border-black/5 shadow-lg group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500 flex flex-col gap-4 relative overflow-hidden ring-1 ring-black/5 h-full">
+                                                    {/* Media Sector */}
+                                                    <div className="relative aspect-[3/2] rounded-2xl overflow-hidden hardware-well bg-slate-50 border border-black/5 shadow-inner">
+                                                        {images.length > 0 ? (
+                                                            <Image
+                                                                src={images[0]}
+                                                                alt=""
+                                                                fill
+                                                                className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                                            />
+                                                        ) : (
+                                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-slate-50 to-rose-50/20">
+                                                                <BookOpen className="w-10 h-10 text-slate-200" />
+                                                                <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest label-mono italic opacity-60">NO_VISUAL_LOG</span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* Status Indicators */}
+                                                        <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+                                                            {!!entry.isMilestone && (
+                                                                <div className="hardware-well p-0.5 rounded-lg bg-orange-500 shadow-md">
+                                                                    <div className="hardware-cap px-2 py-1 bg-amber-400 rounded-md shadow-cap border border-amber-300 flex items-center gap-1.5 min-w-[70px]">
+                                                                        <Star className="w-2.5 h-2.5 text-white fill-white shadow-sm" />
+                                                                        <span className="text-[8px] font-black text-white uppercase italic tracking-tighter leading-none">MILESTONE</span>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {images.length > 1 && (
+                                                                <div className="ml-auto px-2 py-1 bg-black/40 backdrop-blur-md rounded-lg flex items-center gap-1.5 border border-white/10 shadow-lg">
+                                                                    <ImageIcon className="w-2.5 h-2.5 text-white/70" />
+                                                                    <span className="text-[9px] font-black text-white/90 label-mono">0{images.length}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
 
-                                    {hasMore && (
-                                        <button
-                                            onClick={loadMore}
-                                            disabled={loadingMore}
-                                            className="w-full max-w-xs mx-auto py-4 rounded-2xl bg-white border border-orange-100 text-orange-500 font-black text-sm uppercase tracking-widest hover:bg-orange-50 transition-all flex items-center justify-center gap-3 disabled:opacity-50 mt-12 shadow-sm"
-                                        >
-                                            {loadingMore ? (
-                                                <>
-                                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                                     {t('common.loading')}
-                                                </>
-                                            ) : (
-                                                t('journal.exploreMore')
-                                            )}
-                                        </button>
-                                    )}
-                                </>
+                                                    {/* Data Sector */}
+                                                    <div className="flex flex-col gap-3 px-1 pb-1">
+                                                        <div className="flex flex-col gap-1.5 min-h-[3rem]">
+                                                            {entry.title ? (
+                                                                <h3 className="text-base font-black text-slate-800 leading-none uppercase italic tracking-tighter truncate">
+                                                                    {entry.title}
+                                                                </h3>
+                                                            ) : null}
+                                                            <p className={clsx(
+                                                                "text-sm font-medium text-slate-600 line-clamp-2 leading-snug italic",
+                                                                !entry.title && "text-slate-800 font-black uppercase tracking-tighter label-mono"
+                                                            )}>
+                                                                {entry.text || t('journal.entry.preciousMoment')}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="h-px bg-black/5 w-full" />
+
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <div className="w-8 h-8 hardware-well rounded-xl bg-[#DADBD4] shadow-well flex items-center justify-center relative overflow-hidden flex-shrink-0">
+                                                                    {entry.authorAvatar ? (
+                                                                        <Image src={entry.authorAvatar} fill alt="" className="object-cover" />
+                                                                    ) : (
+                                                                        <User className="w-3.5 h-3.5 text-slate-300" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[9px] font-black text-slate-800 uppercase tracking-tight leading-none italic">{entry.authorName || 'OPERATOR'}</span>
+                                                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1 opacity-60 flex items-center gap-1">
+                                                                        <Calendar className="w-2 h-2" />
+                                                                        {new Date(entry.createdAt).toLocaleDateString()}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="hardware-well w-7 h-7 rounded-lg bg-[#DADBD4] shadow-well flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all active:translate-y-0.5">
+                                                                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+
+                            {hasMore && (
+                                <div className="flex justify-center mt-8 pb-10">
+                                    <button
+                                        onClick={loadMore}
+                                        disabled={loadingMore}
+                                        className="hardware-btn group"
+                                    >
+                                        <div className="hardware-well h-12 w-56 rounded-xl bg-[#DADBD4] shadow-well flex items-center justify-center relative overflow-hidden active:translate-y-0.5 transition-all">
+                                            <div className="hardware-cap absolute inset-1 bg-white group-hover:bg-slate-50 rounded-lg shadow-cap flex items-center justify-center gap-3 border border-black/5 transition-all">
+                                                {loadingMore ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                                                ) : (
+                                                    <div className="flex items-center justify-center gap-3">
+                                                        <History className="w-4 h-4 text-slate-300" />
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase italic tracking-tighter">{t('journal.exploreMore')}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
                             )}
                         </div>
                     ) : (
-                        <TimelineView
-                            entries={entries}
-                            onImageClick={(imgs, idx) => setLightbox({ images: imgs, index: idx })}
-                            onEntryClick={(id) => router.push(`/admin/journal/${id}`)}
-                        />
+                        <div className="w-full baustein-panel bg-[#E2DFD2] rounded-[2.5rem] p-6 md:p-8 border-4 border-[#C8C4B0] shadow-inner mb-20 relative overflow-hidden min-h-[600px]">
+                            {/* Decorative Grid Lines */}
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#000_1px,transparent_0)] bg-[size:40px_40px] opacity-[0.03]" />
+                            
+                            <div className="relative z-10">
+                                <TimelineView
+                                    entries={entries}
+                                    onImageClick={(imgs, idx) => setLightbox({ images: imgs, index: idx })}
+                                    onEntryClick={(id) => router.push(`/admin/journal/${id}`)}
+                                />
+                            </div>
+                        </div>
                     )}
                 </div>
             </main>

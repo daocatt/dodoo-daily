@@ -238,6 +238,7 @@ export const journal = sqliteTable("Journal", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     authorId: text("authorId").references(() => users.id),
     authorRole: text("authorRole").notNull(),
+    title: text("title"),
     text: text("text"),
     imageUrl: text("imageUrl"), // Still used for backward compatibility/thumbnail
     imageUrls: text("imageUrls"), // Still used as a JSON cache

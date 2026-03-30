@@ -67,13 +67,15 @@ export default function Lightbox({ images, initialIndex, onClose }: LightboxProp
                             className="relative w-full h-full pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <Image
-                                src={images[index]}
-                                alt=""
-                                fill
-                                className="object-contain"
-                                priority
-                            />
+                            {images[index] ? (
+                                <Image
+                                    src={images[index]}
+                                    alt=""
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                            ) : null}
                         </motion.div>
                     </AnimatePresence>
                 </div>
@@ -85,7 +87,7 @@ export default function Lightbox({ images, initialIndex, onClose }: LightboxProp
                             onClick={(e) => { e.stopPropagation(); setIndex(i); }}
                             className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all shrink-0 relative ${i === index ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-100'}`}
                         >
-                            <Image src={img} alt="" fill className="object-cover" />
+                            {img ? <Image src={img} alt="" fill className="object-cover" /> : null}
                         </button>
                     ))}
                 </div>
