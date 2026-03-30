@@ -481,6 +481,14 @@ export const storageTransfers = sqliteTable("storageTransfers", {
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
+export const storageCategory = sqliteTable("storageCategory", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    emoji: text("emoji"),
+    creatorId: text("creatorId").references(() => users.id),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
+});
+
 // -----------------------------------------------------------------------------
 // AUDIT & LOGGING SYSTEM
 // -----------------------------------------------------------------------------

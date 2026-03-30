@@ -15,6 +15,13 @@
       "when": 1774719482617,
       "tag": "0001_slim_venus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774861752169,
+      "tag": "0002_simple_eternals",
+      "breakpoints": true
     }
   ]
 }
