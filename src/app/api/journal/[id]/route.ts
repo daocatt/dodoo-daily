@@ -49,7 +49,9 @@ export async function GET(
 
         const entry = {
             ...rawEntry,
-            isMilestone: rawEntry.isMilestone === 1 || rawEntry.isMilestone === true || String(rawEntry.isMilestone) === '1' || String(rawEntry.isMilestone) === 'true',
+            isMilestone: !!rawEntry.isMilestone,
+            isPublic: !!rawEntry.isPublic,
+            isDeleted: !!rawEntry.isDeleted,
             authorName: rawEntry.authorNickname || rawEntry.authorName,
             media: media || []
         }
@@ -75,7 +77,7 @@ export async function PATCH(
         }
 
         const body = await req.json()
-        const { title, text, imageUrls, isMilestone, milestoneDate } = body
+        const { title, text, imageUrls, isMilestone, milestoneDate, isPublic, isDeleted } = body
 
         // Check if journal exists and access control
         const existingJournal = await db.select().from(journal).where(eq(journal.id, id)).get()
@@ -96,6 +98,8 @@ export async function PATCH(
                     imageUrl: (imageUrls && imageUrls.length > 0) ? imageUrls[0] : existingJournal.imageUrl,
                     imageUrls: imageUrls ? JSON.stringify(imageUrls) : existingJournal.imageUrls,
                     isMilestone: isMilestone !== undefined ? !!isMilestone : existingJournal.isMilestone,
+                    isPublic: isPublic !== undefined ? !!isPublic : existingJournal.isPublic,
+                    isDeleted: isDeleted !== undefined ? !!isDeleted : existingJournal.isDeleted,
                     milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : existingJournal.milestoneDate,
                     updatedAt: new Date()
                 })
@@ -134,6 +138,8 @@ export async function PATCH(
             imageUrls: journal.imageUrls,
             voiceUrl: journal.voiceUrl,
             isMilestone: journal.isMilestone,
+            isPublic: journal.isPublic,
+            isDeleted: journal.isDeleted,
             milestoneDate: journal.milestoneDate,
             createdAt: journal.createdAt,
             updatedAt: journal.updatedAt
@@ -150,6 +156,9 @@ export async function PATCH(
 
         const finalEntry = {
             ...rawEntryAfterUpdate,
+            isMilestone: !!rawEntryAfterUpdate?.isMilestone,
+            isPublic: !!rawEntryAfterUpdate?.isPublic,
+            isDeleted: !!rawEntryAfterUpdate?.isDeleted,
             authorName: rawEntryAfterUpdate?.authorNickname || rawEntryAfterUpdate?.authorName,
             media: updatedMedia || []
         }
@@ -161,3 +170,37 @@ export async function PATCH(
     }
 }
 
+export async function DELETE(
+    req: NextRequest,
+    { params: _params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await _params
+        const session = await getSessionUser()
+        if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const { userId, role } = session
+
+        const { searchParams } = new URL(req.url)
+        const permanent = searchParams.get('permanent') === 'true'
+
+        // Check if journal exists
+        const existingJournal = await db.select().from(journal).where(eq(journal.id, id)).get()
+        if (!existingJournal) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+        // Permissions
+        if (existingJournal.authorId !== userId && role !== 'PARENT') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+        }
+
+        if (permanent) {
+            await db.delete(journal).where(eq(journal.id, id)).run()
+        } else {
+            await db.update(journal).set({ isDeleted: true }).where(eq(journal.id, id)).run()
+        }
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('Failed to delete journal:', error)
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
+}

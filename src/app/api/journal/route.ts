@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { journal, users, journalMedia } from '@/lib/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, and, count, inArray } from 'drizzle-orm'
 import { getSessionUser } from '@/lib/auth'
-import { count } from 'drizzle-orm'
 import { notifyParents } from '@/lib/push'
 
 export async function GET(req: NextRequest) {
@@ -17,6 +16,20 @@ export async function GET(req: NextRequest) {
         const offset = (page - 1) * limit
 
         const isMilestoneFilter = searchParams.get('isMilestone') === 'true'
+        const isDeletedFilter = searchParams.get('isDeleted') === 'true'
+        const excludeMilestones = searchParams.get('excludeMilestones') === 'true'
+
+        const conditions = []
+        if (isDeletedFilter) {
+            conditions.push(eq(journal.isDeleted, true))
+        } else {
+            conditions.push(eq(journal.isDeleted, false))
+            if (isMilestoneFilter) {
+                conditions.push(eq(journal.isMilestone, true))
+            } else if (excludeMilestones) {
+                conditions.push(eq(journal.isMilestone, false))
+            }
+        }
 
         const baseQuery = db.select({
             id: journal.id,
@@ -31,31 +44,63 @@ export async function GET(req: NextRequest) {
             imageUrls: journal.imageUrls,
             voiceUrl: journal.voiceUrl,
             isMilestone: journal.isMilestone,
+            isPublic: journal.isPublic,
+            isDeleted: journal.isDeleted,
             milestoneDate: journal.milestoneDate,
             createdAt: journal.createdAt,
             updatedAt: journal.updatedAt
         })
             .from(journal)
             .leftJoin(users, eq(journal.authorId, users.id))
-
-        if (isMilestoneFilter) {
-            baseQuery.where(eq(journal.isMilestone, true))
-        } else if (searchParams.get('excludeMilestones') === 'true') {
-            baseQuery.where(eq(journal.isMilestone, false))
-        }
+            .where(and(...conditions))
 
         const rawEntries = await baseQuery
             .orderBy(desc(journal.milestoneDate), desc(journal.createdAt))
             .limit(limit)
             .offset(offset)
 
-        const entries = rawEntries.map(e => ({
-            ...e,
-            isMilestone: e.isMilestone === 1 || e.isMilestone === true || String(e.isMilestone) === '1' || String(e.isMilestone) === 'true',
-            authorName: e.authorNickname || e.authorName
-        }))
+        // Aggregated Media Retrieval
+        const entryIds = rawEntries.map(e => e.id)
+        let allMedia: (typeof journalMedia.$inferSelect)[] = []
+        if (entryIds.length > 0) {
+            allMedia = await db.select()
+                .from(journalMedia)
+                .where(inArray(journalMedia.journalId, entryIds))
+        }
 
-        const [totalCount] = await db.select({ value: count() }).from(journal)
+        const entries = rawEntries.map(e => {
+            // Find all images in journalMedia table
+            const mediaLinks = allMedia
+                .filter(m => m.journalId === e.id && m.type === 'IMAGE')
+                .map(m => m.url)
+            
+            // Merge with existing imageUrls JSON if any
+            let finalImageUrls = [...mediaLinks]
+            if (e.imageUrls) {
+                try {
+                    const parsed = typeof e.imageUrls === 'string' ? JSON.parse(e.imageUrls) : e.imageUrls
+                    if (Array.isArray(parsed)) {
+                        finalImageUrls = [...new Set([...finalImageUrls, ...parsed])]
+                    }
+                } catch {}
+            }
+            if (e.imageUrl && !finalImageUrls.includes(e.imageUrl)) {
+                finalImageUrls.push(e.imageUrl)
+            }
+
+            return {
+                ...e,
+                imageUrls: JSON.stringify(finalImageUrls),
+                isMilestone: !!e.isMilestone,
+                isPublic: !!e.isPublic,
+                isDeleted: !!e.isDeleted,
+                authorName: e.authorNickname || e.authorName
+            }
+        })
+
+        const [totalCount] = await db.select({ value: count() })
+            .from(journal)
+            .where(isDeletedFilter ? eq(journal.isDeleted, true) : eq(journal.isDeleted, false))
 
         return NextResponse.json({
             entries,
@@ -77,7 +122,7 @@ export async function POST(req: NextRequest) {
         const currentUserRole = (currentUserRoleRaw as 'CHILD' | 'PARENT') || 'CHILD'
 
         const body = await req.json()
-        const { title, text, imageUrl, imageUrls, voiceUrl, isMilestone, milestoneDate } = body
+        const { title, text, imageUrl, imageUrls, voiceUrl, isMilestone, milestoneDate, isPublic } = body
 
         if (!title && !text && !imageUrl && !imageUrls && !voiceUrl) {
             return NextResponse.json({ error: 'Journal must have content' }, { status: 400 })
@@ -94,6 +139,8 @@ export async function POST(req: NextRequest) {
                 imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,
                 voiceUrl: voiceUrl || null,
                 isMilestone: !!isMilestone,
+                isPublic: !!isPublic,
+                isDeleted: false,
                 milestoneDate: milestoneDate ? new Date(Number(milestoneDate)) : new Date()
             }).returning().all()
 

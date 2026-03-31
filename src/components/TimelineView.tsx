@@ -17,6 +17,7 @@ interface TimelineEntry {
     authorAvatar: string | null
     authorName: string | null
     createdAt: string | Date
+    title?: string | null
 }
 
 interface TimelineViewProps {
@@ -51,9 +52,17 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
 
     if (yearGroups.length === 0) {
         return (
-            <div className="text-center py-20 px-10 bg-white/40 rounded-xl border-2 border-dashed border-white flex flex-col items-center gap-6 max-w-lg mx-auto">
-                <Star className="w-16 h-16 text-slate-200" />
-                <p className="text-slate-400 font-bold">{t('milestones.empty')}</p>
+            <div className="w-full flex justify-center py-20">
+                <div className="baustein-panel bg-[#E2DFD2] rounded-[2.5rem] p-16 md:p-24 flex flex-col items-center justify-center text-center gap-8 border-4 border-[#C8C4B0] shadow-2xl max-w-xl w-full">
+                    <div className="hardware-well w-24 h-24 rounded-full flex items-center justify-center bg-[#D1CDBC] mb-2 shadow-well relative overflow-hidden">
+                        <div className="hardware-cap absolute inset-2 bg-slate-100 rounded-full flex items-center justify-center shadow-cap border border-black/5">
+                            <Star className="w-10 h-10 text-slate-300 opacity-60" />
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <h3 className="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">{t('milestones.empty')}</h3>
+                    </div>
+                </div>
             </div>
         )
     }
@@ -134,7 +143,7 @@ export default function TimelineView({ entries, onImageClick, onEntryClick }: Ti
                                                     </div>
 
                                                     <h4 className="text-base font-black text-slate-800 line-clamp-2 group-hover:text-orange-600 transition-colors leading-snug">
-                                                        {entry.text || t('journal.entry.preciousMoment')}
+                                                        {entry.title || entry.text || t('journal.entry.preciousMoment')}
                                                     </h4>
 
                                                     {entry.text && entry.text.length > 50 && (

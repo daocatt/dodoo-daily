@@ -211,29 +211,44 @@ async function main() {
         });
     }
 
-    // 9. Mock Journals (Cleanup first)
     console.log('Cleaning up Journal entries...');
+    await db.delete(schema.journalMedia).execute();
     await db.delete(schema.journal).execute();
 
-    console.log('Generating 7 Journal Entries...');
     const journalEntries = [
-        { title: "Family Picnic Day", text: "Today we had an amazing picnic in the park." },
-        { title: "Productivity Boost", text: "Started a new project at work. Feeling productive!" },
-        { title: "School Play Success", text: "The kids did a great job at the school play tonight." },
-        { title: "Cosmos Documentary", text: "Watched a deep documentary about space exploration." },
-        { title: "Neighborhood Brunch", text: "Sunday brunch with the neighbors was fun." },
-        { title: "Mystery Novel Finished", text: "Finally finished reading that mystery novel." },
-        { title: "Board Game Afternoon", text: "Rainy afternoon. Spent it playing board games with family." }
+        { title: "Family Picnic Day", text: "Today we had an amazing picnic in the park.", isPublic: true },
+        { title: "Productivity Boost", text: "Started a new project at work. Feeling productive!", isPublic: false },
+        { title: "School Play Success", text: "The kids did a great job at the school play tonight.", isPublic: true },
+        { title: "Cosmos Documentary", text: "Watched a deep documentary about space exploration.", isPublic: false },
+        { title: "Neighborhood Brunch", text: "Sunday brunch with the neighbors was fun.", isPublic: true },
+        { title: "Mystery Novel Finished", text: "Finally finished reading that mystery novel.", isPublic: false },
+        { title: "Board Game Afternoon", text: "Rainy afternoon. Spent it playing board games with family.", isPublic: true },
+        { title: "Morning Exercise", text: "A fresh start to the day with yoga.", isPublic: false },
+        { title: "Cooking Experiment", text: "Tried a new pasta recipe. It was delicious!", isPublic: true },
+        { title: "Foggy Seaside Walk", text: "A quiet morning by the coast. Feeling calm.", isPublic: false, isDeleted: true }
     ];
-    for (let i = 0; i < 7; i++) {
-        await db.insert(schema.journal).values({
+    for (let i = 0; i < journalEntries.length; i++) {
+        const entry = journalEntries[i];
+        const [inserted] = await db.insert(schema.journal).values({
             authorId: userId,
             authorRole: superadmin.role,
-            title: journalEntries[i].title,
-            text: journalEntries[i].text,
+            title: entry.title,
+            text: entry.text,
             isMilestone: false,
+            isPublic: !!entry.isPublic,
+            isDeleted: !!entry.isDeleted,
             createdAt: new Date(Date.now() - i * 86400000)
-        });
+        }).returning().all();
+
+        // Add dummy images to journalMedia
+        if (i % 2 === 0) {
+            await db.insert(schema.journalMedia).values({
+                journalId: inserted.id,
+                type: 'IMAGE',
+                url: `https://picsum.photos/seed/journal${i}/800/600`,
+                sortOrder: 0
+            });
+        }
     }
 
     // 10. Mock Milestone Timeline (Birth to University) - 18 years span
@@ -251,17 +266,27 @@ async function main() {
         { title: "University Entry", date: "2026-09-01", desc: "Opening a new chapter! Moving to campus life." }
     ];
 
-    for (const m of milestones) {
+    for (let i = 0; i < milestones.length; i++) {
+        const m = milestones[i];
         const date = new Date(m.date);
-        await db.insert(schema.journal).values({
+        const [inserted] = await db.insert(schema.journal).values({
             authorId: userId,
             authorRole: superadmin.role,
             title: m.title,
             text: m.desc,
             isMilestone: true,
-            isTimeline: true, // Correct for timeline display
+            isTimeline: true,
+            isPublic: i % 2 === 0, // 50% public milestones
             milestoneDate: date,
             createdAt: date
+        }).returning().all();
+
+        // Add milestone image
+        await db.insert(schema.journalMedia).values({
+            journalId: inserted.id,
+            type: 'IMAGE',
+            url: `https://picsum.photos/seed/milestone${i}/1200/800`,
+            sortOrder: 0
         });
     }
 

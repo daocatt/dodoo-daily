@@ -244,9 +244,22 @@ export const journal = sqliteTable("Journal", {
     imageUrls: text("imageUrls"), // Still used as a JSON cache
     voiceUrl: text("voiceUrl"),
     isMilestone: integer("isMilestone", { mode: "boolean" }).default(false).notNull(),
+    isPublic: integer("isPublic", { mode: "boolean" }).default(false),
+    isDeleted: integer("isDeleted", { mode: "boolean" }).default(false),
     milestoneDate: integer("milestoneDate", { mode: "timestamp_ms" }),
     createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+});
+
+export const journalComment = sqliteTable("JournalComment", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    journalId: text("journalId").notNull().references(() => journal.id, { onDelete: "cascade" }),
+    visitorId: text("visitorId").references(() => visitor.id),
+    memberId: text("memberId").references(() => users.id),
+    authorName: text("authorName"), // Cached name for quick display
+    text: text("text").notNull(),
+    isApproved: integer("isApproved", { mode: "boolean" }).default(true).notNull(),
+    createdAt: integer("createdAt", { mode: "timestamp_ms" }).default(sql`(unixepoch() * 1000)`),
 });
 
 export const journalMedia = sqliteTable("JournalMedia", {

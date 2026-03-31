@@ -12,7 +12,11 @@ import { zhCN, enUS } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
-import { clsx } from 'clsx'
+import { clsx, type ClassValue } from 'clsx'
+
+function cn(...inputs: ClassValue[]) {
+    return inputs.filter(Boolean).join(' ')
+}
 
 interface SmartDatePickerProps {
     selected?: Date | null
@@ -24,6 +28,7 @@ interface SmartDatePickerProps {
     placeholder?: string
     triggerClassName?: string
     mode?: 'inline' | 'popover'
+    hideIcon?: boolean
 }
 
 // Get all the cells for a calendar month view (always 6 weeks = 42 days)
@@ -48,7 +53,8 @@ export default function SmartDatePicker({
     className,
     placeholder,
     triggerClassName,
-    mode = 'popover'
+    mode = 'popover',
+    hideIcon = false
 }: SmartDatePickerProps) {
     const { locale, t } = useI18n()
     const isValidDate = (d: unknown) => d instanceof Date && !isNaN((d as Date).getTime())
@@ -97,17 +103,21 @@ export default function SmartDatePicker({
             const clampedRight = Math.max(8, Math.min(right, window.innerWidth - CALENDAR_WIDTH - 8))
 
             if (shouldOpenUpward) {
+                const targetBottom = window.innerHeight - rect.top + 12
+                const clampedBottom = Math.max(8, Math.min(targetBottom, window.innerHeight - 8 - CALENDAR_HEIGHT))
                 setPopoverStyle({
                     position: 'fixed',
-                    bottom: window.innerHeight - rect.top + 12,
+                    bottom: clampedBottom,
                     right: clampedRight,
                     width: CALENDAR_WIDTH,
                     zIndex: 9999,
                 })
             } else {
+                const targetTop = rect.bottom + 12
+                const clampedTop = Math.max(8, Math.min(targetTop, window.innerHeight - 8 - CALENDAR_HEIGHT))
                 setPopoverStyle({
                     position: 'fixed',
-                    top: rect.bottom + 12,
+                    top: clampedTop,
                     right: clampedRight,
                     width: CALENDAR_WIDTH,
                     zIndex: 9999,
@@ -369,7 +379,7 @@ export default function SmartDatePicker({
             <div
                 ref={triggerRef}
                 onClick={handleToggle}
-                className={clsx(
+                className={cn(
                     'w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-5 py-3.5 font-bold text-slate-800 hover:bg-white hover:border-slate-100 transition-all cursor-pointer flex items-center justify-between',
                     isOpen && 'bg-white border-indigo-100',
                     triggerClassName
@@ -380,7 +390,7 @@ export default function SmartDatePicker({
                         ? format(selected, showTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd')
                         : (placeholder || t('tasks.form.selectDate'))}
                 </span>
-                <CalendarIcon className={clsx('w-4 h-4', selected ? 'text-indigo-400' : 'text-slate-400')} />
+                {!hideIcon && <CalendarIcon className={cn('w-4 h-4', selected ? 'text-indigo-400' : 'text-slate-400')} />}
             </div>
 
             {/* Portal Popover — rendered at body level to escape overflow:hidden */}
