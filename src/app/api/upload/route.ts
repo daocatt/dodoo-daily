@@ -36,16 +36,20 @@ export async function POST(req: NextRequest) {
 
             const isApproved = role === 'PARENT' || !isPublic; // Parents are auto-approved, or if not public
 
+            const normalizedAlbumId = albumId === 'archive' ? null : (albumId || null);
+            const isArchived = albumId === 'archive';
+
             const insertResult = await db.insert(artwork).values({
                 userId: ownerId,
                 title: artworkTitle,
                 imageUrl: mediaItem.path,
                 priceRMB,
                 priceCoins,
-                albumId: albumId || null,
+                albumId: normalizedAlbumId,
                 isPublic,
                 isFeatured,
                 isApproved,
+                isArchived,
                 exhibitionDescription,
             }).returning()
 

@@ -47,6 +47,7 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                 quality: 1,
                 pixelRatio: 2,
                 cacheBust: true,
+                fontEmbedCSS: '', // Preventing the 'font is undefined' crash on some browsers
             })
             setPosterImageUrl(dataUrl)
         } catch (_error) {
@@ -102,7 +103,12 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                                 {/* Poster template — compact, no scroll */}
                                 <div
                                     ref={posterRef}
-                                    className="rounded-2xl overflow-hidden border border-[#e8dfce] bg-white shrink-0"
+                                    className="rounded-2xl overflow-hidden border border-[#e8dfce] bg-white shrink-0 antialiased"
+                                    style={{ 
+                                        font: "normal normal 900 14px 'Inter', system-ui, sans-serif",
+                                        fontFamily: "'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif",
+                                        fontWeight: 900
+                                    }}
                                 >
                                     {/* Top bar */}
                                     <div className="flex items-center justify-between px-4 py-3">
@@ -130,17 +136,17 @@ export default function PosterGenerator({ artwork, onClose }: PosterProps) {
                                     </div>
 
                                     {/* Bottom: price + QR */}
-                                    <div className="mx-4 mb-4 mt-2 flex items-center justify-between bg-[#f5f0e8] px-4 py-3 rounded-xl">
-                                        <div>
+                                    <div className="mx-4 mb-4 mt-2 flex items-center justify-between gap-2 bg-[#f5f0e8] px-4 py-3 rounded-xl">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-[9px] font-black text-[#a89880] uppercase tracking-wider mb-0.5">{t('poster.priceLabel')}</p>
-                                            <p className="text-lg font-black text-purple-600">
+                                            <p className="text-lg font-black text-purple-600 whitespace-nowrap">
                                                 {artwork.priceCoins} <span className="text-xs font-bold">{t('hud.coins')}</span>
                                             </p>
                                             {artwork.priceRMB > 0 && (
-                                                <p className="text-[10px] text-[#a89880] font-bold">¥ {artwork.priceRMB}</p>
+                                                <p className="text-[10px] text-[#a89880] font-bold whitespace-nowrap">¥ {artwork.priceRMB}</p>
                                             )}
                                         </div>
-                                        <div className="bg-white p-1.5 rounded-xl shadow-sm border border-[#e8dfce]">
+                                        <div className="bg-white p-1.5 rounded-xl shadow-sm border border-[#e8dfce] shrink-0">
                                             <QRCodeSVG value={purchaseUrl} size={56} level="H" />
                                         </div>
                                     </div>

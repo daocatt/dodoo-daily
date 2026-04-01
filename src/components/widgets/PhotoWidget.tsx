@@ -42,6 +42,7 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     }, [photos.length])
 
     const handleDragEnd = (_: unknown, info: PanInfo) => {
+        if (photos.length <= 1) return
         const swipeThreshold = 50;
         if (info.offset.x < -swipeThreshold) {
             setCurrentIndex(prev => (prev + 1) % photos.length)
@@ -56,6 +57,8 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
 
     if (size === 'ICON') return null
 
+    const hasMultiplePhotos = photos.length > 1;
+
     return (
         <motion.div
             whileHover={{ scale: 1.01 }}
@@ -65,17 +68,17 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 {photos.length > 0 ? (
                     <motion.div
                         key={photos[currentIndex].id}
-                        initial={{ opacity: 0, x: 100 }}
+                        initial={hasMultiplePhotos ? { opacity: 0, x: 100 } : { opacity: 0 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
+                        exit={hasMultiplePhotos ? { opacity: 0, x: -100 } : { opacity: 0 }}
                         transition={{
                             type: "spring",
                             stiffness: 300,
                             damping: 30
                         }}
-                        drag="x"
+                        drag={hasMultiplePhotos ? "x" : false}
                         dragConstraints={{ left: 0, right: 0 }}
-                        onDragEnd={handleDragEnd}
+                        onDragEnd={hasMultiplePhotos ? handleDragEnd : undefined}
                         className="absolute inset-0 z-0 touch-none"
                     >
                         <div className="absolute inset-0 bg-slate-50 flex items-center justify-center pointer-events-none group-hover:scale-105 transition-transform duration-700">
@@ -111,16 +114,17 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                         </div>
                     </motion.div>
                 ) : (
-                    <div className="absolute inset-0 bg-purple-50 flex flex-col items-center justify-center text-purple-300 gap-3">
-                        <Camera className="w-10 h-10 opacity-20" />
-                        <span className="text-xs font-bold italic opacity-40">{t('widget.photo.empty')}</span>
+                    <div className="absolute inset-0 bg-indigo-50/10 flex flex-col items-center justify-center text-indigo-300 gap-3">
+                        <div className="hardware-well w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center shadow-well">
+                            <Camera className="w-8 h-8 text-indigo-200" />
+                        </div>
+                        <span className="label-mono text-[10px] font-black uppercase tracking-widest opacity-40">{t('widget.photo.empty')}</span>
                     </div>
                 )}
             </AnimatePresence>
 
             {/* Clickable Dots Navigation */}
-            {/* Clickable Dots Navigation - Explicitly Bottom Right */}
-            {photos.length > 1 && (
+            {hasMultiplePhotos && (
                 <div className="absolute bottom-6 right-6 flex flex-row gap-1.5 z-20 px-2.5 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/10">
                     {photos.map((_, i) => (
                         <button
@@ -137,7 +141,6 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                     ))}
                 </div>
             )}
-
         </motion.div>
     )
 }
