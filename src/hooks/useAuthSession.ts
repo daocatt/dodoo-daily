@@ -9,6 +9,7 @@ export interface AuthSession {
         nickname?: string | null
         avatarUrl?: string | null
         role: 'PARENT' | 'CHILD'
+        permissionRole: 'SUPERADMIN' | 'ADMIN' | 'USER'
         slug: string
         email?: string | null
         phone?: string | null
@@ -24,6 +25,7 @@ export interface AuthSession {
     loading: boolean
     isFamily: boolean
     isVisitor: boolean
+    isAdmin: boolean
     isAuthenticated: boolean
     logout: () => void
     refresh: () => Promise<void>
@@ -91,6 +93,7 @@ export function useAuthSession() {
         loading,
         isFamily: !!user,
         isVisitor: !!visitor,
+        isAdmin: user?.permissionRole === 'SUPERADMIN' || user?.permissionRole === 'ADMIN',
         isAuthenticated: !!user || !!visitor,
         logout,
         refresh: fetchSession

@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Store, Coins, CheckCircle2, AlertCircle, Plus, Sparkles, X, Package } from 'lucide-react'
-import Link from 'next/link'
+import { Plus, Coins, CheckCircle2, AlertCircle, Sparkles, X as XIcon, Package, Edit3, Trash, Store, Fan, Smile, Upload } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import AnimatedSky from '@/components/AnimatedSky'
+import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 import { useI18n } from '@/contexts/I18nContext'
 import EmojiPicker from '@/components/EmojiPicker'
+import { clsx } from 'clsx'
+import { useAuthSession } from '@/hooks/useAuthSession'
 
 type ShopItem = {
     id: string
@@ -15,46 +17,43 @@ type ShopItem = {
     description: string | null
     costCoins: number
     iconUrl: string | null
-    stock: number
+    stock: number | null
 }
 
-
+interface ShopItemPayload {
+    id?: string
+    name: string
+    costCoins: number
+    description: string
+    iconUrl: string
+}
 
 export default function ShopPage() {
     const [items, setItems] = useState<ShopItem[]>([])
     const [loading, setLoading] = useState(true)
     const [purchasingId, setPurchasingId] = useState<string | null>(null)
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
-    const [isAdmin, setIsAdmin] = useState(false)
     const [confirmItem, setConfirmItem] = useState<ShopItem | null>(null)
 
     const [showAddModal, setShowAddModal] = useState(false)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+    const [editingItemId, setEditingItemId] = useState<string | null>(null)
+    
     const [newName, setNewName] = useState('')
     const [newDesc, setNewDesc] = useState('')
     const [newEmoji, setNewEmoji] = useState('🎁')
-
+    const [newCost, setNewCost] = useState('10')
 
     const { t } = useI18n()
+    const router = useRouter()
+    const { isAdmin, loading: _sessionLoading } = useAuthSession()
 
     useEffect(() => {
         fetchItems()
-        fetchStats()
     }, [])
 
-    const fetchStats = async () => {
-        try {
-            const res = await fetch('/api/stats')
-            if (res.ok) {
-                const data = await res.json()
-                setIsAdmin(data.isAdmin || false)
-            }
-        } catch (_e) {
-            console.error(_e)
-        }
-    }
-
     const fetchItems = async () => {
+        setLoading(true)
         try {
             const res = await fetch('/api/shop')
             const data = await res.json()
@@ -65,7 +64,6 @@ export default function ShopPage() {
             setLoading(false)
         }
     }
-
 
     const handlePurchase = async (item: ShopItem) => {
         setConfirmItem(null)
@@ -95,21 +93,97 @@ export default function ShopPage() {
         }
     }
 
-    const handleAddItem = async (e: React.FormEvent) => {
+    const handleOpenEdit = (item: ShopItem) => {
+        setEditingItemId(item.id)
+        setNewName(item.name)
+        setNewCost(item.costCoins.toString())
+        setNewDesc(item.description || '')
+        setNewEmoji(item.iconUrl || '🎁')
+        setShowAddModal(true)
+    }
+
+    const handleOpenAdd = () => {
+        setEditingItemId(null)
+        setNewName('')
+        setNewCost('10')
+        setNewDesc('')
+        setNewEmoji('🎁')
+        setShowAddModal(true)
+    }
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('type', 'IMAGE')
+
+        try {
+            setLoading(true)
+            const res = await fetch('/api/media/upload', {
+                method: 'POST',
+                body: formData
+            })
+            const data = await res.json()
+            if (data.path) {
+                setNewEmoji(data.path)
+            }
+        } catch (error) {
+            console.error('Upload failed:', error)
+            setMessage({ type: 'error', text: 'Upload Failed' })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleDeleteItem = async (id: string, name: string) => {
+        if (!confirm(`Confirm delete ${name}?`)) return
+
+        try {
+            const res = await fetch('/api/shop', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            })
+            if (res.ok) {
+                setMessage({ text: 'Deleted successfully', type: 'success' })
+                fetchItems()
+                setTimeout(() => setMessage(null), 3000)
+            }
+        } catch (_err) {
+            console.error(_err)
+        }
+    }
+
+    const handleSaveItem = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!newName) return
 
         try {
-            const res = await fetch('/api/shop/wishes', {
-                method: 'POST',
+            const isEditing = !!editingItemId
+            const url = '/api/shop'
+            const method = isEditing ? 'PATCH' : 'POST'
+            
+            const payload: ShopItemPayload = {
+                name: newName,
+                costCoins: parseInt(newCost) || 10,
+                description: newDesc,
+                iconUrl: newEmoji
+            }
+            
+            if (isEditing) payload.id = editingItemId
+
+            const res = await fetch(url, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: newName, description: newDesc, imageUrl: newEmoji })
+                body: JSON.stringify(payload)
             })
+
             if (res.ok) {
                 setShowAddModal(false)
-                setNewName('')
-                setNewDesc('')
-                setMessage({ text: t('shop.wish.submitted'), type: 'success' })
+                setMessage({ text: isEditing ? 'Updated successfully' : t('shop.wish.submitted'), type: 'success' })
+                fetchItems()
                 setTimeout(() => setMessage(null), 4000)
             }
         } catch (_err) {
@@ -118,126 +192,183 @@ export default function ShopPage() {
     }
 
     return (
-        <div className="min-h-dvh flex flex-col relative overflow-hidden bg-amber-50 text-[#2c2416]">
-            <AnimatedSky />
+        <div className="min-h-screen bg-[#D1CDBC] relative flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900 text-slate-900">
+            {/* Header / Navbar */}
+            <BausteinAdminNavbar 
+                onBack={() => router.push('/admin')}
+                actions={
+                    <div className="flex items-center gap-1.5 md:gap-3">
+                        {isAdmin && (
+                            <>
+                                <button
+                                    onClick={() => router.push('/admin/shop/orders')}
+                                    className="hardware-btn group"
+                                    title={t('parent.orders.shop')}
+                                >
+                                    <div className="hardware-well h-9 md:h-11 px-2.5 md:px-4 rounded-lg flex items-center gap-2 bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative border-b-2 border-slate-400/20">
+                                        <div className="hardware-cap absolute inset-1 bg-indigo-500 rounded flex items-center justify-center transition-all shadow-cap group-hover:bg-indigo-600 active:translate-y-0.5" />
+                                        <Package className="w-3.5 h-3.5 md:w-4 md:h-4 text-white relative z-10" />
+                                        <span className="hidden lg:inline label-mono text-[9px] font-black text-white uppercase tracking-wider relative z-10 drop-shadow-sm">
+                                            {t('parent.orders.shop')}
+                                        </span>
+                                    </div>
+                                </button>
 
-            <header className="relative z-10 flex justify-between items-center p-6 backdrop-blur-sm bg-white/20 border-b border-amber-200">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full bg-white/40 hover:bg-white/60 transition-colors shadow-sm text-amber-600 border border-white/50">
-                        <ChevronLeft className="w-6 h-6" />
-                    </Link>
-                    <span className="font-extrabold text-2xl tracking-tight text-amber-800 drop-shadow flex items-center gap-2">
-                        <Store className="w-6 h-6" />
-                        {t('shop.title')}
-                    </span>
-                </div>
-                {!isAdmin && (
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href="/shop/orders"
-                            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-amber-700 border border-white/50 shadow-sm"
-                        >
-                            <Package className="w-4 h-4" />
-                            {t('shop.orders.myOrders')}
-                        </Link>
-                        <Link
-                            href="/shop/wishes"
-                            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md transition-colors text-sm font-bold text-amber-700 border border-white/50 shadow-sm"
-                        >
-                            <Sparkles className="w-4 h-4" />
-                            {t('shop.wishes.myWishes')}
-                        </Link>
+                                <button
+                                    onClick={() => router.push('/admin/shop/wishes')}
+                                    className="hardware-btn group"
+                                    title={t('shop.wishes.title')}
+                                >
+                                    <div className="hardware-well h-9 md:h-11 px-2.5 md:px-4 rounded-lg flex items-center gap-2 bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative border-b-2 border-slate-400/20">
+                                        <div className="hardware-cap absolute inset-1 bg-amber-500 rounded flex items-center justify-center transition-all shadow-cap group-hover:bg-amber-600 active:translate-y-0.5" />
+                                        <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-white relative z-10" />
+                                        <span className="hidden lg:inline label-mono text-[9px] font-black text-white uppercase tracking-wider relative z-10 drop-shadow-sm">
+                                            {t('shop.wishes.title')}
+                                        </span>
+                                    </div>
+                                </button>
 
-                        {/* Mobile Icons */}
-                        <Link
-                            href="/shop/orders"
-                            className="flex md:hidden w-10 h-10 items-center justify-center rounded-full bg-white/40 border border-white/50 text-amber-700"
-                        >
-                            <Package className="w-5 h-5" />
-                        </Link>
+                                <div className="h-6 w-px bg-slate-400/30 mx-0.5 md:mx-1 hidden md:block" />
 
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 transition-colors text-sm font-black text-white shadow-lg shadow-amber-500/30 active:scale-95 border-2 border-amber-400"
-                        >
-                            <Plus className="w-4 h-4" />
-                            {t('shop.newWish')}
-                        </button>
+                                <button
+                                    onClick={handleOpenAdd}
+                                    className="hardware-btn group"
+                                >
+                                    <div className="hardware-well h-9 md:h-11 px-2.5 md:px-4 rounded-lg flex items-center gap-2 bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative border-b-2 border-slate-400/20">
+                                        <div className="hardware-cap absolute inset-1 bg-emerald-500 rounded flex items-center justify-center transition-all shadow-cap group-hover:bg-emerald-600 active:translate-y-0.5" />
+                                        <Plus className="w-4 h-4 text-white relative z-10" />
+                                        <span className="hidden lg:inline label-mono text-[9px] font-black text-white uppercase tracking-wider relative z-10 drop-shadow-sm">
+                                            {t('button.add')}
+                                        </span>
+                                    </div>
+                                </button>
+                            </>
+                        )}
                     </div>
-                )}
-            </header>
+                }
+            />
 
-            <main className="relative z-10 flex-1 overflow-y-auto p-6 md:p-12 pb-24 hide-scrollbar">
-
-                {/* Feedback Message */}
+            {/* Main Content Scroll Area */}
+            <main className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto p-4 md:p-8 pb-32 hide-scrollbar">
+                {/* Status Message */}
                 <AnimatePresence>
                     {message && (
                         <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className={`mb-8 p-4 rounded-2xl flex items-center gap-3 font-bold shadow-lg ${message.type === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'
-                                }`}
+                            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className={clsx(
+                                "mb-6 p-4 rounded-xl flex items-center gap-3 font-black text-[10px] uppercase tracking-[0.2em] shadow-well border-2 transition-all",
+                                message.type === 'success' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-rose-500/10 text-rose-600 border-rose-500/20"
+                            )}
                         >
-                            {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                            {message.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
                             {message.text}
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {loading ? (
-                    <div className="flex justify-center items-center h-48">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-600"></div>
+                    <div className="flex justify-center items-center h-64">
+                        <div className="hardware-well w-10 h-10 rounded-lg flex items-center justify-center bg-[#DADBD4] shadow-well animate-pulse">
+                            <Store className="w-5 h-5 text-slate-400 animate-bounce" />
+                        </div>
+                    </div>
+                ) : items.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-80 text-slate-500 bg-[#C8C4B0]/20 rounded-[2rem] border-2 border-dashed border-[#C8C4B0]">
+                        <Store className="w-12 h-12 mb-4 opacity-20" />
+                        <p className="label-mono text-[10px] uppercase tracking-widest opacity-40">{t('gallery.empty')}</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 md:gap-8">
                         {items.map((item, idx) => (
                             <motion.div
                                 key={item.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="group bg-white/70 backdrop-blur-xl border border-white/60 rounded-xl p-6 shadow-xl flex flex-col items-center text-center hover:shadow-2xl transition-all"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ 
+                                    opacity: 1, 
+                                    scale: 1,
+                                    transition: { delay: idx * 0.03, duration: 0.3 }
+                                }}
+                                className="group flex flex-col"
                             >
-                                <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-500 w-24 h-24 flex items-center justify-center">
-                                    {item.iconUrl?.startsWith('http') || item.iconUrl?.startsWith('/') ? (
-                                        <Image 
-                                            src={item.iconUrl} 
-                                            alt={item.name} 
-                                            width={96}
-                                            height={96}
-                                            className="w-full h-full object-cover rounded-2xl shadow-sm border-2 border-amber-100" 
-                                        />
-                                    ) : (
-                                        item.iconUrl || '🎁'
-                                    )}
-                                </div>
-                                <h3 className="font-black text-xl mb-4 text-[#2c2416]">{item.name}</h3>
-
-                                <div className="mt-auto w-full">
-                                    <div className="flex items-center justify-center gap-1.5 mb-6">
-                                        <div className="bg-amber-400 p-1 rounded-full">
-                                            <Coins className="w-4 h-4 text-white" />
+                                <div className="hardware-well p-3 rounded-2xl bg-[#DADBD4]/70 shadow-well border border-black/5 relative group-hover:bg-[#DADBD4]/90 transition-all duration-300">
+                                    {/* Item Slot (Recessed Well) */}
+                                    <div className="aspect-square rounded-xl bg-[#C8C4B0] overflow-hidden relative border border-black/5 flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500 shadow-inner">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-transparent pointer-events-none z-10 opacity-30" />
+                                        <div className="relative z-0 w-full h-full flex items-center justify-center text-6xl drop-shadow-md">
+                                            {item.iconUrl?.startsWith('http') || item.iconUrl?.startsWith('/') ? (
+                                                <Image 
+                                                    src={item.iconUrl} 
+                                                    alt={item.name} 
+                                                    fill
+                                                    className="object-cover transition-transform group-hover:scale-110 duration-700" 
+                                                />
+                                            ) : (
+                                                <span className="relative z-10 transition-transform group-hover:scale-110 duration-500">{item.iconUrl || '🎁'}</span>
+                                            )}
                                         </div>
-                                        <span className="font-black text-2xl text-amber-600">{item.costCoins}</span>
                                     </div>
 
-                                    {!isAdmin ? (
-                                        <button
-                                            onClick={() => setConfirmItem(item)}
-                                            disabled={purchasingId === item.id}
-                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black rounded-2xl shadow-lg hover:shadow-amber-500/40 transition-all active:scale-95 disabled:grayscale"
-                                        >
-                                            {purchasingId === item.id ? t('common.loading') : t('shop.buyNow')}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            disabled
-                                            className="w-full py-4 bg-slate-200 text-slate-400 font-black rounded-2xl shadow-inner cursor-not-allowed"
-                                        >
-                                            {t('shop.previewOnly')}
-                                        </button>
-                                    )}
+                                    {/* Info HUD */}
+                                    <div className="mt-4 px-1 flex flex-col gap-3">
+                                        <div className="flex justify-between items-start gap-2 min-h-[2.5rem]">
+                                            <div className="flex flex-col flex-1 min-w-0">
+                                                <h3 className="font-black text-slate-800 text-sm md:text-base tracking-tighter uppercase leading-tight line-clamp-2 mb-1">
+                                                    {item.name}
+                                                </h3>
+                                                {item.description && (
+                                                    <p className="label-mono text-[8px] font-bold text-slate-500 truncate opacity-60">
+                                                        {item.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
+                                            {isAdmin && (
+                                                <div className="flex gap-1">
+                                                    <button 
+                                                        onClick={() => handleOpenEdit(item)}
+                                                        className="hardware-well w-8 h-8 rounded bg-white/40 shadow-well-sm border border-white/20 flex items-center justify-center group/btn active:translate-y-0.5 transition-all outline-none"
+                                                    >
+                                                        <Edit3 className="w-3.5 h-3.5 text-slate-500 group-hover/btn:text-indigo-600" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDeleteItem(item.id, item.name)}
+                                                        className="hardware-well w-8 h-8 rounded bg-white/40 shadow-well-sm border border-white/20 flex items-center justify-center group/btn active:translate-y-0.5 transition-all text-slate-500 hover:text-rose-500 outline-none"
+                                                    >
+                                                        <Trash className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            {/* Digital Price Slot - Transparent Style */}
+                                            <div className="h-10 flex-1 flex items-center px-2 gap-2 border-b-2 border-black/5 relative active:translate-y-0.5 transition-all">
+                                                <Coins className="w-4 h-4 text-amber-500 shrink-0 drop-shadow-[0_2px_4px_rgba(251,191,36,0.2)]" />
+                                                <span className="font-black text-slate-800 text-lg tracking-tighter label-mono font-number antialiased">
+                                                    {item.costCoins}
+                                                </span>
+                                            </div>
+
+                                            <button
+                                                onClick={() => setConfirmItem(item)}
+                                                disabled={purchasingId === item.id}
+                                                className="hardware-btn group/buy w-28 shrink-0"
+                                            >
+                                                <div className="hardware-well h-10 w-full rounded-lg flex items-center justify-center bg-[#B8B4A0] shadow-well active:translate-y-0.5 relative overflow-hidden transition-all group-hover/buy:bg-[#A8A490]">
+                                                    <div className={clsx(
+                                                        "hardware-cap absolute inset-0.5 rounded shadow-cap pointer-events-none group-hover/buy:opacity-90 transition-all", 
+                                                        isAdmin ? "bg-slate-500" : "bg-emerald-500/90"
+                                                    )} />
+                                                    <span className="relative z-10 label-mono text-[9px] font-black text-white uppercase tracking-[0.15em] flex items-center gap-2">
+                                                        {purchasingId === item.id ? <Fan className="w-3 h-3 animate-spin" /> : isAdmin ? <Package className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
+                                                        {isAdmin ? 'PREVIEW' : t('shop.buyNow')}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
@@ -245,160 +376,224 @@ export default function ShopPage() {
                 )}
             </main>
 
-            {/* Purchase Confirmation Modal */}
+            {/* Modals - Baustein Panel Implementation */}
             <AnimatePresence>
-                {confirmItem && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-                        onClick={() => setConfirmItem(null)}
-                    >
+                {(confirmItem && !isAdmin) && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
                         <motion.div
-                            initial={{ scale: 0.9, y: 40 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 40 }}
-                            className="w-full max-w-sm bg-white rounded-[32px] shadow-2xl overflow-hidden border border-amber-100"
-                            onClick={e => e.stopPropagation()}
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-sm"
                         >
-                            <div className="p-8 flex flex-col items-center text-center gap-5">
-                                <div className="w-24 h-24 flex items-center justify-center text-6xl bg-amber-50 border-2 border-amber-200 rounded-[24px] shadow-inner overflow-hidden">
-                                    {confirmItem.iconUrl?.startsWith('http') || confirmItem.iconUrl?.startsWith('/') ? (
-                                        <Image 
-                                            src={confirmItem.iconUrl} 
-                                            width={96}
-                                            height={96}
-                                            alt={confirmItem.name}
-                                            className="w-full h-full object-cover" 
-                                        />
-                                    ) : (
-                                        confirmItem.iconUrl || '🎁'
-                                    )}
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-black text-slate-800 mb-1">{confirmItem.name}</h3>
-                                    <p className="text-slate-500 font-medium text-sm">{t('shop.confirmBuy')}</p>
-                                </div>
-                                <div className="flex items-center gap-2 bg-amber-50 border-2 border-amber-200 px-6 py-3 rounded-2xl">
-                                    <Coins className="w-5 h-5 text-amber-500" />
-                                    <span className="font-black text-2xl text-amber-600">{confirmItem.costCoins}</span>
-                                    <span className="font-bold text-amber-500 text-sm">{t('shop.coinsDeducted', { amount: '' })}</span>
-                                </div>
-                                <div className="flex gap-3 w-full pt-2">
-                                    <button
-                                        onClick={() => setConfirmItem(null)}
-                                        className="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black hover:bg-slate-200 transition-colors active:scale-95"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        onClick={() => handlePurchase(confirmItem)}
-                                        disabled={purchasingId === confirmItem.id}
-                                        className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95 disabled:grayscale"
-                                    >
-                                        {purchasingId === confirmItem.id ? t('shop.buying') : t('shop.confirmButton')}
-                                    </button>
+                            <div className="baustein-panel w-full bg-[#E6E2D1] rounded-3xl shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col p-8">
+                                <div className="flex flex-col items-center gap-6">
+                                    {/* Visual Confirmation Unit */}
+                                    <div className="hardware-well w-32 h-32 rounded-2xl bg-[#DADBD4] shadow-well relative flex items-center justify-center text-7xl">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent pointer-events-none" />
+                                        {confirmItem.iconUrl?.startsWith('http') || confirmItem.iconUrl?.startsWith('/') ? (
+                                            <Image 
+                                                src={confirmItem.iconUrl} 
+                                                width={128}
+                                                height={128}
+                                                alt={confirmItem.name}
+                                                className="w-full h-full object-cover rounded-xl" 
+                                            />
+                                        ) : (
+                                            <span className="drop-shadow-lg relative z-10">{confirmItem.iconUrl || '🎁'}</span>
+                                        )}
+                                    </div>
+
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase mb-1">{confirmItem.name}</h3>
+                                        <p className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('shop.confirmBuy')}</p>
+                                    </div>
+
+                                    <div className="w-full h-14 rounded-xl flex items-center justify-between px-2 border-b-[3px] border-slate-900/10 relative overflow-hidden active:translate-y-0.5 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="hardware-well w-8 h-8 rounded-full bg-[#DADBD4] shadow-well flex items-center justify-center relative">
+                                                <Coins className="w-4 h-4 text-amber-500" />
+                                            </div>
+                                            <span className="label-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction_Value</span>
+                                        </div>
+                                        <span className="font-black text-slate-800 text-4xl tracking-tighter label-mono antialiased drop-shadow-sm">
+                                            {confirmItem.costCoins}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex gap-4 w-full">
+                                        <button onClick={() => setConfirmItem(null)} className="hardware-btn flex-1">
+                                            <div className="hardware-well h-12 rounded-lg bg-[#DADBD4] shadow-well flex items-center justify-center relative active:translate-y-0.5 overflow-hidden group">
+                                                <div className="hardware-cap absolute inset-0.5 bg-white rounded shadow-cap group-active:translate-y-0.5" />
+                                                <span className="relative z-10 label-mono text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('common.cancel')}</span>
+                                            </div>
+                                        </button>
+                                        <button onClick={() => handlePurchase(confirmItem)} disabled={purchasingId === confirmItem.id} className="hardware-btn flex-1">
+                                            <div className="hardware-well h-12 rounded-lg bg-[#DADBD4] shadow-well flex items-center justify-center overflow-hidden relative group active:translate-y-0.5">
+                                                <div className="hardware-cap absolute inset-0.5 bg-amber-500 rounded shadow-cap group-active:translate-y-0.5" />
+                                                <span className="relative z-10 label-mono text-[10px] font-black text-white uppercase tracking-widest">
+                                                    {purchasingId === confirmItem.id ? '...' : t('common.confirm')}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
 
-            {/* Add Wish Modal */}
-            <AnimatePresence>
                 {showAddModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-                    >
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="w-full max-w-md max-h-[90dvh] bg-white rounded-[40px] shadow-2xl flex flex-col border border-amber-100 overflow-hidden"
+                            initial={{ scale: 0.95, y: 10, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                            className="w-full max-w-lg relative"
                         >
-                            <div className="p-6 border-b border-amber-100 flex justify-between items-center bg-amber-50">
-                                <h3 className="text-xl font-black flex items-center gap-2 text-amber-800"><Sparkles className="w-5 h-5 text-amber-500" /> {t('shop.makeWish')}</h3>
-                                <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-800"><X className="w-5 h-5" /></button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-6 sm:p-8 pt-4 custom-scrollbar">
-                                <form onSubmit={handleAddItem} className="flex flex-col gap-6">
-                                    <div className="flex flex-row items-center gap-4">
-                                        <div className="flex flex-col gap-1.5 shrink-0">
-                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">{t('shop.form.icon')}</label>
-                                            <div className="relative">
+                            <div className="baustein-panel w-full bg-[#E6E2D1] rounded-[2rem] shadow-2xl relative border-4 border-[#C8C4B0] flex flex-col">
+                                <div className="p-8 flex flex-col">
+                                    {/* Modal Header */}
+                                    <div className="flex justify-between items-center mb-8 border-b-2 border-black/5 pb-5">
+                                        <h3 className="text-lg font-black text-slate-900 tracking-tighter uppercase flex items-center gap-4">
+                                            <div className="hardware-well w-9 h-9 rounded-lg bg-[#DADBD4] shadow-well relative overflow-hidden flex items-center justify-center">
+                                                <div className={clsx("hardware-cap absolute inset-0.5 rounded flex items-center justify-center shadow-cap", editingItemId ? "bg-amber-500" : "bg-emerald-500")}>
+                                                    {editingItemId ? <Edit3 className="w-4 h-4 text-white" /> : <Plus className="w-4 h-4 text-white" />}
+                                                </div>
+                                            </div>
+                                            {editingItemId ? '更新商品规格 (Update Specification)' : '初始化新库存 (Initialize New Stock)'}
+                                        </h3>
+                                        <button onClick={() => setShowAddModal(false)} className="hardware-btn group">
+                                            <div className="hardware-well w-9 h-9 rounded-full bg-[#DADBD4] shadow-well flex items-center justify-center relative active:translate-y-0.5">
+                                                <div className="hardware-cap absolute inset-1 bg-white group-hover:bg-rose-50 rounded-full shadow-cap flex items-center justify-center border border-black/5">
+                                                    <XIcon className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors" />
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    {/* Unified Form Grid */}
+                                    <form onSubmit={handleSaveItem} className="flex flex-col gap-6">
+                                        <div className="grid grid-cols-[100px_1fr] gap-x-8 gap-y-8">
+                                            {/* ROW 1: ICON PREVIEW & NAME */}
+                                            <div className="flex flex-col gap-3">
+                                                <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('shop.form.icon')}</label>
+                                                <div className="relative">
+                                                    <div className="hardware-well w-full h-16 rounded-2xl bg-[#DADBD4]/50 shadow-well flex items-center justify-center text-4xl overflow-hidden relative border border-black/5">
+                                                        {newEmoji?.startsWith('http') || newEmoji?.startsWith('/') ? (
+                                                            <Image 
+                                                                src={newEmoji} 
+                                                                alt="Preview" 
+                                                                fill 
+                                                                className="object-cover" 
+                                                            />
+                                                        ) : (
+                                                            <span className="relative z-10 drop-shadow-md">{newEmoji || '🎁'}</span>
+                                                        )}
+                                                        {loading && (
+                                                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-20 backdrop-blur-[1px]">
+                                                                <Fan className="w-6 h-6 text-white animate-spin" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {showEmojiPicker && (
+                                                        <div className="absolute top-1/2 left-[calc(100%+24px)] -translate-y-1/2 z-[300] w-80 baustein-panel bg-[#E6E2D1] rounded-[1.5rem] shadow-2xl border-4 border-[#C8C4B0] p-4 scale-100 transition-all origin-left">
+                                                            <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#E6E2D1] border-l-4 border-b-4 border-[#C8C4B0] rotate-45 z-[-1]" />
+                                                            <EmojiPicker
+                                                                onSelect={(emoji) => {
+                                                                    setNewEmoji(emoji)
+                                                                    setShowEmojiPicker(false)
+                                                                }}
+                                                                currentEmoji={newEmoji}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-3 min-w-0">
+                                                <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('shop.form.wishName')}</label>
+                                                <div className="hardware-well p-1.5 rounded-2xl bg-[#DADBD4]/40 shadow-well border border-black/5 h-16 flex items-center">
+                                                    <input
+                                                        type="text"
+                                                        value={newName}
+                                                        onChange={e => setNewName(e.target.value)}
+                                                        className="w-full h-full bg-white/95 px-5 rounded-xl border-2 border-transparent focus:border-indigo-500/30 outline-none font-black text-lg shadow-inner transition-all placeholder:text-slate-300"
+                                                        placeholder={t('shop.form.wishPlaceholder')}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2 items-start mt-[-20px]">
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowEmojiPicker(v => !v)}
-                                                    className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center text-4xl sm:text-5xl bg-amber-50 border-2 border-amber-200 hover:border-amber-400 rounded-[20px] shadow-inner transition-all active:scale-95 overflow-hidden"
-                                                    title="Click to pick an emoji"
+                                                    className="hardware-well flex-1 h-10 rounded-xl bg-[#DADBD4]/60 shadow-well flex items-center justify-center group active:translate-y-0.5 transition-all outline-none border border-black/5 relative"
+                                                    title="Emoji"
                                                 >
-                                                    {newEmoji.startsWith('http') || newEmoji.startsWith('/') ? (
-                                                        <Image 
-                                                            src={newEmoji} 
-                                                            width={80}
-                                                            height={80}
-                                                            alt="Emoji"
-                                                            className="w-full h-full object-cover" 
-                                                        />
-                                                    ) : (
-                                                        newEmoji
-                                                    )}
+                                                    <div className="hardware-cap absolute inset-1 bg-white/40 rounded-lg shadow-cap pointer-events-none group-hover:bg-white/60 transition-all" />
+                                                    <Smile className="w-4 h-4 text-slate-500 relative z-10" />
                                                 </button>
-                                                {showEmojiPicker && (
-                                                    <div className="absolute top-full left-0 mt-2 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-amber-100 p-3">
-                                                        <EmojiPicker
-                                                            onSelect={(emoji) => {
-                                                                setNewEmoji(emoji)
-                                                                setShowEmojiPicker(false)
-                                                            }}
-                                                            currentEmoji={newEmoji}
+                                                
+                                                <label className="hardware-well flex-1 h-10 rounded-xl bg-[#DADBD4]/60 shadow-well flex items-center justify-center group active:translate-y-0.5 transition-all cursor-pointer border border-black/5 relative">
+                                                    <div className="hardware-cap absolute inset-1 bg-white/40 rounded-lg shadow-cap pointer-events-none group-hover:bg-amber-50 transition-all" />
+                                                    <input type="file" onChange={handleFileUpload} className="hidden" accept="image/*" />
+                                                    <Upload className="w-4 h-4 text-slate-500 relative z-10 group-hover:text-amber-600 transition-colors" />
+                                                </label>
+                                            </div>
+
+                                            <div className="flex flex-col gap-3">
+                                                <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">所需金币 (Required Coins)</label>
+                                                <div className="hardware-well p-1.5 rounded-2xl bg-[#DADBD4]/40 shadow-well border border-black/5 h-16 flex items-center transition-all">
+                                                    <div className="relative flex items-center w-full h-full">
+                                                        <Coins className="absolute left-4 w-5 h-5 text-amber-500 z-10" />
+                                                        <input
+                                                            type="number"
+                                                            value={newCost}
+                                                            onChange={e => setNewCost(e.target.value)}
+                                                            className="w-full h-full bg-white/95 px-4 pl-14 rounded-xl border-2 border-transparent focus:border-amber-500/30 outline-none font-black text-slate-800 text-xl shadow-inner transition-all label-mono"
+                                                            placeholder="10"
+                                                            required
                                                         />
                                                     </div>
-                                                )}
+                                                </div>
+                                            </div>
+
+                                            {/* ROW 3: EMPTY & DESCRIPTION */}
+                                            <div className="hidden sm:block" /> 
+                                            <div className="flex flex-col gap-3">
+                                                <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('shop.form.descOptional')}</label>
+                                                <div className="hardware-well p-1.5 rounded-2xl bg-[#DADBD4]/40 shadow-well border border-black/5 transition-all">
+                                                    <textarea
+                                                        value={newDesc}
+                                                        onChange={e => setNewDesc(e.target.value)}
+                                                        className="w-full bg-white/95 px-5 py-4 rounded-xl border-2 border-transparent focus:border-indigo-500/30 outline-none font-bold text-xs shadow-inner transition-all h-32 resize-none placeholder:text-slate-300 italic"
+                                                        placeholder={t('shop.form.descPlaceholder')}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="flex-1 flex flex-col gap-1.5">
-                                            <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">{t('shop.form.wishName')}</label>
-                                            <input
-                                                type="text"
-                                                value={newName}
-                                                onChange={e => setNewName(e.target.value)}
-                                                className="w-full bg-amber-50/50 border-2 border-amber-100 rounded-[20px] p-4 focus:border-amber-400 outline-none font-black text-xl transition-all h-16 sm:h-20 placeholder:text-amber-200"
-                                                placeholder={t('shop.form.wishPlaceholder')}
-                                                required
-                                            />
+                                        <div className="grid grid-cols-[100px_1fr] gap-8 mt-4">
+                                            <div className="hidden sm:block" />
+                                            <button type="submit" className="hardware-btn group w-full">
+                                                <div className="hardware-well h-16 w-full rounded-2xl bg-[#DADBD4] shadow-well active:translate-y-0.5 relative overflow-hidden transition-all group-hover:bg-[#C8C4B0]">
+                                                    <div className={clsx("hardware-cap absolute inset-1 bg-slate-900 rounded-xl flex items-center justify-center gap-3 transition-opacity shadow-cap group-hover:opacity-90")}>
+                                                        <CheckCircle2 className="w-5 h-5 text-white" />
+                                                        <span className="text-xs font-black text-white uppercase tracking-[0.3em] label-mono italic">{editingItemId ? t('button.save') : t('button.create')}</span>
+                                                    </div>
+                                                </div>
+                                            </button>
                                         </div>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="block text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] pl-1">{t('shop.form.descOptional')}</label>
-                                        <textarea
-                                            value={newDesc}
-                                            onChange={e => setNewDesc(e.target.value)}
-                                            className="w-full bg-amber-50/50 border-2 border-amber-100 rounded-[20px] p-4 sm:p-5 focus:border-amber-400 outline-none font-bold transition-all min-h-[100px] placeholder:text-amber-200 resize-none"
-                                            placeholder={t('shop.form.descPlaceholder')}
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="w-full py-5 rounded-[24px] bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-lg shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 transition-all active:scale-95 border-b-4 border-orange-700 mt-2"
-                                    >
-                                        {t('shop.form.submitWish')}
-                                    </button>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
-
         </div>
     )
 }

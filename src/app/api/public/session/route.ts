@@ -33,6 +33,7 @@ export async function GET() {
                 nickname: userRecord.nickname,
                 avatarUrl: userRecord.avatarUrl,
                 role: userRecord.role,
+                permissionRole: userRecord.permissionRole,
                 slug: userRecord.slug,
                 email: userRecord.email,
                 phone: userRecord.phone,
