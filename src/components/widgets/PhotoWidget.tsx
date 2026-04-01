@@ -2,15 +2,14 @@
 
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence, type PanInfo } from 'motion/react'
-import { Images, Camera } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Images } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useI18n } from '@/contexts/I18nContext'
 import Image from 'next/image'
 
 interface PhotoEntry {
     id: string
-    url: string
+    imageUrl: string
     title: string
 }
 
@@ -18,7 +17,6 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
     const [photos, setPhotos] = useState<PhotoEntry[]>([])
     const [loading, setLoading] = useState(size !== 'ICON')
     const [currentIndex, setCurrentIndex] = useState(0)
-    const router = useRouter()
     const { t } = useI18n()
 
     useEffect(() => {
@@ -57,7 +55,7 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
 
     if (size === 'ICON') return null
 
-    const hasMultiplePhotos = photos.length > 1;
+    const hasCarousel = photos.length >= 2;
 
     return (
         <motion.div
@@ -68,26 +66,26 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 {photos.length > 0 ? (
                     <motion.div
                         key={photos[currentIndex].id}
-                        initial={hasMultiplePhotos ? { opacity: 0, x: 100 } : { opacity: 0 }}
+                        initial={hasCarousel ? { opacity: 0, x: 100 } : { opacity: 0 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={hasMultiplePhotos ? { opacity: 0, x: -100 } : { opacity: 0 }}
+                        exit={hasCarousel ? { opacity: 0, x: -100 } : { opacity: 0 }}
                         transition={{
                             type: "spring",
                             stiffness: 300,
                             damping: 30
                         }}
-                        drag={hasMultiplePhotos ? "x" : false}
+                        drag={hasCarousel ? "x" : false}
                         dragConstraints={{ left: 0, right: 0 }}
-                        onDragEnd={hasMultiplePhotos ? handleDragEnd : undefined}
+                        onDragEnd={hasCarousel ? handleDragEnd : undefined}
                         className="absolute inset-0 z-0 touch-none"
                     >
                         <div className="absolute inset-0 bg-slate-50 flex items-center justify-center pointer-events-none group-hover:scale-105 transition-transform duration-700">
-                            {photos[currentIndex].url && (
+                            {photos[currentIndex].imageUrl && (
                                 <Image
-                                    src={photos[currentIndex].url}
+                                    src={photos[currentIndex].imageUrl}
                                     alt=""
                                     fill
-                                    sizes="50vw"
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                     className="w-full h-full object-cover"
                                 />
                             )}
@@ -116,15 +114,15 @@ export default function PhotoWidget({ size = 'ICON', cellSize = 100 }: { size?: 
                 ) : (
                     <div className="absolute inset-0 bg-indigo-50/10 flex flex-col items-center justify-center text-indigo-300 gap-3">
                         <div className="hardware-well w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center shadow-well">
-                            <Camera className="w-8 h-8 text-indigo-200" />
+                            <Images className="w-8 h-8 text-indigo-200" />
                         </div>
-                        <span className="label-mono text-[10px] font-black uppercase tracking-widest opacity-40">{t('widget.photo.empty')}</span>
+                        <span className="label-mono text-[10px] font-black uppercase tracking-widest opacity-40">{t('gallery.empty')}</span>
                     </div>
                 )}
             </AnimatePresence>
 
             {/* Clickable Dots Navigation */}
-            {hasMultiplePhotos && (
+            {hasCarousel && (
                 <div className="absolute bottom-6 right-6 flex flex-row gap-1.5 z-20 px-2.5 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/10">
                     {photos.map((_, i) => (
                         <button

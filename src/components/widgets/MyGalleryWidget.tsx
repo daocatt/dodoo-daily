@@ -30,10 +30,10 @@ export default function MyGalleryWidget() {
                 const statsRes = await fetch('/api/stats')
                 const stats = await statsRes.json()
                 
-                if (stats?.id) {
+                if (stats?.userId) {
                     const [lRes, oRes] = await Promise.all([
-                        fetch(`/api/visitor/likes?memberId=${stats.id}`),
-                        fetch(`/api/visitor/orders?memberId=${stats.id}`)
+                        fetch(`/api/visitor/likes?memberId=${stats.userId}`),
+                        fetch(`/api/visitor/orders?memberId=${stats.userId}`)
                     ])
                     if (lRes.ok) setLikes(await lRes.json())
                     if (oRes.ok) setOrders(await oRes.json())
@@ -53,7 +53,9 @@ export default function MyGalleryWidget() {
         </div>
     )
 
-    const recentItems = [...likes, ...orders]
+    const allItems = [...likes, ...orders]
+    const uniqueItems = Array.from(new Map(allItems.map(item => [item.artworkId, item])).values())
+    const recentItems = uniqueItems
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 4)
 

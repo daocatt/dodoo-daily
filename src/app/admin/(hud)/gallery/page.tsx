@@ -3,7 +3,7 @@
 import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { Plus, Camera, Image as ImageIcon, Archive, Sparkles, Store, MessageSquare, X as XIcon, Loader2, Edit3, Save, Fan } from 'lucide-react'
+import { Plus, Camera, Image as ImageIcon, Archive, MessageSquare, X as XIcon, Edit3, Save, Fan } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import UploadModal from '@/components/gallery/UploadModal'
 import { useI18n } from '@/contexts/I18nContext'
@@ -237,7 +237,7 @@ export default function GalleryPage() {
                                     <div className="mt-4 flex justify-between items-end">
                                         <div className="flex flex-col gap-1 flex-1 min-w-0 pr-2">
                                             <h3 className="font-black text-slate-900 text-sm md:text-base tracking-tighter uppercase leading-tight truncate">
-                                                {album.title}
+                                                {album.id === 'uncategorized' ? (t('gallery.uncategorized') || 'Uncategorized') : album.title}
                                             </h3>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

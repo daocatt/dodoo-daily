@@ -156,6 +156,7 @@ const dictionaries: Dictionary = {
         'gallery.exhibition.subtitlePlaceholder': 'A Journey Through Colors',
         'gallery.exhibition.descriptionLabel': 'Process / Help Description',
         'gallery.exhibition.descriptionPlaceholder': 'Explain your sales and delivery process here...',
+        'gallery.uncategorized': 'Uncategorized',
 
         // Hud
         'hud.coins': 'Coins',
@@ -1110,6 +1111,7 @@ const dictionaries: Dictionary = {
         'gallery.exhibition.subtitlePlaceholder': '例如：艺术之旅',
         'gallery.exhibition.descriptionLabel': '作品获取流程 / 帮助说明',
         'gallery.exhibition.descriptionPlaceholder': '在这里说明作品的获取与寄送流程...',
+        'gallery.uncategorized': '未分类作品',
 
         // Hud
         'hud.coins': '金币',

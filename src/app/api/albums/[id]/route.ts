@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { album, artwork, users, media } from '@/lib/schema'
-import { desc, eq, and } from 'drizzle-orm'
+import { desc, eq, and, isNull, SQL } from 'drizzle-orm'
 
 export async function GET(
     req: NextRequest,
@@ -10,13 +10,26 @@ export async function GET(
     try {
         const { id } = await _params
 
-        const albums = await db.select().from(album).where(eq(album.id, id))
+        let albumData: typeof album.$inferSelect;
+        let whereCondition: SQL | undefined;
 
-        if (albums.length === 0) {
-            return NextResponse.json({ error: 'Album not found' }, { status: 404 })
+        if (id === 'uncategorized') {
+            albumData = {
+                id: 'uncategorized',
+                title: 'Uncategorized',
+                userId: 'system',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            } as typeof album.$inferSelect;
+            whereCondition = and(isNull(artwork.albumId), eq(artwork.isArchived, false));
+        } else {
+            const albums = await db.select().from(album).where(eq(album.id, id))
+            if (albums.length === 0) {
+                return NextResponse.json({ error: 'Album not found' }, { status: 404 })
+            }
+            albumData = albums[0];
+            whereCondition = and(eq(artwork.albumId, id), eq(artwork.isArchived, false));
         }
-
-        const albumData = albums[0]
 
         const artworkRows = await db
             .select({
@@ -39,7 +52,7 @@ export async function GET(
             .from(artwork)
             .leftJoin(users, eq(artwork.userId, users.id))
             .leftJoin(media, eq(artwork.imageUrl, media.path))
-            .where(and(eq(artwork.albumId, id), eq(artwork.isArchived, false)))
+            .where(whereCondition!)
             .orderBy(desc(artwork.createdAt))
 
         return NextResponse.json({ ...albumData, artworks: artworkRows })

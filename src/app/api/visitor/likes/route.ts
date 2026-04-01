@@ -22,12 +22,15 @@ export async function GET(req: NextRequest) {
             artworkId: artwork.id,
         })
         .from(artworkLike)
-        .leftJoin(artwork, eq(artworkLike.artworkId, artwork.id))
-        .where(whereClause)
+        .innerJoin(artwork, eq(artworkLike.artworkId, artwork.id))
+        .where(and(whereClause, eq(artwork.isArchived, false)))
         .orderBy(desc(artworkLike.createdAt))
 
-        return NextResponse.json(likes)
-    } catch (_e) {
+        // Ensure unique artworks
+        const uniqueLikes = Array.from(new Map(likes.map(item => [item.artworkId, item])).values())
+
+        return NextResponse.json(uniqueLikes)
+    } catch (e) {
         console.error('Fetch likes error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { order, artwork } from '@/lib/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, and } from 'drizzle-orm'
 
 export async function GET(req: NextRequest) {
     try {
@@ -23,11 +23,14 @@ export async function GET(req: NextRequest) {
             artworkId: artwork.id,
         })
         .from(order)
-        .leftJoin(artwork, eq(order.artworkId, artwork.id))
-        .where(condition)
+        .innerJoin(artwork, eq(order.artworkId, artwork.id))
+        .where(and(condition, eq(artwork.isArchived, false)))
         .orderBy(desc(order.createdAt))
 
-        return NextResponse.json(orders)
+        // Ensure unique artworks
+        const uniqueOrders = Array.from(new Map(orders.map(item => [item.artworkId, item])).values())
+
+        return NextResponse.json(uniqueOrders)
     } catch (_e) {
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

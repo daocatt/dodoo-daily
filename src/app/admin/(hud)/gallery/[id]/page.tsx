@@ -4,7 +4,7 @@ import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles, Camera, X as XIcon, ChevronRight, Download, Loader2, Fan } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, Image as ImageIcon, Settings, Trash, Archive, Edit3, AlertTriangle, Star, Sparkles, Camera, X as XIcon, Fan } from 'lucide-react'
 import PosterGenerator from '@/components/PosterGenerator'
 import UploadModal from '@/components/gallery/UploadModal'
 import { useI18n } from '@/contexts/I18nContext'
@@ -296,7 +296,7 @@ export default function AlbumDetailPage() {
                 onBack={() => router.push('/admin/gallery')}
                 actions={
                     <div className="flex items-center gap-2 md:gap-3">
-                        {album.id !== 'archive' && (
+                        {album.id !== 'archive' && album.id !== 'uncategorized' && (
                             <button
                                 onClick={() => {
                                     setEditAlbumName(album.title)
@@ -332,7 +332,9 @@ export default function AlbumDetailPage() {
                 <div className="mb-8 flex items-center gap-4">
                     <div className="hardware-well px-4 py-2 rounded-xl bg-white/40 shadow-inner flex items-center gap-3 border border-white/40 grayscale opacity-60">
                          <ImageIcon className="w-5 h-5 text-slate-500" />
-                         <h2 className="label-mono text-[12px] font-black uppercase tracking-[0.2em]">{album.title}</h2>
+                         <h2 className="label-mono text-[12px] font-black uppercase tracking-[0.2em]">
+                             {album.id === 'uncategorized' ? (t('gallery.uncategorized') || 'Uncategorized') : album.title}
+                         </h2>
                     </div>
                 </div>
 

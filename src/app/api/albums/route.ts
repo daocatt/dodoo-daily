@@ -49,6 +49,20 @@ export async function GET(req: NextRequest) {
             }
         })
 
+        // Add virtual "Uncategorized" album if there are orphaned artworks
+        const orphanedArtworks = allArtworksRaw.filter(art => !art.albumId)
+        if (orphanedArtworks.length > 0) {
+            albumsWithArtworks.push({
+                id: 'uncategorized',
+                userId: currentUserId,
+                title: 'Uncategorized',
+                artworks: orphanedArtworks.slice(0, 3),
+                totalArtworks: orphanedArtworks.length,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            } as typeof album.$inferSelect)
+        }
+
         return NextResponse.json(albumsWithArtworks)
     } catch (error) {
         console.error('Failed to fetch albums:', error)
