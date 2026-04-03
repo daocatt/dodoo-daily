@@ -90,7 +90,7 @@ export function BausteinAdminNavbar({
     }
 
     return (
-        <header className="sticky top-0 z-[100] w-full bg-[#D1CDBC]/80 backdrop-blur-md border-b border-black/5 px-4 md:px-8 flex items-center justify-between font-sans select-none h-[64px] pointer-events-none transition-all">
+        <header className="sticky top-0 z-[100] w-full bg-[#D1CDBC]/80 backdrop-blur-md px-4 md:px-8 flex items-center justify-between font-sans select-none h-[64px] pointer-events-none transition-all">
             {/* Left Section: Logo & Back Button */}
             <div className="flex items-center gap-4 relative z-10 pointer-events-auto">
                 <LogoTitle 
