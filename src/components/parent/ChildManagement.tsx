@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { 
-    Users, UserCheck, Plus, Trash2, Archive, History, 
+    Users, UserCheck, Plus, Trash2, Archive, 
     X, Camera, Shield, AlertTriangle,
     Star, Edit2, Save, Zap,
     Fingerprint,
@@ -16,6 +16,7 @@ import {
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
+import { useRouter } from 'next/navigation'
 import { getZodiac, getChineseZodiac } from '@/lib/utils'
 import SmartDatePicker from '@/components/SmartDatePicker'
 
@@ -45,15 +46,6 @@ interface Child {
     isLocked?: boolean
 }
 
-interface BalanceLog {
-    id: string
-    amount: number
-    type: string
-    reason: string
-    balance: number
-    createdAt: string
-}
-
 export default function ChildManagement({ _onAssignTask, currentUser, forceShowAdd, onSetShowAdd, forceShowArchived }: { 
     _onAssignTask?: (id: string) => void,
     currentUser: { id: string; permissionRole: string },
@@ -62,6 +54,7 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
     forceShowArchived?: boolean
 }) {
     const { t } = useI18n()
+    const router = useRouter()
     const [children, setChildren] = useState<Child[]>([])
     const [loading, setLoading] = useState(true)
     const [showAddInternal, setShowAddInternal] = useState(false)
@@ -70,8 +63,6 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
 
     const [editingChild, setEditingChild] = useState<Partial<Child> | null>(null)
     const [newChild, setNewChild] = useState<Partial<Child>>({ name: '', nickname: '', slug: '', gender: 'OTHER', role: 'CHILD' })
-    const [showLogs, setShowLogs] = useState<string | null>(null)
-    const [logs, setLogs] = useState<BalanceLog[]>([])
     const [adjusting, setAdjusting] = useState<string | null>(null)
     const [adjData, setAdjData] = useState({ currency: 0, goldStars: 0, reason: '' })
     const [showArchivedInternal, _setShowArchivedInternal] = useState(false)
@@ -225,16 +216,6 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
         } finally { setProcessing(false) }
     }
 
-    const fetchLogs = async (userId: string) => {
-        if (processing) return
-        setProcessing(true)
-        try {
-            const res = await fetch(`/api/parent/logs?userId=${userId}`)
-            const data = await res.json()
-            setLogs(data)
-            setShowLogs(userId)
-        } catch (_error) { console.error(_error) } finally { setProcessing(false) }
-    }
 
     const handleArchive = async (id: string) => {
         if (processing) return
@@ -606,7 +587,7 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                         </div>
                     </button>
 
-                    <button onClick={() => fetchLogs(child.id)} className="hardware-btn group w-full h-14">
+                    <button onClick={() => router.push(`/admin/console/members/${child.id}/logs`)} className="hardware-btn group w-full h-14">
                         <div className="hardware-well h-14 rounded-2xl overflow-hidden relative active:translate-y-0.5 transition-transform bg-[#DADBD4] shadow-well p-1">
                             <div className="hardware-cap absolute inset-1 bg-[#F4F4F2] group-hover:bg-amber-50 rounded-xl flex flex-col items-center justify-center gap-1 shadow-cap transition-all">
                                 <Clock className="w-4 h-4 text-amber-600/70 group-hover:text-amber-600" />
@@ -743,56 +724,55 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                     transition={{ type: 'spring', damping: 25, stiffness: 350 }}
                                     className="w-full max-w-lg relative"
                                 >
-                                    <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[32px] shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col">
-                                        <div className="px-8 py-6 relative shrink-0">
+                                    <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[32px] shadow-2xl relative border-4 border-[#C8C4B0] flex flex-col overflow-hidden">
+                                        <div className="px-6 py-5 relative shrink-0">
                                             <div className="flex justify-between items-center relative z-10">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 hardware-well rounded-xl flex items-center justify-center bg-[#DADBD4] shadow-well overflow-hidden">
-                                                        {child.avatarUrl ? (
-                                                            <Image src={child.avatarUrl} alt="" width={48} height={48} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-slate-100 italic text-[10px] text-slate-400">NA</div>
-                                                        )}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 flex items-center justify-center">
+                                                        <Zap className="w-6 h-6 text-blue-500 animate-pulse" />
                                                     </div>
                                                     <div>
                                                         <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase leading-none">
                                                             {child.nickname || child.name}
                                                         </h3>
-                                                        <p className="label-mono opacity-40 mt-1 text-[8px] tracking-widest uppercase">BALANCE MODULATION HUD</p>
                                                     </div>
                                                 </div>
-                                                <Zap className="w-6 h-6 text-blue-500 animate-pulse" />
+                                                <button onClick={() => setAdjusting(null)} className="hardware-btn group w-9 h-9">
+                                                    <div className="hardware-well h-9 rounded-lg overflow-hidden relative flex items-center justify-center group-hover:bg-rose-50 transition-colors">
+                                                        <X className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition-colors" />
+                                                    </div>
+                                                </button>
                                             </div>
                                             <div className="hardware-groove absolute bottom-0 left-0" />
                                         </div>
 
-                                        <div className="p-8 space-y-8">
+                                        <div className="p-6 pb-8 space-y-6">
                                             {/* Coins Modulation */}
                                             <div className="space-y-3">
                                                 <div className="flex items-center justify-between px-2">
-                                                    <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <label className="label-mono text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
                                                         <Coins className="w-3 h-3 text-amber-500" />
-                                                        CURRENCY MODULATION
+                                                        {t('parent.currency')} COINS
                                                     </label>
-                                                    <div className="label-mono text-[9px] font-black text-slate-300">CURR: {child.stats?.currency || 0}</div>
+                                                    <div className="label-mono text-[9px] font-black text-slate-600 uppercase whitespace-nowrap">CURRENT: {child.stats?.currency || 0}</div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex-1 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well">
-                                                        <div className="flex items-center bg-white rounded-xl h-14 px-4 gap-4 shadow-inner">
+                                                <div className="flex items-center gap-3 w-full">
+                                                    <div className="flex-1 min-w-0 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well h-14">
+                                                        <div className="flex items-center bg-white rounded-xl h-full px-3 gap-3 shadow-inner">
                                                             <button 
                                                                 onClick={() => {
                                                                     const val = adjData.currency - 1;
                                                                     if ((child.stats?.currency || 0) + val >= 0) setAdjData({ ...adjData, currency: val });
                                                                 }}
-                                                                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform"
+                                                                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform shrink-0"
                                                             >
                                                                 -
                                                             </button>
                                                             <input 
                                                                 type="number"
-                                                                className="flex-1 bg-transparent text-center font-black text-slate-800 text-lg outline-none"
+                                                                className="flex-1 min-w-0 bg-transparent text-center font-black text-slate-800 text-lg outline-none px-1"
                                                                 value={adjData.currency || ''}
-                                                                placeholder="DELTA"
+                                                                placeholder="0"
                                                                 onChange={e => {
                                                                     const val = parseInt(e.target.value) || 0;
                                                                     if ((child.stats?.currency || 0) + val >= 0) setAdjData({ ...adjData, currency: val });
@@ -800,15 +780,14 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                                             />
                                                             <button 
                                                                 onClick={() => setAdjData({ ...adjData, currency: adjData.currency + 1 })}
-                                                                className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform"
+                                                                className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform shrink-0"
                                                             >
                                                                 +
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div className="w-20 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well flex flex-col items-center justify-center">
-                                                        <span className="label-mono text-[7px] text-slate-400 uppercase">RESULT</span>
-                                                        <span className={`text-lg font-black ${newCurrency > (child.stats?.currency || 0) ? 'text-emerald-500' : newCurrency < (child.stats?.currency || 0) ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                    <div className="w-32 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well flex flex-col items-center justify-center h-14 shrink-0">
+                                                        <span className={`text-lg font-black leading-none tabular-nums ${newCurrency > (child.stats?.currency || 0) ? 'text-emerald-500' : newCurrency < (child.stats?.currency || 0) ? 'text-rose-500' : 'text-slate-500'}`}>
                                                             {newCurrency}
                                                         </span>
                                                     </div>
@@ -818,29 +797,29 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                             {/* Stars Modulation */}
                                             <div className="space-y-3">
                                                 <div className="flex items-center justify-between px-2">
-                                                    <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <label className="label-mono text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 whitespace-nowrap">
                                                         <Star className="w-3 h-3 text-sky-500" />
-                                                        GOLD STAR MODULATION
+                                                        {t('parent.goldStars')} STARS
                                                     </label>
-                                                    <div className="label-mono text-[9px] font-black text-slate-300">CURR: {child.stats?.goldStars || 0}</div>
+                                                    <div className="label-mono text-[9px] font-black text-slate-600 uppercase whitespace-nowrap">CURRENT: {child.stats?.goldStars || 0}</div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex-1 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well">
-                                                        <div className="flex items-center bg-white rounded-xl h-14 px-4 gap-4 shadow-inner">
+                                                <div className="flex items-center gap-3 w-full">
+                                                    <div className="flex-1 min-w-0 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well h-14">
+                                                        <div className="flex items-center bg-white rounded-xl h-full px-3 gap-3 shadow-inner">
                                                             <button 
                                                                 onClick={() => {
                                                                     const val = adjData.goldStars - 1;
                                                                     if ((child.stats?.goldStars || 0) + val >= 0) setAdjData({ ...adjData, goldStars: val });
                                                                 }}
-                                                                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform"
+                                                                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform shrink-0"
                                                             >
                                                                 -
                                                             </button>
                                                             <input 
                                                                 type="number"
-                                                                className="flex-1 bg-transparent text-center font-black text-slate-800 text-lg outline-none"
+                                                                className="flex-1 min-w-0 bg-transparent text-center font-black text-slate-800 text-lg outline-none px-1"
                                                                 value={adjData.goldStars || ''}
-                                                                placeholder="DELTA"
+                                                                placeholder="0"
                                                                 onChange={e => {
                                                                     const val = parseInt(e.target.value) || 0;
                                                                     if ((child.stats?.goldStars || 0) + val >= 0) setAdjData({ ...adjData, goldStars: val });
@@ -848,15 +827,14 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                                             />
                                                             <button 
                                                                 onClick={() => setAdjData({ ...adjData, goldStars: adjData.goldStars + 1 })}
-                                                                className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform"
+                                                                className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center font-black shadow-sm active:scale-90 transition-transform shrink-0"
                                                             >
                                                                 +
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div className="w-20 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well flex flex-col items-center justify-center">
-                                                        <span className="label-mono text-[7px] text-slate-400 uppercase">RESULT</span>
-                                                        <span className={`text-lg font-black ${newStars > (child.stats?.goldStars || 0) ? 'text-emerald-500' : newStars < (child.stats?.goldStars || 0) ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                    <div className="w-32 hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well flex flex-col items-center justify-center h-14 shrink-0">
+                                                        <span className={`text-lg font-black leading-none tabular-nums ${newStars > (child.stats?.goldStars || 0) ? 'text-emerald-500' : newStars < (child.stats?.goldStars || 0) ? 'text-rose-500' : 'text-slate-500'}`}>
                                                             {newStars}
                                                         </span>
                                                     </div>
@@ -865,38 +843,31 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
 
                                             {/* Reason Field */}
                                             <div className="space-y-2">
-                                                <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2">ADJUSTMENT LOG REASON</label>
+                                                <label className="label-mono text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 whitespace-nowrap">{t('parent.reason')}</label>
                                                 <div className="hardware-well rounded-2xl p-1 bg-[#DADBD4] shadow-well">
                                                     <input 
-                                                        className="w-full bg-white rounded-xl h-11 px-4 text-xs font-bold text-slate-700 outline-none placeholder:opacity-30"
-                                                        placeholder="Mnemonic or reason for this distribution..."
+                                                        className="w-full bg-white rounded-xl h-12 px-4 text-xs font-bold text-slate-700 outline-none placeholder:opacity-30"
+                                                        placeholder="..."
                                                         value={adjData.reason}
                                                         onChange={e => setAdjData({ ...adjData, reason: e.target.value })}
                                                     />
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-4 pt-4">
-                                                <button onClick={() => setAdjusting(null)} className="flex-1 hardware-btn group h-14">
-                                                    <div className="hardware-well h-14 rounded-2xl bg-[#DADBD4] p-1 shadow-well active:translate-y-0.5 transition-all">
-                                                        <div className="hardware-cap bg-[#F4F4F2] group-hover:bg-white h-full rounded-xl flex items-center justify-center shadow-cap transition-all">
-                                                            <span className="text-slate-500 font-black uppercase tracking-widest text-xs">CANCEL</span>
-                                                        </div>
-                                                    </div>
-                                                </button>
+                                            <div className="pt-4">
                                                 <button 
                                                     onClick={handleAdjust} 
                                                     disabled={processing || (adjData.currency === 0 && adjData.goldStars === 0)}
-                                                    className="flex-[2] hardware-btn group h-14"
+                                                    className="w-full hardware-btn group h-14"
                                                 >
                                                     <div className="hardware-well h-14 rounded-2xl bg-[#DADBD4] p-1 shadow-well active:translate-y-0.5 transition-all">
-                                                        <div className={`hardware-cap h-full rounded-xl flex items-center justify-center shadow-cap transition-all ${processing ? 'bg-slate-100' : 'bg-blue-600 group-hover:bg-blue-500'}`}>
+                                                        <div className={`hardware-cap h-full rounded-xl flex items-center justify-center shadow-cap transition-all ${processing ? 'bg-slate-100' : 'bg-indigo-600 group-hover:bg-indigo-500'}`}>
                                                             {processing ? (
                                                                 <div className="w-5 h-5 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
                                                             ) : (
                                                                 <div className="flex items-center gap-2">
                                                                     <Save className="w-4 h-4 text-white" />
-                                                                    <span className="text-white font-black uppercase tracking-widest text-xs">COMMIT ADJUSTMENT</span>
+                                                                    <span className="text-white font-black uppercase tracking-widest text-[10px]">提交保存</span>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -950,82 +921,9 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         {archivedChildren.map(child => renderChildCard(child))}
                     </div>
-                  <AnimatePresence>
-                {showLogs && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-[#D1CDBC]/40 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-                            className="w-full max-w-2xl relative"
-                        >
-                            <div className="baustein-panel w-full bg-[#E2DFD2] rounded-[2rem] shadow-2xl relative overflow-hidden border-4 border-[#C8C4B0] flex flex-col max-h-[85dvh]">
-                                <div className="hardware-well px-8 py-6 relative shrink-0">
-                                    <div className="flex justify-between items-center relative z-10">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 hardware-well rounded-xl flex items-center justify-center shadow-well bg-[#DADBD4]">
-                                                <History className="w-6 h-6 text-slate-700" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">{t('parent.balanceLogs')}</h3>
-                                                <p className="label-mono opacity-60 mt-1.5">HISTORICAL SYSTEM AUDIT</p>
-                                            </div>
-                                        </div>
-                                        <button onClick={() => setShowLogs(null)} className="hardware-btn group w-10 h-10">
-                                            <div className="hardware-well h-10 rounded-lg overflow-hidden relative flex items-center justify-center group-hover:bg-slate-50 transition-colors">
-                                                <X className="w-5 h-5 text-slate-400" />
-                                            </div>
-                                        </button>
-                                    </div>
-                                    <div className="hardware-groove absolute bottom-0 left-0" />
-                                </div>
-                                
-                                <div className="flex-1 overflow-y-auto px-8 py-8 space-y-4 custom-scrollbar bg-[#DADBD4]/30">
-                                    {logs.map((log, i) => (
-                                        <div key={i} className="hardware-well group p-1.5 rounded-2xl overflow-hidden hover:bg-[#D1CDBC] transition-colors">
-                                            <div className="bg-white/90 rounded-xl p-4 flex items-center justify-between border-2 border-transparent group-hover:border-blue-200 transition-all">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-14 h-14 hardware-well rounded-xl flex flex-col items-center justify-center shadow-inner ${log.amount > 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                                                        <span className={`text-lg font-black ${log.amount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                            {log.amount > 0 ? '+' : ''}{log.amount}
-                                                        </span>
-                                                        <span className="text-[8px] font-black opacity-30 tracking-widest">UNIT</span>
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-bold text-slate-800 text-sm">{log.reason}</div>
-                                                        <div className="label-mono text-[9px] opacity-40 mt-1">{new Date(log.createdAt).toLocaleString()}</div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="label-mono text-[8px] text-blue-500 font-black mb-1">{log.type}</div>
-                                                    <div className="text-xl font-black text-slate-900 tracking-tighter">{log.balance}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="px-8 py-6 hardware-well shrink-0">
-                                    <div className="hardware-groove absolute top-0 left-0" />
-                                    <button 
-                                        onClick={() => setShowLogs(null)}
-                                        className="hardware-btn group w-full h-14"
-                                    >
-                                        <div className="hardware-well h-14 rounded-xl overflow-hidden relative active:translate-y-0.5 transition-transform">
-                                            <div className="hardware-cap absolute inset-1.5 bg-[#F4F4F2] group-hover:bg-white rounded-lg flex items-center justify-center transition-all shadow-cap">
-                                                <span className="text-slate-600 font-black uppercase tracking-widest text-xs">Acknowledge</span>
-                                            </div>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-           </div>
+                </div>
             )}
+
 
             {/* Confirmation Modals */}
             <AnimatePresence>
@@ -1101,21 +999,52 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                             </div>
                             <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase mb-6">{t('parent.resetPassword')}</h3>
                             
-                            <div className="hardware-well rounded-xl p-1 bg-[#D1CDBC] w-full mb-6">
-                                <input
-                                    autoFocus
-                                    className="w-full bg-white px-4 py-3 rounded-lg border-none outline-none font-black text-slate-800 text-lg shadow-inner tracking-[1em] text-center"
-                                    placeholder="••••"
-                                    maxLength={4}
-                                    value={resettingPin.pin}
-                                    onChange={e => setResettingPin({ ...resettingPin, pin: e.target.value })}
-                                />
+                            <div className="flex items-center gap-2 w-full mb-6">
+                                <div className="flex-1 hardware-well rounded-xl p-1 bg-[#D1CDBC]">
+                                    <input
+                                        autoFocus
+                                        className="w-full bg-white px-4 py-3 rounded-lg border-none outline-none font-bold text-slate-800 text-sm shadow-inner placeholder:tracking-normal"
+                                        placeholder="Enter password..."
+                                        value={resettingPin.pin}
+                                        onChange={e => setResettingPin({ ...resettingPin, pin: e.target.value })}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const alphas = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                                        const nums = '0123456789';
+                                        const specs = '#$*_@,.+';
+                                        const all = alphas + nums + specs;
+                                        
+                                        // 1. Start with a letter
+                                        let pwd = alphas[Math.floor(Math.random() * alphas.length)];
+                                        
+                                        // 2. Ensure at least one of each required type (ignoring the first letter for simplicity of set coverage)
+                                        pwd += alphas.toLowerCase()[Math.floor(Math.random() * 26)];
+                                        pwd += alphas.toUpperCase()[Math.floor(Math.random() * 26)];
+                                        pwd += nums[Math.floor(Math.random() * nums.length)];
+                                        pwd += specs[Math.floor(Math.random() * specs.length)];
+                                        
+                                        // 3. Fill up to 12 chars for good measure (>= 10)
+                                        for (let i = pwd.length; i < 12; i++) {
+                                            pwd += all[Math.floor(Math.random() * all.length)];
+                                        }
+                                        
+                                        setResettingPin({ ...resettingPin, pin: pwd });
+                                    }}
+                                    className="hardware-btn group w-12 h-12 shrink-0"
+                                >
+                                    <div className="hardware-well h-12 rounded-xl flex items-center justify-center bg-[#DADBD4] group-hover:bg-white transition-colors shadow-well">
+                                        <Dices className="w-5 h-5 text-indigo-600 group-hover:rotate-12 transition-transform" />
+                                    </div>
+                                </button>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3 w-full">
                                 <button
                                     onClick={async () => {
-                                        if (resettingPin.pin.length !== 4) return;
+                                        if (resettingPin.pin.length < 4) return;
                                         setProcessing(true);
                                         try {
                                             const res = await fetch(`/api/parent/children/${resettingPin.childId}`, {
@@ -1124,6 +1053,7 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                                 body: JSON.stringify({ pin: resettingPin.pin })
                                             });
                                             if (res.ok) {
+                                                showToast(t('common.updateSuccess'));
                                                 setResettingPin(null);
                                                 fetchData();
                                             }
@@ -1131,7 +1061,7 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                             setProcessing(false);
                                         }
                                     }}
-                                    disabled={resettingPin.pin.length !== 4 || processing}
+                                    disabled={resettingPin.pin.length < 4 || processing}
                                     className="hardware-btn group h-12"
                                 >
                                     <div className="hardware-well h-12 rounded-xl overflow-hidden relative active:translate-y-0.5 transition-transform">
