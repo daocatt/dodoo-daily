@@ -1047,10 +1047,10 @@ export default function ChildManagement({ _onAssignTask, currentUser, forceShowA
                                         if (resettingPin.pin.length < 4) return;
                                         setProcessing(true);
                                         try {
-                                            const res = await fetch(`/api/parent/children/${resettingPin.childId}`, {
+                                            const res = await fetch('/api/parent/children', {
                                                 method: 'PATCH',
                                                 headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ pin: resettingPin.pin })
+                                                body: JSON.stringify({ id: resettingPin.childId, pin: resettingPin.pin })
                                             });
                                             if (res.ok) {
                                                 showToast(t('common.updateSuccess'));
