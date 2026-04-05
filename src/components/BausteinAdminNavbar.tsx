@@ -25,12 +25,14 @@ export function BausteinAdminNavbar({
     isEditing, 
     onToggleEdit,
     onBack,
-    actions
+    actions,
+    title
 }: { 
     isEditing?: boolean, 
     onToggleEdit?: () => void,
     onBack?: () => void,
-    actions?: React.ReactNode
+    actions?: React.ReactNode,
+    title?: React.ReactNode
 }) {
     const { locale, setLocale } = useI18n()
     const [stats, setStats] = useState<Stats | null>(null)
@@ -99,6 +101,7 @@ export function BausteinAdminNavbar({
                     status={status} 
                 />
                 <BackButton onBack={handleBack} />
+                {title && <div className="ml-1 flex items-center">{title}</div>}
             </div>
 
             {/* Center Section: HUD (Telemetry) - Higher z-index to allow modals to cover everything */}

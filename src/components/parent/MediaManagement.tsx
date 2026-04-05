@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import {
-    Upload, Image as ImageIcon, Music, Video,
+    ImageIcon, Music, Video,
     FileText, Trash2, Edit3, Search,
     Loader2, X, Check, ExternalLink, HardDrive, Cloud
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useI18n } from '@/contexts/I18nContext'
 import Image from 'next/image'
+import { clsx } from 'clsx'
 
 type MediaRecord = {
     id: string
@@ -38,10 +39,6 @@ export default function MediaManagement() {
     const [filter, setFilter] = useState('ALL')
     const [search, setSearch] = useState('')
 
-    // Upload State
-    const [uploading, setUploading] = useState(false)
-    const [uploadType, setUploadType] = useState<'IMAGE' | 'VOICE' | 'VIDEO' | 'DOC' | 'GALLERY'>('IMAGE')
-
     // Edit State
     const [editing, setEditing] = useState<string | null>(null)
     const [editName, setEditName] = useState('')
@@ -68,30 +65,6 @@ export default function MediaManagement() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault()
         fetchMedia()
-    }
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.[0]) return
-        const file = e.target.files[0]
-        setUploading(true)
-
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('type', uploadType)
-
-        try {
-            const res = await fetch('/api/media/upload', {
-                method: 'POST',
-                body: formData
-            })
-            if (res.ok) {
-                fetchMedia()
-            }
-        } catch (_err) {
-            console.error('Upload failed:', _err)
-        } finally {
-            setUploading(false)
-        }
     }
 
     const handleDelete = async (id: string) => {
@@ -128,7 +101,7 @@ export default function MediaManagement() {
             case 'IMAGE': return <ImageIcon className="w-5 h-5" />
             case 'VOICE': return <Music className="w-5 h-5" />
             case 'VIDEO': return <Video className="w-5 h-5" />
-            case 'GALLERY': return <ImageIcon className="w-5 h-5 text-orange-500" />
+            case 'GALLERY': return <ImageIcon className="w-5 h-5 text-amber-500" />
             default: return <FileText className="w-5 h-5" />
         }
     }
@@ -142,156 +115,164 @@ export default function MediaManagement() {
     }
 
     return (
-        <div className="space-y-8 pb-12">
-            {/* Header & Upload */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-xl border border-slate-100 shadow-sm">
-                <div className="flex-1">
-                    <h2 className="text-2xl font-black text-slate-800">{t('parent.media')}</h2>
-                    <p className="text-slate-500 mt-1">{t('parent.mediaDesc')}</p>
-                </div>
+        <div className="space-y-6 pb-10">
+            {/* HUD container - Main body gap */}
+            <div className="flex flex-col gap-6">
 
-                <div className="flex items-center gap-3">
-                    <select
-                        value={uploadType}
-                        onChange={(e) => setUploadType(e.target.value as MediaRecord['fileType'])}
-                        className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-                    >
-                        {TYPE_FILTERS.filter(f => f.value !== 'ALL').map(f => (
-                            <option key={f.value} value={f.value}>{t(f.label)}</option>
+                {/* Toolbar Module - Taxonomy & Retrieval Matrix */}
+                <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar lg:flex-1">
+                        {TYPE_FILTERS.map(f => (
+                            <button
+                                key={f.value}
+                                onClick={() => setFilter(f.value)}
+                                className={clsx(
+                                    "px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 flex-shrink-0 label-mono",
+                                    filter === f.value
+                                        ? "bg-slate-900 text-white border-slate-800 shadow-lg"
+                                        : "bg-white text-slate-400 border-white/40 hover:bg-white transition-colors"
+                                )}
+                            >
+                                {t(f.label)}
+                            </button>
                         ))}
-                    </select>
-
-                    <label className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-lg shadow-orange-200 transition-all cursor-pointer active:scale-95">
-                        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                        <span className="text-xs font-black uppercase tracking-widest">{uploading ? t('parent.media.uploading') : t('parent.media.upload')}</span>
-                        <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
-                    </label>
-                </div>
-            </div>
-
-            {/* toolbar */}
-            <div className="flex flex-col md:flex-row gap-4">
-                <form onSubmit={handleSearch} className="flex-1 flex gap-2">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder={t('parent.media.search')}
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
-                        />
                     </div>
-                    <button type="submit" className="px-6 py-3 bg-slate-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-900 transition-colors">
-                        {t('parent.media.searchBtn')}
-                    </button>
-                </form>
 
-                <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-                    {TYPE_FILTERS.map(f => (
-                        <button
-                            key={f.value}
-                            onClick={() => setFilter(f.value)}
-                            className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${filter === f.value
-                                ? 'bg-orange-500 text-white shadow-lg shadow-orange-200'
-                                : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
-                                }`}
-                        >
-                            {t(f.label)}
-                        </button>
-                    ))}
+                    <form onSubmit={handleSearch} className="lg:w-[300px] group">
+                        <div className="hardware-well rounded-xl p-0.5 bg-[#D1CDBC] shadow-well transition-all group-focus-within:bg-[#C8C4B0]">
+                            <div className="relative flex items-center bg-white/95 rounded-lg border border-black/5 overflow-hidden shadow-inner">
+                                <input
+                                    type="text"
+                                    placeholder={t('parent.media.search')}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full pl-4 pr-3 py-1.5 bg-transparent outline-none font-black text-slate-800 text-[10px] placeholder:text-slate-200 transition-all uppercase tracking-tight label-mono"
+                                />
+                                <button type="submit" className="w-8 h-8 flex items-center justify-center bg-slate-900 text-white m-0.5 rounded-md hover:bg-slate-800 transition-colors label-mono flex-shrink-0">
+                                    <Search className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            {/* Media List */}
+            {/* Media Matrix - Item Grid */}
             {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 border-dashed">
-                    <Loader2 className="w-10 h-10 animate-spin text-orange-200 mb-4" />
-                    <p className="text-slate-400 font-medium">{t('parent.media.scanning')}</p>
+                <div className="flex flex-col items-center justify-center py-32 baustein-panel bg-[#DADBD4]/30 rounded-[2.5rem] border-4 border-dashed border-[#C8C4B0]">
+                    <div className="hardware-well w-16 h-16 rounded-full flex items-center justify-center bg-[#D1CDBC] mb-4 animate-pulse">
+                        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] label-mono italic">{t('parent.media.scanning')}</p>
                 </div>
             ) : media.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-slate-100 border-dashed text-slate-400 uppercase tracking-widest font-black text-xs">
-                    {t('parent.media.noFiles')}
+                <div className="flex flex-col items-center justify-center py-32 bg-[#E2DFD2] rounded-[2.5rem] border border-black/5 shadow-well text-slate-300 gap-4">
+                    <HardDrive className="w-12 h-12 opacity-10" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] label-mono opacity-40">{t('parent.media.noFiles')}</span>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
                     <AnimatePresence mode="popLayout">
-                        {media.map((item) => (
+                        {media.map((item, idx) => (
                             <motion.div
                                 key={item.id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="bg-white rounded-xl border border-slate-100 overflow-hidden group hover:shadow-xl transition-all flex flex-col"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: idx * 0.03, duration: 0.4 }}
+                                className="group flex flex-col gap-4"
                             >
-                                {/* Preview / Thumbnail Area */}
-                                <div className="aspect-video bg-slate-50 relative flex items-center justify-center group-hover:bg-slate-100/50 transition-colors">
-                                    {item.fileType === 'IMAGE' || item.fileType === 'GALLERY' ? (
-                                        <Image src={item.path} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    ) : (
-                                        <div className="p-8 rounded-full bg-white shadow-sm text-slate-400">
-                                            {getIcon(item.fileType)}
+                                {/* Media Housing */}
+                                <div className="hardware-well p-2 rounded-2xl bg-[#DADBD4] shadow-well relative">
+                                    <div className="aspect-square bg-slate-100 rounded-2xl overflow-hidden relative border-2 border-white/40 shadow-sm transition-all group-hover:scale-[0.98]">
+                                        {item.fileType === 'IMAGE' || item.fileType === 'GALLERY' ? (
+                                            <Image src={item.path} alt={item.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/5 group-hover:bg-slate-900/10 transition-colors">
+                                                <div className="hardware-well w-16 h-16 rounded-full flex items-center justify-center bg-[#DADBD4] shadow-well">
+                                                    {getIcon(item.fileType)}
+                                                </div>
+                                            </div>
+                                        )}
+
+
+                                        {/* Provider Telemetry */}
+                                        <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/40 backdrop-blur-md rounded-md px-2 py-1 border border-white/10 shadow-lg">
+                                            {item.storageProvider === 'R2' ? <Cloud className="w-3 h-3 text-sky-300" /> : <HardDrive className="w-3 h-3 text-emerald-300" />}
+                                            <span className="text-[7px] font-black text-white uppercase tracking-[0.2em] label-mono">{item.storageProvider}</span>
                                         </div>
-                                    )}
-
-                                    <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <a href={item.path} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-600 hover:text-orange-500 shadow-sm transition-colors">
-                                            <ExternalLink className="w-4 h-4" />
-                                        </a>
-                                        <button
-                                            onClick={() => handleDelete(item.id)}
-                                            className="w-8 h-8 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-600 hover:text-rose-500 shadow-sm transition-colors"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
                                     </div>
-
-                                    <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md rounded-lg px-2 py-1 flex items-center gap-1.5 border border-white/10">
-                                        {item.storageProvider === 'R2' ? <Cloud className="w-3 h-3 text-sky-300" /> : <HardDrive className="w-3 h-3 text-emerald-300" />}
-                                        <span className="text-[8px] font-black text-white uppercase tracking-tighter">{item.storageProvider}</span>
-                                    </div>
+                                    
+                                    {/* Physical Stand Decoration */}
+                                    <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[80%] h-3 bg-gradient-to-b from-[#C8C4B0] to-[#A09D8B] rounded-full z-[-1] shadow-lg opacity-60" />
                                 </div>
 
-                                {/* Info Area */}
-                                <div className="p-5 flex-1 flex flex-col gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        {editing === item.id ? (
-                                            <div className="flex gap-2">
+                                {/* Information Matrix */}
+                                <div className="flex flex-col gap-1 px-1">
+                                    {editing === item.id ? (
+                                        <div className="flex gap-1.5 items-center">
+                                            <div className="hardware-well flex-1 rounded-lg p-0.5 bg-[#D1CDBC] shadow-well">
                                                 <input
                                                     autoFocus
                                                     value={editName}
                                                     onChange={e => setEditName(e.target.value)}
-                                                    className="flex-1 bg-slate-50 border-orange-200 border rounded-lg px-2 py-1 text-sm focus:outline-none"
+                                                    className="w-full bg-white px-2 py-1.5 rounded-md border border-black/5 outline-none font-black text-slate-800 text-[10px] uppercase shadow-inner italic"
                                                 />
-                                                <button onClick={() => handleRename(item.id)} className="text-emerald-500"><Check className="w-4 h-4" /></button>
-                                                <button onClick={() => setEditing(null)} className="text-slate-400"><X className="w-4 h-4" /></button>
                                             </div>
-                                        ) : (
-                                            <div className="flex items-start justify-between gap-2">
-                                                <h3 className="text-sm font-black text-slate-800 line-clamp-1 break-all flex-1">{item.name}</h3>
-                                                <button
-                                                    onClick={() => {
-                                                        setEditing(item.id)
-                                                        setEditName(item.name)
-                                                    }}
-                                                    className="text-slate-300 hover:text-orange-500 transition-colors"
-                                                >
-                                                    <Edit3 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-3 mt-2">
-                                            <span className="text-[10px] font-bold text-slate-400">{formatSize(item.size)}</span>
-                                            <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                            <span className="text-[10px] font-bold text-slate-400 lowercase">{item.mimeType.split('/').pop()}</span>
+                                            <button onClick={() => handleRename(item.id)} className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white shadow-sm active:scale-95"><Check className="w-3.5 h-3.5" /></button>
+                                            <button onClick={() => setEditing(null)} className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white shadow-sm active:scale-95"><X className="w-3.5 h-3.5" /></button>
                                         </div>
-                                    </div>
-                                    <div className="pt-3 border-t border-slate-50 flex items-center justify-between">
-                                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
+                                    ) : (
+                                        <div className="flex items-start justify-between gap-1 group-item">
+                                            <h3 className="text-[11px] font-black text-slate-800 uppercase italic tracking-tight line-clamp-1 break-all flex-1 label-mono py-0.5">{item.name}</h3>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center justify-between mt-1 pb-1 border-t border-black/[0.03] pt-1.5">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="text-[9px] font-black text-slate-800 label-mono uppercase tracking-tighter">{formatSize(item.size)}</span>
+                                            <span className="text-[9px] font-black text-slate-400 label-mono italic opacity-40 truncate">/ {item.mimeType.split('/').pop()}</span>
+                                        </div>
+                                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest label-mono font-number whitespace-nowrap">
                                             {new Date(item.createdAt).toLocaleDateString()}
                                         </span>
-                                        <div className={`w-2 h-2 rounded-full ${item.fileType === 'IMAGE' ? 'bg-orange-400' : item.fileType === 'VOICE' ? 'bg-sky-400' : 'bg-indigo-400'}`} />
+                                    </div>
+
+                                    {/* Action Module - Consolidated High Density Triggers */}
+                                    <div className="flex gap-1.5">
+                                        <a href={item.path} target="_blank" rel="noreferrer" className="hardware-btn group flex-1">
+                                            <div className="hardware-well h-9 rounded-xl bg-[#DADBD4] shadow-well flex items-center justify-center active:translate-y-0.5 transition-all relative overflow-hidden">
+                                                <div className="hardware-cap absolute inset-0.5 bg-white lg:group-hover:bg-slate-900 rounded-lg shadow-cap transition-colors flex items-center justify-center gap-1.5">
+                                                    <ExternalLink className="w-3.5 h-3.5 text-slate-600 lg:group-hover:text-white transition-colors" />
+                                                    <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 lg:group-hover:text-white label-mono transition-colors">{t('button.view')}</span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <button 
+                                            onClick={() => {
+                                                setEditing(item.id)
+                                                setEditName(item.name)
+                                            }}
+                                            className="hardware-btn group flex-1"
+                                        >
+                                            <div className="hardware-well h-9 rounded-xl bg-[#DADBD4] shadow-well flex items-center justify-center active:translate-y-0.5 transition-all relative overflow-hidden">
+                                                <div className="hardware-cap absolute inset-0.5 bg-white lg:group-hover:bg-amber-500 rounded-lg shadow-cap transition-colors flex items-center justify-center gap-1.5">
+                                                    <Edit3 className="w-3.5 h-3.5 text-slate-600 lg:group-hover:text-white transition-colors" />
+                                                    <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 lg:group-hover:text-white label-mono transition-colors">{t('parent.media.rename')}</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDelete(item.id)} 
+                                            className="hardware-btn group flex-1"
+                                        >
+                                            <div className="hardware-well h-9 rounded-xl bg-[#DADBD4] shadow-well flex items-center justify-center active:translate-y-0.5 transition-all relative overflow-hidden">
+                                                <div className="hardware-cap absolute inset-0.5 bg-white lg:group-hover:bg-rose-500 rounded-lg shadow-cap transition-colors flex items-center justify-center gap-1.5">
+                                                    <Trash2 className="w-3.5 h-3.5 text-slate-600 lg:group-hover:text-white transition-colors" />
+                                                    <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 lg:group-hover:text-white label-mono transition-colors">{t('button.delete' )}</span>
+                                                </div>
+                                            </div>
+                                        </button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -302,3 +283,4 @@ export default function MediaManagement() {
         </div>
     )
 }
+

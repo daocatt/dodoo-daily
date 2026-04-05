@@ -47,16 +47,35 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     type DashboardView = 'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS' | 'SHOP_ORDERS' | 'GALLERY_ORDERS'
-    const [view, setView] = useState<DashboardView>(() => {
+    const VIEW_ROUTES: Record<DashboardView, string> = {
+        HOME: '/admin/console',
+        FAMILY: '/admin/console/members',
+        MEDIA: '/admin/console/media',
+        REWARDS: '/admin/console/rewards',
+        EXHIBITION: '/admin/console/exhibition',
+        VISITORS: '/admin/console/visitors',
+        LOGS: '/admin/console/logs',
+        SYSTEM: '/admin/console/system',
+        PROFILE: '/admin/console/profile',
+        SHOP_ORDERS: '/admin/console/shop-orders',
+        GALLERY_ORDERS: '/admin/console/gallery-orders',
+        PENALTIES: '/admin/console/penalties',
+    }
+
+    const [view] = useState<DashboardView>(() => {
         if (forceView) return forceView as DashboardView
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search)
             const qView = params.get('view') || ''
-            const views = ['HOME', 'FAMILY', 'REWARDS', 'PENALTIES', 'PROFILE', 'SYSTEM', 'MEDIA', 'EXHIBITION', 'VISITORS', 'LOGS', 'SHOP_ORDERS', 'GALLERY_ORDERS']
-            if (views.includes(qView)) return qView as DashboardView
+            if (Object.keys(VIEW_ROUTES).includes(qView)) return qView as DashboardView
         }
         return 'HOME'
     })
+
+    const navigateToView = (newView: DashboardView) => {
+        router.push(VIEW_ROUTES[newView])
+    }
+
     const [user, setUser] = useState<ParentUser | null>(null)
     const [showAddChild, setShowAddChild] = useState(false)
     const [showArchived, setShowArchived] = useState(false)
@@ -71,7 +90,8 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                 return res.json()
             })
             .then(data => {
-                if (data && data.isAdmin) {
+                // Strict check for SUPERADMIN or ADMIN
+                if (data && data.isAdmin && (data.permissionRole === 'SUPERADMIN' || data.permissionRole === 'ADMIN')) {
                     setLoading(false)
                     setUser({
                         id: data.userId || '',
@@ -115,11 +135,11 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
             /> : null
             case 'SHOP_ORDERS': return <OrderManagement defaultTab="SHOP" hideTabs={true} />
             case 'GALLERY_ORDERS': return <OrderManagement defaultTab="GALLERY" hideTabs={true} />
-            case 'REWARDS': return <ShopManagement onOrdersClick={() => setView('SHOP_ORDERS')} />
+            case 'REWARDS': return <ShopManagement onOrdersClick={() => navigateToView('SHOP_ORDERS')} />
             case 'PROFILE': return user ? <ProfileManagement user={user} /> : null
             case 'SYSTEM': return <SystemSettings />
             case 'MEDIA': return <MediaManagement />
-            case 'EXHIBITION': return <ExhibitionManagement onOrdersClick={() => setView('GALLERY_ORDERS')} />
+            case 'EXHIBITION': return <ExhibitionManagement onOrdersClick={() => navigateToView('GALLERY_ORDERS')} />
             case 'VISITORS': return <VisitorManagement />
             case 'LOGS': return <LoginLog />
             default: return null
@@ -131,10 +151,16 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
             {/* ─── Integrated Navbar ─── */}
             <BausteinAdminNavbar 
                 onBack={view !== 'HOME' ? () => {
-                    if (view === 'SHOP_ORDERS') setView('REWARDS')
-                    else if (view === 'GALLERY_ORDERS') setView('EXHIBITION')
-                    else setView('HOME')
+                    if (view === 'SHOP_ORDERS') navigateToView('REWARDS')
+                    else if (view === 'GALLERY_ORDERS') navigateToView('EXHIBITION')
+                    else router.push('/admin/console')
                 } : undefined}
+                title={view !== 'HOME' ? (
+                    <div className="flex items-center gap-2 ml-1">
+                        <div className="w-1.5 h-3 bg-amber-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                        <h2 className="text-[13px] font-black text-slate-800 uppercase italic tracking-tighter leading-none">{t(`parent.${view.toLowerCase() === 'shop_orders' ? 'rewards' : view.toLowerCase()}`)}</h2>
+                    </div>
+                ) : undefined}
                 actions={
                     view === 'FAMILY' ? (
                         <div className="flex gap-3 items-center">
@@ -180,7 +206,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                 {/* Family Members */}
                                 <button
-                                    onClick={() => setView('FAMILY')}
+                                    onClick={() => navigateToView('FAMILY')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
@@ -202,7 +228,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
 
                                 {/* Media Management */}
                                 <button
-                                    onClick={() => setView('MEDIA')}
+                                    onClick={() => navigateToView('MEDIA')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
@@ -224,7 +250,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
 
                                 {/* Reward Store */}
                                 <button
-                                    onClick={() => setView('REWARDS')}
+                                    onClick={() => navigateToView('REWARDS')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
@@ -255,7 +281,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {/* Exhibition Management */}
                                 <button
-                                    onClick={() => setView('EXHIBITION')}
+                                    onClick={() => navigateToView('EXHIBITION')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
@@ -277,7 +303,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
 
                                 {/* Visitor Management */}
                                 <button
-                                    onClick={() => setView('VISITORS')}
+                                    onClick={() => navigateToView('VISITORS')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
@@ -308,7 +334,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {/* Audit Logs */}
                                 <button
-                                    onClick={() => setView('LOGS')}
+                                    onClick={() => navigateToView('LOGS')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden bg-transparent border-none p-0 outline-none block w-full"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative overflow-hidden">
@@ -330,7 +356,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
 
                                 {/* System Control */}
                                 <button
-                                    onClick={() => setView('SYSTEM')}
+                                    onClick={() => navigateToView('SYSTEM')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden bg-transparent border-none p-0 outline-none block w-full"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative overflow-hidden">
@@ -360,7 +386,7 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 <button
-                                    onClick={() => setView('PROFILE')}
+                                    onClick={() => navigateToView('PROFILE')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden bg-transparent border-none p-0 outline-none block w-full"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative overflow-hidden">

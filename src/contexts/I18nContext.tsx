@@ -43,6 +43,7 @@ const dictionaries: Dictionary = {
         'button.archive': 'Archive',
         'button.remarks': 'Remarks',
         'button.submitting': 'Submitting...',
+        'button.view': 'View',
 
         // Checkout
         'checkout.confirmPayment': 'Confirm Payment',
@@ -410,6 +411,7 @@ const dictionaries: Dictionary = {
         'parent.media.uploading': 'Uploading...',
         'parent.media.search': 'Search files...',
         'parent.media.searchBtn': 'Search',
+        'parent.media.rename': 'Rename',
         'parent.media.scanning': 'Scanning folders...',
         'parent.media.noFiles': 'No files found',
         'parent.media.deleteConfirm': 'Are you sure you want to delete this file? This is a permanent physical deletion.',
@@ -1015,6 +1017,7 @@ const dictionaries: Dictionary = {
         'button.archive': '归档',
         'button.remarks': '备注',
         'button.submitting': '提交中...',
+        'button.view': '预览',
 
         // Checkout
         'checkout.confirmPayment': '确认支付',
@@ -1418,6 +1421,7 @@ const dictionaries: Dictionary = {
         'parent.media.uploading': '正在上传...',
         'parent.media.search': '搜索文件...',
         'parent.media.searchBtn': '搜索',
+        'parent.media.rename': '重命名',
         'parent.media.scanning': '正在扫描文件夹...',
         'parent.media.noFiles': '未发现文件',
         'parent.media.deleteConfirm': '确定要彻底删除此文件吗？此操作不可撤销。',
