@@ -16,7 +16,7 @@ This skill must be applied when generating new UI components or modifying existi
    const { t } = useI18n()
    return <h1>{t('module.title')}</h1>
    ```
-3. **Always Update `I18nContext.tsx`:** If the translation key does not exist yet, you MUST add it to BOTH the `en` and `zh-CN` dictionary objects in `src/contexts/I18nContext.tsx`. Do not just add the key to one language.
+3. **Always Update Locale Files:** If the translation key does not exist yet, you MUST add it to BOTH `src/i18n/locales/en.ts` and `src/i18n/locales/zh-CN.ts`. Do not just add the key to one language.
 4. **Deep Check Existing Hardcoded Strings:** When refactoring a file, proactively hunt for strings like `placeholder="搜索..."` and replace them with `placeholder={t('some.key')}`.
 5. **No Placeholders in the Code:** Make sure you don't leave things like `TODO: Add translation`. Add the translation right away.
 

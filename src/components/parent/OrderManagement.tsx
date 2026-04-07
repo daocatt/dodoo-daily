@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { ShoppingBag, CheckCircle, RotateCcw, MessageSquare, X, Package, User, Phone, Calendar } from 'lucide-react'
+import { CheckCircle, RotateCcw, MessageSquare, X, Package, User, Phone } from 'lucide-react'
 import { motion, AnimatePresence } from 'motion/react'
 import Image from 'next/image'
 import { useI18n } from '@/contexts/I18nContext'
+import clsx from 'clsx'
 
 interface ShopOrder {
     id: string
@@ -12,29 +13,20 @@ interface ShopOrder {
     status: string
     remarks: string | null
     createdAt: number
+    userId: string
     user: { name: string, avatarUrl: string | null }
     item: { name: string, iconUrl: string | null }
 }
 
 interface GalleryOrder {
     id: string
-    status: string
+    visitor: { name: string, phone: string }
+    artwork: { title: string, imageUrl: string, priceCoins: number }
+    artist: { name: string, nickname: string | null }
+    userId: string
     amountRMB: number
+    status: string
     createdAt: number
-    artwork: {
-        id: string
-        title: string
-        imageUrl: string
-        priceCoins: number
-    }
-    artist: {
-        name: string
-        nickname: string | null
-    }
-    visitor: {
-        name: string
-        phone: string
-    }
 }
 
 const STATUS_CONFIG: Record<string, { labelKey: string; className: string }> = {
@@ -71,6 +63,7 @@ function ItemIcon({ iconUrl, name }: { iconUrl: string | null; name: string }) {
 export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false }: { defaultTab?: 'SHOP' | 'GALLERY', hideTabs?: boolean }) {
     const { t } = useI18n()
     const [tab, setTab] = useState<'SHOP' | 'GALLERY'>(defaultTab)
+    const [_shopSubView, _setShopSubView] = useState<'ITEMS' | 'WISHES'>('ITEMS')
     const [shopOrders, setShopOrders] = useState<ShopOrder[]>([])
     const [galleryOrders, setGalleryOrders] = useState<GalleryOrder[]>([])
     const [loading, setLoading] = useState(true)
@@ -81,16 +74,32 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
     })
     const [remarkText, setRemarkText] = useState('')
     const remarkRef = useRef<HTMLTextAreaElement>(null)
+    const [children, setChildren] = useState<{ id: string; name: string; nickname: string | null }[]>([])
+    const [filterUserId, setFilterUserId] = useState<string>('ALL')
+    const [showMemberDrop, setShowMemberDrop] = useState(false)
+    const dropRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+                setShowMemberDrop(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     const fetchData = React.useCallback(async () => {
         setLoading(true)
         try {
-            const [shopRes, galleryRes] = await Promise.all([
+            const [shopRes, galleryRes, childrenRes] = await Promise.all([
                 fetch('/api/parent/orders'),
-                fetch('/api/parent/gallery-orders')
+                fetch('/api/parent/gallery-orders'),
+                fetch('/api/parent/children')
             ])
             if (shopRes.ok) setShopOrders(await shopRes.json())
             if (galleryRes.ok) setGalleryOrders(await galleryRes.json())
+            if (childrenRes.ok) setChildren(await childrenRes.json())
         } catch (_e) { console.error(_e) }
         finally { setLoading(false) }
     }, [])
@@ -136,23 +145,72 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
 
     return (
         <div className="space-y-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <h2 className="text-3xl font-black text-slate-900 flex items-center gap-3">
-                    <ShoppingBag className="w-8 h-8 text-indigo-600" />
-                    {t('parent.orders')}
-                </h2>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+                <div className="flex items-center gap-2 relative" ref={dropRef}>
+                    <div className="bg-slate-100 p-1 rounded-lg flex items-center gap-1">
+                        <User className="w-3.5 h-3.5 text-slate-400 ml-2" />
+                        <button 
+                            onClick={() => setShowMemberDrop(!showMemberDrop)}
+                            className="bg-transparent text-[10px] font-bold text-slate-600 outline-none px-2 py-1 flex items-center gap-2 uppercase tracking-wider"
+                        >
+                            {filterUserId === 'ALL' ? 'ALL MEMBERS' : children.find(c => c.id === filterUserId)?.name.toUpperCase() || 'ALL MEMBERS'}
+                            <motion.div animate={{ rotate: showMemberDrop ? 180 : 0 }}>
+                                <X className={clsx("w-3 h-3", !showMemberDrop && "rotate-45")} />
+                            </motion.div>
+                        </button>
+                    </div>
+
+                    <AnimatePresence>
+                        {showMemberDrop && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                                className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-[100] overflow-hidden"
+                            >
+                                <button
+                                    onClick={() => { setFilterUserId('ALL'); setShowMemberDrop(false); }}
+                                    className={clsx(
+                                        "w-full px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider transition-colors",
+                                        filterUserId === 'ALL' ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:bg-slate-50"
+                                    )}
+                                >
+                                    ALL MEMBERS
+                                </button>
+                                {children.map(child => (
+                                    <button
+                                        key={child.id}
+                                        onClick={() => { setFilterUserId(child.id); setShowMemberDrop(false); }}
+                                        className={clsx(
+                                            "w-full px-4 py-2 text-left text-[10px] font-bold uppercase tracking-wider transition-colors",
+                                            filterUserId === child.id ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:bg-slate-50"
+                                        )}
+                                    >
+                                        {child.name.toUpperCase()}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 {!hideTabs && (
-                    <div className="flex bg-slate-100 p-1 rounded-2xl">
+                    <div className="bg-slate-100 p-1 rounded-lg flex gap-1">
                         <button
                             onClick={() => setTab('SHOP')}
-                            className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'SHOP' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={clsx(
+                                "px-4 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all",
+                                tab === 'SHOP' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-500"
+                            )}
                         >
                             {t('parent.orders.shop')}
                         </button>
                         <button
                             onClick={() => setTab('GALLERY')}
-                            className={`px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${tab === 'GALLERY' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={clsx(
+                                "px-4 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all",
+                                tab === 'GALLERY' ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400 hover:text-slate-500"
+                            )}
                         >
                             {t('parent.orders.gallery')}
                         </button>
@@ -162,75 +220,62 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
 
             <AnimatePresence mode="wait">
                 <motion.div
-                    key={tab}
+                    key={`${tab}-${filterUserId}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="grid grid-cols-1 gap-6"
+                    className="grid grid-cols-1 gap-4"
                 >
                     {tab === 'SHOP' ? (
-                        shopOrders.length === 0 ? (
-                            <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-100 text-slate-400 font-bold uppercase tracking-widest px-10">
+                        shopOrders.filter(o => filterUserId === 'ALL' || o.userId === filterUserId).length === 0 ? (
+                            <div className="text-center py-20 bg-white/50 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold uppercase tracking-widest px-10 text-xs">
                                 {t('parent.noOrders')}
                             </div>
                         ) : (
-                            shopOrders.map(order => {
+                            shopOrders.filter(o => filterUserId === 'ALL' || o.userId === filterUserId).map(order => {
                                 const statusCfg = STATUS_CONFIG[order.status] ?? { labelKey: order.status, className: 'bg-slate-100 text-slate-500' }
                                 const isBusy = updating === order.id
                                 return (
-                                    <div key={order.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4 hover:shadow-xl transition-all group">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-slate-50 overflow-hidden shrink-0 border border-slate-100 p-0.5">
-                                                    {order.user.avatarUrl ? (
-                                                        <Image 
-                                                            src={order.user.avatarUrl} 
-                                                            alt={order.user.name} 
-                                                            width={48} 
-                                                            height={48} 
-                                                            className="w-full h-full object-cover rounded-[14px]" 
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center font-black text-slate-200 text-lg">
-                                                            {order.user.name[0]?.toUpperCase()}
-                                                        </div>
-                                                    )}
+                                    <div key={order.id} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
+                                        <div className="flex justify-between items-center px-1">
+                                            <div className="flex flex-col">
+                                                <div className="font-bold text-slate-800 text-sm tracking-tight flex items-center gap-2">
+                                                    <User className="w-3.5 h-3.5 text-indigo-400" />
+                                                    {order.user.nickname || order.user.name}
                                                 </div>
-                                                <div>
-                                                    <div className="font-black text-slate-800 text-lg tracking-tight">{order.user.name}</div>
-                                                    <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {new Date(order.createdAt).toLocaleString()}
-                                                    </div>
-                                                </div>
+                                                <div className="text-[9px] text-slate-400 font-medium uppercase tracking-wider mt-0.5">{new Date(order.createdAt).toLocaleString()}</div>
                                             </div>
-                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${statusCfg.className}`}>
+                                            <span className={clsx(
+                                                "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider",
+                                                statusCfg.className
+                                            )}>
                                                 {t(statusCfg.labelKey)}
                                             </span>
                                         </div>
 
-                                        <div className="flex gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner group-hover:bg-indigo-50/50 group-hover:border-indigo-100 transition-colors">
-                                            <ItemIcon iconUrl={order.item.iconUrl} name={order.item.name} />
+                                        <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100 flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                                <ItemIcon iconUrl={order.item.iconUrl} name={order.item.name} />
+                                            </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-black text-slate-800 uppercase tracking-tight truncate">{order.item.name}</div>
-                                                <div className="text-xs text-amber-600 font-black uppercase tracking-widest">{order.costCoins} {t('hud.coins')}</div>
+                                                <div className="font-black text-slate-700 text-sm uppercase truncate leading-tight mb-0.5">{order.item.name}</div>
+                                                <div className="text-[10px] text-amber-600 font-black uppercase tracking-widest">{order.costCoins} CC</div>
                                             </div>
                                         </div>
 
                                         {order.remarks && (
-                                            <div className="flex gap-3 text-sm text-slate-500 bg-blue-50/50 p-4 rounded-2xl border border-blue-50 italic font-medium">
-                                                <MessageSquare className="w-4 h-4 shrink-0 mt-0.5 text-blue-400" />
-                                                <p>{order.remarks}</p>
+                                            <div className="px-1 text-[11px] text-slate-500 italic leading-relaxed border-l-2 border-indigo-100 pl-3">
+                                                {order.remarks}
                                             </div>
                                         )}
 
-                                        <div className="flex flex-wrap gap-2 pt-2">
+                                        <div className="flex gap-2 pt-1 px-1">
                                             {order.status === 'PENDING' && (
                                                 <>
                                                     <button
                                                         onClick={() => handleShopUpdate(order.id, { status: 'COMPLETED' })}
                                                         disabled={isBusy}
-                                                        className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-6 py-4 bg-emerald-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-100 hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50"
+                                                        className="flex-1 h-9 flex items-center justify-center gap-2 bg-emerald-500 text-white rounded-lg text-xs font-black hover:bg-emerald-600 transition-all disabled:opacity-50"
                                                     >
                                                         <CheckCircle className="w-4 h-4" />
                                                         {isBusy ? '...' : t('order.action.confirm')}
@@ -238,20 +283,19 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                                                     <button
                                                         onClick={() => handleShopUpdate(order.id, { status: 'REFUNDED' })}
                                                         disabled={isBusy}
-                                                        className="flex-1 min-w-[140px] flex items-center justify-center gap-2 px-6 py-4 bg-white border-2 border-rose-100 text-rose-500 rounded-2xl text-xs font-black hover:bg-rose-50 transition-all active:scale-95 disabled:opacity-50"
+                                                        className="flex-1 h-9 flex items-center justify-center gap-2 bg-slate-50 border border-slate-200 text-slate-500 rounded-lg text-xs font-black hover:bg-slate-100 transition-all disabled:opacity-50"
                                                     >
                                                         <RotateCcw className="w-4 h-4" />
-                                                        {isBusy ? '...' : t('order.action.refund')}
+                                                        {t('order.action.refund')}
                                                     </button>
                                                 </>
                                             )}
                                             <button
                                                 onClick={() => setRemarkModal({ open: true, orderId: order.id, initialValue: order.remarks || '' })}
                                                 disabled={isBusy}
-                                                className="px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-xs font-black flex items-center gap-2 hover:bg-slate-50 text-slate-600 transition-all"
+                                                className="w-9 h-9 flex items-center justify-center bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-500 transition-all"
                                             >
-                                                <MessageSquare className="w-4 h-4 text-slate-400" />
-                                                {t('button.remarks')}
+                                                <MessageSquare className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
@@ -259,66 +303,61 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                             })
                         )
                     ) : (
-                        galleryOrders.length === 0 ? (
-                            <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-100 text-slate-400 font-bold uppercase tracking-widest px-10">
+                        galleryOrders.filter(o => filterUserId === 'ALL' || o.userId === filterUserId).length === 0 ? (
+                            <div className="text-center py-20 bg-white/50 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold uppercase tracking-widest px-10 text-xs">
                                 {t('parent.orders.noGalleryOrders')}
                             </div>
                         ) : (
-                            galleryOrders.map(order => {
+                            galleryOrders.filter(o => filterUserId === 'ALL' || o.userId === filterUserId).map(order => {
                                 const statusCfg = STATUS_CONFIG[order.status] ?? { labelKey: order.status, className: 'bg-slate-100 text-slate-500' }
                                 const isBusy = updating === order.id
                                 return (
-                                    <div key={order.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6 hover:shadow-xl transition-all group">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-400 border border-indigo-100">
-                                                    <User className="w-6 h-6" />
+                                    <div key={order.id} className="bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm space-y-4">
+                                        <div className="flex justify-between items-center px-1">
+                                            <div className="flex flex-col">
+                                                <div className="font-bold text-slate-800 text-sm tracking-tight uppercase leading-none flex items-center gap-2">
+                                                    <User className="w-3.5 h-3.5 text-indigo-400" />
+                                                    {order.artist.nickname || order.artist.name}
                                                 </div>
-                                                <div>
-                                                    <div className="font-black text-slate-800 text-lg tracking-tight uppercase">{order.visitor.name}</div>
-                                                    <div className="text-xs text-indigo-600 font-bold flex items-center gap-1.5 mt-0.5">
-                                                        <Phone className="w-3 h-3" />
-                                                        {order.visitor.phone}
-                                                    </div>
+                                                <div className="text-[9px] text-indigo-600 font-bold flex items-center gap-1.5 mt-1.5">
+                                                    <Phone className="w-2.5 h-2.5" />
+                                                    {order.visitor.name} ({order.visitor.phone})
                                                 </div>
                                             </div>
-                                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${statusCfg.className}`}>
+                                            <span className={clsx(
+                                                "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider",
+                                                statusCfg.className
+                                            )}>
                                                 {t(statusCfg.labelKey)}
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center bg-slate-50 p-6 rounded-[32px] border border-slate-100 group-hover:border-indigo-100 transition-all">
-                                            <div className="flex gap-4 items-center">
-                                                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-md border-4 border-white shrink-0 relative">
-                                                    <Image 
-                                                        src={order.artwork.imageUrl} 
-                                                        alt={order.artwork.title} 
-                                                        fill 
-                                                        className="object-cover" 
-                                                    />
+                                        <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100 grid grid-cols-1 md:grid-cols-[1fr,auto] gap-4 items-center">
+                                            <div className="flex gap-3 items-center min-w-0">
+                                                <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 relative bg-white">
+                                                    <Image src={order.artwork.imageUrl} alt={order.artwork.title} fill className="object-cover" />
                                                 </div>
-                                                <div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{t('parent.orders.artwork')}</p>
-                                                    <h4 className="font-black text-slate-800 text-base leading-tight uppercase">{order.artwork.title}</h4>
-                                                    <p className="text-xs text-indigo-500 font-black mt-1">
+                                                <div className="min-w-0">
+                                                    <h4 className="font-black text-slate-800 text-sm leading-tight uppercase truncate mb-0.5">{order.artwork.title}</h4>
+                                                    <p className="text-[10px] text-indigo-500 font-bold">
                                                         by {order.artist.nickname || order.artist.name}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="md:border-l border-slate-200 md:pl-8">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('parent.orders.price')}</p>
-                                                <div className="text-2xl font-black text-slate-900 tracking-tight">¥{order.amountRMB} <span className="text-slate-200 font-normal">/</span> <span className="text-indigo-600">{order.artwork.priceCoins} Coins</span></div>
+                                            <div className="md:border-l border-slate-200 md:pl-4 flex flex-col items-start md:items-end">
+                                                <div className="text-[14px] font-black text-slate-900 tracking-tight">¥{order.amountRMB}</div>
+                                                <div className="text-[9px] text-indigo-600 font-bold uppercase">{order.artwork.priceCoins} CC</div>
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="pt-1 px-1">
                                             {order.status === 'PENDING' && (
                                                 <button
                                                     onClick={() => handleGalleryUpdate(order.id, 'COMPLETED')}
                                                     disabled={isBusy}
-                                                    className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-indigo-600 text-white rounded-[24px] font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
+                                                    className="w-full h-10 flex items-center justify-center gap-2 bg-indigo-600 text-white rounded-lg text-xs font-black hover:bg-indigo-700 transition-all disabled:opacity-50 uppercase tracking-widest"
                                                 >
-                                                    <CheckCircle className="w-5 h-5" />
+                                                    <CheckCircle className="w-4 h-4" />
                                                     {isBusy ? '...' : t('order.action.confirm')}
                                                 </button>
                                             )}
@@ -330,6 +369,7 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                     )}
                 </motion.div>
             </AnimatePresence>
+
 
             {/* Remark Modal for Shop Orders */}
             <AnimatePresence>
@@ -343,46 +383,44 @@ export default function OrderManagement({ defaultTab = 'SHOP', hideTabs = false 
                             className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
                         />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden relative"
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="bg-white w-full max-w-sm rounded-3xl shadow-xl overflow-hidden relative border border-slate-200 p-8"
                         >
-                            <div className="p-10">
-                                <div className="flex items-center justify-between mb-8">
-                                    <h3 className="font-black text-slate-900 text-2xl tracking-tight">{t('button.remarks')}</h3>
-                                    <button
-                                        onClick={() => setRemarkModal({ open: false, orderId: '', current: '' })}
-                                        className="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="font-black text-slate-800 text-xl tracking-tight">{t('button.remarks')}</h3>
+                                <button
+                                    onClick={() => setRemarkModal({ open: false, orderId: '', initialValue: '' })}
+                                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition-all"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
 
-                                <textarea
-                                    ref={remarkRef}
-                                    value={remarkText}
-                                    onChange={e => setRemarkText(e.target.value)}
-                                    placeholder={t('order.remark.placeholder')}
-                                    rows={4}
-                                    className="w-full p-6 bg-slate-50 rounded-3xl border border-slate-200 focus:border-indigo-300 focus:ring-8 focus:ring-indigo-50 outline-none text-base font-bold text-slate-700 resize-none transition-all placeholder:text-slate-300"
-                                />
+                            <textarea
+                                ref={remarkRef}
+                                value={remarkText}
+                                onChange={e => setRemarkText(e.target.value)}
+                                placeholder={t('order.remark.placeholder')}
+                                rows={4}
+                                className="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none text-sm font-bold text-slate-600 resize-none transition-all placeholder:text-slate-200"
+                            />
 
-                                <div className="flex flex-col gap-3 mt-8">
-                                    <button
-                                        onClick={saveRemark}
-                                        disabled={updating === remarkModal.orderId}
-                                        className="w-full h-16 bg-indigo-600 text-white rounded-3xl font-black text-lg hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-[0.98] disabled:opacity-60 uppercase tracking-widest"
-                                    >
-                                        {updating === remarkModal.orderId ? '...' : t('common.confirm')}
-                                    </button>
-                                    <button
-                                        onClick={() => setRemarkModal({ open: false, orderId: '', initialValue: '' })}
-                                        className="w-full h-14 bg-slate-100 rounded-2xl font-black text-slate-500 hover:bg-slate-200 transition-all text-sm uppercase tracking-widest"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                </div>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={saveRemark}
+                                    disabled={updating === remarkModal.orderId}
+                                    className="flex-1 h-12 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 transition-all disabled:opacity-50"
+                                >
+                                    {updating === remarkModal.orderId ? '...' : t('common.confirm')}
+                                </button>
+                                <button
+                                    onClick={() => setRemarkModal({ open: false, orderId: '', initialValue: '' })}
+                                    className="px-6 h-12 bg-slate-100 text-slate-500 rounded-xl font-black text-sm hover:bg-slate-200 transition-all"
+                                >
+                                    {t('common.cancel')}
+                                </button>
                             </div>
                         </motion.div>
                     </div>

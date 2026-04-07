@@ -25,9 +25,11 @@ export async function GET() {
             itemName: purchase.itemName,
             itemIconUrl: purchase.itemIconUrl,
             itemDescription: purchase.itemDescription,
+            userId: users.id,
             user: {
                 id: users.id,
                 name: users.name,
+                nickname: users.nickname,
                 avatarUrl: users.avatarUrl
             },
             item: {

@@ -18,6 +18,7 @@ export async function GET() {
             status: order.status,
             amountRMB: order.amountRMB,
             createdAt: order.createdAt,
+            userId: users.id,
             artwork: {
                 id: artwork.id,
                 title: artwork.title,
@@ -25,6 +26,7 @@ export async function GET() {
                 priceCoins: artwork.priceCoins
             },
             artist: {
+                id: users.id,
                 name: users.name,
                 nickname: users.nickname
             },
@@ -41,7 +43,7 @@ export async function GET() {
         .all()
 
         return NextResponse.json(results)
-    } catch (_e) {
+    } catch (e) {
         console.error('Failed to fetch gallery orders:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
@@ -70,7 +72,7 @@ export async function PATCH(req: NextRequest) {
             .returning()
 
         return NextResponse.json(updated)
-    } catch (_e) {
+    } catch (e) {
         console.error('Failed to update gallery order:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

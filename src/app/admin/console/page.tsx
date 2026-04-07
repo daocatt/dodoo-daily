@@ -13,13 +13,15 @@ import {
     Shield,
     Plus,
     Archive,
-    Fan
+    Fan,
+    ShoppingBag
 } from 'lucide-react'
 import { useI18n } from '@/contexts/I18nContext'
 import { BausteinAdminNavbar } from '@/components/BausteinAdminNavbar'
+import { useRef } from 'react'
 
 import ChildManagement from '@/components/parent/ChildManagement'
-import ShopManagement from '@/components/parent/ShopManagement'
+import ShopManagement, { ShopManagementHandle } from '@/components/parent/ShopManagement'
 import OrderManagement from '@/components/parent/OrderManagement'
 import ProfileManagement from '@/components/parent/SettingsManagement'
 import SystemSettings from '@/components/parent/SystemSettings'
@@ -46,12 +48,13 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
     const { t } = useI18n()
     const router = useRouter()
     const [loading, setLoading] = useState(true)
-    type DashboardView = 'HOME' | 'FAMILY' | 'REWARDS' | 'PENALTIES' | 'PROFILE' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS' | 'SHOP_ORDERS' | 'GALLERY_ORDERS'
+    type DashboardView = 'HOME' | 'FAMILY' | 'SHOP' | 'WISHES' | 'PENALTIES' | 'PROFILE' | 'SYSTEM' | 'MEDIA' | 'EXHIBITION' | 'VISITORS' | 'LOGS' | 'SHOP_ORDERS' | 'GALLERY_ORDERS'
     const VIEW_ROUTES: Record<DashboardView, string> = {
         HOME: '/admin/console',
         FAMILY: '/admin/console/members',
         MEDIA: '/admin/console/media',
-        REWARDS: '/admin/console/rewards',
+        SHOP: '/admin/console/shop',
+        WISHES: '/admin/console/wishes',
         EXHIBITION: '/admin/console/exhibition',
         VISITORS: '/admin/console/visitors',
         LOGS: '/admin/console/logs',
@@ -79,6 +82,8 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
     const [user, setUser] = useState<ParentUser | null>(null)
     const [showAddChild, setShowAddChild] = useState(false)
     const [showArchived, setShowArchived] = useState(false)
+    const [_shopSubView, _setShopSubView] = useState<'ITEMS' | 'WISHES'>('ITEMS')
+    const shopRef = useRef<ShopManagementHandle>(null)
 
     useEffect(() => {
         fetch('/api/stats')
@@ -135,7 +140,17 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
             /> : null
             case 'SHOP_ORDERS': return <OrderManagement defaultTab="SHOP" hideTabs={true} />
             case 'GALLERY_ORDERS': return <OrderManagement defaultTab="GALLERY" hideTabs={true} />
-            case 'REWARDS': return <ShopManagement onOrdersClick={() => navigateToView('SHOP_ORDERS')} />
+            case 'SHOP': return <ShopManagement 
+                ref={shopRef}
+                initialView="ITEMS"
+                hideTabs={true}
+                onOrdersClick={() => navigateToView('SHOP_ORDERS')} 
+            />
+            case 'WISHES': return <ShopManagement 
+                ref={shopRef}
+                initialView="WISHES"
+                hideTabs={true}
+            />
             case 'PROFILE': return user ? <ProfileManagement user={user} /> : null
             case 'SYSTEM': return <SystemSettings />
             case 'MEDIA': return <MediaManagement />
@@ -151,14 +166,30 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
             {/* ─── Integrated Navbar ─── */}
             <BausteinAdminNavbar 
                 onBack={view !== 'HOME' ? () => {
-                    if (view === 'SHOP_ORDERS') navigateToView('REWARDS')
+                    if (view === 'SHOP_ORDERS') navigateToView('SHOP')
                     else if (view === 'GALLERY_ORDERS') navigateToView('EXHIBITION')
                     else router.push('/admin/console')
                 } : undefined}
                 title={view !== 'HOME' ? (
                     <div className="flex items-center gap-2 ml-1">
                         <div className="w-1.5 h-3 bg-amber-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-                        <h2 className="text-[13px] font-black text-slate-800 uppercase italic tracking-tighter leading-none">{t(`parent.${view.toLowerCase() === 'shop_orders' ? 'rewards' : view.toLowerCase()}`)}</h2>
+                        <h2 className="text-[13px] font-black text-slate-800 uppercase italic tracking-tighter leading-none flex items-center gap-2">
+                            {view === 'SHOP_ORDERS' ? (
+                                <>
+                                    <span className="opacity-40">{t('parent.shop')}</span>
+                                    <span className="opacity-40 ring-1 ring-slate-400 rotate-12 h-3 mx-1" />
+                                    <span>{t('parent.orders')}</span>
+                                </>
+                            ) : view === 'GALLERY_ORDERS' ? (
+                                <>
+                                    <span className="opacity-40">{t('gallery.exhibition')}</span>
+                                    <span className="opacity-40 ring-1 ring-slate-400 rotate-12 h-3 mx-1" />
+                                    <span>{t('parent.orders')}</span>
+                                </>
+                            ) : (
+                                t(`parent.${view.toLowerCase()}`)
+                            )}
+                        </h2>
                     </div>
                 ) : undefined}
                 actions={
@@ -186,6 +217,33 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                                 <div className="hardware-well w-12 h-12 rounded-xl flex items-center justify-center bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative">
                                     <div className={`hardware-cap absolute inset-1.5 rounded-lg flex items-center justify-center transition-all shadow-cap active:translate-y-0.5 ${showArchived ? 'bg-slate-800' : 'bg-white group-hover:bg-slate-50'}`}>
                                         <Archive className={`w-4 h-4 ${showArchived ? 'text-white' : 'text-slate-400'}`} />
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    ) : view === 'SHOP' ? (
+                        <div className="flex gap-3 items-center">
+                            <button 
+                                onClick={() => navigateToView('SHOP_ORDERS')}
+                                className="hardware-btn group"
+                            >
+                                <div className="hardware-well h-12 rounded-xl flex items-center bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative">
+                                    <div className="hardware-cap absolute inset-1.5 bg-white rounded-lg flex items-center transition-all shadow-cap group-hover:bg-slate-50 active:translate-y-0.5" />
+                                    <div className="relative z-10 flex items-center px-4 gap-2 pointer-events-none">
+                                        <ShoppingBag className="w-4 h-4 text-slate-400" />
+                                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-tighter">{t('parent.orders.shop')}</span>
+                                    </div>
+                                </div>
+                            </button>
+                            <button 
+                                onClick={() => shopRef.current?.openAdd()}
+                                className="hardware-btn group"
+                            >
+                                <div className="hardware-well h-12 rounded-xl flex items-center bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative">
+                                    <div className="hardware-cap absolute inset-1.5 bg-amber-500 rounded-lg flex items-center transition-all shadow-cap group-hover:bg-amber-600 active:translate-y-0.5" />
+                                    <div className="relative z-10 flex items-center px-6 gap-2 pointer-events-none">
+                                        <Plus className="w-4 h-4 text-white" />
+                                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">{t('shop.management.add')}</span>
                                     </div>
                                 </div>
                             </button>
@@ -250,7 +308,29 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
 
                                 {/* Reward Store */}
                                 <button
-                                    onClick={() => navigateToView('REWARDS')}
+                                    onClick={() => navigateToView('SHOP')}
+                                    className="hardware-btn group text-left rounded-[24px] overflow-hidden"
+                                >
+                                    <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
+                                        <div className="hardware-cap absolute inset-2 bg-white rounded-[16px] p-6 flex flex-col items-start gap-4 transition-all shadow-cap">
+                                            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center border border-orange-100 shrink-0 shadow-inner">
+                                                <ShoppingBag className="w-6 h-6 text-orange-500" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase">{t('parent.shop')}</h2>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-1 leading-tight">{t('parent.shopDesc')}</p>
+                                            </div>
+                                            <div className="mt-auto flex items-center gap-2 transition-transform">
+                                                <span className="label-mono text-orange-600">{t('button.manage')}</span>
+                                                <ArrowLeft className="w-3 h-3 rotate-180 text-orange-400" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {/* Wish Applications */}
+                                <button
+                                    onClick={() => navigateToView('WISHES')}
                                     className="hardware-btn group text-left rounded-[24px] overflow-hidden"
                                 >
                                     <div className="hardware-well h-48 rounded-[24px] bg-[#DADBD4] shadow-well active:translate-y-0.5 relative">
@@ -259,8 +339,8 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                                                 <Star className="w-6 h-6 text-yellow-500" />
                                             </div>
                                             <div>
-                                                <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase">{t('parent.rewards')}</h2>
-                                                <p className="text-[10px] font-bold text-slate-400 mt-1 leading-tight">{t('parent.rewardsDesc')}</p>
+                                                <h2 className="text-xl font-black text-slate-900 tracking-tighter uppercase">{t('parent.wishes')}</h2>
+                                                <p className="text-[10px] font-bold text-slate-400 mt-1 leading-tight">{t('parent.wishesDesc')}</p>
                                             </div>
                                             <div className="mt-auto flex items-center gap-2 transition-transform">
                                                 <span className="label-mono text-yellow-600">{t('button.manage')}</span>
