@@ -248,6 +248,21 @@ export default function ParentDashboard({ forceView }: { forceView?: string }) {
                                 </div>
                             </button>
                         </div>
+                    ) : view === 'EXHIBITION' ? (
+                        <div className="flex gap-3 items-center">
+                            <button 
+                                onClick={() => navigateToView('GALLERY_ORDERS')}
+                                className="hardware-btn group"
+                            >
+                                <div className="hardware-well h-12 rounded-xl flex items-center bg-[#DADBD4] shadow-well active:translate-y-0.5 overflow-hidden relative">
+                                    <div className="hardware-cap absolute inset-1.5 bg-white rounded-lg flex items-center transition-all shadow-cap group-hover:bg-indigo-50 active:translate-y-0.5" />
+                                    <div className="relative z-10 flex items-center px-4 gap-2 pointer-events-none">
+                                        <ShoppingBag className="w-4 h-4 text-indigo-500" />
+                                        <span className="text-[10px] font-black text-slate-900 uppercase tracking-tighter">{t('parent.orders.gallery')}</span>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
                     ) : undefined
                 }
             />
