@@ -198,9 +198,14 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
                                                 </div>
                                             )}
 
-                                            {/* Action HUD - Persistent on mobile/touch, Hover-subtle on desktop */}
-                                            <div className="absolute inset-x-0 bottom-0 p-1.5 flex gap-1.5 bg-gradient-to-t from-black/60 via-black/20 to-transparent 
-                                                translate-y-0 md:translate-y-full md:group-hover:translate-y-0 transition-transform duration-300 z-20">
+                                            {/* Action HUD - Capability-aware reveal */}
+                                            {/* This HUD is persistently visible on Touch/No-Hover devices (PWA/iPad/Mobile) 
+                                                and only uses the hover-slide-up effect on true desktop pointers. */}
+                                            <div className="absolute inset-x-0 bottom-0 p-1.5 flex gap-1.5 bg-gradient-to-t from-black/70 via-black/30 to-transparent 
+                                                transition-transform duration-300 z-20
+                                                translate-y-0 
+                                                [@media(hover:hover)]:translate-y-full 
+                                                [@media(hover:hover)]:group-hover:translate-y-0">
                                                 {!art.isApproved ? (
                                                     <button 
                                                         onClick={() => handleApprove(art.id)}
@@ -264,7 +269,8 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
                                                                     setEditingDescriptionId(art.id)
                                                                     setTempDescription(art.exhibitionDescription || '')
                                                                 }}
-                                                                className="text-slate-300 hover:text-indigo-500 opacity-0 md:group-hover/desc:opacity-100"
+                                                                className="text-slate-300 hover:text-indigo-500 transition-all 
+                                                                    opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/desc:opacity-100"
                                                             >
                                                                 <Edit className="w-2 h-2" />
                                                             </button>
