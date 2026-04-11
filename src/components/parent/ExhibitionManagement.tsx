@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { Palette, XCircle, Search, Loader2, Heart, Eye, CheckCircle, Edit, User } from 'lucide-react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react'
 import { useI18n } from '@/contexts/I18nContext'
 import clsx from 'clsx'
 
@@ -19,9 +19,12 @@ interface ExhibitionArtwork {
     views: number
     isPublic: boolean
     isApproved: boolean
+    isArchived: boolean
     exhibitionDescription: string | null
     createdAt: string
 }
+
+type TabStatus = 'ALL' | 'PENDING' | 'APPROVED' | 'REMOVED'
 
 export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClick?: () => void }) {
     const { t } = useI18n()
@@ -29,7 +32,7 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
     const [loading, setLoading] = useState(true)
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState('')
-    const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED'>('ALL')
+    const [statusFilter, setStatusFilter] = useState<TabStatus>('ALL')
     const [editingDescriptionId, setEditingDescriptionId] = useState<string | null>(null)
     const [tempDescription, setTempDescription] = useState('')
 
@@ -55,13 +58,16 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
         if (processingId) return
         setProcessingId(id)
         try {
-            const res = await fetch(`/api/parent/artworks/${id}/public`, {
+            // "Take Down" (下架) keeps isPublic: true but sets isArchived: true
+            const res = await fetch(`/api/parent/artworks/${id}/archive`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isPublic: false })
+                body: JSON.stringify({ isArchived: true })
             })
             if (res.ok) {
-                setArtworks(prev => prev.filter(art => art.id !== id))
+                setArtworks(prev => prev.map(art => 
+                    art.id === id ? { ...art, isArchived: true, isApproved: false } : art
+                ))
             }
         } catch (e: unknown) {
             console.error('Failed to take down artwork:', e)
@@ -74,13 +80,16 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
         if (processingId) return
         setProcessingId(id)
         try {
+            // "Approve" (上架/待审核通过) sets isApproved: true and isArchived: false
             const res = await fetch(`/api/parent/artworks/${id}/approve`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isApproved: true })
+                body: JSON.stringify({ isApproved: true, isArchived: false })
             })
             if (res.ok) {
-                setArtworks(prev => prev.map(art => art.id === id ? { ...art, isApproved: true } : art))
+                setArtworks(prev => prev.map(art => 
+                    art.id === id ? { ...art, isApproved: true, isArchived: false } : art
+                ))
             }
         } catch (e: unknown) {
             console.error('Failed to approve artwork:', e)
@@ -115,8 +124,9 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
             (art.userName.toLowerCase().includes(searchTerm.toLowerCase()))
         
         const matchesStatus = statusFilter === 'ALL' || 
-            (statusFilter === 'PENDING' && !art.isApproved) ||
-            (statusFilter === 'APPROVED' && art.isApproved)
+            (statusFilter === 'PENDING' && !art.isApproved && !art.isArchived) ||
+            (statusFilter === 'APPROVED' && art.isApproved && !art.isArchived) ||
+            (statusFilter === 'REMOVED' && art.isArchived)
             
         return matchesSearch && matchesStatus
     })
@@ -135,19 +145,22 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
             {/* ── Baustein Header HUD (Relocated to right) ───────────────────── */}
             <div className="flex flex-col md:flex-row justify-end items-center gap-4 w-full">
                 {/* Status Filter WELL */}
-                <div className="flex items-center gap-1 bg-[#DADBD4] p-1 rounded-2xl shadow-well hardware-well shrink-0 w-full md:w-auto">
-                    {(['ALL', 'PENDING', 'APPROVED'] as const).map((filter) => (
+                <div className="flex items-center gap-1 bg-[#DADBD4] p-1 rounded-2xl shadow-well hardware-well shrink-0 w-full md:w-auto overflow-x-auto no-scrollbar">
+                    {(['ALL', 'PENDING', 'APPROVED', 'REMOVED'] as const).map((filter) => (
                         <button
                             key={filter}
                             onClick={() => setStatusFilter(filter)}
                             className={clsx(
-                                "relative px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex-1 md:flex-initial flex items-center justify-center gap-2",
+                                "relative px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex-1 md:flex-initial flex items-center justify-center gap-2 whitespace-nowrap",
                                 statusFilter === filter 
                                     ? "bg-white text-slate-800 shadow-cap translate-y-[-1px] ring-1 ring-black/5" 
                                     : "text-slate-500 hover:text-slate-700 opacity-60"
                             )}
                         >
-                            {filter === 'ALL' ? t('parent.exhibition.tabAll') : filter === 'PENDING' ? t('parent.exhibition.tabPending') : t('parent.exhibition.tabApproved')}
+                            {filter === 'ALL' ? t('parent.exhibition.tabAll') : 
+                             filter === 'PENDING' ? t('parent.exhibition.tabPending') : 
+                             filter === 'APPROVED' ? t('parent.exhibition.tabApproved') :
+                             t('parent.exhibition.tabRemoved')}
                         </button>
                     ))}
                 </div>
@@ -179,11 +192,11 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 className="group relative"
                             >
-                                <div className="hardware-well p-1 rounded-2xl bg-[#DADBD4] shadow-well transition-all group-hover:shadow-lg">
-                                    <div className="hardware-cap bg-[#FEFBEA] rounded-[14px] overflow-hidden shadow-cap h-full flex flex-col transition-all group-hover:-translate-y-0.5 ring-1 ring-white/30">
+                                <div className="hardware-well p-1 rounded-xl bg-[#DADBD4] shadow-well transition-all group-hover:shadow-lg">
+                                    <div className="hardware-cap bg-[#FEFBEA] rounded-[10px] overflow-hidden shadow-cap h-full flex flex-col transition-all group-hover:-translate-y-0.5 ring-1 ring-white/30">
                                         
-                                        {/* Image Sector (Reduced Height) */}
-                                        <div className="relative aspect-[3/2] w-full bg-slate-200 overflow-hidden group/img">
+                                        {/* Image Sector (Highly Compressed Height) */}
+                                        <div className="relative aspect-[2/1] w-full bg-slate-200 overflow-hidden group/img">
                                             <Image 
                                                 src={art.imageUrl} 
                                                 alt={art.title}
@@ -193,54 +206,30 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
                                             
                                             {/* Top Metadata Badges (Subtle) */}
                                             {art.albumTitle && (
-                                                <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-white/70 backdrop-blur-md rounded-md text-[6px] font-black text-indigo-700 uppercase tracking-[0.2em] border border-white/50 z-10">
+                                                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-white/70 backdrop-blur-md rounded-md text-[6px] font-black text-indigo-700 uppercase tracking-[0.2em] border border-white/50 z-10">
                                                     {art.albumTitle}
                                                 </div>
                                             )}
 
-                                            {/* Action HUD - Capability-aware reveal */}
-                                            {/* This HUD is persistently visible on Touch/No-Hover devices (PWA/iPad/Mobile) 
-                                                and only uses the hover-slide-up effect on true desktop pointers. */}
-                                            <div className="absolute inset-x-0 bottom-0 p-1.5 flex gap-1.5 bg-gradient-to-t from-black/70 via-black/30 to-transparent 
-                                                transition-transform duration-300 z-20
-                                                translate-y-0 
-                                                [@media(hover:hover)]:translate-y-full 
-                                                [@media(hover:hover)]:group-hover:translate-y-0">
-                                                {!art.isApproved ? (
-                                                    <button 
-                                                        onClick={() => handleApprove(art.id)}
-                                                        disabled={processingId === art.id}
-                                                        className="flex-1 py-2 bg-emerald-500/90 hover:bg-emerald-500 text-white rounded-lg font-black text-[9px] uppercase tracking-widest shadow-lg active:scale-95 flex items-center justify-center gap-1.5 backdrop-blur-sm transition-all"
-                                                    >
-                                                        {processingId === art.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                                                        {t('parent.exhibition.approve')}
-                                                    </button>
-                                                ) : null}
-                                                <button 
-                                                    onClick={() => handleTakeDown(art.id)}
-                                                    disabled={processingId === art.id}
-                                                    className="flex-1 py-2 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg font-black text-[9px] uppercase tracking-widest shadow-lg active:scale-95 flex items-center justify-center gap-1.5 backdrop-blur-sm transition-all"
-                                                >
-                                                    {processingId === art.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-                                                    {t('parent.exhibition.takeDown')}
-                                                </button>
-                                            </div>
-
                                             {/* Status Indicator Bubble (Always visible if pending) */}
-                                            {!art.isApproved && (
+                                            {(!art.isApproved && !art.isArchived) && (
                                                 <div className="absolute top-2 right-2 z-10 md:group-hover:opacity-0 transition-opacity">
                                                     <div className="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow-lg border border-white">
                                                         <Eye className="w-2.5 h-2.5 text-white" />
                                                     </div>
                                                 </div>
                                             )}
-                                            
-                                            {/* Action Reveal Trigger for Mobile (Visible area to tap) */}
-                                            <div className="absolute inset-0 z-10 md:hidden" onClick={() => {}} /* Just for touch reveal if CSS hover won't trigger */ />
+                                            {art.isArchived && (
+                                                <div className="absolute top-2 right-2 z-10">
+                                                    <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center shadow-lg border border-white">
+                                                        <XCircle className="w-2.5 h-2.5 text-white" />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Content Sector (Compressed) */}
-                                        <div className="p-3 flex flex-col gap-1.5">
+                                        <div className="p-3 flex flex-col gap-2">
                                             <h3 className="font-black text-slate-800 text-[9px] leading-tight uppercase tracking-tight line-clamp-1">{art.title}</h3>
 
                                             {/* Description HUD - Only if exists */}
@@ -279,8 +268,31 @@ export default function ExhibitionManagement({ _onOrdersClick }: { _onOrdersClic
                                                 </div>
                                             )}
 
+                                            {/* Action HUD - Bottom Placement */}
+                                            <div className="flex gap-1.5 pt-1">
+                                                {!art.isApproved ? (
+                                                    <button 
+                                                        onClick={() => handleApprove(art.id)}
+                                                        disabled={processingId === art.id}
+                                                        className="flex-1 py-1.5 bg-emerald-500/90 hover:bg-emerald-500 text-white rounded-lg font-black text-[8px] uppercase tracking-widest shadow-sm active:scale-95 flex items-center justify-center gap-1 transition-all"
+                                                    >
+                                                        {processingId === art.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                                                        {t('parent.exhibition.approve')}
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        onClick={() => handleTakeDown(art.id)}
+                                                        disabled={processingId === art.id}
+                                                        className="flex-1 py-1.5 bg-rose-500/90 hover:bg-rose-500 text-white rounded-lg font-black text-[8px] uppercase tracking-widest shadow-sm active:scale-95 flex items-center justify-center gap-1 transition-all"
+                                                    >
+                                                        {processingId === art.id ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                                        {t('parent.exhibition.takeDown')}
+                                                    </button>
+                                                )}
+                                            </div>
+
                                             {/* Footer HUD (Stats + Owner Attribution) */}
-                                            <div className="flex items-center justify-between pt-0.5 mt-auto">
+                                            <div className="flex items-center justify-between pt-1 border-t border-black/5">
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex items-center gap-0.5 text-rose-400/60">
                                                         <Heart className="w-2 h-2 fill-current" />

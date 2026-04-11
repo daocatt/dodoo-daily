@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest) {
     if (!await checkIsParent()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     try {
-        const { id, status } = await req.json()
+        const { id, status, contactName, contactPhone, shippingAddress } = await req.json()
         if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
         // If status is COMPLETED, we mark the artwork as sold
@@ -67,7 +67,13 @@ export async function PATCH(req: NextRequest) {
         }
 
         const [updated] = await db.update(order)
-            .set({ status, updatedAt: new Date() })
+            .set({ 
+                ...(status && { status }), 
+                ...(contactName !== undefined && { contactName }),
+                ...(contactPhone !== undefined && { contactPhone }),
+                ...(shippingAddress !== undefined && { shippingAddress }),
+                updatedAt: new Date() 
+            })
             .where(eq(order.id, id))
             .returning()
 

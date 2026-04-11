@@ -16,19 +16,23 @@ export async function PATCH(
         }
 
         const body = await req.json()
-        const { isPublic } = body
+        const { isArchived } = body
 
-        if (typeof isPublic !== 'boolean') {
+        if (typeof isArchived !== 'boolean') {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
         }
 
+        // When archiving, we also set isApproved to false to take it off-shelf
         await db.update(artwork)
-            .set({ isPublic })
+            .set({ 
+                isArchived,
+                isApproved: isArchived ? false : undefined 
+            })
             .where(eq(artwork.id, id))
 
         return NextResponse.json({ success: true })
     } catch (e) {
-        console.error('Artwork public status update error:', e)
+        console.error('Artwork archive status update error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }
 }

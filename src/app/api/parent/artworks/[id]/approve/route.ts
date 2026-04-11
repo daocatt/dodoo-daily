@@ -9,25 +9,29 @@ export async function PATCH(
     { params: _params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params
+        const { id } = await _params
         const session = await getSessionUser()
         if (!session || session.role !== 'PARENT') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const body = await req.json()
-        const { isApproved } = body
+        const { isApproved, isArchived } = body
 
         if (typeof isApproved !== 'boolean') {
             return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
         }
 
+        // Allow updating both isApproved and isArchived (e.g. restoring from archive and approving in one go)
         await db.update(artwork)
-            .set({ isApproved })
+            .set({ 
+                isApproved,
+                ...(typeof isArchived === 'boolean' ? { isArchived } : {})
+            })
             .where(eq(artwork.id, id))
 
         return NextResponse.json({ success: true })
-    } catch (_e) {
+    } catch (e) {
         console.error('Artwork approval status update error:', e)
         return NextResponse.json({ error: 'Failed' }, { status: 500 })
     }

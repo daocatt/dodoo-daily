@@ -23,16 +23,14 @@ export async function GET(_req: NextRequest) {
             views: artwork.views,
             isPublic: artwork.isPublic,
             isApproved: artwork.isApproved,
+            isArchived: artwork.isArchived,
             createdAt: artwork.createdAt
         })
         .from(artwork)
         .leftJoin(album, eq(artwork.albumId, album.id))
         .leftJoin(users, eq(artwork.userId, users.id))
         .where(
-            and(
-                eq(artwork.isPublic, true),
-                eq(artwork.isArchived, false)
-            )
+            eq(artwork.isPublic, true)
         )
         .orderBy(desc(artwork.createdAt))
 
